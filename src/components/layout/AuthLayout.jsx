@@ -19,21 +19,20 @@ export default function AuthLayout({
         justify-center
         bg-[#EBEBEB]
         px-4
-        py-6
+        py-8
         sm:px-6
         md:px-8
-        font-['Inter']
+        font-sans
       "
     >
       {/* AUTH CARD */}
       <section
         className="
           w-full
-          max-w-270
+          max-w-5xl
           bg-white
-          rounded-[30px]
-          p-3
-          sm:p-4
+          rounded-2xl
+          shadow-card
           overflow-hidden
           flex
           flex-col
@@ -47,11 +46,11 @@ export default function AuthLayout({
           className="
             relative
             w-full
-            md:w-1/2
+            md:w-5/12
             shrink-0
-            min-h-70
-            sm:min-h-85
-            md:min-h-125
+            min-h-[280px]
+            sm:min-h-[340px]
+            md:min-h-auto
           "
         >
           {/* ILLUSTRATION PANEL */}
@@ -60,8 +59,9 @@ export default function AuthLayout({
               absolute
               inset-0
               overflow-hidden
-              rounded-[18px]
-              bg-[#EBEBEB]
+              bg-gradient-to-br
+              from-slate-100
+              to-slate-200
             "
           >
             <img
@@ -73,8 +73,10 @@ export default function AuthLayout({
                 w-full
                 h-full
                 object-cover
+                opacity-90
               "
             />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/20 to-transparent" />
           </div>
         </div>
 
@@ -87,15 +89,15 @@ export default function AuthLayout({
             flex
             items-center
             justify-center
-            px-5
-            py-8
-            sm:px-10
-            sm:py-10
-            md:px-12
-            lg:px-16
+            px-6
+            py-10
+            sm:px-12
+            sm:py-12
+            md:px-16
+            lg:px-20
           "
         >
-          <div className="w-full max-w-90">
+          <div className="w-full max-w-sm">
 
             {/* HEADER */}
             <header
@@ -104,7 +106,7 @@ export default function AuthLayout({
                 flex-col
                 items-center
                 text-center
-                mb-6
+                mb-8
               "
             >
               {/* TITLE */}
@@ -114,8 +116,8 @@ export default function AuthLayout({
                     flex
                     items-center
                     justify-center
-                    gap-2
-                    mb-2
+                    gap-3
+                    mb-3
                   "
                 >
                   {logo && (
@@ -123,8 +125,8 @@ export default function AuthLayout({
                       src={logo}
                       alt={brandName}
                       className="
-                        w-8
-                        h-8
+                        w-10
+                        h-10
                         object-contain
                         shrink-0
                       "
@@ -133,11 +135,10 @@ export default function AuthLayout({
 
                   <h1
                     className="
-                      text-[21px]
-                      leading-[1.2]
+                      text-2xl
                       font-semibold
-                      tracking-[-0.3px]
-                      text-[#111111]
+                      tracking-tight
+                      text-slate-900
                     "
                   >
                     {title}
@@ -149,11 +150,9 @@ export default function AuthLayout({
               {subtitle && (
                 <p
                   className="
-                    max-w-75
-                    text-[10px]
-                    leading-normal
-                    font-normal
-                    text-[#A3A3A3]
+                    text-sm
+                    leading-relaxed
+                    text-slate-500
                   "
                 >
                   {subtitle}

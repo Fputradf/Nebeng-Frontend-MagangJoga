@@ -353,20 +353,20 @@ export default function UserGovernance() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="w-2 h-2 rounded-full bg-[#10367D] animate-pulse"></span>
-            <span className="text-[9px] font-bold uppercase tracking-widest text-[#10367D]">
+            <span className="text-[12px] font-bold uppercase tracking-widest text-[#10367D]">
               SUPERADMIN GOVERNANCE & CONTROL
             </span>
           </div>
-          <h1 className="text-[18px] sm:text-[20px] font-bold text-neutral-800">
+          <h1 className="text-[21px] sm:text-[23px] font-bold text-neutral-800">
             User Governance (Super-Override)
           </h1>
-          <p className="text-[10px] sm:text-[11px] text-neutral-400 mt-0.5">
+          <p className="text-[13px] sm:text-[14px] text-neutral-400 mt-0.5">
             Kelola akses akun secara sistemik dengan proteksi PII dan pencatatan audit log otomatis.
           </p>
         </div>
 
         <div className="flex items-center gap-2.5 shrink-0">
-          <div className="hidden md:flex px-3.5 py-2 bg-[#74B4D9]/15 border border-[#74B4D9]/30 rounded-full text-[10px] font-bold text-[#10367D] items-center gap-2">
+          <div className="hidden md:flex px-3.5 py-2 bg-[#74B4D9]/15 border border-[#74B4D9]/30 rounded-full text-[13px] font-bold text-[#10367D] items-center gap-2">
             <ShieldCheck size={14} />
             Level Akses: Super-Override (Enkripsi PII)
           </div>
@@ -377,7 +377,7 @@ export default function UserGovernance() {
               setIsRegionDropdownOpen(false);
               setShowAddModal(true);
             }}
-            className="flex items-center gap-2 px-4 py-2 bg-[#10367D] hover:bg-[#0C2C66] text-white rounded-full text-[10px] sm:text-[11px] font-bold transition cursor-pointer shadow-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-[#10367D] hover:bg-[#0C2C66] text-white rounded-full text-[13px] sm:text-[14px] font-bold transition cursor-pointer shadow-sm"
           >
             <UserPlus size={14} />
             <span>Tambah User</span>
@@ -390,9 +390,9 @@ export default function UserGovernance() {
             <UserCheck size={20} />
           </div>
           <div>
-            <p className="text-[8px] font-bold text-neutral-400 uppercase tracking-wider">Akun Aktif</p>
-            <h3 className="text-[18px] font-bold text-neutral-800 mt-0.5">{userStats.active} Pengguna</h3>
-            <span className="text-[10px] font-semibold text-emerald-600">Beroperasi normal</span>
+            <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">Akun Aktif</p>
+            <h3 className="text-[21px] font-bold text-neutral-800 mt-0.5">{userStats.active} Pengguna</h3>
+            <span className="text-[13px] font-semibold text-emerald-600">Beroperasi normal</span>
           </div>
         </div>
 
@@ -401,9 +401,9 @@ export default function UserGovernance() {
             <AlertTriangle size={20} />
           </div>
           <div>
-            <p className="text-[8px] font-bold text-neutral-400 uppercase tracking-wider">Akun Disuspend</p>
-            <h3 className="text-[18px] font-bold text-neutral-800 mt-0.5">{userStats.suspended} Pengguna</h3>
-            <span className="text-[10px] font-semibold text-amber-600">Ditangguhkan sementara</span>
+            <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">Akun Disuspend</p>
+            <h3 className="text-[21px] font-bold text-neutral-800 mt-0.5">{userStats.suspended} Pengguna</h3>
+            <span className="text-[13px] font-semibold text-amber-600">Ditangguhkan sementara</span>
           </div>
         </div>
 
@@ -412,16 +412,16 @@ export default function UserGovernance() {
             <UserX size={20} />
           </div>
           <div>
-            <p className="text-[8px] font-bold text-neutral-400 uppercase tracking-wider">Akun Diblokir</p>
-            <h3 className="text-[18px] font-bold text-neutral-800 mt-0.5">{userStats.blocked} Pengguna</h3>
-            <span className="text-[10px] font-semibold text-rose-600">Akses dicabut sistemik</span>
+            <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">Akun Diblokir</p>
+            <h3 className="text-[21px] font-bold text-neutral-800 mt-0.5">{userStats.blocked} Pengguna</h3>
+            <span className="text-[13px] font-semibold text-rose-600">Akses dicabut sistemik</span>
           </div>
         </div>
       </div>
 
        {/* Banner Notifikasi Toast User-Friendly */}
         {notification.show && (
-          <div className={`p-4 rounded-2xl flex items-center justify-between text-[11px] font-bold shadow-sm transition-all ${
+          <div className={`p-4 rounded-2xl flex items-center justify-between text-[14px] font-bold shadow-sm transition-all ${
             notification.type === 'success' 
               ? 'bg-emerald-50 border border-emerald-200 text-emerald-800' 
               : 'bg-rose-50 border border-rose-200 text-rose-800'
@@ -451,7 +451,7 @@ export default function UserGovernance() {
             placeholder="Cari nama, email, atau ID pengguna..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-neutral-50 border border-neutral-200 rounded-full pl-9 pr-8 py-2 text-[10px] sm:text-[11px] font-medium text-neutral-700 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-[#74B4D9] transition"
+            className="w-full bg-neutral-50 border border-neutral-200 rounded-full pl-9 pr-8 py-2 text-[13px] sm:text-[14px] font-medium text-neutral-700 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-[#74B4D9] transition"
           />
           {searchTerm && (
             <button onClick={() => setSearchTerm('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 cursor-pointer">
@@ -461,14 +461,14 @@ export default function UserGovernance() {
         </div>
 
         <div className="flex items-center gap-2 self-end sm:self-auto">
-          <span className="text-[10px] font-semibold text-neutral-500 flex items-center gap-1">
+          <span className="text-[13px] font-semibold text-neutral-500 flex items-center gap-1">
             <Filter size={12} />
             Status:
           </span>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="bg-neutral-50 border border-neutral-200 rounded-full px-3 py-1.5 text-[10px] font-semibold text-neutral-700 focus:outline-none focus:ring-2 focus:ring-[#74B4D9] cursor-pointer"
+            className="bg-neutral-50 border border-neutral-200 rounded-full px-3 py-1.5 text-[13px] font-semibold text-neutral-700 focus:outline-none focus:ring-2 focus:ring-[#74B4D9] cursor-pointer"
           >
             <option value="All">Semua Status</option>
             <option value="Active">Active (Aktif)</option>
@@ -482,7 +482,7 @@ export default function UserGovernance() {
         <div className="hidden sm:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-gray-50/70 text-neutral-400 text-[9px] uppercase tracking-wider font-semibold">
+              <tr className="bg-gray-50/70 text-neutral-400 text-[12px] uppercase tracking-wider font-bold">
                 <th className="py-3 px-5">ID & Nama Pengguna</th>
                 <th className="py-3 px-5">Peran (Role)</th>
                 <th className="py-3 px-5">Kontak PII (Protected)</th>
@@ -490,7 +490,7 @@ export default function UserGovernance() {
                 <th className="py-3 px-5 text-right">Aksi Super-Override</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 text-[9px]">
+            <tbody className="divide-y divide-gray-100 text-[12px]">
               {isLoadingUsers ? (
                 <SkeletonTableRows rows={4} columns={5} />
               ) : filteredUsers.length > 0 ? (
@@ -499,8 +499,8 @@ export default function UserGovernance() {
                   return (
                     <tr key={user.id} className="hover:bg-[#74B4D9]/10 transition-colors">
                       <td className="py-3.5 px-5">
-                        <div className="font-bold text-neutral-800 text-[10px]">{user.name}</div>
-                        <div className="text-[8px] font-bold text-[#10367D] font-mono">ID: {String(user.id)}</div>
+                        <div className="font-bold text-neutral-800 text-[13px]">{user.name}</div>
+                        <div className="text-[11px] font-bold text-[#10367D] font-mono">ID: {String(user.id)}</div>
                       </td>
                       <td className="py-3.5 px-5">
                         <RoleBadge role={user.role} />
@@ -512,7 +512,7 @@ export default function UserGovernance() {
                               <Mail size={11} className="text-neutral-400" />
                               {isUnmasked ? user.email : maskEmail(user.email)}
                             </div>
-                            <div className="text-[8px] text-neutral-400 flex items-center gap-1.5 mt-0.5">
+                            <div className="text-[11px] text-neutral-400 flex items-center gap-1.5 mt-0.5">
                               <Phone size={11} className="text-neutral-400" />
                               {isUnmasked ? user.phone : maskPhone(user.phone)}
                             </div>
@@ -539,7 +539,7 @@ export default function UserGovernance() {
                                 setSelectedUser(user);
                                 setActionModal('Block');
                               }}
-                              className="px-3 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 text-[9px] font-bold rounded-full transition cursor-pointer flex items-center gap-1"
+                              className="px-3 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 text-[12px] font-bold rounded-full transition cursor-pointer flex items-center gap-1"
                             >
                               <Lock size={12} />
                               Blokir
@@ -551,7 +551,7 @@ export default function UserGovernance() {
                                 setSelectedUser(user);
                                 setActionModal('Suspend');
                               }}
-                              className="px-3 py-1 bg-amber-50 hover:bg-amber-100 text-amber-600 text-[9px] font-bold rounded-full transition cursor-pointer flex items-center gap-1"
+                              className="px-3 py-1 bg-amber-50 hover:bg-amber-100 text-amber-600 text-[12px] font-bold rounded-full transition cursor-pointer flex items-center gap-1"
                             >
                               <ShieldAlert size={12} />
                               Suspend
@@ -563,7 +563,7 @@ export default function UserGovernance() {
                                 setSelectedUser(user);
                                 setActionModal('Unblock');
                               }}
-                              className="px-3 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 text-[9px] font-bold rounded-full transition cursor-pointer flex items-center gap-1"
+                              className="px-3 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 text-[12px] font-bold rounded-full transition cursor-pointer flex items-center gap-1"
                             >
                               <Unlock size={12} />
                               Pulihkan
@@ -590,7 +590,7 @@ export default function UserGovernance() {
         </div>
 
         {paginationMeta && paginationMeta.totalPages > 1 && (
-          <div className="flex items-center justify-between p-4 bg-neutral-50/50 border-t border-neutral-200 text-[10px]">
+          <div className="flex items-center justify-between p-4 bg-neutral-50/50 border-t border-neutral-200 text-[13px]">
             <span className="text-neutral-500">
               Halaman <strong>{paginationMeta.currentPage}</strong> dari <strong>{paginationMeta.totalPages}</strong> (Total: {paginationMeta.totalData} Pengguna)
             </span>
@@ -618,20 +618,20 @@ export default function UserGovernance() {
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-neutral-200 space-y-3">
           <div className="flex items-center gap-2">
             <History size={16} className="text-[#10367D]" />
-            <h3 className="text-[12px] font-bold text-neutral-800">Catatan Audit Log Override Sistem Sesi Ini</h3>
+            <h3 className="text-[15px] font-bold text-neutral-800">Catatan Audit Log Override Sistem Sesi Ini</h3>
           </div>
           <div className="space-y-2">
             {auditLogs.map((log) => (
-              <div key={log.id} className="p-3 bg-neutral-50 border border-neutral-100 rounded-xl text-[9px] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div key={log.id} className="p-3 bg-neutral-50 border border-neutral-100 rounded-xl text-[12px] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-neutral-800 font-mono">{log.id}</span>
-                    <span className="text-[8px] font-bold px-2 py-0.5 bg-[#10367D]/10 text-[#10367D] rounded-full">{log.action}</span>
+                    <span className="text-[11px] font-bold px-2 py-0.5 bg-[#10367D]/10 text-[#10367D] rounded-full">{log.action}</span>
                     <span className="text-neutral-500">Target: <strong>{log.targetName}</strong> ({log.targetId})</span>
                   </div>
                   <p className="text-neutral-500 mt-0.5">Alasan: <em>"{log.reason}"</em></p>
                 </div>
-                <div className="text-right text-[8px] text-neutral-400 shrink-0">
+                <div className="text-right text-[11px] text-neutral-400 shrink-0">
                   {log.timestamp} • Admin: {log.admin}
                 </div>
               </div>
@@ -651,7 +651,7 @@ export default function UserGovernance() {
         subtitle="Formulir Pendaftaran Manual Admin"
         maxWidth="max-w-md"
       >
-        <form onSubmit={handleAddUser} className="space-y-4 text-[10px]">
+        <form onSubmit={handleAddUser} className="space-y-4 text-[13px]">
           <div>
             <label className="font-bold text-neutral-600 block mb-1.5">Nama Lengkap</label>
             <div className="relative">
@@ -763,14 +763,14 @@ export default function UserGovernance() {
                       >
                         <div>
                           <span className="font-semibold">{reg.name}</span>
-                          <span className="text-[8px] text-neutral-400 ml-1.5 font-mono">({reg.code})</span>
+                          <span className="text-[11px] text-neutral-400 ml-1.5 font-mono">({reg.code})</span>
                         </div>
                         {isSelected && <Check size={13} className="text-[#10367D]" />}
                       </div>
                     );
                   })
                 ) : (
-                  <div className="px-3 py-2.5 text-[9px] text-neutral-400 text-center font-medium">
+                  <div className="px-3 py-2.5 text-[12px] text-neutral-400 text-center font-medium">
                     Wilayah tidak ditemukan
                   </div>
                 )}
@@ -836,13 +836,13 @@ export default function UserGovernance() {
         subtitle="Otentikasi Tindakan Super-Override & Log Audit"
         maxWidth="max-w-md"
       >
-        <div className="space-y-4 text-neutral-800 text-[10px]">
+        <div className="space-y-4 text-neutral-800 text-[13px]">
           <p className="text-neutral-500">
             Anda akan melakukan tindakan <strong className="text-neutral-800">{actionModal}</strong> secara sistemik pada akun <strong className="text-neutral-800">{selectedUser?.name}</strong> (ID: {selectedUser ? String(selectedUser.id) : ''}).
           </p>
 
           <div className="space-y-1">
-            <label className="text-[9px] font-bold text-neutral-500 uppercase tracking-wider">
+            <label className="text-[12px] font-bold text-neutral-500 uppercase tracking-wider">
               Alasan Override Sistem <span className="text-rose-600">*Wajib Diisi untuk Audit Log</span>
             </label>
             <textarea
@@ -851,7 +851,7 @@ export default function UserGovernance() {
               placeholder="Sebutkan alasan administratif atau kendala keamanan..."
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              className="w-full bg-neutral-50 border border-neutral-200 rounded-2xl p-3 text-[10px] font-medium text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#74B4D9] transition resize-none"
+              className="w-full bg-neutral-50 border border-neutral-200 rounded-2xl p-3 text-[13px] font-medium text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#74B4D9] transition resize-none"
             />
           </div>
 
@@ -862,14 +862,14 @@ export default function UserGovernance() {
                 setSelectedUser(null);
                 setReason('');
               }}
-              className="px-4 py-2 rounded-full text-[10px] font-bold text-neutral-500 hover:bg-neutral-100 transition cursor-pointer"
+              className="px-4 py-2 rounded-full text-[13px] font-bold text-neutral-500 hover:bg-neutral-100 transition cursor-pointer"
             >
               Batal
             </button>
             <button
               onClick={handleExecuteAction}
               disabled={!reason.trim()}
-              className={`px-4 py-2 rounded-full text-[10px] font-bold text-white transition cursor-pointer shadow-sm ${
+              className={`px-4 py-2 rounded-full text-[13px] font-bold text-white transition cursor-pointer shadow-sm ${
                 !reason.trim()
                   ? 'bg-neutral-300 cursor-not-allowed'
                   : actionModal === 'Block'

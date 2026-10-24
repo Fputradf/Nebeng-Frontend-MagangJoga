@@ -7,4 +7,10 @@ export default defineConfig({
   plugins: [react(),
     tailwindcss(),
   ],
+  server: {
+    fs: {
+      // Allow serving files from public directory
+      strict: false
+    }
+  }
 })

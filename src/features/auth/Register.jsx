@@ -182,7 +182,7 @@ export default function Register({ onSwitchToLogin }) {
         />
 
         <div className="w-full">
-          <label htmlFor="register-role" className="block mb-1.5 text-[11px] leading-[1.4] font-normal text-[#999999]">
+          <label htmlFor="register-role" className="block mb-2 text-sm font-medium text-slate-600">
             Daftar sebagai
           </label>
           <div className="relative">
@@ -190,21 +190,21 @@ export default function Register({ onSwitchToLogin }) {
               id="register-role"
               value={form.role}
               onChange={handleChange('role')}
-              className="w-full h-10 sm:h-10.25 appearance-none pl-4 pr-11 bg-white border border-[#E3E3E3] rounded-full text-[10px] sm:text-[10.5px] leading-none font-normal text-[#333333] focus:outline-none focus:border-[#74B4D9] focus:ring-2 focus:ring-[#74B4D9]/15 transition-all duration-200 cursor-pointer"
+              className="w-full h-10 appearance-none pl-4 pr-10 bg-white border border-slate-300 rounded-lg text-sm font-medium text-slate-900 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all duration-200 cursor-pointer"
             >
               <option value="customer">Customer</option>
               <option value="mitra">Mitra (Driver)</option>
             </select>
-            <ChevronDown className="pointer-events-none absolute inset-y-0 right-4 my-auto w-3.75 h-3.75 text-[#999999]" />
+            <ChevronDown className="pointer-events-none absolute inset-y-0 right-3 my-auto w-4 h-4 text-slate-400" />
           </div>
         </div>
 
         {/* Custom Searchable Select - Wilayah Operasional (Region) */}
         <div className="w-full relative" ref={regionDropdownRef}>
-          <label className="block mb-1.5 text-[11px] leading-[1.4] font-normal text-[#999999]">
-            Wilayah Operasional (Region) <span className="text-[#E57373] font-bold">*Wajib Diisi</span>
+          <label className="block mb-2 text-sm font-medium text-slate-600">
+            Wilayah Operasional (Region) <span className="text-rose-600 font-semibold">*Wajib Diisi</span>
           </label>
-          
+
           <div className="relative">
             <div
               onClick={() => {
@@ -212,15 +212,15 @@ export default function Register({ onSwitchToLogin }) {
                   setIsRegionDropdownOpen((prev) => !prev);
                 }
               }}
-              className={`w-full h-10 sm:h-10.25 px-4 bg-white border ${
-                errors.regionId ? 'border-[#E57373]' : 'border-[#E3E3E3]'
-              } rounded-full flex items-center justify-between cursor-pointer focus-within:border-[#74B4D9] transition-all duration-200 ${
-                isLoadingRegions || regions.length === 0 ? 'bg-[#EBEBEB] cursor-not-allowed' : ''
+              className={`w-full h-10 px-4 bg-white border ${
+                errors.regionId ? 'border-rose-500' : 'border-slate-300'
+              } rounded-lg flex items-center justify-between cursor-pointer focus-within:border-brand-500 transition-all duration-200 ${
+                isLoadingRegions || regions.length === 0 ? 'bg-slate-100 cursor-not-allowed' : ''
               }`}
             >
               <div className="flex items-center gap-2 overflow-hidden pr-2">
-                <MapPin className="w-3.75 h-3.75 text-[#999999] shrink-0" />
-                <span className={`text-[10px] sm:text-[10.5px] truncate ${selectedRegionName ? 'text-[#333333] font-normal' : 'text-[#999999]'}`}>
+                <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
+                <span className={`text-sm truncate ${selectedRegionName ? 'text-slate-900 font-medium' : 'text-slate-400'}`}>
                   {isLoadingRegions
                     ? 'Memuat wilayah...'
                     : regions.length === 0
@@ -228,27 +228,27 @@ export default function Register({ onSwitchToLogin }) {
                     : selectedRegionName || 'Cari atau pilih wilayah operasional...'}
                 </span>
               </div>
-              <ChevronDown className={`w-3.75 h-3.75 text-[#999999] shrink-0 transition-transform duration-200 ${isRegionDropdownOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 ${isRegionDropdownOpen ? 'rotate-180' : ''}`} />
             </div>
 
             {/* Dropdown Menu List dengan Fitur Filter Search */}
             {isRegionDropdownOpen && (
-              <div className="absolute z-50 left-0 right-0 mt-1.5 bg-white border border-[#E3E3E3] rounded-2xl shadow-lg overflow-hidden transition-all duration-200">
-                <div className="p-2 border-b border-[#F0F0F0] flex items-center gap-2 bg-[#FAFAFA]">
-                  <Search className="w-3.5 h-3.5 text-[#999999] ml-2 shrink-0" />
+              <div className="absolute z-50 left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-xl shadow-elevated overflow-hidden transition-all duration-200">
+                <div className="p-2.5 border-b border-slate-100 flex items-center gap-2 bg-slate-50">
+                  <Search className="w-4 h-4 text-slate-400 ml-1 shrink-0" />
                   <input
                     type="text"
                     placeholder="Cari nama atau kode wilayah..."
                     value={regionSearch}
                     onChange={(e) => setRegionSearch(e.target.value)}
-                    className="w-full py-1 pr-2 bg-transparent text-[10px] sm:text-[10.5px] text-[#333333] focus:outline-none placeholder:text-[#999999]"
+                    className="w-full py-1 pr-2 bg-transparent text-sm text-slate-900 focus:outline-none placeholder:text-slate-400"
                     autoFocus
                   />
                 </div>
 
-                <div className="max-h-48 overflow-y-auto divide-y divide-[#F5F5F5]">
+                <div className="max-h-48 overflow-y-auto divide-y divide-slate-100">
                   {filteredRegions.length === 0 ? (
-                    <div className="p-3 text-center text-[10px] text-[#999999]">
+                    <div className="p-3 text-center text-sm text-slate-500">
                       Wilayah tidak ditemukan
                     </div>
                   ) : (
@@ -256,12 +256,12 @@ export default function Register({ onSwitchToLogin }) {
                       <div
                         key={reg.id}
                         onClick={() => handleSelectRegion(reg)}
-                        className={`px-4 py-2.5 text-[10px] sm:text-[10.5px] cursor-pointer hover:bg-[#F0F7FF] transition-colors flex items-center justify-between ${
-                          String(form.regionId) === String(reg.id) ? 'bg-[#EBF4FA] font-medium text-[#10367D]' : 'text-[#333333]'
+                        className={`px-4 py-2.5 text-sm cursor-pointer hover:bg-slate-50 transition-colors flex items-center justify-between ${
+                          String(form.regionId) === String(reg.id) ? 'bg-brand-50 font-medium text-brand-700' : 'text-slate-700'
                         }`}
                       >
                         <span>{reg.name}</span>
-                        <span className="text-[9px] text-[#999999] font-mono">({reg.code})</span>
+                        <span className="text-xs text-slate-400 font-mono">({reg.code})</span>
                       </div>
                     ))
                   )}
@@ -271,11 +271,11 @@ export default function Register({ onSwitchToLogin }) {
           </div>
 
           {errors.regionId && (
-            <p className="mt-1.5 ml-1 text-[9px] leading-[1.4] font-medium text-[#E57373]">{errors.regionId}</p>
+            <p className="mt-1.5 ml-1 text-xs font-medium text-rose-600">{errors.regionId}</p>
           )}
 
           {!isLoadingRegions && regions.length === 0 && (
-            <p className="mt-2 px-3 py-2 rounded-[14px] bg-[#FFF4E5] border border-[#F5D9A8] text-[9px] leading-[1.4] font-normal text-[#B8791E]">
+            <p className="mt-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-xs leading-relaxed text-amber-700">
               Belum ada wilayah operasional yang aktif saat ini. Silakan hubungi admin untuk mengaktifkan region, lalu muat ulang halaman ini.
             </p>
           )}
@@ -308,25 +308,25 @@ export default function Register({ onSwitchToLogin }) {
         <button
           type="submit"
           disabled={isSubmitting || isLoadingRegions || regions.length === 0}
-          className="w-full h-10.25 px-4 bg-[#10367D] hover:bg-[#0C2C66] disabled:opacity-60 disabled:cursor-not-allowed text-white text-[12px] leading-none font-medium rounded-full flex items-center justify-center gap-2 transition-colors duration-200 mt-2 cursor-pointer"
+          className="w-full py-3 px-4 bg-brand-900 hover:bg-brand-800 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-brand-900 text-white text-sm font-medium rounded-xl flex items-center justify-center gap-2 transition-all duration-200 mt-2 cursor-pointer"
         >
           {isSubmitting ? (
             <>
-              <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               MEMPROSES...
             </>
           ) : (
             <>
               Daftar sekarang
-              <ArrowRight className="w-3.5 h-3.5" />
+              <ArrowRight className="w-4 h-4" />
             </>
           )}
         </button>
       </form>
 
-      <p className="text-center text-[9px] leading-[1.4] font-normal text-[#999999] mt-5">
+      <p className="text-center text-sm text-slate-500 mt-6">
         Sudah punya akun?{' '}
-        <button onClick={onSwitchToLogin} className="font-medium text-[#10367D] hover:text-[#0C2C66] hover:underline cursor-pointer transition-colors duration-150">
+        <button onClick={onSwitchToLogin} className="font-medium text-brand-600 hover:text-brand-700 cursor-pointer transition-colors">
           Masuk di sini
         </button>
       </p>

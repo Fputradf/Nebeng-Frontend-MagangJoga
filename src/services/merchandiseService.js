@@ -49,6 +49,17 @@ export const merchandiseService = {
     const res = await apiClient.patch(`/merchandises/admin/redemptions/${id}/status`, payload);
     return res.data;
   },
+
+  async uploadMerchandiseImage(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await apiClient.post('/uploads/banners', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return res.data; // { filePath, fileType }
+  },
 };
 
 export default merchandiseService;

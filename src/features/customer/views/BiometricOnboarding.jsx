@@ -313,7 +313,7 @@ export default function BiometricOnboarding() {
     return (
       <div className="max-w-md mx-auto p-12 mt-16 bg-white rounded-2xl shadow-sm border border-neutral-100 text-center space-y-3 font-['Inter']">
         <Loader2 className="w-8 h-8 animate-spin mx-auto" style={{ color: PRIMARY_COLOR }} />
-        <p className="text-[12px] font-medium text-neutral-500">
+        <p className="text-[15px] font-medium text-neutral-500">
           Memeriksa status verifikasi biometrik...
         </p>
       </div>
@@ -328,16 +328,16 @@ export default function BiometricOnboarding() {
         </div>
 
         <div className="space-y-1">
-          <h2 className="text-[16px] font-bold text-neutral-800">
+          <h2 className="text-[19px] font-bold text-neutral-800">
             Verifikasi Sedang Ditinjau
           </h2>
-          <p className="text-[11px] text-neutral-500 max-w-md mx-auto">
+          <p className="text-[14px] text-neutral-500 max-w-md mx-auto">
             Dokumen KTP dan pemindaian Face ID Anda telah berhasil kami terima.
             Tim Admin kami sedang meninjau kelayakan data Anda.
           </p>
         </div>
 
-        <div className="p-3 bg-amber-50/60 border border-amber-200/60 rounded-xl text-amber-800 text-[10px] text-left space-y-1">
+        <div className="p-3 bg-amber-50/60 border border-amber-200/60 rounded-xl text-amber-800 text-[13px] text-left space-y-1">
           <span className="font-bold block">Status Dokumen:</span>
           <p className="text-amber-700">
             Dalam antrean verifikasi manual oleh petugas keamanan.
@@ -347,7 +347,7 @@ export default function BiometricOnboarding() {
         <button
           onClick={handleManualCheckStatus}
           disabled={isCheckingStatus}
-          className="py-2.5 px-5 text-white rounded-xl text-[10px] font-bold cursor-pointer disabled:opacity-50 flex items-center gap-1.5 mx-auto transition"
+          className="py-2.5 px-5 text-white rounded-xl text-[13px] font-bold cursor-pointer disabled:opacity-50 flex items-center gap-1.5 mx-auto transition"
           style={{ backgroundColor: PRIMARY_COLOR }}
           onMouseEnter={(e) => {
             if (!isCheckingStatus) e.currentTarget.style.backgroundColor = PRIMARY_HOVER;
@@ -373,7 +373,7 @@ export default function BiometricOnboarding() {
               style={{ backgroundColor: PRIMARY_COLOR }}
             />
             <span
-              className="text-[9px] font-bold uppercase tracking-widest flex items-center gap-1"
+              className="text-[12px] font-bold uppercase tracking-widest flex items-center gap-1"
               style={{ color: PRIMARY_COLOR }}
             >
               <ShieldCheck className="w-3 h-3" />
@@ -381,10 +381,10 @@ export default function BiometricOnboarding() {
             </span>
           </div>
 
-          <h1 className="text-[18px] sm:text-[20px] font-bold text-neutral-800">
+          <h1 className="text-[21px] sm:text-[23px] font-bold text-neutral-800">
             Biometric Onboarding & Face ID
           </h1>
-          <p className="text-[10px] sm:text-[11px] text-neutral-400 mt-0.5">
+          <p className="text-[13px] sm:text-[14px] text-neutral-400 mt-0.5">
             Lakukan verifikasi identitas resmi untuk mengaktifkan seluruh fitur
             transaksi aman dan escrow di aplikasi.
           </p>
@@ -392,14 +392,14 @@ export default function BiometricOnboarding() {
       </div>
 
       {rejectionReason && (
-        <div className="max-w-xl mx-auto bg-red-50 border border-red-200 rounded-2xl p-4 flex items-start gap-3 text-red-800 text-[11px]">
+        <div className="max-w-xl mx-auto bg-red-50 border border-red-200 rounded-2xl p-4 flex items-start gap-3 text-red-800 text-[14px]">
           <AlertTriangle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
           <div className="space-y-1">
             <p className="font-bold text-red-700">Verifikasi Sebelumnya Ditolak</p>
             <p className="text-red-600">
               <b>Alasan:</b> {rejectionReason}
             </p>
-            <p className="text-[10px] text-red-500 italic mt-1">
+            <p className="text-[13px] text-red-500 italic mt-1">
               Mohon periksa kembali kelengkapan foto KTP dan pencahayaan foto Face ID Anda sebelum mengirim ulang data.
             </p>
           </div>
@@ -415,8 +415,8 @@ export default function BiometricOnboarding() {
               : { borderColor: '#e5e7eb', backgroundColor: '#ffffff', color: '#9ca3af' }
           }
         >
-          <span className="text-[8px] font-bold uppercase tracking-wider block">Langkah 1</span>
-          <p className="text-[10px] font-bold">Data Diri & NIK</p>
+          <span className="text-[11px] font-bold uppercase tracking-wider block">Langkah 1</span>
+          <p className="text-[13px] font-bold">Data Diri & NIK</p>
         </div>
 
         <div
@@ -427,8 +427,8 @@ export default function BiometricOnboarding() {
               : { borderColor: '#e5e7eb', backgroundColor: '#ffffff', color: '#9ca3af' }
           }
         >
-          <span className="text-[8px] font-bold uppercase tracking-wider block">Langkah 2</span>
-          <p className="text-[10px] font-bold">Upload Foto KTP</p>
+          <span className="text-[11px] font-bold uppercase tracking-wider block">Langkah 2</span>
+          <p className="text-[13px] font-bold">Upload Foto KTP</p>
         </div>
 
         <div
@@ -439,20 +439,20 @@ export default function BiometricOnboarding() {
               : { borderColor: '#e5e7eb', backgroundColor: '#ffffff', color: '#9ca3af' }
           }
         >
-          <span className="text-[8px] font-bold uppercase tracking-wider block">Langkah 3</span>
-          <p className="text-[10px] font-bold">Pemindaian Face ID</p>
+          <span className="text-[11px] font-bold uppercase tracking-wider block">Langkah 3</span>
+          <p className="text-[13px] font-bold">Pemindaian Face ID</p>
         </div>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 max-w-xl mx-auto space-y-4">
         {step === 1 && (
-          <div className="space-y-3.5 text-[10px]">
-            <h2 className="text-[14px] font-bold text-neutral-800">
+          <div className="space-y-3.5 text-[13px]">
+            <h2 className="text-[17px] font-bold text-neutral-800">
               1. Masukkan Informasi Identitas
             </h2>
 
             <div>
-              <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+              <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                 Nama Lengkap (Sesuai KTP)
               </label>
               <input
@@ -467,7 +467,7 @@ export default function BiometricOnboarding() {
             </div>
 
             <div>
-              <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+              <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                 NIK (16 Digit)
               </label>
               <input
@@ -485,7 +485,7 @@ export default function BiometricOnboarding() {
             </div>
 
             <div>
-              <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+              <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                 Alamat Sesuai KTP
               </label>
               <input
@@ -500,7 +500,7 @@ export default function BiometricOnboarding() {
             </div>
 
             <div>
-              <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+              <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                 Nomor WhatsApp/HP
               </label>
               <input
@@ -518,7 +518,7 @@ export default function BiometricOnboarding() {
             <button
               onClick={() => setStep(2)}
               disabled={!formData.fullName.trim() || formData.nik.length !== 16 || !isPhoneValid}
-              className="w-full py-3 text-white rounded-xl text-[10px] font-bold cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5 transition"
+              className="w-full py-3 text-white rounded-xl text-[13px] font-bold cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5 transition"
               style={{ backgroundColor: PRIMARY_COLOR }}
               onMouseEnter={(e) => {
                 if (!e.currentTarget.disabled) e.currentTarget.style.backgroundColor = PRIMARY_HOVER;
@@ -534,8 +534,8 @@ export default function BiometricOnboarding() {
         )}
 
         {step === 2 && (
-          <div className="space-y-3.5 text-[10px]">
-            <h2 className="text-[14px] font-bold text-neutral-800">
+          <div className="space-y-3.5 text-[13px]">
+            <h2 className="text-[17px] font-bold text-neutral-800">
               2. Unggah Foto KTP Asli
             </h2>
 
@@ -550,17 +550,17 @@ export default function BiometricOnboarding() {
                     alt="Preview KTP"
                     className="w-48 h-28 object-cover rounded-lg shadow-sm border border-neutral-200 mx-auto"
                   />
-                  <p className="text-[8px] font-bold" style={{ color: PRIMARY_COLOR }}>
+                  <p className="text-[11px] font-bold" style={{ color: PRIMARY_COLOR }}>
                     KTP berhasil diunggah (Klik untuk mengganti)
                   </p>
                 </div>
               ) : (
                 <div className="space-y-1">
                   <Upload className="w-6 h-6 mx-auto mb-1" style={{ color: PRIMARY_COLOR }} />
-                  <p className="text-[10px] font-bold text-neutral-700">
+                  <p className="text-[13px] font-bold text-neutral-700">
                     Klik untuk upload foto KTP
                   </p>
-                  <p className="text-[8px] text-neutral-400">Format: JPG, PNG (Maks. 5MB)</p>
+                  <p className="text-[11px] text-neutral-400">Format: JPG, PNG (Maks. 5MB)</p>
                 </div>
               )}
 
@@ -602,8 +602,8 @@ export default function BiometricOnboarding() {
         )}
 
         {step === 3 && (
-          <div className="space-y-3.5 text-center text-[10px]">
-            <h2 className="text-[14px] font-bold text-neutral-800">
+          <div className="space-y-3.5 text-center text-[13px]">
+            <h2 className="text-[17px] font-bold text-neutral-800">
               3. Pemindaian Face ID & Liveness
             </h2>
 
@@ -615,7 +615,7 @@ export default function BiometricOnboarding() {
                 >
                   <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
                   {!isCameraActive && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/60 text-white text-[9px] p-2">
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/60 text-white text-[12px] p-2">
                       Kamera belum aktif
                     </div>
                   )}

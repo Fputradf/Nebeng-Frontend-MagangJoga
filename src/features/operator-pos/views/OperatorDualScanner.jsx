@@ -206,7 +206,7 @@ export default function OperatorDualScanner() {
             />
 
             <span
-              className="text-[9px] font-bold uppercase tracking-widest flex items-center gap-1 flex-wrap min-w-0"
+              className="text-[12px] font-bold uppercase tracking-widest flex items-center gap-1 flex-wrap min-w-0"
               style={{ color: PRIMARY_COLOR }}
             >
               <QrCode className="w-3 h-3" />
@@ -214,11 +214,11 @@ export default function OperatorDualScanner() {
             </span>
           </div>
 
-          <h1 className="text-[18px] sm:text-[20px] font-bold text-neutral-800 break-words">
+          <h1 className="text-[21px] sm:text-[23px] font-bold text-neutral-800 break-words">
             Dual QR Scanner
           </h1>
 
-          <p className="text-[10px] sm:text-[11px] text-neutral-400 mt-0.5">
+          <p className="text-[13px] sm:text-[14px] text-neutral-400 mt-0.5">
             Validasi check-in & pelepasan escrow.
           </p>
         </div>
@@ -227,7 +227,7 @@ export default function OperatorDualScanner() {
           <button
             type="button"
             onClick={() => setScanMode('origin')}
-            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg text-[13px] font-bold transition cursor-pointer ${
               scanMode === 'origin'
                 ? 'text-white shadow-sm'
                 : 'text-neutral-500 hover:text-neutral-800'
@@ -244,7 +244,7 @@ export default function OperatorDualScanner() {
           <button
             type="button"
             onClick={() => setScanMode('destination')}
-            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg text-[13px] font-bold transition cursor-pointer ${
               scanMode === 'destination'
                 ? 'text-white shadow-sm'
                 : 'text-neutral-500 hover:text-neutral-800'
@@ -263,7 +263,7 @@ export default function OperatorDualScanner() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <div className="lg:col-span-1 bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-[14px] font-bold text-neutral-800">
+            <h2 className="text-[17px] font-bold text-neutral-800">
               {scanMode === 'origin'
                 ? 'Check-in Pos Asal (Scan 1)'
                 : 'Check-in Pos Tujuan (Scan 2)'}
@@ -278,18 +278,18 @@ export default function OperatorDualScanner() {
 
           <form
             onSubmit={handleProcessScan}
-            className="space-y-3 text-[10px]"
+            className="space-y-3 text-[13px]"
           >
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider">
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider">
                   QR TRIP MITRA
                 </label>
 
                 <button
                   type="button"
                   onClick={() => startCamera('trip')}
-                  className="flex items-center gap-1 text-[8px] font-bold hover:underline cursor-pointer"
+                  className="flex items-center gap-1 text-[11px] font-bold hover:underline cursor-pointer"
                   style={{ color: PRIMARY_COLOR }}
                 >
                   <ScanLine className="w-3 h-3" />
@@ -303,7 +303,7 @@ export default function OperatorDualScanner() {
                 placeholder="cth: TRIP-A2D4CS13"
                 value={tripQr}
                 onChange={(e) => setTripQr(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 focus:outline-none font-mono text-[10px] font-medium uppercase"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 focus:outline-none font-mono text-[13px] font-medium uppercase"
                 onFocus={(e) => {
                   e.currentTarget.style.borderColor = PRIMARY_COLOR;
                 }}
@@ -315,14 +315,14 @@ export default function OperatorDualScanner() {
 
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider">
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider">
                   QR TIKET/PAKET
                 </label>
 
                 <button
                   type="button"
                   onClick={() => startCamera('ticket')}
-                  className="flex items-center gap-1 text-[8px] font-bold hover:underline cursor-pointer"
+                  className="flex items-center gap-1 text-[11px] font-bold hover:underline cursor-pointer"
                   style={{ color: PRIMARY_COLOR }}
                 >
                   <ScanLine className="w-3 h-3" />
@@ -336,7 +336,7 @@ export default function OperatorDualScanner() {
                 placeholder="cth: TKT-SDJF12H"
                 value={ticketQr}
                 onChange={(e) => setTicketQr(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 focus:outline-none font-mono text-[10px] font-medium uppercase"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 focus:outline-none font-mono text-[13px] font-medium uppercase"
                 onFocus={(e) => {
                   e.currentTarget.style.borderColor = PRIMARY_COLOR;
                 }}
@@ -348,7 +348,7 @@ export default function OperatorDualScanner() {
 
             <button
               type="submit"
-              className="w-full py-3 text-white text-[10px] font-bold rounded-xl transition shadow-sm cursor-pointer flex items-center justify-center gap-1.5 mt-1"
+              className="w-full py-3 text-white text-[13px] font-bold rounded-xl transition shadow-sm cursor-pointer flex items-center justify-center gap-1.5 mt-1"
               style={{ backgroundColor: PRIMARY_COLOR }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = PRIMARY_HOVER;
@@ -373,14 +373,14 @@ export default function OperatorDualScanner() {
         </div>
 
         <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 space-y-4">
-          <h2 className="text-[14px] font-bold text-neutral-800">
+          <h2 className="text-[17px] font-bold text-neutral-800">
             Riwayat Log Dual Scan Pos Sesi Ini
           </h2>
 
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-neutral-100 text-neutral-400 text-[9px] uppercase tracking-wider font-semibold">
+                <tr className="border-b border-neutral-100 text-neutral-400 text-[12px] uppercase tracking-wider font-bold">
                   <th className="py-3 px-2">ID</th>
                   <th className="py-3 px-2">TIPE</th>
                   <th className="py-3 px-2">TRIP</th>
@@ -389,7 +389,7 @@ export default function OperatorDualScanner() {
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-neutral-100 text-[9px]">
+              <tbody className="divide-y divide-neutral-100 text-[12px]">
                 {isLoadingHistory ? (
                   <SkeletonTableRows rows={3} columns={5} />
                 ) : scanHistory.length === 0 ? (
@@ -412,7 +412,7 @@ export default function OperatorDualScanner() {
                         key={log.id}
                         className="hover:bg-neutral-50/60 transition"
                       >
-                        <td className="py-3.5 px-4 font-bold text-neutral-800 font-mono text-[10px]">
+                        <td className="py-3.5 px-4 font-bold text-neutral-800 font-mono text-[13px]">
                           {log.id}
                         </td>
 
@@ -453,7 +453,7 @@ export default function OperatorDualScanner() {
         <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-sm w-full p-4 space-y-4 text-center shadow-2xl">
             <div className="flex items-center justify-between">
-              <h3 className="text-[12px] font-bold text-neutral-800">
+              <h3 className="text-[15px] font-bold text-neutral-800">
                 Pindai{' '}
                 {activeTargetField === 'trip'
                   ? 'QR Trip Mitra'
@@ -479,7 +479,7 @@ export default function OperatorDualScanner() {
                 className="absolute inset-0 border-2 border-dashed m-6 rounded-lg pointer-events-none flex items-center justify-center"
                 style={{ borderColor: `${PRIMARY_COLOR}99` }}
               >
-                <p className="text-[9px] text-white bg-black/60 px-2 py-1 rounded">
+                <p className="text-[12px] text-white bg-black/60 px-2 py-1 rounded">
                   Arahkan QR ke Kotak Ini
                 </p>
               </div>
@@ -489,7 +489,7 @@ export default function OperatorDualScanner() {
               <button
                 type="button"
                 onClick={handleCaptureMockQr}
-                className="w-full py-2.5 text-white text-[10px] font-bold rounded-xl shadow cursor-pointer flex items-center justify-center gap-1.5 transition"
+                className="w-full py-2.5 text-white text-[13px] font-bold rounded-xl shadow cursor-pointer flex items-center justify-center gap-1.5 transition"
                 style={{ backgroundColor: PRIMARY_COLOR }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = PRIMARY_HOVER;
@@ -502,7 +502,7 @@ export default function OperatorDualScanner() {
                 <span>Simulasikan Tangkap QR (Cepat / Alternatif)</span>
               </button>
 
-              <p className="text-[8px] text-neutral-400">
+              <p className="text-[11px] text-neutral-400">
                 Gunakan tombol di atas jika kamera perangkat tidak mendeteksi
                 kode atau diblokir browser.
               </p>

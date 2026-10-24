@@ -65,3 +65,51 @@ export async function registerRequest(payload) {
     data: response.data,
   };
 }
+
+export async function forgotPasswordRequest(email) {
+  if (!email) {
+    throw new Error('Email wajib diisi');
+  }
+
+  const response = await apiClient.post('/auth/forgot-password', {
+    email: email.trim(),
+  });
+
+  return {
+    success: true,
+    data: response.data,
+  };
+}
+
+export async function verifyOtpRequest({ email, otp }) {
+  if (!email || !otp) {
+    throw new Error('Email dan kode OTP wajib diisi');
+  }
+
+  const response = await apiClient.post('/auth/verify-otp', {
+    email: email.trim(),
+    otp: otp.trim(),
+  });
+
+  return {
+    success: true,
+    data: response.data,
+  };
+}
+
+export async function resetPasswordRequest({ email, otp, newPassword }) {
+  if (!email || !newPassword) {
+    throw new Error('Data reset password tidak lengkap');
+  }
+
+  const response = await apiClient.post('/auth/reset-password', {
+    email: email.trim(),
+    otp: otp ? otp.trim() : undefined,
+    newPassword,
+  });
+
+  return {
+    success: true,
+    data: response.data,
+  };
+}

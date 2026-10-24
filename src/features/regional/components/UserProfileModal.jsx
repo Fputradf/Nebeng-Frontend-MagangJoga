@@ -215,7 +215,7 @@ export default function UserProfileModal({
                 items-center
                 justify-center
                 font-bold
-                text-[18px]
+                text-[21px]
                 shrink-0
                 overflow-hidden
               "
@@ -240,7 +240,7 @@ export default function UserProfileModal({
 
               <h3
                 className="
-                  text-[14px]
+                  text-[17px]
                   font-bold
                   truncate
                 "
@@ -267,7 +267,7 @@ export default function UserProfileModal({
 
                 <span
                   className="
-                    text-[9px]
+                    text-[12px]
                     font-semibold
                     text-[#74B4D9]
                     uppercase
@@ -293,7 +293,7 @@ export default function UserProfileModal({
         >
 
           {isLoading ? (
-            <div className="py-6 text-center text-neutral-400 text-[10px]">
+            <div className="py-6 text-center text-neutral-400 text-[13px]">
               Memuat data profil...
             </div>
           ) : (
@@ -332,7 +332,7 @@ export default function UserProfileModal({
 
                     <p
                       className="
-                        text-[8px]
+                        text-[11px]
                         font-bold
                         text-neutral-400
                         uppercase
@@ -344,7 +344,7 @@ export default function UserProfileModal({
 
                     <p
                       className="
-                        text-[10px]
+                        text-[13px]
                         font-semibold
                         text-neutral-800
                         wrap-break-words
@@ -376,7 +376,7 @@ export default function UserProfileModal({
               className="
                 px-4
                 py-2
-                text-[10px]
+                text-[13px]
                 font-bold
                 text-neutral-500
                 hover:bg-neutral-100
@@ -402,7 +402,7 @@ export default function UserProfileModal({
               className="
                 px-4
                 py-2
-                text-[10px]
+                text-[13px]
                 font-bold
                 text-white
                 bg-[#10367D]

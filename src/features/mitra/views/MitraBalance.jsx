@@ -217,7 +217,7 @@ export default function MitraBalance() {
               style={{ backgroundColor: PRIMARY_COLOR }}
             />
             <span
-              className="text-[9px] font-bold uppercase tracking-widest flex items-center gap-1"
+              className="text-[12px] font-bold uppercase tracking-widest flex items-center gap-1"
               style={{ color: PRIMARY_COLOR }}
             >
               <Wallet className="w-3 h-3" />
@@ -225,11 +225,11 @@ export default function MitraBalance() {
             </span>
           </div>
 
-          <h1 className="text-[18px] sm:text-[20px] font-bold text-neutral-800">
+          <h1 className="text-[21px] sm:text-[23px] font-bold text-neutral-800">
             Dompet Mitra & Pendapatan Auto-Escrow
           </h1>
 
-          <p className="text-[10px] sm:text-[11px] text-neutral-400 mt-0.5">
+          <p className="text-[13px] sm:text-[14px] text-neutral-400 mt-0.5">
             Pantau saldo tertahan (escrow) secara otomatis dan lakukan penarikan
             pendapatan ke rekening bank yang terdaftar dengan aman.
           </p>
@@ -254,7 +254,7 @@ export default function MitraBalance() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 lg:col-span-1 space-y-4">
-          <h3 className="text-[14px] font-bold text-neutral-800 flex items-center gap-1.5">
+          <h3 className="text-[17px] font-bold text-neutral-800 flex items-center gap-1.5">
             <ArrowUpRight className="w-4 h-4" style={{ color: PRIMARY_COLOR }} />
             Penarikan Saldo
           </h3>
@@ -274,13 +274,13 @@ export default function MitraBalance() {
                   </div>
 
                   <div>
-                    <p className="text-[10px] font-bold text-neutral-800">
+                    <p className="text-[13px] font-bold text-neutral-800">
                       {bankInfo.bankName ? `${bankInfo.bankName} - ` : ''}
                       {showAccountPii
                         ? bankInfo.accountNumber || 'Belum diatur'
                         : maskAccountNumber(bankInfo.accountNumber || 'Belum diatur')}
                     </p>
-                    <p className="text-[8px] text-neutral-400 font-medium">
+                    <p className="text-[11px] text-neutral-400 font-medium">
                       {bankInfo.accountHolder || 'Atas Nama Belum Diatur'}
                     </p>
                   </div>
@@ -310,10 +310,10 @@ export default function MitraBalance() {
           ) : (
             <form
               onSubmit={handleSaveBank}
-              className="bg-neutral-50 p-3.5 rounded-xl border border-neutral-200 space-y-2.5 text-[10px]"
+              className="bg-neutral-50 p-3.5 rounded-xl border border-neutral-200 space-y-2.5 text-[13px]"
             >
               <div>
-                <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                   Nama Bank
                 </label>
                 <input
@@ -328,7 +328,7 @@ export default function MitraBalance() {
               </div>
 
               <div>
-                <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                   Nomor Rekening
                 </label>
                 <input
@@ -347,7 +347,7 @@ export default function MitraBalance() {
               </div>
 
               <div>
-                <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                   Nama Pemilik Rekening
                 </label>
                 <input
@@ -380,9 +380,9 @@ export default function MitraBalance() {
             </form>
           )}
 
-          <form onSubmit={handleWithdraw} className="space-y-3.5 text-[10px]">
+          <form onSubmit={handleWithdraw} className="space-y-3.5 text-[13px]">
             <div>
-              <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+              <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                 Jumlah Penarikan (Rp)
               </label>
               <input
@@ -391,9 +391,9 @@ export default function MitraBalance() {
                 value={withdrawAmount}
                 onChange={(e) => setWithdrawAmount(e.target.value.replace(/\D/g, ''))}
                 placeholder="Contoh: 100000"
-                className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl text-[10px] font-bold text-neutral-800 focus:outline-none"
+                className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl text-[13px] font-bold text-neutral-800 focus:outline-none"
               />
-              <span className="text-[8px] text-neutral-400 mt-1 block">
+              <span className="text-[11px] text-neutral-400 mt-1 block">
                 Minimal Rp 50.000 | Maksimal Rp {availableBalance.toLocaleString('id-ID')}
               </span>
             </div>
@@ -401,7 +401,7 @@ export default function MitraBalance() {
             <button
               type="submit"
               disabled={isEditingBank || availableBalance < MIN_WITHDRAWAL}
-              className="w-full py-3 disabled:bg-neutral-200 disabled:text-neutral-400 disabled:cursor-not-allowed text-white rounded-xl text-[10px] font-bold transition shadow-sm cursor-pointer"
+              className="w-full py-3 disabled:bg-neutral-200 disabled:text-neutral-400 disabled:cursor-not-allowed text-white rounded-xl text-[13px] font-bold transition shadow-sm cursor-pointer"
               style={{ backgroundColor: isEditingBank ? undefined : PRIMARY_COLOR }}
             >
               Cairkan ke Rekening Bank
@@ -412,12 +412,12 @@ export default function MitraBalance() {
         <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 lg:col-span-2 space-y-5">
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-[14px] font-bold text-neutral-800 flex items-center gap-1.5">
+              <h3 className="text-[17px] font-bold text-neutral-800 flex items-center gap-1.5">
                 <Lock className="w-3.5 h-3.5 text-amber-500" />
                 Rincian Dana Escrow Aktif
               </h3>
 
-              <div className="flex items-center gap-2 text-[10px]">
+              <div className="flex items-center gap-2 text-[13px]">
                 <span className="text-neutral-400">Tampilkan:</span>
                 <select
                   value={escrowLimit}
@@ -437,14 +437,14 @@ export default function MitraBalance() {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-neutral-100 text-[9px] text-neutral-400 uppercase font-semibold">
+                  <tr className="border-b border-neutral-100 text-[12px] text-neutral-400 uppercase font-bold">
                     <th className="py-3 px-3">ID Perjalanan</th>
                     <th className="py-3 px-3">Rute Perjalanan</th>
                     <th className="py-3 px-3">Tarif Trip</th>
                     <th className="py-3 px-3">Status Sistem</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-neutral-100 text-[9px]">
+                <tbody className="divide-y divide-neutral-100 text-[12px]">
                   {isLoading ? (
                     <tr>
                       <td colSpan={4} className="py-6 text-center text-neutral-400">
@@ -482,7 +482,7 @@ export default function MitraBalance() {
             </div>
 
             {totalEscrowItems > 0 && (
-              <div className="flex items-center justify-between pt-3 border-t border-neutral-100 text-[10px] text-neutral-500">
+              <div className="flex items-center justify-between pt-3 border-t border-neutral-100 text-[13px] text-neutral-500">
                 <span>
                   Halaman {escrowPage} dari {totalEscrowPages} ({totalEscrowItems} data)
                 </span>
@@ -510,14 +510,14 @@ export default function MitraBalance() {
           </div>
 
           <div className="pt-4 border-t border-neutral-100">
-            <h3 className="text-[14px] font-bold text-neutral-800 mb-3 flex items-center gap-1.5">
+            <h3 className="text-[17px] font-bold text-neutral-800 mb-3 flex items-center gap-1.5">
               <History className="w-3.5 h-3.5" style={{ color: PRIMARY_COLOR }} />
               Riwayat Mutasi Dompet Mitra
             </h3>
 
             <div className="space-y-2">
               {walletHistory.length === 0 ? (
-                <p className="text-[10px] text-neutral-400 text-center py-4">
+                <p className="text-[13px] text-neutral-400 text-center py-4">
                   Belum terdapat riwayat mutasi transaksi.
                 </p>
               ) : (
@@ -527,10 +527,10 @@ export default function MitraBalance() {
                     className="p-3 bg-neutral-50/70 border border-neutral-100 rounded-xl flex items-center justify-between"
                   >
                     <div>
-                      <p className="text-[10px] font-bold text-neutral-800 flex items-center gap-1.5">
+                      <p className="text-[13px] font-bold text-neutral-800 flex items-center gap-1.5">
                         {item.description || item.type || 'Mutasi Dompet'}
                       </p>
-                      <p className="text-[8px] text-neutral-400">
+                      <p className="text-[11px] text-neutral-400">
                         {new Date(item.createdAt).toLocaleDateString('id-ID', {
                           day: 'numeric',
                           month: 'short',
@@ -542,7 +542,7 @@ export default function MitraBalance() {
 
                     <div className="text-right">
                       <p
-                        className={`text-[10px] font-bold ${
+                        className={`text-[13px] font-bold ${
                           Number(item.amount) < 0 ? 'text-neutral-800' : 'text-emerald-600'
                         }`}
                       >
@@ -550,7 +550,7 @@ export default function MitraBalance() {
                           ? `- Rp ${Math.abs(Number(item.amount)).toLocaleString('id-ID')}`
                           : `+ Rp ${Number(item.amount).toLocaleString('id-ID')}`}
                       </p>
-                      <p className="text-[8px] text-neutral-400 font-medium uppercase">
+                      <p className="text-[11px] text-neutral-400 font-medium uppercase">
                         {item.type}
                       </p>
                     </div>
@@ -569,7 +569,7 @@ export default function MitraBalance() {
         subtitle="Pencairan Komisi Mitra"
         maxWidth="max-w-sm"
       >
-        <div className="text-center space-y-3 text-[10px]">
+        <div className="text-center space-y-3 text-[13px]">
           <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
             <CheckCircle2 className="w-5 h-5" />
           </div>

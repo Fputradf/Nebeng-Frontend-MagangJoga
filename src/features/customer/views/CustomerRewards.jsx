@@ -221,14 +221,14 @@ export default function CustomerRewards() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Gift className="w-4 h-4 text-amber-500 animate-bounce" />
-            <span className="text-[9px] font-bold uppercase tracking-widest text-amber-600">
+            <span className="text-[12px] font-bold uppercase tracking-widest text-amber-600">
               LOYALTY REWARDS & MERCHANDISE
             </span>
           </div>
-          <h1 className="text-[18px] sm:text-[20px] font-bold text-neutral-800">
+          <h1 className="text-[21px] sm:text-[23px] font-bold text-neutral-800">
             Katalog Hadiah & Penukaran Poin
           </h1>
-          <p className="text-[10px] sm:text-[11px] text-neutral-400 mt-0.5">
+          <p className="text-[13px] sm:text-[14px] text-neutral-400 mt-0.5">
             Tukarkan poin hasil perjalanan aman Anda dengan merchandise resmi Nebeng.
           </p>
         </div>
@@ -248,15 +248,15 @@ export default function CustomerRewards() {
             <Sparkles className="w-5 h-5 text-amber-300" />
           </div>
           <div>
-            <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-wider">
+            <span className="text-[12px] font-bold text-neutral-500 uppercase tracking-wider">
               Poin Tersedia
             </span>
             <p
-              className="text-[18px] font-extrabold tracking-tight"
+              className="text-[21px] font-extrabold tracking-tight"
               style={{ color: PRIMARY_COLOR }}
             >
               {userPoints.toLocaleString('id-ID')}{' '}
-              <span className="text-[11px] font-normal text-neutral-500">Poin</span>
+              <span className="text-[14px] font-normal text-neutral-500">Poin</span>
             </p>
           </div>
         </div>
@@ -267,7 +267,7 @@ export default function CustomerRewards() {
         <div className="flex gap-2">
           <button
             onClick={() => setActiveTab('katalog')}
-            className={`px-4 py-2 rounded-xl text-[10px] font-bold transition cursor-pointer flex items-center gap-1.5 ${
+            className={`px-4 py-2 rounded-xl text-[13px] font-bold transition cursor-pointer flex items-center gap-1.5 ${
               activeTab === 'katalog'
                 ? 'text-white shadow-sm'
                 : 'bg-white text-neutral-600 border border-neutral-200 hover:bg-neutral-50'
@@ -283,7 +283,7 @@ export default function CustomerRewards() {
               setIsLoadingRedemptions(true);
               setActiveTab('riwayat');
             }}
-            className={`px-4 py-2 rounded-xl text-[10px] font-bold transition cursor-pointer flex items-center gap-1.5 ${
+            className={`px-4 py-2 rounded-xl text-[13px] font-bold transition cursor-pointer flex items-center gap-1.5 ${
               activeTab === 'riwayat'
                 ? 'text-white shadow-sm'
                 : 'bg-white text-neutral-600 border border-neutral-200 hover:bg-neutral-50'
@@ -303,7 +303,7 @@ export default function CustomerRewards() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Cari merchandise..."
-              className="w-full pl-9 pr-3.5 py-2 bg-white border border-neutral-200 rounded-xl text-[10px] font-medium text-neutral-800 focus:outline-none shadow-sm"
+              className="w-full pl-9 pr-3.5 py-2 bg-white border border-neutral-200 rounded-xl text-[13px] font-medium text-neutral-800 focus:outline-none shadow-sm"
             />
           </div>
         )}
@@ -348,7 +348,7 @@ export default function CustomerRewards() {
 
                         <div className="absolute top-2 right-2">
                           <span
-                            className={`px-2 py-0.5 rounded-full text-[8px] font-bold shadow-xs ${
+                            className={`px-2 py-0.5 rounded-full text-[11px] font-bold shadow-xs ${
                               isOutOfStock
                                 ? 'bg-rose-50 text-rose-600 border border-rose-200'
                                 : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
@@ -361,10 +361,10 @@ export default function CustomerRewards() {
 
                       {/* Info Merchandise */}
                       <div>
-                        <h3 className="text-[12px] font-bold text-neutral-800 line-clamp-1">
+                        <h3 className="text-[15px] font-bold text-neutral-800 line-clamp-1">
                           {item.name}
                         </h3>
-                        <p className="text-[9px] text-neutral-400 line-clamp-2 mt-0.5 leading-relaxed">
+                        <p className="text-[12px] text-neutral-400 line-clamp-2 mt-0.5 leading-relaxed">
                           {item.description || 'Merchandise resmi eksklusif Nebeng.'}
                         </p>
                       </div>
@@ -373,15 +373,15 @@ export default function CustomerRewards() {
                     {/* Harga Poin & Tombol Tukar */}
                     <div className="pt-3 border-t border-neutral-100 flex items-center justify-between gap-2">
                       <div>
-                        <span className="text-[8px] text-neutral-400 uppercase font-bold block">
+                        <span className="text-[11px] text-neutral-400 uppercase font-bold block">
                           Dibutuhkan
                         </span>
                         <span
-                          className="text-[13px] font-black font-mono"
+                          className="text-[16px] font-black font-mono"
                           style={{ color: PRIMARY_COLOR }}
                         >
                           {item.pointsRequired.toLocaleString('id-ID')}
-                          <span className="text-[9px] font-normal text-neutral-500 ml-0.5">
+                          <span className="text-[12px] font-normal text-neutral-500 ml-0.5">
                             Poin
                           </span>
                         </span>
@@ -390,7 +390,7 @@ export default function CustomerRewards() {
                       <button
                         onClick={() => handleOpenRedeemModal(item)}
                         disabled={isOutOfStock}
-                        className={`px-3 py-1.5 rounded-xl text-[9px] font-bold transition shadow-xs flex items-center gap-1 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+                        className={`px-3 py-1.5 rounded-xl text-[12px] font-bold transition shadow-xs flex items-center gap-1 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
                           canAfford && !isOutOfStock
                             ? 'text-white'
                             : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
@@ -451,7 +451,7 @@ export default function CustomerRewards() {
 
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h4 className="text-[12px] font-bold text-neutral-800">
+                        <h4 className="text-[15px] font-bold text-neutral-800">
                           {redemption.merchandiseName}
                         </h4>
                         <StatusBadge variant={STATUS_BADGE_VARIANT[redemption.status] || 'default'}>
@@ -459,12 +459,12 @@ export default function CustomerRewards() {
                         </StatusBadge>
                       </div>
 
-                      <p className="text-[9px] text-neutral-500">
+                      <p className="text-[12px] text-neutral-500">
                         Penerima: <strong className="text-neutral-800">{redemption.recipientName}</strong> (
                         {redemption.recipientPhone})
                       </p>
 
-                      <p className="text-[9px] text-neutral-500">
+                      <p className="text-[12px] text-neutral-500">
                         Metode:{' '}
                         {redemption.pickupPosName ? (
                           <span className="text-blue-600 font-medium">
@@ -478,7 +478,7 @@ export default function CustomerRewards() {
                       </p>
 
                       {redemption.trackingNumber && (
-                        <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-neutral-100 rounded text-[8px] font-mono text-neutral-700 mt-1">
+                        <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-neutral-100 rounded text-[11px] font-mono text-neutral-700 mt-1">
                           <Truck className="w-2.5 h-2.5" /> No. Resi: {redemption.trackingNumber}
                         </div>
                       )}
@@ -486,10 +486,10 @@ export default function CustomerRewards() {
                   </div>
 
                   <div className="text-left sm:text-right pt-3 sm:pt-0 border-t sm:border-t-0 border-neutral-100 shrink-0">
-                    <span className="text-[9px] font-bold text-rose-600 font-mono block">
+                    <span className="text-[12px] font-bold text-rose-600 font-mono block">
                       -{redemption.pointsSpent.toLocaleString('id-ID')} Poin
                     </span>
-                    <span className="text-[8px] text-neutral-400 block mt-0.5">
+                    <span className="text-[11px] text-neutral-400 block mt-0.5">
                       {new Date(redemption.createdAt).toLocaleDateString('id-ID', {
                         day: 'numeric',
                         month: 'short',
@@ -525,17 +525,17 @@ export default function CustomerRewards() {
         subtitle={selectedItem?.name}
         maxWidth="max-w-md"
       >
-        <form onSubmit={handleSubmitRedeem} className="space-y-4 text-[10px]">
+        <form onSubmit={handleSubmitRedeem} className="space-y-4 text-[13px]">
           {/* Ringkasan Poin */}
           <div className="p-3 bg-neutral-50 rounded-xl border border-neutral-200 flex items-center justify-between">
             <div>
-              <span className="text-[8px] text-neutral-400 font-bold uppercase block">
+              <span className="text-[11px] text-neutral-400 font-bold uppercase block">
                 Total Poin Anda
               </span>
               <span className="font-bold text-neutral-700">{userPoints.toLocaleString('id-ID')} Poin</span>
             </div>
             <div className="text-right">
-              <span className="text-[8px] text-neutral-400 font-bold uppercase block">
+              <span className="text-[11px] text-neutral-400 font-bold uppercase block">
                 Poin Terpotong
               </span>
               <span className="font-bold text-rose-600 font-mono">
@@ -546,7 +546,7 @@ export default function CustomerRewards() {
 
           {/* Opsi Metode Penerimaan */}
           <div>
-            <label className="block text-[8px] font-bold text-neutral-500 uppercase tracking-wider mb-1.5">
+            <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-wider mb-1.5">
               Metode Penerimaan Barang
             </label>
             <div className="grid grid-cols-2 gap-2">
@@ -561,8 +561,8 @@ export default function CustomerRewards() {
               >
                 <Building2 className="w-4 h-4 text-blue-600 shrink-0" />
                 <div>
-                  <p className="font-bold text-[9px]">Ambil di Pos</p>
-                  <p className="text-[7px] text-neutral-400">Gratis di Pos Resmi</p>
+                  <p className="font-bold text-[12px]">Ambil di Pos</p>
+                  <p className="text-[13px] text-neutral-400">Gratis di Pos Resmi</p>
                 </div>
               </button>
 
@@ -577,8 +577,8 @@ export default function CustomerRewards() {
               >
                 <Truck className="w-4 h-4 text-emerald-600 shrink-0" />
                 <div>
-                  <p className="font-bold text-[9px]">Kirim ke Rumah</p>
-                  <p className="text-[7px] text-neutral-400">Via Kurir Pengiriman</p>
+                  <p className="font-bold text-[12px]">Kirim ke Rumah</p>
+                  <p className="text-[13px] text-neutral-400">Via Kurir Pengiriman</p>
                 </div>
               </button>
             </div>
@@ -587,7 +587,7 @@ export default function CustomerRewards() {
           {/* Form Data Penerima */}
           <div className="space-y-2.5">
             <div>
-              <label className="block text-[8px] font-bold text-neutral-500 uppercase mb-1">
+              <label className="block text-[11px] font-bold text-neutral-500 uppercase mb-1">
                 Nama Penerima
               </label>
               <input
@@ -601,7 +601,7 @@ export default function CustomerRewards() {
             </div>
 
             <div>
-              <label className="block text-[8px] font-bold text-neutral-500 uppercase mb-1">
+              <label className="block text-[11px] font-bold text-neutral-500 uppercase mb-1">
                 Nomor Telepon / WhatsApp
               </label>
               <input
@@ -616,7 +616,7 @@ export default function CustomerRewards() {
 
             {deliveryMethod === 'pos' ? (
               <div>
-                <label className="block text-[8px] font-bold text-neutral-500 uppercase mb-1">
+                <label className="block text-[11px] font-bold text-neutral-500 uppercase mb-1">
                   Pilih Pos Pengambilan
                 </label>
                 <select
@@ -633,7 +633,7 @@ export default function CustomerRewards() {
               </div>
             ) : (
               <div>
-                <label className="block text-[8px] font-bold text-neutral-500 uppercase mb-1">
+                <label className="block text-[11px] font-bold text-neutral-500 uppercase mb-1">
                   Alamat Lengkap Pengiriman
                 </label>
                 <textarea

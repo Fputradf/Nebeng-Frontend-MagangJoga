@@ -174,24 +174,24 @@ export default function OperatorFinancial() {
                 style={{ backgroundColor: PRIMARY_ACCENT }}
               />
               <span
-                className="text-[9px] font-bold uppercase tracking-widest flex items-center gap-1"
+                className="text-[12px] font-bold uppercase tracking-widest flex items-center gap-1"
                 style={{ color: PRIMARY_COLOR }}
               >
                 <FileText className="w-3 h-3" />
                 REKAPITULASI KAS & PENDAPATAN POS ({posInfo?.posName || 'TERMINAL'})
               </span>
             </div>
-            <h1 className="text-[18px] sm:text-[20px] font-bold text-neutral-800">
+            <h1 className="text-[21px] sm:text-[23px] font-bold text-neutral-800">
               Laporan Finansial Pos Terminal
             </h1>
-            <p className="text-[10px] sm:text-[11px] text-neutral-400 mt-0.5">
+            <p className="text-[13px] sm:text-[14px] text-neutral-400 mt-0.5">
               Kelola setoran tunai harian, rekonsiliasi kasir, dan pantau pendapatan total pos dari server.
             </p>
           </div>
 
           <button
             onClick={() => window.print()}
-            className="text-white px-4 py-2.5 rounded-xl text-[10px] font-bold flex items-center justify-center gap-2 transition shadow-sm cursor-pointer shrink-0"
+            className="text-white px-4 py-2.5 rounded-xl text-[13px] font-bold flex items-center justify-center gap-2 transition shadow-sm cursor-pointer shrink-0"
             style={{ backgroundColor: PRIMARY_COLOR }}
             onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = PRIMARY_HOVER;
@@ -228,12 +228,12 @@ export default function OperatorFinancial() {
 
         <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <h2 className="text-[14px] font-bold text-neutral-800">
+            <h2 className="text-[17px] font-bold text-neutral-800">
               Rincian Transaksi Shift Aktif (Database)
             </h2>
 
             {/* Selector Option Limit */}
-            <div className="flex items-center gap-2 self-end sm:self-auto text-[10px]">
+            <div className="flex items-center gap-2 self-end sm:self-auto text-[13px]">
               <span className="text-neutral-500 font-semibold">Tampilkan:</span>
               <select
                 value={limit}
@@ -251,14 +251,14 @@ export default function OperatorFinancial() {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-neutral-100 text-neutral-400 text-[9px] uppercase tracking-wider font-semibold">
+                <tr className="border-b border-neutral-100 text-neutral-400 text-[12px] uppercase tracking-wider font-bold">
                   <th className="py-3 px-4">ID TRX & WAKTU</th>
                   <th className="py-3 px-4">GATEWAY PEMBAYARAN</th>
                   <th className="py-3 px-4">METODE</th>
                   <th className="py-3 px-4 text-right">TOTAL NOMINAL</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-100 text-[9px]">
+              <tbody className="divide-y divide-neutral-100 text-[12px]">
                 {isLoadingTransactions ? (
                   <SkeletonTableRows rows={limit > 5 ? 5 : limit} columns={4} />
                 ) : dailyTransactions.length === 0 ? (
@@ -275,10 +275,10 @@ export default function OperatorFinancial() {
                   dailyTransactions.map((trx) => (
                     <tr key={trx.id} className="hover:bg-neutral-50/60 transition">
                       <td className="py-3.5 px-4">
-                        <p className="font-bold text-neutral-800 font-mono text-[10px]">
+                        <p className="font-bold text-neutral-800 font-mono text-[13px]">
                           {trx.id}
                         </p>
-                        <p className="text-[8px] text-neutral-400">{trx.time}</p>
+                        <p className="text-[11px] text-neutral-400">{trx.time}</p>
                       </td>
                       <td className="py-3.5 px-4 font-semibold text-neutral-700">
                         {trx.type}
@@ -300,7 +300,7 @@ export default function OperatorFinancial() {
 
           {/* Controls Pagination UI Footer */}
           {!isLoadingTransactions && dailyTransactions.length > 0 && (
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-neutral-100 text-[10px]">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-neutral-100 text-[13px]">
               <span className="text-neutral-500">
                 Menampilkan halaman <strong>{paginationMeta.currentPage}</strong> dari <strong>{paginationMeta.totalPages}</strong> (Total {paginationMeta.totalData} data)
               </span>
@@ -327,7 +327,7 @@ export default function OperatorFinancial() {
                           {showEllipsis && <span className="text-neutral-400 px-1">...</span>}
                           <button
                             onClick={() => setCurrentPage(page)}
-                            className={`w-7 h-7 rounded-lg text-[10px] font-bold cursor-pointer transition ${
+                            className={`w-7 h-7 rounded-lg text-[13px] font-bold cursor-pointer transition ${
                               currentPage === page
                                 ? 'bg-[#10367D] text-white shadow-xs'
                                 : 'bg-neutral-50 border border-neutral-200 text-neutral-600 hover:bg-neutral-100'
@@ -359,11 +359,11 @@ export default function OperatorFinancial() {
           <div>
             <h1 className="text-xl font-black tracking-wide uppercase">NEBENG SYSTEM</h1>
             <p className="text-xs font-semibold uppercase">Laporan Rekapitulasi Kasir & Kas Pos Operasional</p>
-            <p className="text-[10px] text-gray-600">
+            <p className="text-[13px] text-gray-600">
               Pos: {posInfo?.posName || user?.assignedPickupPointName || user?.posName || 'Pos Terminal Utama'}
             </p>
           </div>
-          <div className="text-right text-[10px]">
+          <div className="text-right text-[13px]">
             <p><span className="font-bold">Tanggal Cetak:</span> {printDate}</p>
             <p><span className="font-bold">Operator:</span> {user?.name || 'Operator Pos'}</p>
           </div>
@@ -371,19 +371,19 @@ export default function OperatorFinancial() {
 
         <div className="grid grid-cols-3 gap-4 mb-6 text-center">
           <div className="border border-black p-2.5 rounded">
-            <p className="text-[9px] font-bold uppercase text-gray-700">Total Transaksi Pos</p>
+            <p className="text-[12px] font-bold uppercase text-gray-700">Total Transaksi Pos</p>
             <p className="text-sm font-black mt-1">Rp {totalRevenue.toLocaleString('id-ID')}</p>
-            <p className="text-[8px] text-gray-500">{paginationMeta.totalData || dailyTransactions.length} Transaksi Tercatat</p>
+            <p className="text-[11px] text-gray-500">{paginationMeta.totalData || dailyTransactions.length} Transaksi Tercatat</p>
           </div>
           <div className="border border-black p-2.5 rounded">
-            <p className="text-[9px] font-bold uppercase text-gray-700">Pendapatan QRIS</p>
+            <p className="text-[12px] font-bold uppercase text-gray-700">Pendapatan QRIS</p>
             <p className="text-sm font-black mt-1">Rp {qrisRevenue.toLocaleString('id-ID')}</p>
-            <p className="text-[8px] text-gray-500">Tunai/Lainnya: Rp {otherRevenue.toLocaleString('id-ID')}</p>
+            <p className="text-[11px] text-gray-500">Tunai/Lainnya: Rp {otherRevenue.toLocaleString('id-ID')}</p>
           </div>
           <div className="border border-black p-2.5 rounded">
-            <p className="text-[9px] font-bold uppercase text-gray-700">Bagi Hasil Regional (15%)</p>
+            <p className="text-[12px] font-bold uppercase text-gray-700">Bagi Hasil Regional (15%)</p>
             <p className="text-sm font-black mt-1">Rp {regionalCommission.toLocaleString('id-ID')}</p>
-            <p className="text-[8px] text-gray-500">Potongan Sistem</p>
+            <p className="text-[11px] text-gray-500">Potongan Sistem</p>
           </div>
         </div>
 
@@ -391,7 +391,7 @@ export default function OperatorFinancial() {
           <h2 className="text-xs font-bold uppercase mb-2 border-b border-gray-400 pb-1">
             Rincian Transaksi Shift
           </h2>
-          <table className="w-full text-left text-[10px] border-collapse">
+          <table className="w-full text-left text-[13px] border-collapse">
             <thead>
               <tr className="border-b border-black text-black uppercase font-bold">
                 <th className="py-2 px-2">No / ID TRX</th>
@@ -423,18 +423,18 @@ export default function OperatorFinancial() {
           </table>
         </div>
 
-        <div className="grid grid-cols-2 gap-8 text-center text-[10px] pt-4 mt-8 break-inside-avoid">
+        <div className="grid grid-cols-2 gap-8 text-center text-[13px] pt-4 mt-8 break-inside-avoid">
           <div>
             <p className="font-bold">Diserahkan Oleh (Operator Shift),</p>
             <div className="h-16"></div>
             <p className="font-bold underline uppercase">{user?.name || 'Operator Pos'}</p>
-            <p className="text-[9px] text-gray-600">NIP / ID Operator</p>
+            <p className="text-[12px] text-gray-600">NIP / ID Operator</p>
           </div>
           <div>
             <p className="font-bold">Diterima & Diverifikasi Oleh,</p>
             <div className="h-16"></div>
             <p className="font-bold underline uppercase">( Supervisor / Finance Pos )</p>
-            <p className="text-[9px] text-gray-600">Manajer Keuangan Regional</p>
+            <p className="text-[12px] text-gray-600">Manajer Keuangan Regional</p>
           </div>
         </div>
       </div>

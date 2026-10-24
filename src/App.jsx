@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-
 
 import Login from './features/auth/Login';
 import Register from './features/auth/Register';
+import ForgotPassword from './features/auth/ForgotPassword';
 import ProtectedRoute from './components/routing/ProtectedRoute';
 import { useAuth } from './context/AuthContext';
 
@@ -54,10 +55,13 @@ import SearchTrip from './features/customer/views/SearchTrip';
 import MyTickets from './features/customer/views/MyTickets';
 import CustomerAccountSettings from './features/customer/views/CustomerAccountSettings';
 import CustomerRewards from './features/customer/views/CustomerRewards';
+import CustomerChat from './features/customer/views/CustomerChat';
+import { NotificationSettings, NotificationHistory, NotificationPermissionRequest } from './features/notifications';
 
 function CustomerIndexRedirect() {
   const { isCustomerVerified } = useAuth();
-  return <Navigate to={isCustomerVerified ? 'booking' : 'onboarding'} replace />;
+  const destination = isCustomerVerified ? 'booking' : 'onboarding';
+  return <Navigate to={destination} replace />;
 }
 
 const ROLE_HOME = {
@@ -72,7 +76,13 @@ function GuestRoute({ children }) {
   const { isAuthenticated, role } = useAuth();
 
   if (isAuthenticated) {
-    return <Navigate to={ROLE_HOME[role] || ROLE_HOME.admin} replace />;
+    // Pastikan role valid sebelum redirect
+    const homePath = ROLE_HOME[role];
+    if (homePath) {
+      return <Navigate to={homePath} replace />;
+    }
+    // Jika role tidak dikenali, redirect ke dashboard admin sebagai fallback
+    return <Navigate to={ROLE_HOME.admin} replace />;
   }
 
   return children;
@@ -90,7 +100,9 @@ export default function App() {
   };
 
   return (
-    <Routes>
+    <>
+      <NotificationPermissionRequest />
+      <Routes>
       <Route path="/" element={<Navigate to="/login" replace />} />
 
       <Route
@@ -99,8 +111,17 @@ export default function App() {
           <GuestRoute>
             <Login
               onSwitchToRegister={() => navigate('/register')}
+              onSwitchToForgotPassword={() => navigate('/forgot-password')}
               onLogin={handleLogin}
             />
+          </GuestRoute>
+        }
+      />
+      <Route
+        path="/forgot-password"
+        element={
+          <GuestRoute>
+            <ForgotPassword onSwitchToLogin={() => navigate('/login')} />
           </GuestRoute>
         }
       />
@@ -131,6 +152,8 @@ export default function App() {
         <Route path="banner" element={<BannerManagement />} />
         <Route path="audit" element={<AuditLedger />} />
         <Route path="governance" element={<UserGovernance />} />
+        <Route path="notifications" element={<NotificationHistory />} />
+        <Route path="notifications/settings" element={<NotificationSettings />} />
         <Route path="profile/pengaturan" element={<SuperadminAccountSettings />} />
         <Route path="*" element={<Navigate to="dashboard" replace />} />
       </Route>
@@ -152,6 +175,8 @@ export default function App() {
         <Route path="trip-order" element={<TripOrderPage />} />
         <Route path="armada-kurir" element={<ArmadaKurirTabs />} />
         <Route path="laporan" element={<FinancialReportPage />} />
+        <Route path="notifications" element={<NotificationHistory />} />
+        <Route path="notifications/settings" element={<NotificationSettings />} />
         <Route path="profile/pengaturan" element={<RegionalAccountSettings />} />
         <Route path="*" element={<Navigate to="dashboard" replace />} />
       </Route>
@@ -171,6 +196,8 @@ export default function App() {
         <Route path="scanner" element={<OperatorDualScanner />} />
         <Route path="handover" element={<OperatorHandover />} />
         <Route path="financial" element={<OperatorFinancial />} />
+        <Route path="notifications" element={<NotificationHistory />} />
+        <Route path="notifications/settings" element={<NotificationSettings />} />
         <Route path="profile" element={<Navigate to="pengaturan" replace />} />
         <Route path="profile/pengaturan" element={<OperatorAccountSettings />} />
         <Route path="*" element={<Navigate to="dashboard" replace />} />
@@ -192,6 +219,8 @@ export default function App() {
         <Route path="qr" element={<MitraQrDisplay />} />
         <Route path="saldo" element={<MitraBalance />} />
         <Route path="chat" element={<MitraChat />} />
+        <Route path="notifications" element={<NotificationHistory />} />
+        <Route path="notifications/settings" element={<NotificationSettings />} />
         <Route path="profile/pengaturan" element={<MitraAccountSettings />} />
         <Route path="*" element={<Navigate to="dashboard" replace />} />
       </Route>
@@ -209,7 +238,10 @@ export default function App() {
         <Route path="onboarding" element={<BiometricOnboarding />} />
         <Route path="booking" element={<SearchTrip />} />
         <Route path="tickets" element={<MyTickets />} />
+        <Route path="chat" element={<CustomerChat />} />
         <Route path="rewards" element={<CustomerRewards />} />
+        <Route path="notifications" element={<NotificationHistory />} />
+        <Route path="notifications/settings" element={<NotificationSettings />} />
         <Route path="profile" element={<Navigate to="pengaturan" replace />} />
         <Route path="profile/pengaturan" element={<CustomerAccountSettings />} />
         <Route path="*" element={<CustomerIndexRedirect />} />
@@ -217,5 +249,6 @@ export default function App() {
 
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
+    </>
   );
 }

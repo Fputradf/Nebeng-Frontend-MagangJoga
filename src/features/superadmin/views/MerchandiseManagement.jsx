@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Gift,
   Plus,
@@ -7,7 +7,11 @@ import {
   Trash2,
   Truck,
   Building2,
+  Upload,
+  Image as ImageIcon,
+  AlertTriangle,
 } from 'lucide-react';
+import { BASE_URL } from '../../../config/env';
 import { useToast } from '../../../context/ToastContext';
 import { Skeleton } from '../../../components/ui/Skeleton';
 import EmptyState from '../../../components/ui/EmptyState';
@@ -38,12 +42,15 @@ export default function MerchandiseManagement() {
   const [isItemModalOpen, setIsItemModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [isSubmittingItem, setIsSubmittingItem] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   const [itemName, setItemName] = useState('');
   const [itemDesc, setItemDesc] = useState('');
   const [pointsRequired, setPointsRequired] = useState(100);
   const [itemStock, setItemStock] = useState(10);
   const [itemImageUrl, setItemImageUrl] = useState('');
+
+  const fileInputRef = useRef(null);
 
   // State Modal Update Status Klaim
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
@@ -52,13 +59,18 @@ export default function MerchandiseManagement() {
   const [trackingNumber, setTrackingNumber] = useState('');
   const [isSubmittingStatus, setIsSubmittingStatus] = useState(false);
 
+  // State Modal Konfirmasi Hapus
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   // Memuat Data Asinkron tanpa memanggil setState sinkron di body effect
   useEffect(() => {
     let ignore = false;
 
     if (activeTab === 'items') {
       merchandiseService
-        .getCatalog(true)
+        .getCatalog(false)
         .then((data) => {
           if (!ignore) {
             setItems(data || []);
@@ -109,6 +121,26 @@ export default function MerchandiseManagement() {
     setIsItemModalOpen(true);
   };
 
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingImage(true);
+    try {
+      const result = await merchandiseService.uploadMerchandiseImage(file);
+      const baseUrl = import.meta.env.VITE_API_BASE_URL
+        ? import.meta.env.VITE_API_BASE_URL.replace(/\/api\/?$/, '')
+        : BASE_URL;
+      setItemImageUrl(`${baseUrl}${result.filePath}`);
+      toast.success('Gambar berhasil diunggah');
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error(error.response?.data?.message || 'Gagal mengunggah gambar');
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
   const handleSubmitItem = async (e) => {
     e.preventDefault();
     if (isSubmittingItem) return;
@@ -123,10 +155,10 @@ export default function MerchandiseManagement() {
     try {
       const payload = {
         name: itemName.trim(),
-        description: itemDesc.trim() || undefined,
+        description: itemDesc.trim() || null,
         pointsRequired: Number(pointsRequired),
         stock: Number(itemStock),
-        imageUrl: itemImageUrl.trim() || undefined,
+        imageUrl: itemImageUrl.trim() || null,
       };
 
       if (editingItem) {
@@ -138,7 +170,7 @@ export default function MerchandiseManagement() {
       }
 
       setIsItemModalOpen(false);
-      const updated = await merchandiseService.getCatalog(true);
+      const updated = await merchandiseService.getCatalog(false);
       setItems(updated || []);
     } catch (err) {
       console.error('Gagal menyimpan merchandise:', err);
@@ -148,17 +180,27 @@ export default function MerchandiseManagement() {
     }
   };
 
-  const handleDeleteItem = async (item) => {
-    if (!confirm(`Yakin ingin menonaktifkan merchandise "${item.name}"?`)) return;
+  const handleDeleteItem = (item) => {
+    setItemToDelete(item);
+    setIsDeleteModalOpen(true);
+  };
 
+  const confirmDeleteItem = async () => {
+    if (!itemToDelete) return;
+
+    setIsDeleting(true);
     try {
-      await merchandiseService.deleteItem(item.id);
-      toast.success('Merchandise berhasil dinonaktifkan.');
-      const updated = await merchandiseService.getCatalog(true);
+      await merchandiseService.deleteItem(itemToDelete.id);
+      toast.success('Merchandise berhasil dihapus.');
+      const updated = await merchandiseService.getCatalog(false);
       setItems(updated || []);
+      setIsDeleteModalOpen(false);
+      setItemToDelete(null);
     } catch (err) {
       console.error('Gagal menghapus merchandise:', err);
-      toast.error('Gagal menonaktifkan merchandise.');
+      toast.error('Gagal menghapus merchandise.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -202,14 +244,14 @@ export default function MerchandiseManagement() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Gift className="w-4 h-4 text-indigo-600" />
-            <span className="text-[9px] font-bold uppercase tracking-widest text-indigo-600">
+            <span className="text-[12px] font-bold uppercase tracking-widest text-indigo-600">
               MODUL SUPERADMIN
             </span>
           </div>
-          <h1 className="text-[20px] font-bold text-neutral-800">
+          <h1 className="text-[23px] font-bold text-neutral-800">
             Manajemen Merchandise & Antrean Hadiah
           </h1>
-          <p className="text-[11px] text-neutral-500 mt-0.5">
+          <p className="text-[14px] text-neutral-500 mt-0.5">
             Atur stok produk reward loyalti dan proses pengiriman merchandise ke customer.
           </p>
         </div>
@@ -217,7 +259,7 @@ export default function MerchandiseManagement() {
         {activeTab === 'items' && (
           <button
             onClick={handleOpenCreateModal}
-            className="px-4 py-2.5 text-white rounded-xl text-[10px] font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer self-start sm:self-auto"
+            className="px-4 py-2.5 text-white rounded-xl text-[13px] font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer self-start sm:self-auto"
             style={{ backgroundColor: PRIMARY_COLOR }}
           >
             <Plus className="w-3.5 h-3.5" />
@@ -233,7 +275,7 @@ export default function MerchandiseManagement() {
             setIsLoading(true);
             setActiveTab('items');
           }}
-          className={`px-4 py-2 rounded-xl text-[10px] font-bold transition cursor-pointer flex items-center gap-1.5 ${
+          className={`px-4 py-2 rounded-xl text-[13px] font-bold transition cursor-pointer flex items-center gap-1.5 ${
             activeTab === 'items'
               ? 'text-white shadow-sm'
               : 'bg-white text-neutral-600 border border-neutral-200 hover:bg-neutral-50'
@@ -249,7 +291,7 @@ export default function MerchandiseManagement() {
             setIsLoading(true);
             setActiveTab('redemptions');
           }}
-          className={`px-4 py-2 rounded-xl text-[10px] font-bold transition cursor-pointer flex items-center gap-1.5 ${
+          className={`px-4 py-2 rounded-xl text-[13px] font-bold transition cursor-pointer flex items-center gap-1.5 ${
             activeTab === 'redemptions'
               ? 'text-white shadow-sm'
               : 'bg-white text-neutral-600 border border-neutral-200 hover:bg-neutral-50'
@@ -288,7 +330,7 @@ export default function MerchandiseManagement() {
                         <Package className="w-10 h-10 text-neutral-300" />
                       )}
                       <span
-                        className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-[8px] font-bold ${
+                        className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-[11px] font-bold ${
                           item.isActive
                             ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                             : 'bg-neutral-200 text-neutral-600'
@@ -299,13 +341,13 @@ export default function MerchandiseManagement() {
                     </div>
 
                     <div>
-                      <h3 className="text-[12px] font-bold text-neutral-800 line-clamp-1">{item.name}</h3>
-                      <p className="text-[9px] text-neutral-400 line-clamp-2 mt-0.5">
+                      <h3 className="text-[15px] font-bold text-neutral-800 line-clamp-1">{item.name}</h3>
+                      <p className="text-[12px] text-neutral-400 line-clamp-2 mt-0.5">
                         {item.description || 'Tidak ada deskripsi.'}
                       </p>
                     </div>
 
-                    <div className="flex items-center justify-between text-[10px] bg-neutral-50 p-2 rounded-lg">
+                    <div className="flex items-center justify-between text-[13px] bg-neutral-50 p-2 rounded-lg">
                       <span className="text-neutral-500">
                         Harga: <strong className="text-blue-700 font-mono">{item.pointsRequired} Poin</strong>
                       </span>
@@ -318,19 +360,17 @@ export default function MerchandiseManagement() {
                   <div className="flex gap-2 pt-2 border-t border-neutral-100">
                     <button
                       onClick={() => handleOpenEditModal(item)}
-                      className="flex-1 py-1.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-lg text-[9px] font-bold transition flex items-center justify-center gap-1 cursor-pointer"
+                      className="flex-1 py-1.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-lg text-[12px] font-bold transition flex items-center justify-center gap-1 cursor-pointer"
                     >
                       <Pencil className="w-3 h-3" /> Edit
                     </button>
-                    {item.isActive && (
-                      <button
-                        onClick={() => handleDeleteItem(item)}
-                        className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-[9px] font-bold transition cursor-pointer border border-rose-200"
-                        title="Nonaktifkan"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    )}
+                    <button
+                      onClick={() => handleDeleteItem(item)}
+                      className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-[12px] font-bold transition cursor-pointer border border-rose-200"
+                      title="Hapus Merchandise"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
               ))}
@@ -351,10 +391,10 @@ export default function MerchandiseManagement() {
       {activeTab === 'redemptions' && (
         <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden">
           {isLoading ? (
-            <div className="p-6 text-[10px] text-neutral-400">Memuat antrean klaim...</div>
+            <div className="p-6 text-[13px] text-neutral-400">Memuat antrean klaim...</div>
           ) : redemptions.length > 0 ? (
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-[10px]">
+              <table className="w-full text-left text-[13px]">
                 <thead className="bg-neutral-50 border-b border-neutral-200 text-neutral-500 font-bold uppercase tracking-wider">
                   <tr>
                     <th className="p-3.5">ID & Waktu</th>
@@ -370,22 +410,22 @@ export default function MerchandiseManagement() {
                     <tr key={row.id} className="hover:bg-neutral-50/50">
                       <td className="p-3.5">
                         <span className="font-mono font-bold text-neutral-800">#{row.id}</span>
-                        <span className="text-[8px] text-neutral-400 block">
+                        <span className="text-[11px] text-neutral-400 block">
                           {new Date(row.createdAt).toLocaleDateString('id-ID')}
                         </span>
                       </td>
 
                       <td className="p-3.5">
                         <span className="font-bold text-neutral-800 block">{row.merchandiseName}</span>
-                        <span className="text-[8px] text-rose-600 font-mono">
+                        <span className="text-[11px] text-rose-600 font-mono">
                           -{row.pointsSpent} Poin
                         </span>
                       </td>
 
                       <td className="p-3.5">
                         <span className="font-bold text-neutral-800 block">{row.recipientName}</span>
-                        <span className="text-[8px] text-neutral-500 block">{row.recipientPhone}</span>
-                        <span className="text-[7px] text-neutral-400 block">Akun: {row.userName}</span>
+                        <span className="text-[11px] text-neutral-500 block">{row.recipientPhone}</span>
+                        <span className="text-[13px] text-neutral-400 block">Akun: {row.userName}</span>
                       </td>
 
                       <td className="p-3.5 max-w-xs">
@@ -397,7 +437,7 @@ export default function MerchandiseManagement() {
                           <span className="text-neutral-600 line-clamp-2">{row.shippingAddress}</span>
                         )}
                         {row.trackingNumber && (
-                          <span className="text-[8px] font-mono text-emerald-700 block mt-0.5">
+                          <span className="text-[11px] font-mono text-emerald-700 block mt-0.5">
                             Resi: {row.trackingNumber}
                           </span>
                         )}
@@ -452,9 +492,9 @@ export default function MerchandiseManagement() {
         subtitle="Loyalty Point Reward System"
         maxWidth="max-w-md"
       >
-        <form onSubmit={handleSubmitItem} className="space-y-3 text-[10px]">
+        <form onSubmit={handleSubmitItem} className="space-y-3 text-[13px]">
           <div>
-            <label className="block text-[8px] font-bold text-neutral-500 uppercase mb-1">
+            <label className="block text-[11px] font-bold text-neutral-500 uppercase mb-1">
               Nama Merchandise
             </label>
             <input
@@ -468,7 +508,7 @@ export default function MerchandiseManagement() {
           </div>
 
           <div>
-            <label className="block text-[8px] font-bold text-neutral-500 uppercase mb-1">
+            <label className="block text-[11px] font-bold text-neutral-500 uppercase mb-1">
               Deskripsi Singkat
             </label>
             <textarea
@@ -482,7 +522,7 @@ export default function MerchandiseManagement() {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[8px] font-bold text-neutral-500 uppercase mb-1">
+              <label className="block text-[11px] font-bold text-neutral-500 uppercase mb-1">
                 Harga Poin
               </label>
               <input
@@ -496,7 +536,7 @@ export default function MerchandiseManagement() {
             </div>
 
             <div>
-              <label className="block text-[8px] font-bold text-neutral-500 uppercase mb-1">
+              <label className="block text-[11px] font-bold text-neutral-500 uppercase mb-1">
                 Stok Barang
               </label>
               <input
@@ -511,16 +551,66 @@ export default function MerchandiseManagement() {
           </div>
 
           <div>
-            <label className="block text-[8px] font-bold text-neutral-500 uppercase mb-1">
-              URL Foto Produk
+            <label className="block text-[11px] font-bold text-neutral-500 uppercase mb-1">
+              Foto Produk
             </label>
-            <input
-              type="url"
-              value={itemImageUrl}
-              onChange={(e) => setItemImageUrl(e.target.value)}
-              placeholder="https://images.unsplash.com/..."
-              className="w-full p-2.5 bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-none"
-            />
+            <div className="space-y-2">
+              {itemImageUrl && (
+                <div className="relative w-full max-h-48 aspect-video rounded-xl overflow-hidden border border-neutral-200 bg-neutral-100 flex items-center justify-center group">
+                  <img
+                    src={itemImageUrl}
+                    alt="Preview"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                    <button
+                      type="button"
+                      onClick={() => setItemImageUrl('')}
+                      className="px-3 py-1.5 bg-rose-600 text-white rounded-lg text-xs font-semibold shadow hover:bg-rose-700 transition"
+                    >
+                      Hapus Gambar
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={itemImageUrl}
+                  onChange={(e) => setItemImageUrl(e.target.value)}
+                  placeholder="https://domain.com/merchandise.jpg atau upload..."
+                  className="flex-1 p-2.5 bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-none font-mono text-xs"
+                />
+
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  ref={fileInputRef}
+                  onChange={handleImageUpload}
+                />
+
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploadingImage}
+                  className="px-4 bg-[#10367D] text-white rounded-xl text-xs font-bold flex items-center gap-1.5 hover:bg-[#0C2C66] transition disabled:opacity-50 cursor-pointer shadow-sm shrink-0"
+                >
+                  {isUploadingImage ? (
+                    <span className="animate-spin text-sm">⏳</span>
+                  ) : (
+                    <>
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>Upload</span>
+                    </>
+                  )}
+                </button>
+              </div>
+              <p className="text-[11px] text-neutral-400">
+                Format disarankan: 1:1 atau 4:3 (JPG, PNG, WEBP).
+              </p>
+            </div>
           </div>
 
           <div className="flex gap-2 pt-2 border-t border-neutral-100">
@@ -552,9 +642,9 @@ export default function MerchandiseManagement() {
         subtitle={`Klaim #${selectedRedemption?.id} • ${selectedRedemption?.merchandiseName}`}
         maxWidth="max-w-md"
       >
-        <form onSubmit={handleSubmitStatus} className="space-y-3 text-[10px]">
+        <form onSubmit={handleSubmitStatus} className="space-y-3 text-[13px]">
           <div>
-            <label className="block text-[8px] font-bold text-neutral-500 uppercase mb-1">
+            <label className="block text-[11px] font-bold text-neutral-500 uppercase mb-1">
               Pilih Status Baru
             </label>
             <select
@@ -571,7 +661,7 @@ export default function MerchandiseManagement() {
           </div>
 
           <div>
-            <label className="block text-[8px] font-bold text-neutral-500 uppercase mb-1">
+            <label className="block text-[11px] font-bold text-neutral-500 uppercase mb-1">
               Nomor Resi / Ekspedisi (Opsional)
             </label>
             <input
@@ -602,6 +692,49 @@ export default function MerchandiseManagement() {
             </button>
           </div>
         </form>
+      </BaseModal>
+
+      {/* Modal Konfirmasi Hapus Merchandise */}
+      <BaseModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => { if (!isDeleting) setIsDeleteModalOpen(false); }}
+        title="Konfirmasi Hapus Merchandise"
+        maxWidth="max-w-sm"
+      >
+        <div className="space-y-4 text-[13px]">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+              <AlertTriangle className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="font-bold text-neutral-800">
+                Yakin ingin menghapus "{itemToDelete?.name}"?
+              </p>
+              <p className="text-neutral-500 mt-1">
+                Tindakan ini akan menghapus merchandise secara permanen dan tidak dapat dibatalkan.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex gap-2 pt-2">
+            <button
+              type="button"
+              disabled={isDeleting}
+              onClick={() => setIsDeleteModalOpen(false)}
+              className="flex-1 py-2.5 bg-neutral-100 text-neutral-700 rounded-xl font-bold"
+            >
+              Batal
+            </button>
+            <button
+              type="button"
+              onClick={confirmDeleteItem}
+              disabled={isDeleting}
+              className="flex-1 py-2.5 bg-rose-600 text-white rounded-xl font-bold hover:bg-rose-700 transition disabled:opacity-50"
+            >
+              {isDeleting ? 'Menghapus...' : 'Ya, Hapus'}
+            </button>
+          </div>
+        </div>
       </BaseModal>
     </div>
   );

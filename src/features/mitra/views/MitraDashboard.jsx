@@ -16,9 +16,13 @@ import StatusBadge from '../../../components/ui/StatusBadge';
 import EmptyState from '../../../components/ui/EmptyState';
 import { BannerSlider } from '../../../components/ui/BannerSlider';
 import apiClient from '../../../services/apiClient';
+import { useAuth } from '../../../context/AuthContext';
 
 const PRIMARY_COLOR = '#10367D';
 const PRIMARY_ACCENT = '#74B4D9';
+
+const DAYS_FULL = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+const MONTHS_FULL = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
 const formatRupiah = (value) =>
   `Rp ${Math.max(0, Math.round(value || 0)).toLocaleString('id-ID')}`;
@@ -51,6 +55,7 @@ function formatTripSchedule(dateStr, timeStr) {
 }
 
 export default function MitraDashboard() {
+  const { user, mitraProfile } = useAuth();
   const [trips, setTrips] = useState([]);
   const [ratingStats, setRatingStats] = useState({ averageRating: 0, totalReviews: 0 });
   const [wallet, setWallet] = useState({
@@ -59,6 +64,8 @@ export default function MitraDashboard() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [activeService, setActiveService] = useState('all');
+
+  const mitraName = mitraProfile?.name || user?.name || 'Mitra';
 
   useEffect(() => {
     let isMounted = true;
@@ -159,77 +166,50 @@ export default function MitraDashboard() {
 
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
-      <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-neutral-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span
-              className="w-2 h-2 rounded-full animate-pulse"
-              style={{ backgroundColor: PRIMARY_COLOR }}
-            />
-            <span
-              className="text-[9px] font-bold uppercase tracking-widest flex items-center gap-1"
-              style={{ color: PRIMARY_COLOR }}
-            >
-              <TrendingUp className="w-3 h-3" />
-              MITRA POS UTAMA DASHBOARD
-            </span>
-          </div>
-          <h1 className="text-[18px] sm:text-[20px] font-bold text-neutral-800">
-            Ringkasan Aktivitas Mitra
-          </h1>
-          <p className="text-[10px] sm:text-[11px] text-neutral-400 mt-0.5">
-            Kelola trip mendatang, pantau riwayat perjalanan, statistik rating, dan total saldo dompet Anda.
-          </p>
-        </div>
-
-        <div
-          className="flex items-center gap-2.5 px-3.5 py-2 rounded-full shrink-0 border"
-          style={{
-            backgroundColor: `${PRIMARY_ACCENT}18`,
-            borderColor: `${PRIMARY_COLOR}35`
-          }}
-        >
-          <div
-            className="w-7 h-7 rounded-full text-white flex items-center justify-center font-bold shrink-0"
-            style={{ backgroundColor: PRIMARY_COLOR }}
-          >
-            <Calendar className="w-3.5 h-3.5" />
-          </div>
+      {/* ── BANNER ── */}
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] p-6 text-white shadow-card sm:p-8">
+        <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10" />
+        <div className="absolute bottom-0 right-32 h-28 w-28 rounded-full bg-accent/20" />
+        <div className="relative flex flex-col gap-3 pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p
-              className="text-[8px] font-bold uppercase tracking-wider"
-              style={{ color: PRIMARY_COLOR }}
-            >
-              STATUS MITRA
-            </p>
-            <p className="text-[10px] font-bold text-neutral-800">
-              Aktif & Terverifikasi
-            </p>
+            <h1 className="font-display text-2xl font-bold">Ringkasan Aktivitas Mitra</h1>
+            <p className="mt-1 text-sm text-blue-100">Kelola trip mendatang, pantau riwayat perjalanan, statistik rating, dan total saldo dompet Anda.</p>
+          </div>
+          <div className="flex items-center gap-2.5 px-3.5 py-2 bg-white/15 border border-white/25 rounded-full backdrop-blur shrink-0">
+            <div className="w-7 h-7 rounded-full bg-white/20 text-white flex items-center justify-center shrink-0">
+              <Calendar className="w-3.5 h-3.5" />
+            </div>
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-white/80">STATUS MITRA</p>
+              <p className="text-[13px] font-bold text-white">Aktif & Terverifikasi</p>
+            </div>
           </div>
         </div>
-      </div>
+        <div className="absolute bottom-4 left-6 right-6 border-t border-dashed border-white/25 sm:left-8 sm:right-8" />
+        <span className="absolute bottom-[11px] right-6 h-2.5 w-2.5 rounded-full border-2 border-white bg-accent sm:right-8" />
+      </section>
       <BannerSlider role="mitra" />
 
       <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-neutral-200">
-        <h2 className="text-[14px] font-extrabold text-neutral-800 mb-4 uppercase tracking-tight">Layanan Kami</h2>
+        <h2 className="text-[17px] font-extrabold text-neutral-800 mb-4 uppercase tracking-tight">Layanan Kami</h2>
         <div className="flex justify-around items-center">
           <button className="flex flex-col items-center gap-2 hover:opacity-80 transition cursor-pointer" onClick={() => setActiveService(activeService === 'motor' ? 'all' : 'motor')}>
             <div className={`w-14 h-14 rounded-full flex items-center justify-center text-white shadow-md transition ${activeService === 'motor' ? 'bg-[#262160]' : 'bg-neutral-300'}`}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5V14l-3-3 4-3 2 3h2"/></svg>
             </div>
-            <span className={`text-[10px] font-bold ${activeService === 'motor' ? 'text-[#262160]' : 'text-neutral-500'}`}>Nebeng Motor</span>
+            <span className={`text-[13px] font-bold ${activeService === 'motor' ? 'text-[#262160]' : 'text-neutral-500'}`}>Nebeng Motor</span>
           </button>
           <button className="flex flex-col items-center gap-2 hover:opacity-80 transition cursor-pointer" onClick={() => setActiveService(activeService === 'mobil' ? 'all' : 'mobil')}>
             <div className={`w-14 h-14 rounded-full flex items-center justify-center text-white shadow-md transition ${activeService === 'mobil' ? 'bg-[#262160]' : 'bg-neutral-300'}`}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>
             </div>
-            <span className={`text-[10px] font-bold ${activeService === 'mobil' ? 'text-[#262160]' : 'text-neutral-500'}`}>Nebeng Mobil</span>
+            <span className={`text-[13px] font-bold ${activeService === 'mobil' ? 'text-[#262160]' : 'text-neutral-500'}`}>Nebeng Mobil</span>
           </button>
           <button className="flex flex-col items-center gap-2 hover:opacity-80 transition cursor-pointer" onClick={() => setActiveService(activeService === 'barang' ? 'all' : 'barang')}>
             <div className={`w-14 h-14 rounded-full flex items-center justify-center text-white shadow-md transition ${activeService === 'barang' ? 'bg-[#262160]' : 'bg-neutral-300'}`}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
             </div>
-            <span className={`text-[10px] font-bold ${activeService === 'barang' ? 'text-[#262160]' : 'text-neutral-500'}`}>Nebeng Barang</span>
+            <span className={`text-[13px] font-bold ${activeService === 'barang' ? 'text-[#262160]' : 'text-neutral-500'}`}>Nebeng Barang</span>
           </button>
         </div>
       </div>
@@ -262,13 +242,13 @@ export default function MitraDashboard() {
               >
                 <Calendar className="w-4 h-4" />
               </div>
-              <h2 className="text-[14px] font-bold text-neutral-800">
+              <h2 className="text-[17px] font-bold text-neutral-800">
                 Ringkasan Trip Mendatang
               </h2>
             </div>
             <Link
               to="/mitra/trip"
-              className="text-[9px] font-bold hover:underline flex items-center gap-0.5"
+              className="text-[12px] font-bold hover:underline flex items-center gap-0.5"
               style={{ color: PRIMARY_COLOR }}
             >
               Lihat Semua
@@ -278,7 +258,7 @@ export default function MitraDashboard() {
 
           <div className="space-y-3">
             {isLoading ? (
-              <div className="text-[10px] text-neutral-400 p-3">
+              <div className="text-[13px] text-neutral-400 p-3">
                 Memuat data trip...
               </div>
             ) : upcomingTrips.length === 0 ? (
@@ -294,7 +274,7 @@ export default function MitraDashboard() {
                   className="p-3.5 rounded-xl border border-neutral-100 bg-neutral-50/60 hover:bg-neutral-100/60 transition space-y-2"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-[10px] text-neutral-800 font-mono">
+                    <span className="font-bold text-[13px] text-neutral-800 font-mono">
                       TRIP-{trip.id}
                     </span>
 
@@ -304,7 +284,7 @@ export default function MitraDashboard() {
                       </StatusBadge>
                     ) : (
                       <span
-                        className="inline-flex items-center px-2 py-1 rounded-full text-[9px] font-bold"
+                        className="inline-flex items-center px-2 py-1 rounded-full text-[12px] font-bold"
                         style={{
                           color: PRIMARY_COLOR,
                           backgroundColor: `${PRIMARY_ACCENT}18`,
@@ -316,7 +296,7 @@ export default function MitraDashboard() {
                     )}
                   </div>
 
-                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-neutral-800">
+                  <div className="flex items-center gap-1.5 text-[13px] font-bold text-neutral-800">
                     <MapPin
                       className="w-3 h-3 shrink-0"
                       style={{ color: PRIMARY_COLOR }}
@@ -327,7 +307,7 @@ export default function MitraDashboard() {
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between pt-2 border-t border-neutral-200/60 text-[9px] text-neutral-400 font-medium">
+                  <div className="flex items-center justify-between pt-2 border-t border-neutral-200/60 text-[12px] text-neutral-400 font-medium">
                     <span className="flex items-center gap-1">
                       <Clock className="w-2.5 h-2.5" />
                       {formatTripSchedule(
@@ -355,18 +335,18 @@ export default function MitraDashboard() {
               <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl">
                 <CheckCircle2 className="w-4 h-4" />
               </div>
-              <h2 className="text-[14px] font-bold text-neutral-800">
+              <h2 className="text-[17px] font-bold text-neutral-800">
                 Riwayat Perjalanan
               </h2>
             </div>
-            <span className="text-[8px] font-bold text-neutral-400">
+            <span className="text-[11px] font-bold text-neutral-400">
               Terakhir Selesai
             </span>
           </div>
 
           <div className="space-y-3">
             {isLoading ? (
-              <div className="text-[10px] text-neutral-400 p-3">
+              <div className="text-[13px] text-neutral-400 p-3">
                 Memuat riwayat...
               </div>
             ) : recentHistory.length === 0 ? (
@@ -382,15 +362,15 @@ export default function MitraDashboard() {
                   className="p-3.5 rounded-xl border border-neutral-100 bg-neutral-50/60 hover:bg-neutral-100/60 transition space-y-2"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-[10px] text-neutral-800 font-mono">
+                    <span className="font-bold text-[13px] text-neutral-800 font-mono">
                       TRIP-{history.id}
                     </span>
-                    <span className="text-[10px] font-bold text-emerald-600">
+                    <span className="text-[13px] font-bold text-emerald-600">
                       {formatRupiah(history.price)}
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-neutral-800">
+                  <div className="flex items-center gap-1.5 text-[13px] font-bold text-neutral-800">
                     <MapPin className="w-3 h-3 text-neutral-400 shrink-0" />
                     <span>
                       {history.originPoint?.name || 'Asal'} &rarr;{' '}
@@ -398,7 +378,7 @@ export default function MitraDashboard() {
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between pt-2 border-t border-neutral-100 text-[9px] text-neutral-400 font-medium">
+                  <div className="flex items-center justify-between pt-2 border-t border-neutral-100 text-[12px] text-neutral-400 font-medium">
                     <span>
                       {history.departureDate?.split('T')[0]}
                     </span>
@@ -408,7 +388,7 @@ export default function MitraDashboard() {
                         <span>{Number(history.rating).toFixed(1)}</span>
                       </div>
                     ) : (
-                      <span className="text-[8px] text-neutral-400 italic">
+                      <span className="text-[11px] text-neutral-400 italic">
                         Belum ada ulasan
                       </span>
                     )}

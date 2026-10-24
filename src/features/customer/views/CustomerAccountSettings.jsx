@@ -263,16 +263,16 @@ export default function CustomerAccountSettings() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: PRIMARY_COLOR }} />
-            <span className="text-[9px] font-bold uppercase tracking-widest flex items-center gap-1" style={{ color: PRIMARY_COLOR }}>
+            <span className="text-[12px] font-bold uppercase tracking-widest flex items-center gap-1" style={{ color: PRIMARY_COLOR }}>
               <Settings className="w-3 h-3" /> AKUN & IDENTITAS
             </span>
           </div>
 
-          <h1 className="text-[18px] sm:text-[20px] font-bold text-neutral-800">
+          <h1 className="text-[21px] sm:text-[23px] font-bold text-neutral-800">
             Pengaturan Akun
           </h1>
 
-          <p className="text-[10px] sm:text-[11px] text-neutral-400 mt-0.5">
+          <p className="text-[13px] sm:text-[14px] text-neutral-400 mt-0.5">
             Kelola data diri, PIN keamanan transaksi, dan lihat status verifikasi akun Anda.
           </p>
         </div>
@@ -323,7 +323,7 @@ export default function CustomerAccountSettings() {
                     style={{ backgroundColor: `${PRIMARY_ACCENT}22`, color: PRIMARY_COLOR }}
                   >
                     {displayName.trim() ? (
-                      <span className="text-[16px] font-extrabold">
+                      <span className="text-[19px] font-extrabold">
                         {displayName.trim().charAt(0).toUpperCase()}
                       </span>
                     ) : (
@@ -352,9 +352,9 @@ export default function CustomerAccountSettings() {
               </div>
 
               <div>
-                <h2 className="text-[14px] font-bold text-neutral-800">{displayName}</h2>
+                <h2 className="text-[17px] font-bold text-neutral-800">{displayName}</h2>
                 <span
-                  className={`text-[8px] font-bold uppercase tracking-wider flex items-center gap-1 mt-0.5 ${
+                  className={`text-[11px] font-bold uppercase tracking-wider flex items-center gap-1 mt-0.5 ${
                     isVerified ? 'text-emerald-600' : 'text-neutral-400'
                   }`}
                 >
@@ -363,7 +363,7 @@ export default function CustomerAccountSettings() {
                 </span>
 
                 {avatarError && (
-                  <p className="text-[8px] text-rose-600 font-bold mt-1">{avatarError}</p>
+                  <p className="text-[11px] text-rose-600 font-bold mt-1">{avatarError}</p>
                 )}
               </div>
             </div>
@@ -371,7 +371,7 @@ export default function CustomerAccountSettings() {
             {!isEditing ? (
               <button
                 onClick={startEditing}
-                className="px-3.5 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-xl text-[9px] font-bold transition cursor-pointer flex items-center gap-1.5"
+                className="px-3.5 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-xl text-[12px] font-bold transition cursor-pointer flex items-center gap-1.5"
               >
                 <Pencil className="w-3.5 h-3.5" />
                 <span>Edit Profil</span>
@@ -380,7 +380,7 @@ export default function CustomerAccountSettings() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setIsEditing(false)}
-                  className="px-3 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-xl text-[9px] font-bold transition cursor-pointer flex items-center gap-1"
+                  className="px-3 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-xl text-[12px] font-bold transition cursor-pointer flex items-center gap-1"
                 >
                   <X className="w-3.5 h-3.5" />
                   <span>Batal</span>
@@ -389,7 +389,7 @@ export default function CustomerAccountSettings() {
                 <button
                   onClick={handleSave}
                   disabled={!canSave}
-                  className={`px-3.5 py-2 rounded-xl text-[9px] font-bold transition flex items-center gap-1.5 ${
+                  className={`px-3.5 py-2 rounded-xl text-[12px] font-bold transition flex items-center gap-1.5 ${
                     canSave ? 'text-white cursor-pointer shadow-sm' : 'bg-neutral-200 text-neutral-400 cursor-not-allowed'
                   }`}
                   style={canSave ? { backgroundColor: PRIMARY_COLOR } : undefined}
@@ -407,9 +407,9 @@ export default function CustomerAccountSettings() {
             )}
           </div>
 
-          <div className="border-t border-neutral-100 pt-4 space-y-3.5 text-[10px]">
+          <div className="border-t border-neutral-100 pt-4 space-y-3.5 text-[13px]">
             <div>
-              <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+              <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                 Nama Lengkap
               </label>
 
@@ -431,14 +431,14 @@ export default function CustomerAccountSettings() {
 
             <div>
               <div className="flex justify-between items-center mb-1">
-                <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider">
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider">
                   Nomor Induk Kependudukan (NIK)
                 </label>
 
                 <button
                   type="button"
                   onClick={() => setShowNik(!showNik)}
-                  className="text-[8px] font-bold flex items-center gap-1 cursor-pointer"
+                  className="text-[11px] font-bold flex items-center gap-1 cursor-pointer"
                   style={{ color: PRIMARY_COLOR }}
                 >
                   {showNik ? <EyeOff size={11} /> : <Eye size={11} />}
@@ -453,7 +453,7 @@ export default function CustomerAccountSettings() {
             </div>
 
             <div>
-              <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+              <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                 Nomor WhatsApp/HP
               </label>
 
@@ -474,7 +474,7 @@ export default function CustomerAccountSettings() {
                     }}
                   />
                   {draft.phone.trim() && !isPhoneValid && (
-                    <p className="text-[8px] text-rose-600 font-bold mt-1">Format nomor tidak valid. Contoh: 081234567890</p>
+                    <p className="text-[11px] text-rose-600 font-bold mt-1">Format nomor tidak valid. Contoh: 081234567890</p>
                   )}
                 </>
               ) : (
@@ -486,7 +486,7 @@ export default function CustomerAccountSettings() {
             </div>
 
             <div>
-              <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+              <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                 Anggota Sejak
               </label>
               <p className="px-3.5 py-2.5 bg-neutral-50 rounded-xl font-bold text-neutral-600">
@@ -506,18 +506,18 @@ export default function CustomerAccountSettings() {
             </div>
 
             <div>
-              <h2 className="text-[14px] font-bold text-neutral-800">
+              <h2 className="text-[17px] font-bold text-neutral-800">
                 PIN Keamanan Transaksi
               </h2>
-              <p className="text-[10px] text-neutral-400">
+              <p className="text-[13px] text-neutral-400">
                 Digunakan untuk otorisasi pembayaran dan pencairan dana Escrow.
               </p>
             </div>
           </div>
 
-          <form onSubmit={handleSavePin} className="space-y-3.5 text-[10px] border-t border-neutral-100 pt-4">
+          <form onSubmit={handleSavePin} className="space-y-3.5 text-[13px] border-t border-neutral-100 pt-4">
             <div>
-              <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+              <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                 PIN Baru (6 Digit Angka)
               </label>
 
@@ -547,7 +547,7 @@ export default function CustomerAccountSettings() {
             </div>
 
             <div>
-              <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+              <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                 Konfirmasi PIN Baru
               </label>
 
@@ -566,7 +566,7 @@ export default function CustomerAccountSettings() {
               />
             </div>
 
-            <p className="text-[8px] text-neutral-400">
+            <p className="text-[11px] text-neutral-400">
               Pastikan Anda mengingat PIN ini karena diperlukan setiap kali melakukan pemesanan trip atau konfirmasi transaksi.
             </p>
 
@@ -574,7 +574,7 @@ export default function CustomerAccountSettings() {
               <button
                 type="submit"
                 disabled={pinForm.pin.length !== 6 || pinForm.pin !== pinForm.confirmPin || isSubmittingPin}
-                className={`px-5 py-2.5 rounded-xl text-[10px] font-bold transition shadow-sm ${
+                className={`px-5 py-2.5 rounded-xl text-[13px] font-bold transition shadow-sm ${
                   pinForm.pin.length === 6 && pinForm.pin === pinForm.confirmPin && !isSubmittingPin
                     ? 'text-white cursor-pointer'
                     : 'bg-neutral-200 text-neutral-400 cursor-not-allowed'

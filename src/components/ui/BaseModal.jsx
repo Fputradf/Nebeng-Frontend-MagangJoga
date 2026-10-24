@@ -28,25 +28,25 @@ export default function BaseModal({
       onClick={onClose}
     >
       <div
-        className={`bg-white rounded-2xl p-5 sm:p-6 w-full ${maxWidth} shadow-xl border border-neutral-200 space-y-4`}
+        className={`bg-white rounded-2xl p-5 sm:p-6 w-full ${maxWidth} max-h-[90vh] flex flex-col shadow-2xl border border-neutral-200 overflow-hidden`}
         onClick={(e) => e.stopPropagation()}
       >
         {(title || subtitle) && (
-          <div className="flex items-center justify-between pb-3 border-b border-neutral-100">
+          <div className="flex items-center justify-between pb-3 border-b border-neutral-100 shrink-0">
             <div>
-              {title && <h3 className="text-[14px] font-bold text-neutral-800">{title}</h3>}
-              {subtitle && <p className="text-[9px] text-neutral-400 mt-0.5">{subtitle}</p>}
+              {title && <h3 className="text-[17px] font-bold text-neutral-800">{title}</h3>}
+              {subtitle && <p className="text-[12px] text-neutral-400 mt-0.5">{subtitle}</p>}
             </div>
             <button
               onClick={onClose}
               aria-label="Tutup Modal"
-              className="w-6 h-6 rounded-full bg-neutral-100 text-neutral-500 flex items-center justify-center hover:bg-neutral-200 transition cursor-pointer"
+              className="w-7 h-7 rounded-full bg-neutral-100 text-neutral-500 flex items-center justify-center hover:bg-neutral-200 transition cursor-pointer"
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="w-4 h-4" />
             </button>
           </div>
         )}
-        <div className="text-[10px]">{children}</div>
+        <div className="text-[13px] overflow-y-auto pr-1 flex-1 py-1">{children}</div>
       </div>
     </div>
   );

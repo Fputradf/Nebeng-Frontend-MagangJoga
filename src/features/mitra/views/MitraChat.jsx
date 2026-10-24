@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { MessageSquare, Send, CheckCheck, Search, Phone, ArrowLeft } from 'lucide-react';
 import apiClient from '../../../services/apiClient';
 import { useToast } from '../../../context/ToastContext';
+import { useNotification } from '../../../context/NotificationContext';
 
 const PRIMARY_COLOR = '#10367D';
 const PRIMARY_HOVER = '#0C2C66';
@@ -9,6 +10,7 @@ const PRIMARY_ACCENT = '#74B4D9';
 
 export default function MitraChat() {
   const toast = useToast();
+  const { markConversationAsRead } = useNotification();
 
   const [chats, setChats] = useState([]);
   const [selectedConversationId, setSelectedConversationId] = useState(null);
@@ -17,8 +19,24 @@ export default function MitraChat() {
   const [chatSearchTerm, setChatSearchTerm] = useState('');
   const [showMobileChat, setShowMobileChat] = useState(false);
   const [isLoadingChats, setIsLoadingChats] = useState(false);
+  const [cooldownSeconds, setCooldownSeconds] = useState(0);
 
   const messagesEndRef = useRef(null);
+
+  // Timer cooldown anti-spam
+  useEffect(() => {
+    if (cooldownSeconds <= 0) return;
+    const timer = setInterval(() => {
+      setCooldownSeconds((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [cooldownSeconds]);
 
   // 1. Ambil daftar percakapan
   useEffect(() => {
@@ -37,6 +55,8 @@ export default function MitraChat() {
 
           if (list.length > 0 && !selectedConversationId) {
             setSelectedConversationId(list[0].id);
+            // Mark notifications as read for initial conversation
+            markConversationAsRead(list[0].id);
           }
         }
       } catch (err) {
@@ -115,6 +135,11 @@ export default function MitraChat() {
     setSelectedConversationId(chat.id);
     setShowMobileChat(true);
 
+    // Mark conversation notifications as read
+    if (chat.id) {
+      markConversationAsRead(chat.id);
+    }
+
     try {
       const resConv = await apiClient.post('/chat/conversation', {
         tripId: String(chat.trip?.id),
@@ -124,6 +149,9 @@ export default function MitraChat() {
       const convId = resConv.data.id;
 
       setSelectedConversationId(convId);
+
+      // Mark conversation notifications as read
+      markConversationAsRead(convId);
 
       const resMsg = await apiClient.get(
         `/chat/conversation/${convId}/messages`
@@ -138,7 +166,7 @@ export default function MitraChat() {
   const handleSendMessage = async (e) => {
     e.preventDefault();
 
-    if (!messageText.trim() || !selectedConversationId) return;
+    if (!messageText.trim() || !selectedConversationId || cooldownSeconds > 0) return;
 
     const textToSend = messageText.trim();
 
@@ -155,6 +183,7 @@ export default function MitraChat() {
       const sentMsg = res.data;
 
       setMessages((prev) => [...prev, sentMsg]);
+      setCooldownSeconds(15);
     } catch (err) {
       console.error(
         'Gagal mengirim pesan:',
@@ -185,7 +214,7 @@ export default function MitraChat() {
             />
 
             <span
-              className="text-[9px] font-bold uppercase tracking-widest flex items-center gap-1"
+              className="text-[12px] font-bold uppercase tracking-widest flex items-center gap-1"
               style={{ color: PRIMARY_COLOR }}
             >
               <MessageSquare className="w-3 h-3" />
@@ -193,11 +222,11 @@ export default function MitraChat() {
             </span>
           </div>
 
-          <h1 className="text-[18px] sm:text-[20px] font-bold text-neutral-800">
+          <h1 className="text-[21px] sm:text-[23px] font-bold text-neutral-800">
             In-App Messaging Pelanggan
           </h1>
 
-          <p className="text-[10px] sm:text-[11px] text-neutral-400 mt-0.5">
+          <p className="text-[13px] sm:text-[14px] text-neutral-400 mt-0.5">
             Berkomunikasi secara langsung dengan pelanggan yang memesan trip
             atau paket pos Anda.
           </p>
@@ -222,7 +251,7 @@ export default function MitraChat() {
                 placeholder="Cari pelanggan atau trip..."
                 value={chatSearchTerm}
                 onChange={(e) => setChatSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-3.5 py-2 bg-white border border-neutral-200 rounded-xl text-[10px] font-medium focus:outline-none"
+                className="w-full pl-9 pr-3.5 py-2 bg-white border border-neutral-200 rounded-xl text-[13px] font-medium focus:outline-none"
                 onFocus={(e) => {
                   e.currentTarget.style.borderColor = PRIMARY_COLOR;
                 }}
@@ -235,16 +264,16 @@ export default function MitraChat() {
 
           <div className="overflow-y-auto flex-1 divide-y divide-neutral-100 min-h-0">
             {isLoadingChats ? (
-              <div className="p-6 text-center text-[10px] text-neutral-400">
+              <div className="p-6 text-center text-[13px] text-neutral-400">
                 Memuat percakapan...
               </div>
             ) : filteredChats.length === 0 ? (
               <div className="p-6 text-center">
-                <p className="text-[10px] font-bold text-neutral-500">
+                <p className="text-[13px] font-bold text-neutral-500">
                   Tidak ada percakapan ditemukan
                 </p>
 
-                <p className="text-[8px] text-neutral-400 mt-0.5">
+                <p className="text-[11px] text-neutral-400 mt-0.5">
                   Coba kata kunci lain.
                 </p>
               </div>
@@ -275,7 +304,7 @@ export default function MitraChat() {
                     }
                   >
                     <div
-                      className="w-9 h-9 rounded-xl flex items-center justify-center font-extrabold text-[11px] shrink-0 shadow-sm"
+                      className="w-9 h-9 rounded-xl flex items-center justify-center font-extrabold text-[14px] shrink-0 shadow-sm"
                       style={{
                         backgroundColor: `${PRIMARY_ACCENT}30`,
                         color: PRIMARY_COLOR,
@@ -286,17 +315,17 @@ export default function MitraChat() {
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-0.5">
-                        <span className="font-bold text-[10px] text-neutral-800 truncate">
+                        <span className="font-bold text-[13px] text-neutral-800 truncate">
                           {custName}
                         </span>
 
-                        <span className="text-[8px] text-neutral-400 font-medium">
+                        <span className="text-[11px] text-neutral-400 font-medium">
                           Aktif
                         </span>
                       </div>
 
                       <p
-                        className="text-[8px] font-bold mb-0.5"
+                        className="text-[11px] font-bold mb-0.5"
                         style={{ color: PRIMARY_COLOR }}
                       >
                         TRIP-{chat.trip?.id} •{' '}
@@ -304,7 +333,7 @@ export default function MitraChat() {
                         {chat.trip?.destinationPoint?.name}
                       </p>
 
-                      <p className="text-[9px] text-neutral-400 truncate">
+                      <p className="text-[12px] text-neutral-400 truncate">
                         Ketuk untuk melihat pesan
                       </p>
                     </div>
@@ -332,19 +361,19 @@ export default function MitraChat() {
               </button>
 
               <div
-                className="w-9 h-9 rounded-xl text-white flex items-center justify-center font-bold text-[11px] shrink-0"
+                className="w-9 h-9 rounded-xl text-white flex items-center justify-center font-bold text-[14px] shrink-0"
                 style={{ backgroundColor: PRIMARY_COLOR }}
               >
                 {(activeChat?.customer?.name || 'P').charAt(0)}
               </div>
 
               <div>
-                <h2 className="text-[11px] font-bold text-neutral-800">
+                <h2 className="text-[14px] font-bold text-neutral-800">
                   {activeChat?.customer?.name || 'Pilih Percakapan'}
                 </h2>
 
                 <p
-                  className="text-[8px] font-bold"
+                  className="text-[11px] font-bold"
                   style={{ color: PRIMARY_COLOR }}
                 >
                   TRIP-{activeChat?.trip?.id}
@@ -352,15 +381,27 @@ export default function MitraChat() {
               </div>
             </div>
 
-            <button className="p-2 rounded-xl border border-neutral-200 text-neutral-600 hover:bg-neutral-50 transition cursor-pointer">
-              <Phone className="w-3.5 h-3.5" />
+            <button
+              onClick={() => {
+                const phone = activeChat?.customer?.phone;
+                if (!phone) {
+                  toast.error('Nomor telepon pelanggan tidak tersedia.', { title: 'Panggilan' });
+                  return;
+                }
+                window.location.href = `tel:${phone}`;
+              }}
+              title="Hubungi Pelanggan via Telepon"
+              className="p-2 rounded-xl border border-neutral-200 text-neutral-600 hover:bg-neutral-50 transition cursor-pointer flex items-center gap-1.5 text-xs font-semibold"
+            >
+              <Phone className="w-3.5 h-3.5 text-emerald-600" />
+              <span className="hidden sm:inline text-neutral-700">Telepon</span>
             </button>
           </div>
 
           {/* Area Pesan */}
           <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-neutral-50/40 min-h-0 flex flex-col">
             {messages.length === 0 ? (
-              <div className="text-center text-[10px] text-neutral-400 py-10 my-auto">
+              <div className="text-center text-[13px] text-neutral-400 py-10 my-auto">
                 Belum ada pesan dalam percakapan ini.
               </div>
             ) : (
@@ -379,12 +420,12 @@ export default function MitraChat() {
                         : 'mr-auto items-start'
                     }`}
                   >
-                    <span className="text-[7px] text-neutral-400 mb-0.5">
+                    <span className="text-[13px] text-neutral-400 mb-0.5">
                       {msg.sender?.name || 'Pengguna'}
                     </span>
 
                     <div
-                      className={`p-2.5 rounded-2xl text-[10px] ${
+                      className={`p-2.5 rounded-2xl text-[13px] ${
                         isMe
                           ? 'text-white rounded-br-none'
                           : 'bg-white border border-neutral-200 text-neutral-800 rounded-bl-none shadow-sm'
@@ -400,7 +441,7 @@ export default function MitraChat() {
                       <p>{msg.messageText || msg.text}</p>
                     </div>
 
-                    <div className="flex items-center gap-1 mt-1 text-[8px] text-neutral-400">
+                    <div className="flex items-center gap-1 mt-1 text-[11px] text-neutral-400">
                       <span>
                         {msg.createdAt
                           ? new Date(
@@ -436,8 +477,9 @@ export default function MitraChat() {
               type="text"
               value={messageText}
               onChange={(e) => setMessageText(e.target.value)}
-              placeholder="Ketik pesan balasan ke pelanggan..."
-              className="flex-1 px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl text-[10px] font-medium text-neutral-800 focus:outline-none"
+              placeholder={cooldownSeconds > 0 ? `Tunggu ${cooldownSeconds} detik sebelum mengirim lagi...` : "Ketik pesan balasan ke pelanggan..."}
+              disabled={cooldownSeconds > 0}
+              className="flex-1 px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl text-[13px] font-medium text-neutral-800 focus:outline-none disabled:bg-neutral-100 disabled:cursor-not-allowed"
               onFocus={(e) => {
                 e.currentTarget.style.borderColor = PRIMARY_COLOR;
               }}
@@ -448,8 +490,8 @@ export default function MitraChat() {
 
             <button
               type="submit"
-              disabled={!messageText.trim()}
-              className="p-2.5 text-white rounded-xl transition shadow-sm cursor-pointer flex items-center justify-center disabled:opacity-50"
+              disabled={!messageText.trim() || cooldownSeconds > 0}
+              className="p-2.5 text-white rounded-xl transition shadow-sm cursor-pointer flex items-center justify-center disabled:opacity-50 min-w-[38px]"
               style={{
                 backgroundColor: PRIMARY_COLOR,
               }}

@@ -417,7 +417,7 @@ export default function RegionalAccountSettings() {
             />
 
             <span
-              className="text-[9px] font-bold uppercase tracking-widest flex items-center gap-1"
+              className="text-[12px] font-bold uppercase tracking-widest flex items-center gap-1"
               style={{ color: PRIMARY_COLOR }}
             >
               <Settings className="w-3 h-3" />
@@ -425,11 +425,11 @@ export default function RegionalAccountSettings() {
             </span>
           </div>
 
-          <h1 className="text-[18px] sm:text-[20px] font-bold text-neutral-800">
+          <h1 className="text-[21px] sm:text-[23px] font-bold text-neutral-800">
             Pengaturan Akun
           </h1>
 
-          <p className="text-[10px] sm:text-[11px] text-neutral-400 mt-0.5">
+          <p className="text-[13px] sm:text-[14px] text-neutral-400 mt-0.5">
             Ubah foto, nama, email, nomor telepon, keamanan login, dan
             preferensi notifikasi akun Admin Regional Anda.
           </p>
@@ -438,7 +438,7 @@ export default function RegionalAccountSettings() {
 
       <div className="space-y-5">
         <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 space-y-4">
-          <h3 className="text-[14px] font-bold text-neutral-800 flex items-center gap-1.5">
+          <h3 className="text-[17px] font-bold text-neutral-800 flex items-center gap-1.5">
             <User
               className="w-4 h-4"
               style={{ color: PRIMARY_COLOR }}
@@ -456,7 +456,7 @@ export default function RegionalAccountSettings() {
                 />
               ) : (
                 <div
-                  className="w-16 h-16 rounded-full text-white flex items-center justify-center text-[20px] font-extrabold shadow-sm"
+                  className="w-16 h-16 rounded-full text-white flex items-center justify-center text-[23px] font-extrabold shadow-sm"
                   style={{ backgroundColor: PRIMARY_COLOR }}
                 >
                   {(profileDraft.name || 'R')
@@ -486,21 +486,21 @@ export default function RegionalAccountSettings() {
             </div>
 
             <div>
-              <p className="text-[10px] font-bold text-neutral-700">
+              <p className="text-[13px] font-bold text-neutral-700">
                 Foto Profil
               </p>
 
-              <p className="text-[8px] text-neutral-400">
+              <p className="text-[11px] text-neutral-400">
                 JPG atau PNG, maksimal 2MB.
               </p>
 
               {avatarError && (
-                <p className="text-[8px] text-rose-600 font-bold mt-0.5">
+                <p className="text-[11px] text-rose-600 font-bold mt-0.5">
                   {avatarError}
                 </p>
               )}
 
-              <p className="text-[8px] font-bold text-neutral-400 uppercase tracking-wider flex items-center gap-1 mt-1">
+              <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider flex items-center gap-1 mt-1">
                 <ShieldCheck size={10} />
                 {displayRole}
               </p>
@@ -509,11 +509,11 @@ export default function RegionalAccountSettings() {
 
           <form
             onSubmit={handleSaveProfile}
-            className="space-y-3.5 text-[10px] pt-1 border-t border-neutral-100"
+            className="space-y-3.5 text-[13px] pt-1 border-t border-neutral-100"
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-3.5">
               <div>
-                <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                   Nama Lengkap
                 </label>
 
@@ -529,7 +529,7 @@ export default function RegionalAccountSettings() {
               </div>
 
               <div>
-                <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                   Nomor Telepon
                 </label>
 
@@ -545,7 +545,7 @@ export default function RegionalAccountSettings() {
               </div>
 
               <div className="sm:col-span-2">
-                <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                   Email
                 </label>
 
@@ -584,7 +584,7 @@ export default function RegionalAccountSettings() {
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 space-y-5">
-          <h3 className="text-[14px] font-bold text-neutral-800 flex items-center gap-1.5">
+          <h3 className="text-[17px] font-bold text-neutral-800 flex items-center gap-1.5">
             <KeyRound
               className="w-4 h-4"
               style={{ color: PRIMARY_COLOR }}
@@ -594,9 +594,9 @@ export default function RegionalAccountSettings() {
 
           <form
             onSubmit={handleChangePassword}
-            className="space-y-3 text-[10px]"
+            className="space-y-3 text-[13px]"
           >
-            <p className="text-[9px] font-bold text-neutral-500 uppercase tracking-wider">
+            <p className="text-[12px] font-bold text-neutral-500 uppercase tracking-wider">
               Ubah Kata Sandi
             </p>
 
@@ -616,7 +616,7 @@ export default function RegionalAccountSettings() {
                 },
               ].map(({ key, label }) => (
                 <div key={key} className="relative">
-                  <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                  <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                     {label}
                   </label>
 
@@ -652,7 +652,7 @@ export default function RegionalAccountSettings() {
               ))}
             </div>
 
-            <p className="text-[8px] text-neutral-400">
+            <p className="text-[11px] text-neutral-400">
               Minimal 8 karakter, kombinasi huruf dan angka disarankan.
             </p>
 
@@ -689,11 +689,11 @@ export default function RegionalAccountSettings() {
               </div>
 
               <div>
-                <p className="text-[10px] font-bold text-neutral-800">
+                <p className="text-[13px] font-bold text-neutral-800">
                   Autentikasi Dua Faktor (2FA)
                 </p>
 
-                <p className="text-[8px] text-neutral-400 max-w-xs">
+                <p className="text-[11px] text-neutral-400 max-w-xs">
                   Tambahan lapisan keamanan berupa kode OTP setiap kali
                   login dari perangkat baru.
                 </p>
@@ -713,11 +713,11 @@ export default function RegionalAccountSettings() {
               </div>
 
               <div>
-                <p className="text-[10px] font-bold text-neutral-800">
+                <p className="text-[13px] font-bold text-neutral-800">
                   Sesi Login Saat Ini
                 </p>
 
-                <p className="text-[8px] text-neutral-400">
+                <p className="text-[11px] text-neutral-400">
                   Sesi aktif terverifikasi pada perangkat ini.
                 </p>
               </div>
@@ -726,7 +726,7 @@ export default function RegionalAccountSettings() {
             <button
               type="button"
               onClick={() => setShowLogoutSessionsModal(true)}
-              className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-[9px] font-bold transition cursor-pointer shrink-0"
+              className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-[12px] font-bold transition cursor-pointer shrink-0"
             >
               Keluar dari Perangkat Lain
             </button>
@@ -734,7 +734,7 @@ export default function RegionalAccountSettings() {
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 space-y-4">
-          <h3 className="text-[14px] font-bold text-neutral-800 flex items-center gap-1.5">
+          <h3 className="text-[17px] font-bold text-neutral-800 flex items-center gap-1.5">
             <Bell
               className="w-4 h-4"
               style={{ color: PRIMARY_COLOR }}
@@ -770,11 +770,11 @@ export default function RegionalAccountSettings() {
                 className="flex items-center justify-between gap-3 p-3 bg-neutral-50/70 border border-neutral-100 rounded-xl"
               >
                 <div>
-                  <p className="text-[10px] font-bold text-neutral-800">
+                  <p className="text-[13px] font-bold text-neutral-800">
                     {item.label}
                   </p>
 
-                  <p className="text-[8px] text-neutral-400">
+                  <p className="text-[11px] text-neutral-400">
                     {item.desc}
                   </p>
                 </div>
@@ -789,18 +789,18 @@ export default function RegionalAccountSettings() {
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-rose-200 p-5 sm:p-6 space-y-3">
-          <h3 className="text-[14px] font-bold text-rose-600 flex items-center gap-1.5">
+          <h3 className="text-[17px] font-bold text-rose-600 flex items-center gap-1.5">
             <AlertTriangle className="w-4 h-4" />
             Zona Berbahaya
           </h3>
 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 bg-rose-50/50 border border-rose-100 rounded-xl">
             <div>
-              <p className="text-[10px] font-bold text-neutral-800">
+              <p className="text-[13px] font-bold text-neutral-800">
                 Nonaktifkan Akun Admin Regional
               </p>
 
-              <p className="text-[8px] text-neutral-400 max-w-md">
+              <p className="text-[11px] text-neutral-400 max-w-md">
                 Akses ke panel Admin Regional akan disembunyikan sampai
                 diaktifkan kembali oleh Superadmin. Pastikan tidak ada
                 verifikasi atau trip yang sedang perlu ditindaklanjuti.
@@ -810,7 +810,7 @@ export default function RegionalAccountSettings() {
             <button
               type="button"
               onClick={() => setShowDeactivateModal(true)}
-              className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-[9px] font-bold transition shadow-sm cursor-pointer shrink-0"
+              className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-[12px] font-bold transition shadow-sm cursor-pointer shrink-0"
             >
               Ajukan Nonaktifasi
             </button>
@@ -825,7 +825,7 @@ export default function RegionalAccountSettings() {
         subtitle="Keamanan Tambahan Akun"
         maxWidth="max-w-sm"
       >
-        <div className="space-y-3 text-[10px]">
+        <div className="space-y-3 text-[13px]">
           <p className="text-neutral-600">
             Kode OTP akan dikirim ke email terdaftar (
             {profileDraft.email || 'email belum diatur'}) setiap kali
@@ -864,7 +864,7 @@ export default function RegionalAccountSettings() {
         subtitle="Keamanan Sesi"
         maxWidth="max-w-sm"
       >
-        <div className="space-y-3 text-[10px]">
+        <div className="space-y-3 text-[13px]">
           <p className="text-neutral-600">
             Semua sesi aktif selain perangkat ini akan dipaksa logout.
             Anda perlu login ulang di perangkat tersebut.
@@ -895,7 +895,7 @@ export default function RegionalAccountSettings() {
         subtitle="Tindakan Ini Memerlukan Persetujuan Superadmin"
         maxWidth="max-w-sm"
       >
-        <div className="space-y-3 text-[10px]">
+        <div className="space-y-3 text-[13px]">
           <p className="text-neutral-600">
             Verifikasi atau trip yang masih perlu ditindaklanjuti di
             wilayah Anda sebaiknya dialihkan terlebih dahulu. Pengajuan

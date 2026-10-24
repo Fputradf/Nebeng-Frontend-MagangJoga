@@ -226,21 +226,21 @@ export default function AdminWilayahManagement() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="w-2 h-2 rounded-full bg-[#10367D] animate-pulse"></span>
-            <span className="text-[9px] font-bold uppercase tracking-widest text-[#10367D]">
+            <span className="text-[12px] font-bold uppercase tracking-widest text-[#10367D]">
               MANAJEMEN AKUN ADMIN WILAYAH
             </span>
           </div>
-          <h1 className="text-[18px] sm:text-[20px] font-bold text-neutral-800">
+          <h1 className="text-[21px] sm:text-[23px] font-bold text-neutral-800">
             Kelola Admin Wilayah
           </h1>
-          <p className="text-[10px] sm:text-[11px] text-neutral-400 mt-0.5">
+          <p className="text-[13px] sm:text-[14px] text-neutral-400 mt-0.5">
             Buat akun admin operasional baru dan tentukan penugasan kerjanya.
           </p>
         </div>
 
         <button
           onClick={handleOpenAddModal}
-          className="flex items-center gap-2 px-4 py-2 bg-[#10367D] hover:bg-[#0C2C66] text-white rounded-full text-[10px] sm:text-[11px] font-bold transition cursor-pointer shadow-sm shrink-0"
+          className="flex items-center gap-2 px-4 py-2 bg-[#10367D] hover:bg-[#0C2C66] text-white rounded-full text-[13px] sm:text-[14px] font-bold transition cursor-pointer shadow-sm shrink-0"
         >
           <Plus size={14} />
           <span>Buat Admin Baru</span>
@@ -258,16 +258,16 @@ export default function AdminWilayahManagement() {
               setSearchTerm(e.target.value);
               setCurrentPage(1);
             }}
-            className="w-full bg-neutral-50 border border-neutral-200 rounded-full pl-9 pr-8 py-2 text-[10px] sm:text-[11px] font-medium text-neutral-700 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-[#74B4D9] transition"
+            className="w-full bg-neutral-50 border border-neutral-200 rounded-full pl-9 pr-8 py-2 text-[13px] sm:text-[14px] font-medium text-neutral-700 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-[#74B4D9] transition"
           />
         </div>
-        <div className="text-[10px] font-semibold text-neutral-400 px-2">
+        <div className="text-[13px] font-semibold text-neutral-400 px-2">
           Total: <span className="font-bold text-neutral-800">{paginationMeta?.totalData || 0} Admin</span>
         </div>
       </div>
 
       {notification.show && (
-        <div className={`p-4 rounded-2xl flex items-center justify-between text-[11px] font-bold shadow-sm transition-all ${
+        <div className={`p-4 rounded-2xl flex items-center justify-between text-[14px] font-bold shadow-sm transition-all ${
           notification.type === 'success' ? 'bg-emerald-50 border border-emerald-200 text-emerald-800' : 'bg-rose-50 border border-rose-200 text-rose-800'
         }`}>
           <div className="flex items-center gap-2">
@@ -284,7 +284,7 @@ export default function AdminWilayahManagement() {
         <div className={`hidden sm:block overflow-x-auto transition-opacity duration-200 ${isFetchingPage ? 'opacity-40' : 'opacity-100'}`}>
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-gray-50/70 text-neutral-400 text-[9px] uppercase tracking-wider font-semibold">
+              <tr className="bg-gray-50/70 text-neutral-400 text-[12px] uppercase tracking-wider font-bold">
                 <th className="py-3 px-5">ID & Nama Admin</th>
                 <th className="py-3 px-5">Email Akun</th>
                 <th className="py-3 px-5">Wilayah Penempatan</th>
@@ -292,7 +292,7 @@ export default function AdminWilayahManagement() {
                 <th className="py-3 px-5 text-center">Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 text-[9px]">
+            <tbody className="divide-y divide-gray-100 text-[12px]">
               {isLoadingAdmins ? (
                 <SkeletonTableRows rows={4} columns={5} />
               ) : admins.length > 0 ? (
@@ -302,8 +302,8 @@ export default function AdminWilayahManagement() {
                   return (
                     <tr key={admin.id} className="hover:bg-gray-50/50">
                       <td className="py-3.5 px-5">
-                        <div className="font-bold text-neutral-800 text-[10px]">{admin.name}</div>
-                        <div className="text-[8px] font-bold text-[#10367D] font-mono">ID: {String(admin.id)}</div>
+                        <div className="font-bold text-neutral-800 text-[13px]">{admin.name}</div>
+                        <div className="text-[11px] font-bold text-[#10367D] font-mono">ID: {String(admin.id)}</div>
                       </td>
                       <td className="py-3.5 px-5 font-semibold text-neutral-700">{admin.email}</td>
                       <td className="py-3.5 px-5 font-bold text-neutral-800">{regionName}</td>
@@ -340,7 +340,7 @@ export default function AdminWilayahManagement() {
         </div>
 
         {paginationMeta && paginationMeta.totalPages > 1 && (
-          <div className="flex items-center justify-between p-4 bg-neutral-50/50 border-t border-neutral-200 text-[10px]">
+          <div className="flex items-center justify-between p-4 bg-neutral-50/50 border-t border-neutral-200 text-[13px]">
             <span className="text-neutral-500">
               Halaman <strong>{paginationMeta.currentPage}</strong> dari{' '}
               <strong>{paginationMeta.totalPages}</strong> (Total: {paginationMeta.totalData} Admin Wilayah)
@@ -373,7 +373,7 @@ export default function AdminWilayahManagement() {
         subtitle={`ID: ${selectedAdmin ? String(selectedAdmin.id) : ''}`}
         maxWidth="max-w-sm"
       >
-        <div className="space-y-3 text-[10px]">
+        <div className="space-y-3 text-[13px]">
           <div className="bg-neutral-50 p-3 rounded-xl border border-neutral-200 space-y-2">
             <div className="flex justify-between">
               <span className="text-neutral-400 font-bold uppercase">Email:</span>
@@ -396,7 +396,7 @@ export default function AdminWilayahManagement() {
           </div>
           <button
             onClick={() => setIsDetailModalOpen(false)}
-            className="w-full py-2 bg-[#10367D] hover:bg-[#0C2C66] text-white text-[10px] font-bold rounded-full cursor-pointer transition shadow-sm"
+            className="w-full py-2 bg-[#10367D] hover:bg-[#0C2C66] text-white text-[13px] font-bold rounded-full cursor-pointer transition shadow-sm"
           >
             Tutup
           </button>
@@ -410,42 +410,42 @@ export default function AdminWilayahManagement() {
         subtitle="Sistem Manajemen Admin Wilayah"
         maxWidth="max-w-md"
       >
-        <form onSubmit={handleSubmitForm} className="space-y-3 text-[10px]">
+        <form onSubmit={handleSubmitForm} className="space-y-3 text-[13px]">
           <div className="space-y-1">
-            <label className="text-[9px] font-bold text-neutral-500 uppercase">Nama Lengkap</label>
+            <label className="text-[12px] font-bold text-neutral-500 uppercase">Nama Lengkap</label>
             <input
               type="text"
               required
               value={formData.name}
               onChange={(e) => setFormData({...formData, name: e.target.value})}
-              className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[10px] font-medium focus:outline-none focus:ring-2 focus:ring-[#74B4D9]"
+              className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-[#74B4D9]"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="text-[9px] font-bold text-neutral-500 uppercase">Email Akses</label>
+            <label className="text-[12px] font-bold text-neutral-500 uppercase">Email Akses</label>
             <input
               type="email"
               required
               value={formData.email}
               onChange={(e) => setFormData({...formData, email: e.target.value})}
-              className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[10px] font-medium focus:outline-none focus:ring-2 focus:ring-[#74B4D9]"
+              className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-[#74B4D9]"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="text-[9px] font-bold text-neutral-500 uppercase">Nomor Telepon</label>
+            <label className="text-[12px] font-bold text-neutral-500 uppercase">Nomor Telepon</label>
             <input
               type="text"
               placeholder="08123456789"
               value={formData.phone}
               onChange={(e) => setFormData({...formData, phone: e.target.value})}
-              className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[10px] font-medium focus:outline-none focus:ring-2 focus:ring-[#74B4D9]"
+              className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-[#74B4D9]"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="text-[9px] font-bold text-neutral-500 uppercase">
+            <label className="text-[12px] font-bold text-neutral-500 uppercase">
               Password Akun {isEditing && '(Kosongkan jika tidak diubah)'}
             </label>
             <input
@@ -454,13 +454,13 @@ export default function AdminWilayahManagement() {
               placeholder="••••••••"
               value={formData.password}
               onChange={(e) => setFormData({...formData, password: e.target.value})}
-              className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[10px] font-medium focus:outline-none focus:ring-2 focus:ring-[#74B4D9]"
+              className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-[#74B4D9]"
             />
           </div>
 
           {/* Searchable Autocomplete Select for Region */}
           <div className="space-y-1 relative" ref={regionDropdownRef}>
-            <label className="text-[9px] font-bold text-neutral-500 uppercase">
+            <label className="text-[12px] font-bold text-neutral-500 uppercase">
               Penempatan Wilayah <span className="text-rose-600">*Wajib Diisi</span>
             </label>
             
@@ -475,7 +475,7 @@ export default function AdminWilayahManagement() {
                   setFormData({ ...formData, regionId: '' }); // Reset regionId jika ketik ulang
                   setIsRegionDropdownOpen(true);
                 }}
-                className="w-full bg-neutral-50 border border-neutral-200 rounded-xl pl-3 pr-8 py-2 text-[10px] font-medium focus:outline-none focus:ring-2 focus:ring-[#74B4D9]"
+                className="w-full bg-neutral-50 border border-neutral-200 rounded-xl pl-3 pr-8 py-2 text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-[#74B4D9]"
               />
               <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" />
             </div>
@@ -500,14 +500,14 @@ export default function AdminWilayahManagement() {
                       >
                         <div>
                           <span className="font-semibold">{reg.name}</span>
-                          <span className="text-[8px] text-neutral-400 ml-1.5 font-mono">({reg.code})</span>
+                          <span className="text-[11px] text-neutral-400 ml-1.5 font-mono">({reg.code})</span>
                         </div>
                         {isSelected && <Check size={13} className="text-[#10367D]" />}
                       </div>
                     );
                   })
                 ) : (
-                  <div className="px-3 py-2.5 text-[9px] text-neutral-400 text-center font-medium">
+                  <div className="px-3 py-2.5 text-[12px] text-neutral-400 text-center font-medium">
                     Wilayah tidak ditemukan
                   </div>
                 )}
@@ -516,10 +516,10 @@ export default function AdminWilayahManagement() {
           </div>
 
           <div className="flex items-center justify-end gap-2 pt-3">
-            <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-[10px] font-bold text-neutral-500 hover:bg-neutral-100 rounded-full cursor-pointer">
+            <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-[13px] font-bold text-neutral-500 hover:bg-neutral-100 rounded-full cursor-pointer">
               Batal
             </button>
-            <button type="submit" className="px-4 py-2 text-[10px] font-bold text-white bg-[#10367D] hover:bg-[#0C2C66] rounded-full flex items-center gap-1 cursor-pointer shadow-sm transition">
+            <button type="submit" className="px-4 py-2 text-[13px] font-bold text-white bg-[#10367D] hover:bg-[#0C2C66] rounded-full flex items-center gap-1 cursor-pointer shadow-sm transition">
               <Save size={13} /> Simpan
             </button>
           </div>
@@ -533,7 +533,7 @@ export default function AdminWilayahManagement() {
         subtitle="Manajemen Status Akses Admin"
         maxWidth="max-w-sm"
       >
-        <div className="space-y-3 text-[10px] text-center">
+        <div className="space-y-3 text-[13px] text-center">
           <div className="w-10 h-10 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto">
             <AlertTriangle size={20} />
           </div>

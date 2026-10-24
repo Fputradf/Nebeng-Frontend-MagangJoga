@@ -104,7 +104,7 @@ export default function MitraProfileModal({ isOpen, onClose, onSettingsClick }) 
           </button>
 
           <div className="flex items-center gap-3">
-            <div className="w-14 h-14 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center font-bold text-[18px] shrink-0 overflow-hidden">
+            <div className="w-14 h-14 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center font-bold text-[21px] shrink-0 overflow-hidden">
               {photoUrl ? (
                 <img
                   src={photoUrl}
@@ -117,7 +117,7 @@ export default function MitraProfileModal({ isOpen, onClose, onSettingsClick }) 
             </div>
 
             <div className="min-w-0">
-              <h3 className="text-[14px] font-bold truncate">
+              <h3 className="text-[17px] font-bold truncate">
                 {displayName}
               </h3>
 
@@ -126,7 +126,7 @@ export default function MitraProfileModal({ isOpen, onClose, onSettingsClick }) 
                   className="w-3 h-3 shrink-0 text-[#74B4D9]"
                 />
                 <span
-                  className="text-[9px] font-semibold uppercase tracking-wide truncate text-[#74B4D9]"
+                  className="text-[12px] font-semibold uppercase tracking-wide truncate text-[#74B4D9]"
                 >
                   Mitra Terverifikasi
                 </span>
@@ -145,10 +145,10 @@ export default function MitraProfileModal({ isOpen, onClose, onSettingsClick }) 
               <Icon className="w-3.5 h-3.5 text-neutral-400 mt-0.5 shrink-0" />
 
               <div className="min-w-0">
-                <p className="text-[8px] font-bold text-neutral-400 uppercase tracking-wide">
+                <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-wide">
                   {label}
                 </p>
-                <p className="text-[10px] font-semibold text-neutral-800 wrap-break-words">
+                <p className="text-[13px] font-semibold text-neutral-800 wrap-break-words">
                   {value}
                 </p>
               </div>
@@ -158,7 +158,7 @@ export default function MitraProfileModal({ isOpen, onClose, onSettingsClick }) 
           <div className="pt-2 flex items-center justify-end gap-2">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-[10px] font-bold text-neutral-500 hover:bg-neutral-100 rounded-full cursor-pointer transition"
+              className="px-4 py-2 text-[13px] font-bold text-neutral-500 hover:bg-neutral-100 rounded-full cursor-pointer transition"
             >
               Tutup
             </button>
@@ -169,7 +169,7 @@ export default function MitraProfileModal({ isOpen, onClose, onSettingsClick }) 
                   onClose && onClose();
                   onSettingsClick();
                 }}
-                className="px-4 py-2 text-[10px] font-bold text-white rounded-full cursor-pointer shadow-sm transition flex items-center gap-1.5"
+                className="px-4 py-2 text-[13px] font-bold text-white rounded-full cursor-pointer shadow-sm transition flex items-center gap-1.5"
                 style={{
                   backgroundColor: PRIMARY_COLOR,
                 }}

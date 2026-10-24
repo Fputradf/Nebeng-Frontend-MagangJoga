@@ -91,7 +91,7 @@ export default function SuperadminHeader({ session, role, superadminProfile, onV
   }
 
   return (
-    <div className="flex items-center justify-end gap-2 sm:gap-3 pl-14 lg:pl-0 h-11 px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6">
+    <div className="sticky top-0 z-30 bg-white/85 backdrop-blur-md border-b border-neutral-100/80 flex items-center justify-end gap-2 sm:gap-3 pl-14 lg:pl-0 h-14 px-4 sm:px-6 lg:px-8">
       {/* Tombol Peringatan Sistem */}
       <button
         onClick={() => {
@@ -127,15 +127,15 @@ export default function SuperadminHeader({ session, role, superadminProfile, onV
           <div className="absolute right-0 top-12 w-72 sm:w-80 bg-white rounded-2xl shadow-2xl border border-neutral-200 z-50 overflow-hidden animate-in fade-in duration-150">
             <div className="p-3.5 border-b border-neutral-100 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-[13px] font-semibold text-neutral-800">Notifikasi</span>
+                <span className="text-[16px] font-semibold text-neutral-800">Notifikasi</span>
                 {unreadCount > 0 && (
-                  <span className="text-[11px] font-semibold bg-brand-900/10 text-brand-900 px-2 py-0.5 rounded-full">
+                  <span className="text-[14px] font-semibold bg-brand-900/10 text-brand-900 px-2 py-0.5 rounded-full">
                     {unreadCount} baru
                   </span>
                 )}
               </div>
               {unreadCount > 0 && (
-                <button onClick={markAllNotifsAsRead} className="text-[11px] font-medium text-brand-900 hover:underline cursor-pointer">
+                <button onClick={markAllNotifsAsRead} className="text-[14px] font-medium text-brand-900 hover:underline cursor-pointer">
                   Tandai dibaca
                 </button>
               )}
@@ -145,14 +145,14 @@ export default function SuperadminHeader({ session, role, superadminProfile, onV
                 notifications.map((n) => (
                   <div key={n.id} className={`p-3 hover:bg-neutral-50 transition cursor-pointer ${n.unread ? 'bg-brand-50' : ''}`}>
                     <div className="flex justify-between items-start mb-1">
-                      <p className="text-[12px] font-semibold text-neutral-800">{n.title}</p>
-                      <span className="text-[10px] text-neutral-400">{n.time}</span>
+                      <p className="text-[15px] font-semibold text-neutral-800">{n.title}</p>
+                      <span className="text-[13px] text-neutral-400">{n.time}</span>
                     </div>
-                    <p className="text-[11px] text-neutral-500 leading-relaxed">{n.desc}</p>
+                    <p className="text-[14px] text-neutral-500 leading-relaxed">{n.desc}</p>
                   </div>
                 ))
               ) : (
-                <div className="p-4 text-center text-neutral-500 text-[12px]">
+                <div className="p-4 text-center text-neutral-500 text-[15px]">
                   Tidak ada notifikasi baru.
                 </div>
               )}
@@ -173,15 +173,15 @@ export default function SuperadminHeader({ session, role, superadminProfile, onV
             {avatarUrl ? (
               <img src={avatarUrl} alt="Avatar" className="w-10 h-10 sm:w-9 sm:h-9 rounded-full object-cover border border-neutral-200 shadow-sm" />
             ) : (
-              <div className="w-10 h-10 sm:w-9 sm:h-9 rounded-full bg-brand-900 text-white flex items-center justify-center font-bold text-[13px]">
+              <div className="w-10 h-10 sm:w-9 sm:h-9 rounded-full bg-brand-900 text-white flex items-center justify-center font-bold text-[16px]">
                 {getInitials(displayName)}
               </div>
             )}
             <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white"></span>
           </div>
           <div className="hidden sm:flex flex-col text-left">
-            <span className="text-[12px] font-semibold text-neutral-800 leading-tight">{displayName}</span>
-            <span className="text-[11px] text-neutral-400 leading-tight">{displayRole}</span>
+            <span className="text-[15px] font-semibold text-neutral-800 leading-tight">{displayName}</span>
+            <span className="text-[14px] text-neutral-400 leading-tight">{displayRole}</span>
           </div>
           <ChevronDown className="hidden sm:block w-3.5 h-3.5 text-neutral-400" />
         </button>
@@ -192,13 +192,13 @@ export default function SuperadminHeader({ session, role, superadminProfile, onV
               {avatarUrl ? (
                 <img src={avatarUrl} alt="Avatar" className="w-10 h-10 rounded-full object-cover border border-neutral-200 shrink-0" />
               ) : (
-                <div className="w-10 h-10 rounded-full bg-brand-900 text-white flex items-center justify-center font-bold text-[13px] shrink-0">
+                <div className="w-10 h-10 rounded-full bg-brand-900 text-white flex items-center justify-center font-bold text-[16px] shrink-0">
                   {getInitials(displayName)}
                 </div>
               )}
               <div className="min-w-0">
-                <p className="text-[13px] font-semibold text-neutral-800 truncate">{displayName}</p>
-                <p className="text-[10px] text-neutral-400 truncate">{displayEmail || displayRole}</p>
+                <p className="text-[16px] font-semibold text-neutral-800 truncate">{displayName}</p>
+                <p className="text-[13px] text-neutral-400 truncate">{displayEmail || displayRole}</p>
               </div>
             </div>
             <div className="py-1.5">
@@ -207,7 +207,7 @@ export default function SuperadminHeader({ session, role, superadminProfile, onV
                   setShowProfileMenu(false);
                   onViewProfile && onViewProfile();
                 }}
-                className="w-full flex items-center gap-2.5 px-4 py-2 text-[12px] font-medium text-neutral-600 hover:bg-neutral-50 cursor-pointer"
+                className="w-full flex items-center gap-2.5 px-4 py-2 text-[15px] font-medium text-neutral-600 hover:bg-neutral-50 cursor-pointer"
               >
                 <UserCircle size={15} /> Profil Saya
               </button>
@@ -216,7 +216,7 @@ export default function SuperadminHeader({ session, role, superadminProfile, onV
                   setShowProfileMenu(false);
                   onSettingsClick && onSettingsClick();
                 }}
-                className="w-full flex items-center gap-2.5 px-4 py-2 text-[12px] font-medium text-neutral-600 hover:bg-neutral-50 cursor-pointer"
+                className="w-full flex items-center gap-2.5 px-4 py-2 text-[15px] font-medium text-neutral-600 hover:bg-neutral-50 cursor-pointer"
               >
                 <Settings size={15} /> Pengaturan Akun
               </button>
@@ -232,7 +232,7 @@ export default function SuperadminHeader({ session, role, superadminProfile, onV
             <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
               <div className="flex items-center gap-2 text-amber-600">
                 <AlertTriangle size={20} />
-                <h3 className="text-[16px] font-semibold text-neutral-800">Peringatan Sistem Terbaru</h3>
+                <h3 className="text-[19px] font-bold text-neutral-800">Peringatan Sistem Terbaru</h3>
               </div>
               <button onClick={() => setShowWarningModal(false)} className="text-neutral-400 hover:text-neutral-600 cursor-pointer">
                 <X size={16} />
@@ -244,20 +244,20 @@ export default function SuperadminHeader({ session, role, superadminProfile, onV
                   <div key={idx} className="p-3 bg-amber-50 rounded-xl border border-amber-200 flex items-start gap-3">
                     <Info size={16} className="text-amber-600 shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-[12px] font-semibold text-amber-900">{warning.title}</p>
-                      <p className="text-[11px] text-amber-700 mt-0.5 leading-relaxed">{warning.desc}</p>
+                      <p className="text-[15px] font-semibold text-amber-900">{warning.title}</p>
+                      <p className="text-[14px] text-amber-700 mt-0.5 leading-relaxed">{warning.desc}</p>
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="p-4 text-center text-neutral-500 text-[12px]">
+                <div className="p-4 text-center text-neutral-500 text-[15px]">
                   Tidak ada peringatan sistem saat ini.
                 </div>
               )}
             </div>
             <button
               onClick={() => setShowWarningModal(false)}
-              className="w-full py-2.5 bg-brand-900 text-white text-[11px] font-semibold rounded-full hover:bg-brand-950 transition cursor-pointer"
+              className="w-full py-2.5 bg-brand-900 text-white text-[14px] font-semibold rounded-full hover:bg-brand-950 transition cursor-pointer"
             >
               Tutup & Evaluasi
             </button>

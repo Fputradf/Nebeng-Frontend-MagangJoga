@@ -470,7 +470,7 @@ export default function MitraOnboarding() {
               style={{ backgroundColor: PRIMARY_COLOR }}
             />
             <span
-              className="text-[9px] font-bold uppercase tracking-widest flex items-center gap-1"
+              className="text-[12px] font-bold uppercase tracking-widest flex items-center gap-1"
               style={{ color: PRIMARY_COLOR }}
             >
               <ShieldCheck className="w-3 h-3" />
@@ -478,13 +478,13 @@ export default function MitraOnboarding() {
             </span>
           </div>
 
-          <h1 className="text-[18px] sm:text-[20px] font-bold text-neutral-800">
+          <h1 className="text-[21px] sm:text-[23px] font-bold text-neutral-800">
             {isResubmissionMode
               ? 'Perbaikan Berkas Verifikasi Ditolak'
               : 'Mitra Onboarding & Verification'}
           </h1>
 
-          <p className="text-[10px] sm:text-[11px] text-neutral-400 mt-0.5">
+          <p className="text-[13px] sm:text-[14px] text-neutral-400 mt-0.5">
             {isResubmissionMode
               ? 'Unggah kembali dokumen yang perlu diperbaiki sesuai catatan periksa admin.'
               : 'Lengkapi data diri, rekening bank, kendaraan, dan unggah berkas fisik.'}
@@ -501,18 +501,18 @@ export default function MitraOnboarding() {
       </div>
 
       {!submitted ? (
-        <form onSubmit={handleSubmit} className="space-y-5 text-[10px]">
+        <form onSubmit={handleSubmit} className="space-y-5 text-[13px]">
           {!isResubmissionMode && (
             <>
               <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 space-y-4">
-                <h2 className="text-[14px] font-bold text-neutral-800 flex items-center gap-1.5">
+                <h2 className="text-[17px] font-bold text-neutral-800 flex items-center gap-1.5">
                   <User className="w-4 h-4" style={{ color: PRIMARY_COLOR }} />
                   1. Informasi Data Diri & Kendaraan
                 </h2>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                   <div>
-                    <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                    <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                       Nama Lengkap (Sesuai KTP)
                     </label>
                     <input
@@ -529,7 +529,7 @@ export default function MitraOnboarding() {
                   </div>
 
                   <div>
-                    <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                    <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                       Nomor NIK KTP (16 Digit)
                     </label>
                     <input
@@ -548,7 +548,7 @@ export default function MitraOnboarding() {
                   </div>
 
                   <div>
-                    <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                    <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                       Nomor Telepon / WhatsApp
                     </label>
                     <input
@@ -565,7 +565,7 @@ export default function MitraOnboarding() {
                   </div>
 
                   <div>
-                    <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                    <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                       Jenis Kendaraan
                     </label>
                     <select
@@ -580,7 +580,7 @@ export default function MitraOnboarding() {
                   </div>
 
                   <div>
-                    <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                    <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                       Model / Merk Kendaraan
                     </label>
                     <input
@@ -597,7 +597,7 @@ export default function MitraOnboarding() {
                   </div>
 
                   <div>
-                    <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                    <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                       Nomor Plat Kendaraan
                     </label>
                     <input
@@ -614,7 +614,7 @@ export default function MitraOnboarding() {
                   </div>
 
                   <div className="md:col-span-2">
-                    <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                    <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                       Alamat Domisili
                     </label>
                     <textarea
@@ -633,14 +633,14 @@ export default function MitraOnboarding() {
               </div>
 
               <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 space-y-4">
-                <h2 className="text-[14px] font-bold text-neutral-800 flex items-center gap-1.5">
+                <h2 className="text-[17px] font-bold text-neutral-800 flex items-center gap-1.5">
                   <CreditCard className="w-4 h-4" style={{ color: PRIMARY_COLOR }} />
                   Informasi Rekening Bank (Pencairan)
                 </h2>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
                   <div>
-                    <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                    <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                       Nama Bank
                     </label>
                     <input
@@ -657,7 +657,7 @@ export default function MitraOnboarding() {
                   </div>
 
                   <div>
-                    <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                    <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                       Nomor Rekening
                     </label>
                     <input
@@ -675,7 +675,7 @@ export default function MitraOnboarding() {
                   </div>
 
                   <div>
-                    <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                    <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                       Nama Pemilik Rekening
                     </label>
                     <input
@@ -696,7 +696,7 @@ export default function MitraOnboarding() {
           )}
 
           <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 space-y-4">
-            <h2 className="text-[14px] font-bold text-neutral-800 flex items-center gap-1.5">
+            <h2 className="text-[17px] font-bold text-neutral-800 flex items-center gap-1.5">
               <FileText className="w-4 h-4" style={{ color: PRIMARY_COLOR }} />
               {isResubmissionMode
                 ? 'Dokumen Yang Memerlukan Unggah Ulang'
@@ -733,16 +733,16 @@ export default function MitraOnboarding() {
                     <Upload className="w-6 h-6 mb-1" style={{ color: PRIMARY_COLOR }} />
                   )}
 
-                  <p className="text-[10px] font-bold text-neutral-800 mb-0.5 uppercase">
+                  <p className="text-[13px] font-bold text-neutral-800 mb-0.5 uppercase">
                     Foto {field}
                   </p>
 
-                  <p className="text-[8px] text-neutral-400 mb-2 truncate max-w-45">
+                  <p className="text-[11px] text-neutral-400 mb-2 truncate max-w-45">
                     {rawFiles[field] ? rawFiles[field].name : 'Format JPG/PNG (Maks 5MB)'}
                   </p>
 
                   <label
-                    className="px-3 py-1 rounded-lg text-[8px] font-bold cursor-pointer transition"
+                    className="px-3 py-1 rounded-lg text-[11px] font-bold cursor-pointer transition"
                     style={{
                       backgroundColor: `${PRIMARY_ACCENT}18`,
                       color: PRIMARY_COLOR
@@ -758,9 +758,9 @@ export default function MitraOnboarding() {
                   </label>
 
                   {fileErrors[field] ? (
-                    <p className="text-[8px] text-rose-500 mt-1">{fileErrors[field]}</p>
+                    <p className="text-[11px] text-rose-500 mt-1">{fileErrors[field]}</p>
                   ) : !rawFiles[field] ? (
-                    <p className="text-[8px] text-rose-500 mt-1">
+                    <p className="text-[11px] text-rose-500 mt-1">
                       Berkas {field.toUpperCase()} wajib diperbaiki.
                     </p>
                   ) : null}
@@ -775,7 +775,7 @@ export default function MitraOnboarding() {
                 !faceScanned ? 'border-rose-200' : 'border-neutral-200'
               }`}
             >
-              <h2 className="text-[14px] font-bold text-neutral-800 flex items-center justify-center gap-1.5">
+              <h2 className="text-[17px] font-bold text-neutral-800 flex items-center justify-center gap-1.5">
                 <Camera className="w-4 h-4" style={{ color: PRIMARY_COLOR }} />
                 3. Pendaftaran Data Face ID Scan
               </h2>
@@ -798,7 +798,7 @@ export default function MitraOnboarding() {
                   <button
                     type="button"
                     onClick={captureFaceId}
-                    className="mt-2 px-3 py-1 bg-[#10367D] hover:bg-[#0C2C66] text-white text-[9px] font-bold rounded-lg transition cursor-pointer"
+                    className="mt-2 px-3 py-1 bg-[#10367D] hover:bg-[#0C2C66] text-white text-[12px] font-bold rounded-lg transition cursor-pointer"
                   >
                     Ambil / Konfirmasi Wajah
                   </button>
@@ -813,14 +813,14 @@ export default function MitraOnboarding() {
                         className="w-full h-full object-cover"
                       />
                     </div>
-                    <div className="flex items-center gap-1 text-[9px] font-bold text-[#74B4D9]">
+                    <div className="flex items-center gap-1 text-[12px] font-bold text-[#74B4D9]">
                       <CheckCircle2 className="w-3.5 h-3.5" />
                       Face ID Berhasil Direkam!
                     </div>
                     <button
                       type="button"
                       onClick={resetFaceScan}
-                      className="text-[8px] underline hover:text-white cursor-pointer"
+                      className="text-[11px] underline hover:text-white cursor-pointer"
                       style={{ color: PRIMARY_ACCENT }}
                     >
                       Ulangi Foto Wajah
@@ -833,7 +833,7 @@ export default function MitraOnboarding() {
                     <button
                       type="button"
                       onClick={startCamera}
-                      className="px-3.5 py-1.5 text-white rounded-xl text-[9px] font-bold transition cursor-pointer"
+                      className="px-3.5 py-1.5 text-white rounded-xl text-[12px] font-bold transition cursor-pointer"
                       style={{ backgroundColor: PRIMARY_COLOR }}
                     >
                       Mulai Kamera & Scan Wajah
@@ -843,7 +843,7 @@ export default function MitraOnboarding() {
               </div>
 
               {!faceScanned && (
-                <p className="text-[8px] text-rose-500 mt-1">
+                <p className="text-[11px] text-rose-500 mt-1">
                   Verifikasi Face ID scan wajah belum dilakukan.
                 </p>
               )}
@@ -851,7 +851,7 @@ export default function MitraOnboarding() {
           )}
 
           {errorMessage && (
-            <div className="p-3 bg-rose-50 border border-rose-200 text-rose-600 rounded-xl text-[10px] font-bold flex items-center gap-2">
+            <div className="p-3 bg-rose-50 border border-rose-200 text-rose-600 rounded-xl text-[13px] font-bold flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{errorMessage}</span>
             </div>
@@ -861,7 +861,7 @@ export default function MitraOnboarding() {
             <button
               type="submit"
               disabled={!isFormComplete || isLoading}
-              className={`px-6 py-3 rounded-xl text-[10px] font-bold transition shadow-sm ${
+              className={`px-6 py-3 rounded-xl text-[13px] font-bold transition shadow-sm ${
                 isFormComplete && !isLoading
                   ? 'text-white cursor-pointer'
                   : 'bg-neutral-200 text-neutral-400 cursor-not-allowed'
@@ -886,11 +886,11 @@ export default function MitraOnboarding() {
             <CheckCircle2 className="w-6 h-6" />
           </div>
 
-          <h2 className="text-[16px] font-bold text-neutral-800">
+          <h2 className="text-[19px] font-bold text-neutral-800">
             Verifikasi Mitra Sedang Ditinjau
           </h2>
 
-          <p className="text-[11px] text-neutral-500">
+          <p className="text-[14px] text-neutral-500">
             Dokumen Anda telah dikirim ke pusat verifikasi. Dashboard Mitra akan terbuka otomatis
             setelah Admin menyetujui pengajuan Anda.
           </p>
@@ -898,7 +898,7 @@ export default function MitraOnboarding() {
           <button
             onClick={handleManualCheckStatus}
             disabled={isCheckingStatus}
-            className="py-2.5 px-5 text-white rounded-xl text-[10px] font-bold cursor-pointer disabled:opacity-50 flex items-center gap-1.5 mx-auto"
+            className="py-2.5 px-5 text-white rounded-xl text-[13px] font-bold cursor-pointer disabled:opacity-50 flex items-center gap-1.5 mx-auto"
             style={{ backgroundColor: PRIMARY_COLOR }}
           >
             <RefreshCw className={`w-3 h-3 ${isCheckingStatus ? 'animate-spin' : ''}`} />

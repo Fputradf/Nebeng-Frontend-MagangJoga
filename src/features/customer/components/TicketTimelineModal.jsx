@@ -14,6 +14,7 @@ export default function TicketTimelineModal({ isOpen, onClose, ticket }) {
   const isCheckedInOrigin = ['checked_in_origin', 'in_transit', 'arrived_destination', 'completed'].includes(status);
   const isCompleted = status === 'completed';
   const isCancelled = status === 'cancelled';
+  const isNoShow = status === 'no_show';
 
   // Temukan detail log spesifik jika ada
   const originLog = logs.find((l) => l.scanType === 'checkin_origin');
@@ -39,12 +40,12 @@ export default function TicketTimelineModal({ isOpen, onClose, ticket }) {
     {
       id: 'paid',
       title: 'Pembayaran Dikonfirmasi & Dana Ditahan di Escrow',
-      subtitle: 'Pembayaran aman tersimpan di sistem rekening bersama',
-      time: isPaid ? 'Pembayaran Sukses' : 'Menunggu Pembayaran',
+      subtitle: isNoShow ? 'Tiket hangus (penumpang tidak datang)' : 'Pembayaran aman tersimpan di sistem rekening bersama',
+      time: isPaid ? (isNoShow ? 'No-Show (Hangus)' : 'Pembayaran Sukses') : 'Menunggu Pembayaran',
       isDone: isPaid,
       isActive: status === 'paid',
       icon: ShieldCheck,
-      color: 'bg-emerald-600',
+      color: isNoShow ? 'bg-orange-600' : 'bg-emerald-600',
     },
     {
       id: 'origin_scan',
@@ -116,6 +117,24 @@ export default function TicketTimelineModal({ isOpen, onClose, ticket }) {
           </div>
         )}
 
+        {/* Kondisi No-Show Penumpang */}
+        {isNoShow && (
+          <div className="my-4 p-3 bg-orange-50 border border-orange-200 rounded-xl flex items-center gap-3 text-orange-700">
+            <AlertCircle className="w-5 h-5 shrink-0" />
+            <div className="text-xs">
+              <span className="font-bold">Penumpang Tidak Datang (No-Show).</span>
+              <p className="mt-0.5">Tiket dianggap hangus tanpa refund. Kuota kursi telah dikembalikan ke trip.</p>
+              {ticket.disputeDeadline && !ticket.isDisputed && (
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="text-[11px] text-orange-600">
+                    Jendela keberatan: {new Date(ticket.disputeDeadline).toLocaleString('id-ID')}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Stepper Timeline List */}
         <div className="py-6 space-y-6">
           {steps.map((step, idx) => {
@@ -158,7 +177,7 @@ export default function TicketTimelineModal({ isOpen, onClose, ticket }) {
                     >
                       {step.title}
                     </h4>
-                    <span className="text-[11px] font-medium text-gray-500 ml-2 shrink-0">
+                    <span className="text-[14px] font-medium text-gray-500 ml-2 shrink-0">
                       {step.time}
                     </span>
                   </div>

@@ -40,7 +40,7 @@ export const BannerSlider = ({ role }) => {
   if (loading || banners.length === 0) return null;
 
   return (
-    <div className="relative w-full h-48 md:h-64 rounded-xl overflow-hidden mb-6 group bg-gray-100">
+    <div className="relative w-full h-48 md:h-64 rounded-xl overflow-hidden mb-6 group bg-slate-100 shadow-card">
       {banners.map((banner, index) => (
         <a
           key={banner.id}
@@ -64,23 +64,25 @@ export const BannerSlider = ({ role }) => {
         <>
           <button
             onClick={goToPrev}
-            className="absolute left-2 top-1/2 -translate-y-1/2 z-20 bg-black/40 hover:bg-black/60 text-white p-1.5 md:p-2 rounded-full opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+            className="absolute left-3 top-1/2 -translate-y-1/2 z-20 bg-slate-900/60 hover:bg-slate-900/80 text-white p-2 md:p-2.5 rounded-lg opacity-100 md:opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-soft backdrop-blur-sm"
           >
             <ChevronLeft size={20} />
           </button>
           <button
             onClick={goToNext}
-            className="absolute right-2 top-1/2 -translate-y-1/2 z-20 bg-black/40 hover:bg-black/60 text-white p-1.5 md:p-2 rounded-full opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+            className="absolute right-3 top-1/2 -translate-y-1/2 z-20 bg-slate-900/60 hover:bg-slate-900/80 text-white p-2 md:p-2.5 rounded-lg opacity-100 md:opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-soft backdrop-blur-sm"
           >
             <ChevronRight size={20} />
           </button>
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex space-x-2">
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex space-x-2">
             {banners.map((_, idx) => (
               <button
                 key={idx}
                 onClick={() => setCurrentIndex(idx)}
-                className={`w-2 h-2 rounded-full transition-colors ${
-                  idx === currentIndex ? 'bg-white' : 'bg-white/50'
+                className={`w-2.5 h-2.5 rounded-full transition-all duration-200 ${
+                  idx === currentIndex
+                    ? 'bg-white w-6'
+                    : 'bg-white/50 hover:bg-white/70'
                 }`}
               />
             ))}

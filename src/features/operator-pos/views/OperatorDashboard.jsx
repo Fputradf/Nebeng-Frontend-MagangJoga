@@ -7,7 +7,6 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
-  RefreshCw,
 } from 'lucide-react';
 import { SkeletonTableRows } from '../../../components/ui/Skeleton';
 import EmptyState from '../../../components/ui/EmptyState';
@@ -19,6 +18,9 @@ import { operatorService } from '../../../services/operatorService';
 const PRIMARY_COLOR = '#10367D';
 const PRIMARY_ACCENT = '#74B4D9';
 
+const DAYS_FULL = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+const MONTHS_FULL = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
 export default function OperatorDashboard() {
   const { session, adminProfile } = useAuth();
 
@@ -28,7 +30,6 @@ export default function OperatorDashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [directionFilter, setDirectionFilter] = useState('all');
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [paginationMeta, setPaginationMeta] = useState({
     total: 0,
     page: 1,
@@ -39,10 +40,6 @@ export default function OperatorDashboard() {
   const operatorProfile = adminProfile || session;
   const operatorPosId =
     operatorProfile?.assignedPickupPointId || operatorProfile?.posId || operatorProfile?.pickupPointId;
-
-  const handleRefresh = () => {
-    setRefreshTrigger((prev) => prev + 1);
-  };
 
   useEffect(() => {
     let isMounted = true;
@@ -125,7 +122,7 @@ export default function OperatorDashboard() {
     return () => {
       isMounted = false;
     };
-  }, [currentPage, limit, operatorPosId, refreshTrigger, directionFilter]);
+  }, [currentPage, limit, operatorPosId, directionFilter]);
 
   const incomingCount = tripsSchedule.filter((t) => t.type === 'Masuk').length;
   const outgoingCount = tripsSchedule.filter((t) => t.type === 'Keluar').length;
@@ -172,6 +169,22 @@ export default function OperatorDashboard() {
           border: 'border-rose-200',
           dot: 'bg-rose-500',
         };
+      case 'no_show':
+        return {
+          label: 'Penumpang Tidak Datang',
+          bg: 'bg-orange-50',
+          text: 'text-orange-700',
+          border: 'border-orange-200',
+          dot: 'bg-orange-500',
+        };
+      case 'mitra_no_show':
+        return {
+          label: 'Mitra Tidak Datang',
+          bg: 'bg-red-50',
+          text: 'text-red-700',
+          border: 'border-red-200',
+          dot: 'bg-red-500',
+        };
       default:
         return {
           label: status || 'Pending',
@@ -185,65 +198,30 @@ export default function OperatorDashboard() {
 
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
-      <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-neutral-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span
-              className="w-2 h-2 rounded-full animate-pulse"
-              style={{ backgroundColor: PRIMARY_COLOR }}
-            />
-            <span
-              className="text-[9px] font-bold uppercase tracking-widest"
-              style={{ color: PRIMARY_COLOR }}
-            >
-              POS OPERASIONAL WILAYAH | {operatorProfile?.name ? operatorProfile.name.toUpperCase() : 'OPERATOR POS'}
-            </span>
+      {/* ── BANNER ── */}
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] p-6 text-white shadow-card sm:p-8">
+        <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10" />
+        <div className="absolute bottom-0 right-32 h-28 w-28 rounded-full bg-accent/20" />
+        <div className="relative flex flex-col gap-3 pb-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="font-display text-2xl font-bold">Dashboard Operasional Pos</h1>
+            <p className="mt-1 text-sm text-blue-100">Pantau jadwal trip mitra yang masuk dan keluar di pos Anda secara realtime dari server.</p>
           </div>
-
-          <h1 className="text-[18px] sm:text-[20px] font-bold text-neutral-800">
-            Dashboard Operasional Pos
-          </h1>
-
-          <p className="text-[10px] sm:text-[11px] text-neutral-400 mt-0.5">
-            Pantau jadwal trip mitra yang masuk dan keluar di pos Anda secara realtime dari server.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3 shrink-0">
-          <button
-            onClick={handleRefresh}
-            disabled={isLoadingTrips}
-            title="Muat ulang data"
-            className="p-2.5 rounded-full border border-neutral-200 hover:bg-neutral-50 text-neutral-600 transition disabled:opacity-50"
-          >
-            <RefreshCw className={`w-4 h-4 ${isLoadingTrips ? 'animate-spin' : ''}`} />
-          </button>
-
-          <div
-            className="flex items-center gap-2.5 px-3.5 py-2 rounded-full"
-            style={{
-              backgroundColor: `${PRIMARY_ACCENT}1A`,
-              border: `1px solid ${PRIMARY_ACCENT}33`,
-            }}
-          >
-            <div
-              className="w-7 h-7 rounded-full text-white flex items-center justify-center font-bold shrink-0"
-              style={{ backgroundColor: PRIMARY_COLOR }}
-            >
-              <Calendar className="w-3.5 h-3.5" />
-            </div>
-            <div>
-              <p
-                className="text-[8px] font-bold uppercase tracking-wider"
-                style={{ color: PRIMARY_COLOR }}
-              >
-                TANGGAL HARI INI
-              </p>
-              <p className="text-[10px] font-bold text-neutral-800">{todayLabel}</p>
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="flex items-center gap-2.5 px-3.5 py-2 bg-white/15 border border-white/25 rounded-full backdrop-blur">
+              <div className="w-7 h-7 rounded-full bg-white/20 text-white flex items-center justify-center shrink-0">
+                <Calendar className="w-3.5 h-3.5" />
+              </div>
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-white/80">TANGGAL HARI INI</p>
+                <p className="text-[13px] font-bold text-white">{todayLabel}</p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+        <div className="absolute bottom-4 left-6 right-6 border-t border-dashed border-white/25 sm:left-8 sm:right-8" />
+        <span className="absolute bottom-[11px] right-6 h-2.5 w-2.5 rounded-full border-2 border-white bg-accent sm:right-8" />
+      </section>
       <BannerSlider role="operator" />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
@@ -280,16 +258,16 @@ export default function OperatorDashboard() {
               <Calendar className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-[14px] font-bold text-neutral-800">
+              <h2 className="text-[17px] font-bold text-neutral-800">
                 Jadwal Trip Mitra Masuk & Keluar Pos
               </h2>
-              <p className="text-[10px] text-neutral-400">
+              <p className="text-[13px] text-neutral-400">
                 Data terpaginasi langsung dari server backend (Total: {paginationMeta.total} trip)
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 text-[11px]">
+          <div className="flex items-center gap-3 text-[14px]">
             <div className="flex items-center gap-2">
               <span className="text-neutral-500 font-medium hidden sm:inline">Arah Trip:</span>
               <select
@@ -330,7 +308,7 @@ export default function OperatorDashboard() {
         <div className="hidden sm:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-neutral-100 text-neutral-400 text-[9px] uppercase tracking-wider font-semibold">
+              <tr className="border-b border-neutral-100 text-neutral-400 text-[12px] uppercase tracking-wider font-bold">
                 <th className="py-3 px-4">ID TRIP & WAKTU</th>
                 <th className="py-3 px-4">TIPE ARAH</th>
                 <th className="py-3 px-4">MITRA & KENDARAAN</th>
@@ -339,7 +317,7 @@ export default function OperatorDashboard() {
                 <th className="py-3 px-4 text-right">RUTE</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-100 text-[10px]">
+            <tbody className="divide-y divide-neutral-100 text-[13px]">
               {isLoadingTrips ? (
                 <SkeletonTableRows rows={limit} columns={6} />
               ) : tripsSchedule.length === 0 ? (
@@ -356,10 +334,10 @@ export default function OperatorDashboard() {
                 tripsSchedule.map((trip) => (
                   <tr key={trip.id} className="hover:bg-neutral-50/60 transition border-b border-neutral-100">
                     <td className="py-3.5 px-4">
-                      <p className="font-bold text-neutral-800 font-mono text-[11px]">
+                      <p className="font-bold text-neutral-800 font-mono text-[14px]">
                         #{trip.id}
                       </p>
-                      <p className="text-[9px] text-neutral-400 flex items-center gap-1 mt-0.5">
+                      <p className="text-[12px] text-neutral-400 flex items-center gap-1 mt-0.5">
                         <Clock className="w-3 h-3 text-[#10367D]" />
                         {trip.time}
                       </p>
@@ -367,12 +345,12 @@ export default function OperatorDashboard() {
 
                     <td className="py-3.5 px-4">
                       {trip.type === 'Masuk' ? (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200/80">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[13px] font-bold bg-purple-50 text-purple-700 border border-purple-200/80">
                           <ArrowDownLeft className="w-3.5 h-3.5 text-purple-600" />
                           Masuk Pos
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold bg-teal-50 text-teal-700 border border-teal-200/80">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[13px] font-bold bg-teal-50 text-teal-700 border border-teal-200/80">
                           <ArrowUpRight className="w-3.5 h-3.5 text-teal-600" />
                           Keluar Pos
                         </span>
@@ -381,7 +359,7 @@ export default function OperatorDashboard() {
 
                     <td className="py-3.5 px-4">
                       <p className="font-bold text-neutral-800">{trip.partnerName}</p>
-                      <p className="text-[9px] text-neutral-400 font-mono">{trip.plateNumber}</p>
+                      <p className="text-[12px] text-neutral-400 font-mono">{trip.plateNumber}</p>
                     </td>
                     
                     <td className="py-3.5 px-4 font-semibold text-neutral-700">{trip.service}</td>
@@ -391,7 +369,7 @@ export default function OperatorDashboard() {
                         const config = getStatusConfig(trip.status);
                         return (
                           <span
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold border ${config.bg} ${config.text} ${config.border}`}
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[13px] font-semibold border ${config.bg} ${config.text} ${config.border}`}
                           >
                             <span className={`w-1.5 h-1.5 rounded-full ${config.dot}`} />
                             {config.label}
@@ -401,7 +379,7 @@ export default function OperatorDashboard() {
                     </td>
 
                     <td className="py-3.5 px-4 text-right">
-                      <span className="text-[10px] text-neutral-600 font-medium bg-neutral-100 px-2 py-1 rounded-md">
+                      <span className="text-[13px] text-neutral-600 font-medium bg-neutral-100 px-2 py-1 rounded-md">
                         {trip.originName} ➔ {trip.destName}
                       </span>
                     </td>
@@ -412,7 +390,7 @@ export default function OperatorDashboard() {
           </table>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-neutral-100 text-[11px] text-neutral-500">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-neutral-100 text-[14px] text-neutral-500">
           <div>
             Menampilkan data <span className="font-bold text-neutral-800">{tripsSchedule.length}</span> dari total{' '}
             <span className="font-bold text-neutral-800">{paginationMeta.total}</span> data

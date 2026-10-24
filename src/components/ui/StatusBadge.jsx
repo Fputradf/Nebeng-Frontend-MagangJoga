@@ -14,7 +14,7 @@ export default function StatusBadge({
 
   return (
     <span
-      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] font-bold border transition ${variants[variant] || variants.default} ${className}`}
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold border transition ${variants[variant] || variants.default} ${className}`}
     >
       {Icon && <Icon className="w-2.5 h-2.5 shrink-0" />}
       <span>{children}</span>

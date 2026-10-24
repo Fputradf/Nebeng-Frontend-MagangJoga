@@ -1,6 +1,10 @@
+import { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import OperatorSidebar from './components/OperatorSidebar';
 import OperatorTopbar from './components/OperatorTopBar';
+import OperatorProfileModal from './components/OperatorProfileModal';
+import AppShell from '../../components/layout/AppShell';
+import AppTopbar from '../../components/layout/AppTopbar';
 import { useAuth } from '../../context/AuthContext';
 
 const OPERATOR_MENU_PATH = {
@@ -13,8 +17,9 @@ const OPERATOR_MENU_PATH = {
 
 export default function OperatorLayout() {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, adminProfile } = useAuth();
   const location = useLocation();
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   const currentPath = location.pathname.replace(/\/$/, '');
   const activeMenu = Object.keys(OPERATOR_MENU_PATH).find((menu) => {
@@ -22,21 +27,43 @@ export default function OperatorLayout() {
     return currentPath.endsWith(`/operator-pos/${slug}`) || currentPath.includes(`/operator-pos/${slug}/`);
   }) || 'Dashboard Pos';
 
+  const handleLogout = () => {
+    logout();
+    navigate('/login', { replace: true });
+  };
+
+  const handleMenuSelect = (name) => {
+    const slug = OPERATOR_MENU_PATH[name];
+    if (!slug) {
+      console.warn('Menu tidak dikenal:', name);
+      return;
+    }
+    navigate(`/operator-pos/${slug}`);
+  };
+
   return (
-    <div className="flex min-h-screen bg-[#f8f9fa] font-['Inter']">
-      <OperatorSidebar
-        activeMenu={activeMenu}
-        onMenuSelect={(name) => navigate(`/operator-pos/${OPERATOR_MENU_PATH[name]}`)}
-        onLogout={() => {
-          logout();
-          navigate('/login', { replace: true });
-        }}
+    <AppShell
+      sidebar={
+        <OperatorSidebar
+          activeMenu={activeMenu}
+          onMenuSelect={handleMenuSelect}
+          onLogout={handleLogout}
+        />
+      }
+      topbar={
+        <AppTopbar
+          profile={adminProfile}
+          roleLabel="Operator Pos"
+          onProfileClick={() => setShowProfileModal(true)}
+        />
+      }
+    >
+      <OperatorProfileModal
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+        profile={adminProfile}
+        onSettingsClick={() => navigate('/operator-pos/profile/pengaturan')}
       />
-      
-      <div className="flex-1 lg:ml-64 min-h-screen pb-20 lg:pb-0">
-        <OperatorTopbar onSettingsClick={() => navigate('/operator-pos/profile/pengaturan')} />
-        <Outlet />
-      </div>
-    </div>
+    </AppShell>
   );
 }

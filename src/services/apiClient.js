@@ -88,6 +88,13 @@ apiClient.interceptors.response.use(
 
     // Jika error 401 dan bukan sedang mencoba endpoint login/refresh itu sendiri
     if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url.includes('/auth/')) {
+      // Jangan coba refresh token jika sudah di halaman login
+      const currentPath = window.location.pathname;
+      if (currentPath === '/login' || currentPath === '/register' || currentPath === '/forgot-password') {
+        sessionStorage.removeItem(AUTH_STORAGE_KEY);
+        localStorage.removeItem(AUTH_STORAGE_KEY);
+        return Promise.reject(error);
+      }
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
@@ -131,7 +138,13 @@ apiClient.interceptors.response.use(
         // Hapus sesi lokal jika refresh token gagal/kadaluwarsa
         sessionStorage.removeItem(AUTH_STORAGE_KEY);
         localStorage.removeItem(AUTH_STORAGE_KEY);
-        window.location.href = '/login';
+        
+        // Cek apakah sudah di halaman login untuk mencegah infinite loop
+        const currentPath = window.location.pathname;
+        if (currentPath !== '/login' && currentPath !== '/register' && currentPath !== '/forgot-password') {
+          window.location.href = '/login';
+        }
+        
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

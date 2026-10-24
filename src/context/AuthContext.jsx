@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import apiClient from '../services/apiClient';
 
 const AuthContext = createContext(null);
@@ -28,6 +28,8 @@ function readStoredSession() {
 
 export function AuthProvider({ children }) {
   const [{ session, persisted }, setAuthState] = useState(readStoredSession);
+  // true setelah /auth/me selesai dicek (berhasil maupun gagal) untuk sesi customer
+  const [customerStatusChecked, setCustomerStatusChecked] = useState(false);
 
   const login = useCallback((role, extra = {}, remember = false) => {
     const nextSession = { role, loggedInAt: Date.now(), ...extra };
@@ -40,29 +42,45 @@ export function AuthProvider({ children }) {
       localStorage.removeItem(STORAGE_KEY);
     }
 
+    // Login baru: status verifikasi customer harus dicek ulang ke server.
+    setCustomerStatusChecked(false);
     setAuthState({ session: nextSession, persisted: remember });
+    // Emit event for push notification resubscription
+    window.dispatchEvent(new CustomEvent('nebeng-login'));
   }, []);
 
   const checkAuthStatus = useCallback(async () => {
-      try {
-        const res = await apiClient.get('/auth/me');
-        if (res.data) {
-          setAuthState((prev) => {
-            if (!prev.session) return prev;
-            const nextSession = {
-              ...prev.session,
-              customerVerified: res.data.statusVerification === 'approved',
-              customerProfile: { ...prev.session.customerProfile, ...res.data },
-            };
-            const storage = prev.persisted ? localStorage : sessionStorage;
-            storage.setItem(STORAGE_KEY, JSON.stringify(nextSession));
-            return { ...prev, session: nextSession };
-          });
-        }
-      } catch (err) {
-        console.error('Gagal memperbarui AuthStatus:', err);
+    try {
+      const res = await apiClient.get('/auth/me');
+      if (res.data) {
+        const verified =
+          String(res.data.statusVerification ?? '').toLowerCase() === 'approved';
+
+        setAuthState((prev) => {
+          if (!prev.session) return prev;
+          const nextSession = {
+            ...prev.session,
+            customerVerified: verified,
+            customerProfile: { ...prev.session.customerProfile, ...res.data },
+          };
+          const storage = prev.persisted ? localStorage : sessionStorage;
+          storage.setItem(STORAGE_KEY, JSON.stringify(nextSession));
+          return { ...prev, session: nextSession };
+        });
       }
+    } catch (err) {
+      console.error('Gagal memperbarui AuthStatus:', err);
+    } finally {
+      setCustomerStatusChecked(true);
+    }
   }, []);
+
+  // Sinkronkan status verifikasi customer dengan server saat app dimuat / setelah login.
+  useEffect(() => {
+    if (session?.role === 'customer') {
+      checkAuthStatus();
+    }
+  }, [session?.role, checkAuthStatus]);
 
   const logout = useCallback(async () => {
     try {
@@ -72,7 +90,10 @@ export function AuthProvider({ children }) {
     } finally {
       localStorage.removeItem(STORAGE_KEY);
       sessionStorage.removeItem(STORAGE_KEY);
+      setCustomerStatusChecked(false);
       setAuthState({ session: null, persisted: false });
+      // Emit event for push notification cleanup
+      window.dispatchEvent(new CustomEvent('nebeng-logout'));
     }
   }, []);
 
@@ -148,6 +169,8 @@ export function AuthProvider({ children }) {
     isAuthenticated: !!session,
     role: session?.role ?? null,
     sessionPersisted: persisted,
+    // Untuk non-customer selalu true, supaya guard tidak menunggu tanpa ujung.
+    statusChecked: session?.role !== 'customer' || customerStatusChecked,
     isCustomerVerified: !!session?.customerVerified,
     customerProfile: session?.customerProfile ?? null,
     adminProfile: session?.adminProfile ?? null,

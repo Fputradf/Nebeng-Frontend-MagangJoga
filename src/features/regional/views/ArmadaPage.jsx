@@ -118,14 +118,14 @@ export default function FleetCourierPage() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="w-2 h-2 rounded-full bg-[#10367D] animate-pulse"></span>
-            <span className="text-[9px] font-bold uppercase tracking-widest text-[#10367D]">
+            <span className="text-[12px] font-bold uppercase tracking-widest text-[#10367D]">
               MANAJEMEN ARMADA & KENDARAAN (MITRA)
             </span>
           </div>
-          <h1 className="text-[18px] sm:text-[20px] font-bold text-neutral-800">
+          <h1 className="text-[21px] sm:text-[23px] font-bold text-neutral-800">
             Status Kendaraan & Verifikasi Mitra
           </h1>
-          <p className="text-[10px] sm:text-[11px] text-neutral-400 mt-0.5">
+          <p className="text-[13px] sm:text-[14px] text-neutral-400 mt-0.5">
             Kendaraan didaftarkan langsung oleh masing-masing akun Mitra melalui menu panel mereka.
           </p>
         </div>
@@ -134,7 +134,7 @@ export default function FleetCourierPage() {
       {/* INFORMATION */}
       <div className="bg-[#74B4D9]/10 border border-[#74B4D9]/30 p-4 rounded-xl flex items-start gap-3">
         <ShieldAlert size={18} className="text-[#10367D] shrink-0 mt-0.5" />
-        <div className="text-[10px] text-neutral-800 space-y-1">
+        <div className="text-[13px] text-neutral-800 space-y-1">
           <p>Halaman ini menampilkan daftar Mitra di wilayah Anda yang berhak mendaftarkan kendaraan.</p>
         </div>
       </div>
@@ -148,12 +148,12 @@ export default function FleetCourierPage() {
             placeholder="Cari nama mitra, email..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-neutral-50 border border-neutral-200 rounded-full pl-9 pr-8 py-2 text-[10px] sm:text-[11px] font-medium text-neutral-700 focus:outline-none focus:ring-2 focus:ring-[#10367D] transition"
+            className="w-full bg-neutral-50 border border-neutral-200 rounded-full pl-9 pr-8 py-2 text-[13px] sm:text-[14px] font-medium text-neutral-700 focus:outline-none focus:ring-2 focus:ring-[#10367D] transition"
           />
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-[10px] font-medium text-neutral-600">
+          <div className="flex items-center gap-2 text-[13px] font-medium text-neutral-600">
             <span>Tampilkan:</span>
             <select
               value={limit}
@@ -170,7 +170,7 @@ export default function FleetCourierPage() {
             </select>
           </div>
 
-          <div className="text-[10px] font-semibold text-neutral-400 px-2">
+          <div className="text-[13px] font-semibold text-neutral-400 px-2">
             Total: <span className="font-bold text-neutral-800">{paginationMeta?.totalData || filteredData.length} Orang</span>
           </div>
         </div>
@@ -181,7 +181,7 @@ export default function FleetCourierPage() {
         <div className="hidden sm:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-gray-50/70 text-neutral-400 text-[9px] uppercase tracking-wider font-semibold">
+              <tr className="bg-gray-50/70 text-neutral-400 text-[12px] uppercase tracking-wider font-bold">
                 <th className="py-3 px-5">ID & Nama Mitra Pemilik</th>
                 <th className="py-3 px-5">Email Akun</th>
                 <th className="py-3 px-5">Kendaraan</th>
@@ -191,15 +191,15 @@ export default function FleetCourierPage() {
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-gray-100 text-[9px]">
+            <tbody className="divide-y divide-gray-100 text-[12px]">
               {isLoading ? (
                 <SkeletonTableRows rows={4} columns={6} />
               ) : filteredData.length > 0 ? (
                 filteredData.map((item) => (
                   <tr key={item.id} className="hover:bg-[#74B4D9]/10 transition">
                     <td className="py-3.5 px-5">
-                      <div className="font-bold text-neutral-800 text-[10px]">{item.name}</div>
-                      <div className="text-[8px] font-bold text-[#10367D] font-mono">ID: {item.id}</div>
+                      <div className="font-bold text-neutral-800 text-[13px]">{item.name}</div>
+                      <div className="text-[11px] font-bold text-[#10367D] font-mono">ID: {item.id}</div>
                     </td>
                     <td className="py-3.5 px-5 font-semibold text-neutral-700">{item.email}</td>
                     <td className="py-3.5 px-5 font-bold text-neutral-800">
@@ -209,14 +209,14 @@ export default function FleetCourierPage() {
                       {item.hasVehicle ? item.plateNumber : '-'}
                     </td>
                     <td className="py-3.5 px-5">
-                      <span className={`px-2.5 py-1 rounded-full text-[8px] font-bold ${
+                      <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${
                         item.hasVehicle ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-neutral-100 text-neutral-500 border border-neutral-200'
                       }`}>
                         {item.hasVehicle ? 'TERDAFTAR' : 'BELUM TERDAFTAR'}
                       </span>
                     </td>
                     <td className="py-3.5 px-5">
-                      <span className={`px-2.5 py-1 rounded-full text-[8px] font-bold ${
+                      <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${
                         item.status === 'Aktif' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'
                       }`}>
                         {item.status.toUpperCase()}
@@ -241,7 +241,7 @@ export default function FleetCourierPage() {
 
         {/* PAGINATION FOOTER */}
         {paginationMeta && paginationMeta.totalPages > 1 && (
-          <div className="flex items-center justify-between p-4 bg-neutral-50/50 border-t border-neutral-200 text-[10px]">
+          <div className="flex items-center justify-between p-4 bg-neutral-50/50 border-t border-neutral-200 text-[13px]">
             <span className="text-neutral-500">
               Halaman <strong>{paginationMeta.currentPage}</strong> dari <strong>{paginationMeta.totalPages}</strong> (Total: {paginationMeta.totalData} Data)
             </span>

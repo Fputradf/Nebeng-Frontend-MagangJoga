@@ -103,24 +103,24 @@ export default function MitraQrDisplay() {
               style={{ backgroundColor: PRIMARY_COLOR }}
             />
             <span
-              className="text-[9px] font-bold uppercase tracking-widest flex items-center gap-1"
+              className="text-[12px] font-bold uppercase tracking-widest flex items-center gap-1"
               style={{ color: PRIMARY_COLOR }}
             >
               <Smartphone className="w-3 h-3" />
               TAMPILAN LAYAR PERANGKAT MITRA
             </span>
           </div>
-          <h1 className="text-[18px] sm:text-[20px] font-bold text-neutral-800">
+          <h1 className="text-[21px] sm:text-[23px] font-bold text-neutral-800">
             Digital Dynamic QR Trip Display
           </h1>
-          <p className="text-[10px] sm:text-[11px] text-neutral-400 mt-0.5">
+          <p className="text-[13px] sm:text-[14px] text-neutral-400 mt-0.5">
             Tunjukkan QR Code dinamis ini kepada Operator Pos saat verifikasi keberangkatan atau kedatangan di pos mitra.
           </p>
         </div>
       </div>
 
       {isLoading ? (
-        <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-8 text-center text-[10px] text-neutral-400">
+        <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-8 text-center text-[13px] text-neutral-400">
           Memuat data QR trip...
         </div>
       ) : trips.length === 0 ? (
@@ -134,7 +134,7 @@ export default function MitraQrDisplay() {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 lg:col-span-1 space-y-3">
-            <h2 className="text-[14px] font-bold text-neutral-800 flex items-center gap-1.5 mb-2">
+            <h2 className="text-[17px] font-bold text-neutral-800 flex items-center gap-1.5 mb-2">
               <QrCode className="w-3.5 h-3.5" style={{ color: PRIMARY_COLOR }} />
               Pilih Trip Aktif
             </h2>
@@ -165,14 +165,14 @@ export default function MitraQrDisplay() {
                     }
                   >
                     <div className="flex items-center justify-between mb-0.5">
-                      <span className="font-bold text-[10px] text-neutral-800 font-mono">
+                      <span className="font-bold text-[13px] text-neutral-800 font-mono">
                         {trip.qrCodeTrip}
                       </span>
                       {trip.status === 'in_transit' ? (
                         <StatusBadge variant="amber">{trip.status}</StatusBadge>
                       ) : (
                         <span
-                          className="px-2 py-0.5 rounded-full text-[8px] font-bold"
+                          className="px-2 py-0.5 rounded-full text-[11px] font-bold"
                           style={{
                             backgroundColor: `${PRIMARY_ACCENT}20`,
                             color: PRIMARY_COLOR,
@@ -183,10 +183,10 @@ export default function MitraQrDisplay() {
                         </span>
                       )}
                     </div>
-                    <p className="text-[10px] font-bold text-neutral-700">
+                    <p className="text-[13px] font-bold text-neutral-700">
                       {trip.originPoint?.name} &rarr; {trip.destinationPoint?.name}
                     </p>
-                    <p className="text-[8px] text-neutral-400 mt-0.5">
+                    <p className="text-[11px] text-neutral-400 mt-0.5">
                       {trip.vehicle?.model} • {trip.departureDate?.split('T')[0]} WIB
                     </p>
                   </button>
@@ -197,7 +197,7 @@ export default function MitraQrDisplay() {
 
           <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 lg:col-span-2 flex flex-col items-center justify-center text-center">
             <div className="w-full max-w-xs bg-neutral-900 p-5 rounded-2xl text-white shadow-lg border-4 border-neutral-800 relative">
-              <div className="flex justify-between items-center text-[8px] text-neutral-500 mb-3 px-1">
+              <div className="flex justify-between items-center text-[11px] text-neutral-500 mb-3 px-1">
                 <span>Nebeng App Driver</span>
                 <span className="flex items-center gap-1" style={{ color: PRIMARY_ACCENT }}>
                   <ShieldCheck className="w-2.5 h-2.5" />
@@ -210,39 +210,39 @@ export default function MitraQrDisplay() {
                   {qrError ? (
                     <div className="flex flex-col items-center gap-1.5 text-rose-600 text-center px-2">
                       <AlertCircle className="w-6 h-6" />
-                      <p className="text-[8px] font-bold">Gagal membuat QR. Coba tekan "Perbarui Sekarang".</p>
+                      <p className="text-[11px] font-bold">Gagal membuat QR. Coba tekan "Perbarui Sekarang".</p>
                     </div>
                   ) : (
                     <canvas ref={canvasRef} className="w-full h-full object-contain" />
                   )}
                 </div>
-                <p className="text-neutral-900 font-bold text-[12px] font-mono mt-2">
+                <p className="text-neutral-900 font-bold text-[15px] font-mono mt-2">
                   {current?.qrCodeTrip}
                 </p>
-                <p className="text-neutral-400 text-[9px] font-medium">
+                <p className="text-neutral-400 text-[12px] font-medium">
                   {current?.originPoint?.name} &rarr; {current?.destinationPoint?.name}
                 </p>
               </div>
 
               <div className="mt-3 bg-white/10 p-2.5 rounded-lg border border-white/10 text-left space-y-1">
                 <div className="flex justify-between items-center">
-                  <p className="text-[8px] font-bold uppercase" style={{ color: `${PRIMARY_ACCENT}` }}>
+                  <p className="text-[11px] font-bold uppercase" style={{ color: `${PRIMARY_ACCENT}` }}>
                     Token Keamanan:
                   </p>
-                  <span className="text-[8px] font-mono font-bold" style={{ color: PRIMARY_ACCENT }}>
+                  <span className="text-[11px] font-mono font-bold" style={{ color: PRIMARY_ACCENT }}>
                     {dynamicToken}
                   </span>
                 </div>
-                <p className="text-[10px] text-white font-semibold">
+                <p className="text-[13px] text-white font-semibold">
                   {current?.departureDate?.split('T')[0]} • Sesuai Jadwal
                 </p>
-                <p className="text-[9px] text-neutral-300">
+                <p className="text-[12px] text-neutral-300">
                   {current?.vehicle?.model} ({current?.vehicle?.plateNumber})
                 </p>
               </div>
 
               <div
-                className="mt-3 flex items-center justify-between text-[8px] font-bold py-1.5 px-3 rounded-lg"
+                className="mt-3 flex items-center justify-between text-[11px] font-bold py-1.5 px-3 rounded-lg"
                 style={{
                   color: PRIMARY_ACCENT,
                   backgroundColor: `${PRIMARY_ACCENT}18`,

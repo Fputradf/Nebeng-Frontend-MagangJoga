@@ -241,7 +241,7 @@ export default function OperatorInspection() {
             />
 
             <span
-              className="text-[9px] font-bold uppercase tracking-widest flex items-center gap-1 flex-wrap min-w-0"
+              className="text-[12px] font-bold uppercase tracking-widest flex items-center gap-1 flex-wrap min-w-0"
               style={{ color: PRIMARY_COLOR }}
             >
               <PackageCheck className="w-3 h-3" />
@@ -249,11 +249,11 @@ export default function OperatorInspection() {
             </span>
           </div>
 
-          <h1 className="text-[18px] sm:text-[20px] font-bold text-neutral-800 break-words">
+          <h1 className="text-[21px] sm:text-[23px] font-bold text-neutral-800 break-words">
             Inspeksi & Sealing Checkpoint
           </h1>
 
-          <p className="text-[10px] sm:text-[11px] text-neutral-400 mt-0.5">
+          <p className="text-[13px] sm:text-[14px] text-neutral-400 mt-0.5">
             Validasi fisik paket pos asal, unggah foto kondisi, dan
             sinkronkan segel QR langsung ke database.
           </p>
@@ -262,18 +262,18 @@ export default function OperatorInspection() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <div className="lg:col-span-1 bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 space-y-4">
-          <h2 className="text-[14px] font-bold text-neutral-800">
+          <h2 className="text-[17px] font-bold text-neutral-800">
             Form Validasi Pos Asal
           </h2>
 
           <form
             onSubmit={handleScanAndSeal}
-            className="space-y-3.5 text-[10px]"
+            className="space-y-3.5 text-[13px]"
           >
             <input type="hidden" value={formData.posId} />
 
             <div>
-              <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+              <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                 KODE QR TRIP MITRA
               </label>
 
@@ -288,12 +288,12 @@ export default function OperatorInspection() {
                     qrCodeTrip: e.target.value
                   })
                 }
-                className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 focus:outline-none font-medium text-[10px] uppercase font-mono"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 focus:outline-none font-medium text-[13px] uppercase font-mono"
               />
             </div>
 
             <div>
-              <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+              <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                 KODE QR TIKET / PARCEL
               </label>
 
@@ -308,12 +308,12 @@ export default function OperatorInspection() {
                     qrCodeTicket: e.target.value
                   })
                 }
-                className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 focus:outline-none font-medium text-[10px] uppercase font-mono"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 focus:outline-none font-medium text-[13px] uppercase font-mono"
               />
             </div>
 
             <div>
-              <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+              <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                 UPLOAD FOTO KONDISI BARANG
               </label>
 
@@ -326,11 +326,11 @@ export default function OperatorInspection() {
                   />
 
                   <div className="flex-1 min-w-0">
-                    <p className="text-[9px] font-bold text-emerald-600">
+                    <p className="text-[12px] font-bold text-emerald-600">
                       {isCompressing ? 'Mengompresi Foto...' : 'Foto Siap Dikirim'}
                     </p>
 
-                    <p className="text-[8px] text-neutral-400 truncate">
+                    <p className="text-[11px] text-neutral-400 truncate">
                       {itemPhoto?.name}
                     </p>
                   </div>
@@ -350,11 +350,11 @@ export default function OperatorInspection() {
                     style={{ color: PRIMARY_COLOR }}
                   />
 
-                  <p className="font-bold text-neutral-700 text-[10px]">
+                  <p className="font-bold text-neutral-700 text-[13px]">
                     Klik untuk Unggah Foto
                   </p>
 
-                  <p className="text-[8px] text-neutral-400">
+                  <p className="text-[11px] text-neutral-400">
                     Otomatis terkompresi (Cepat & Ringan)
                   </p>
 
@@ -373,7 +373,7 @@ export default function OperatorInspection() {
             </div>
 
             <div>
-              <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+              <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                 NOMOR SEGEL
               </label>
 
@@ -388,7 +388,7 @@ export default function OperatorInspection() {
                       securitySealQr: e.target.value
                     })
                   }
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 focus:outline-none font-medium text-[10px] font-mono uppercase"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 focus:outline-none font-medium text-[13px] font-mono uppercase"
                 />
 
                 <button
@@ -402,7 +402,7 @@ export default function OperatorInspection() {
                       )}`
                     })
                   }
-                  className="px-3 font-bold text-[9px] rounded-xl transition shrink-0 flex items-center gap-1 cursor-pointer"
+                  className="px-3 font-bold text-[12px] rounded-xl transition shrink-0 flex items-center gap-1 cursor-pointer"
                   style={{
                     backgroundColor: `${PRIMARY_ACCENT}22`,
                     color: PRIMARY_COLOR
@@ -417,7 +417,7 @@ export default function OperatorInspection() {
             <button
               type="submit"
               disabled={isLoading || isCompressing}
-              className="w-full py-3 text-white text-[10px] font-bold rounded-xl transition shadow-sm cursor-pointer mt-1 disabled:opacity-50"
+              className="w-full py-3 text-white text-[13px] font-bold rounded-xl transition shadow-sm cursor-pointer mt-1 disabled:opacity-50"
               style={{
                 backgroundColor: PRIMARY_COLOR
               }}
@@ -430,14 +430,14 @@ export default function OperatorInspection() {
         </div>
 
         <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 space-y-4">
-          <h2 className="text-[14px] font-bold text-neutral-800">
+          <h2 className="text-[17px] font-bold text-neutral-800">
             Status Hasil Scan Checkpoint Terakhir
           </h2>
 
           <div className="hidden sm:block overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-neutral-100 text-neutral-400 text-[9px] uppercase tracking-wider font-semibold">
+                <tr className="border-b border-neutral-100 text-neutral-400 text-[12px] uppercase tracking-wider font-bold">
                   <th className="py-3 px-2">ID</th>
                   <th className="py-3 px-2">TRIP</th>
                   <th className="py-3 px-2">TIKET</th>
@@ -446,14 +446,14 @@ export default function OperatorInspection() {
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-neutral-100 text-[9px]">
+              <tbody className="divide-y divide-neutral-100 text-[12px]">
                 {!latestScanResult ? (
                   <tr>
                     <td colSpan={5}>
                       <div className="py-12">
                         <PackageCheck className="w-8 h-8 text-neutral-300 mx-auto mb-2" />
 
-                        <p className="text-center text-neutral-400 text-[10px]">
+                        <p className="text-center text-neutral-400 text-[13px]">
                           Belum ada aktivitas scan pos yang
                           dikirim ke server pada sesi ini.
                         </p>
@@ -462,7 +462,7 @@ export default function OperatorInspection() {
                   </tr>
                 ) : (
                   <tr className="hover:bg-neutral-50/60 transition">
-                    <td className="py-3.5 px-4 font-bold text-neutral-800 font-mono text-[10px]">
+                    <td className="py-3.5 px-4 font-bold text-neutral-800 font-mono text-[13px]">
                       {latestScanResult.id}
                     </td>
 

@@ -231,23 +231,23 @@ export default function RegionsManagement() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="w-2 h-2 rounded-full bg-[#10367D] animate-pulse"></span>
-            <span className="text-[9px] font-bold uppercase tracking-widest text-[#10367D]">
+            <span className="text-[12px] font-bold uppercase tracking-widest text-[#10367D]">
               MANAJEMEN WILAYAH & SPASIAL PETA
             </span>
           </div>
 
-          <h1 className="text-[18px] sm:text-[20px] font-bold text-neutral-800">
+          <h1 className="text-[21px] sm:text-[23px] font-bold text-neutral-800">
             Kelola Wilayah & Cakupan Operasional
           </h1>
 
-          <p className="text-[10px] sm:text-[11px] text-neutral-400 mt-0.5">
+          <p className="text-[13px] sm:text-[14px] text-neutral-400 mt-0.5">
             Tambah wilayah operasional lengkap dengan titik pusat koordinat dan radius peta otomatis.
           </p>
         </div>
 
         <button 
           onClick={handleOpenAddModal}
-          className="flex items-center gap-2 px-4 py-2 bg-[#10367D] hover:bg-[#0C2C66] text-white rounded-full text-[10px] sm:text-[11px] font-bold transition cursor-pointer shadow-sm shrink-0"
+          className="flex items-center gap-2 px-4 py-2 bg-[#10367D] hover:bg-[#0C2C66] text-white rounded-full text-[13px] sm:text-[14px] font-bold transition cursor-pointer shadow-sm shrink-0"
         >
           <Plus size={14} />
           <span>Tambah Wilayah Baru</span>
@@ -255,7 +255,7 @@ export default function RegionsManagement() {
       </div>
 
       {notification.show && (
-        <div className={`p-4 rounded-2xl flex items-center justify-between text-[11px] font-bold shadow-sm transition-all ${
+        <div className={`p-4 rounded-2xl flex items-center justify-between text-[14px] font-bold shadow-sm transition-all ${
           notification.type === 'success' 
             ? 'bg-emerald-50 border border-emerald-200 text-emerald-800' 
             : 'bg-rose-50 border border-rose-200 text-rose-800'
@@ -278,11 +278,11 @@ export default function RegionsManagement() {
             placeholder="Cari nama wilayah atau kode..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-neutral-50 border border-neutral-200 rounded-full pl-9 pr-8 py-2 text-[10px] sm:text-[11px] font-medium text-neutral-700 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-[#74B4D9] transition"
+            className="w-full bg-neutral-50 border border-neutral-200 rounded-full pl-9 pr-8 py-2 text-[13px] sm:text-[14px] font-medium text-neutral-700 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-[#74B4D9] transition"
           />
         </div>
 
-        <div className="text-[10px] font-semibold text-neutral-400 px-2">
+        <div className="text-[13px] font-semibold text-neutral-400 px-2">
           Total: <span className="font-bold text-neutral-800">{paginationMeta?.totalData || 0} Wilayah</span>
         </div>
       </div>
@@ -291,7 +291,7 @@ export default function RegionsManagement() {
         <div className={`hidden sm:block overflow-x-auto transition-opacity duration-200 ${isFetchingPage ? 'opacity-40' : 'opacity-100'}`}>
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-gray-50/70 text-neutral-400 text-[9px] uppercase tracking-wider font-semibold">
+              <tr className="bg-gray-50/70 text-neutral-400 text-[12px] uppercase tracking-wider font-bold">
                 <th className="py-3 px-5">Kode & Wilayah</th>
                 <th className="py-3 px-5">Radius Cakupan</th>
                 <th className="py-3 px-5">Titik Pusat Koordinat</th>
@@ -299,7 +299,7 @@ export default function RegionsManagement() {
                 <th className="py-3 px-5 text-center">Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 text-[9px]">
+            <tbody className="divide-y divide-gray-100 text-[12px]">
               {isLoadingRegions ? (
                 <SkeletonTableRows rows={4} columns={5} />
               ) : filteredRegions.length > 0 ? (
@@ -311,8 +311,8 @@ export default function RegionsManagement() {
                           <MapPin size={14} />
                         </div>
                         <div>
-                          <div className="font-bold text-neutral-800 text-[10px]">{region.name}</div>
-                          <div className="text-[8px] font-bold text-neutral-400 font-mono">{region.code}</div>
+                          <div className="font-bold text-neutral-800 text-[13px]">{region.name}</div>
+                          <div className="text-[11px] font-bold text-neutral-400 font-mono">{region.code}</div>
                         </div>
                       </div>
                     </td>
@@ -354,7 +354,7 @@ export default function RegionsManagement() {
         </div>
 
         {paginationMeta && paginationMeta.totalPages > 1 && (
-          <div className="flex items-center justify-between p-4 bg-neutral-50/50 border-t border-neutral-200 text-[10px]">
+          <div className="flex items-center justify-between p-4 bg-neutral-50/50 border-t border-neutral-200 text-[13px]">
             <span className="text-neutral-500">
               Halaman <strong>{paginationMeta.currentPage}</strong> dari{' '}
               <strong>{paginationMeta.totalPages}</strong> (Total: {paginationMeta.totalData} Wilayah)
@@ -387,7 +387,7 @@ export default function RegionsManagement() {
         subtitle={`Kode: ${selectedRegion?.code} • Radius: ${selectedRegion?.radiusKm || 20} KM`}
         maxWidth="max-w-lg"
       >
-        <div className="space-y-3 text-[10px]">
+        <div className="space-y-3 text-[13px]">
           <div className="rounded-xl overflow-hidden border border-neutral-200 h-60 relative">
             {selectedRegion?.latitude && selectedRegion?.longitude ? (
               <div className="absolute inset-0 z-0">
@@ -406,7 +406,7 @@ export default function RegionsManagement() {
               <div className="flex items-center justify-center h-full text-neutral-400">Koordinat peta belum tersedia</div>
             )}
           </div>
-          <button onClick={() => setIsDetailModalOpen(false)} className="w-full py-2 bg-[#10367D] hover:bg-[#0C2C66] text-white text-[10px] font-bold rounded-full cursor-pointer transition">
+          <button onClick={() => setIsDetailModalOpen(false)} className="w-full py-2 bg-[#10367D] hover:bg-[#0C2C66] text-white text-[13px] font-bold rounded-full cursor-pointer transition">
             Tutup
           </button>
         </div>
@@ -419,10 +419,10 @@ export default function RegionsManagement() {
         subtitle="Cari nama lokasi untuk mendeteksi koordinat dan atur radius cakupan."
         maxWidth="max-w-lg"
       >
-        <form onSubmit={handleSubmitForm} className="space-y-3 text-[10px]">
+        <form onSubmit={handleSubmitForm} className="space-y-3 text-[13px]">
 
           <div className="space-y-1">
-            <label className="text-[9px] font-bold text-[#10367D] uppercase flex items-center gap-1">
+            <label className="text-[12px] font-bold text-[#10367D] uppercase flex items-center gap-1">
               <Globe size={12} /> Cari Nama Kota / Wilayah (Otomatis Deteksi Koordinat)
             </label>
             <div className="flex gap-2">
@@ -431,7 +431,7 @@ export default function RegionsManagement() {
                 placeholder="Misal: Surakarta, Yogyakarta, Semarang..."
                 value={locationSearchQuery}
                 onChange={(e) => setLocationSearchQuery(e.target.value)}
-                className="flex-1 bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[10px] font-medium"
+                className="flex-1 bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-medium"
               />
               <button
                 type="button"
@@ -447,35 +447,35 @@ export default function RegionsManagement() {
 
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1">
-              <label className="text-[9px] font-bold text-neutral-500 uppercase">Nama Wilayah</label>
+              <label className="text-[12px] font-bold text-neutral-500 uppercase">Nama Wilayah</label>
               <input
                 type="text"
                 required
                 placeholder="Contoh: Region Surakarta"
                 value={formData.name}
                 onChange={(e) => setFormData({...formData, name: e.target.value})}
-                className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[10px] font-medium"
+                className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-medium"
               />
             </div>
             <div className="space-y-1">
-              <label className="text-[9px] font-bold text-neutral-500 uppercase">Kode Unik</label>
+              <label className="text-[12px] font-bold text-neutral-500 uppercase">Kode Unik</label>
               <input
                 type="text"
                 required
                 placeholder="Contoh: REG-SKT"
                 value={formData.code}
                 onChange={(e) => setFormData({...formData, code: e.target.value})}
-                className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[10px] font-medium font-mono uppercase"
+                className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-medium font-mono uppercase"
               />
             </div>
           </div>
 
           <div className="space-y-1 bg-neutral-50 p-3 rounded-xl border border-neutral-200">
             <div className="flex justify-between items-center mb-1">
-              <label className="text-[9px] font-bold text-neutral-600 uppercase">
+              <label className="text-[12px] font-bold text-neutral-600 uppercase">
                 Radius Cakupan Operasional
               </label>
-              <span className="font-bold text-[#10367D] text-[11px] font-mono">
+              <span className="font-bold text-[#10367D] text-[14px] font-mono">
                 {formData.radiusKm} KM
               </span>
             </div>
@@ -491,7 +491,7 @@ export default function RegionsManagement() {
           </div>
 
           <div className="space-y-1">
-            <label className="text-[9px] font-bold text-neutral-500 uppercase">Preview Titik Pusat di Peta</label>
+            <label className="text-[12px] font-bold text-neutral-500 uppercase">Preview Titik Pusat di Peta</label>
             <div className="rounded-xl overflow-hidden border border-neutral-200 h-40 relative z-0">
               <div className="absolute inset-0 z-0">
                 <MapContainer center={[formData.latitude, formData.longitude]} zoom={11} style={{ height: '100%', width: '100%', zIndex: 0 }}>
@@ -512,13 +512,13 @@ export default function RegionsManagement() {
             <button
               type="button"
               onClick={() => setIsModalOpen(false)}
-              className="px-4 py-2 text-[10px] font-bold text-neutral-500 hover:bg-neutral-100 rounded-full cursor-pointer"
+              className="px-4 py-2 text-[13px] font-bold text-neutral-500 hover:bg-neutral-100 rounded-full cursor-pointer"
             >
               Batal
             </button>
             <button
               type="submit"
-              className="px-4 py-2 text-[10px] font-bold text-white bg-[#10367D] hover:bg-[#0C2C66] rounded-full flex items-center gap-1 cursor-pointer shadow-sm transition"
+              className="px-4 py-2 text-[13px] font-bold text-white bg-[#10367D] hover:bg-[#0C2C66] rounded-full flex items-center gap-1 cursor-pointer shadow-sm transition"
             >
               <Save size={13}/>
               Simpan Wilayah
@@ -535,7 +535,7 @@ export default function RegionsManagement() {
         subtitle="Sistem Manajemen Operasional"
         maxWidth="max-w-sm"
       >
-        <div className="space-y-3 text-[10px] text-center">
+        <div className="space-y-3 text-[13px] text-center">
           <div className="w-10 h-10 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto">
             <AlertTriangle size={20} />
           </div>

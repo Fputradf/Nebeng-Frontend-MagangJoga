@@ -159,23 +159,23 @@ export default function FinancialReportPage() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="w-2 h-2 rounded-full bg-[#10367D] animate-pulse"></span>
-            <span className="text-[9px] font-bold uppercase tracking-widest text-[#10367D]">
+            <span className="text-[12px] font-bold uppercase tracking-widest text-[#10367D]">
               LAPORAN FINANSIAL & PENDAPATAN
             </span>
           </div>
 
-          <h1 className="text-[18px] sm:text-[20px] font-bold text-neutral-800">
+          <h1 className="text-[21px] sm:text-[23px] font-bold text-neutral-800">
             Laporan Keuangan Wilayah (Database)
           </h1>
 
-          <p className="text-[10px] sm:text-[11px] text-neutral-400 mt-0.5">
+          <p className="text-[13px] sm:text-[14px] text-neutral-400 mt-0.5">
             Pantau arus kas, total transaksi, dan komisi regional langsung dari server.
           </p>
         </div>
 
         <button
           onClick={() => window.print()}
-          className="flex items-center gap-2 px-4 py-2 bg-[#10367D] hover:bg-[#0C2C66] text-white rounded-full text-[10px] sm:text-[11px] font-bold transition cursor-pointer shadow-sm shrink-0 print-hidden"
+          className="flex items-center gap-2 px-4 py-2 bg-[#10367D] hover:bg-[#0C2C66] text-white rounded-full text-[13px] sm:text-[14px] font-bold transition cursor-pointer shadow-sm shrink-0 print-hidden"
         >
           <Printer size={14} />
           <span>Cetak PDF</span>
@@ -212,11 +212,11 @@ export default function FinancialReportPage() {
             placeholder="Cari ID transaksi, layanan..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-neutral-50 border border-neutral-200 rounded-full pl-9 pr-8 py-2 text-[10px] sm:text-[11px] font-medium text-neutral-700 focus:outline-none focus:ring-2 focus:ring-[#10367D] transition"
+            className="w-full bg-neutral-50 border border-neutral-200 rounded-full pl-9 pr-8 py-2 text-[13px] sm:text-[14px] font-medium text-neutral-700 focus:outline-none focus:ring-2 focus:ring-[#10367D] transition"
           />
         </div>
 
-        <div className="flex items-center gap-2 text-[10px] font-medium text-neutral-600">
+        <div className="flex items-center gap-2 text-[13px] font-medium text-neutral-600">
           <span>Tampilkan:</span>
           <select
             value={limit}
@@ -240,7 +240,7 @@ export default function FinancialReportPage() {
         <div className="hidden sm:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-gray-50/70 text-neutral-400 text-[9px] uppercase tracking-wider font-semibold">
+              <tr className="bg-gray-50/70 text-neutral-400 text-[12px] uppercase tracking-wider font-bold">
                 <th className="py-3 px-5">ID TRX & Waktu</th>
                 <th className="py-3 px-5">Pos Asal</th>
                 <th className="py-3 px-5">Layanan</th>
@@ -250,7 +250,7 @@ export default function FinancialReportPage() {
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-gray-100 text-[9px]">
+            <tbody className="divide-y divide-gray-100 text-[12px]">
               {isLoadingReports ? (
                 <SkeletonTableRows rows={4} columns={6} />
               ) : filteredReports.length > 0 ? (
@@ -261,8 +261,8 @@ export default function FinancialReportPage() {
                     className="hover:bg-[#74B4D9]/10 transition cursor-pointer"
                   >
                     <td className="py-3.5 px-5">
-                      <div className="font-bold text-neutral-800 font-mono text-[10px]">{item.id}</div>
-                      <div className="text-[8px] text-neutral-400">{item.date}</div>
+                      <div className="font-bold text-neutral-800 font-mono text-[13px]">{item.id}</div>
+                      <div className="text-[11px] text-neutral-400">{item.date}</div>
                     </td>
 
                     <td className="py-3.5 px-5 font-bold text-neutral-800">{item.posName}</td>
@@ -272,7 +272,7 @@ export default function FinancialReportPage() {
                     <td className="py-3.5 px-5 font-bold text-neutral-800">{item.amount}</td>
 
                     <td className="py-3.5 px-5 font-bold text-[#10367D]">
-                      {item.commission} <span className="text-[7px] text-neutral-400 font-normal">({item.commissionPercentage}%)</span>
+                      {item.commission} <span className="text-[13px] text-neutral-400 font-normal">({item.commissionPercentage}%)</span>
                     </td>
 
                     <td className="py-3.5 px-5 text-right">
@@ -297,7 +297,7 @@ export default function FinancialReportPage() {
 
         {/* PAGINATION FOOTER */}
         {paginationMeta && paginationMeta.totalPages > 1 && (
-          <div className="flex items-center justify-between p-4 bg-neutral-50/50 border-t border-neutral-200 text-[10px] print-hidden">
+          <div className="flex items-center justify-between p-4 bg-neutral-50/50 border-t border-neutral-200 text-[13px] print-hidden">
             <span className="text-neutral-500">
               Halaman <strong>{paginationMeta.currentPage}</strong> dari <strong>{paginationMeta.totalPages}</strong> (Total: {paginationMeta.totalItems} Transaksi)
             </span>
@@ -330,7 +330,7 @@ export default function FinancialReportPage() {
         subtitle={`Metode: ${selectedStatusDetail?.paymentMethod}`}
         maxWidth="max-w-sm"
       >
-        <div className="space-y-3 text-[10px]">
+        <div className="space-y-3 text-[13px]">
           <div><strong>ID Trip:</strong> {selectedStatusDetail?.tripId}</div>
           <div><strong>Metode Pembayaran:</strong> {selectedStatusDetail?.paymentMethod}</div>
           <div><strong>Persentase Komisi:</strong> {selectedStatusDetail?.commissionPercentage}% (Dihitung dari Backend)</div>
@@ -338,7 +338,7 @@ export default function FinancialReportPage() {
 
           <button
             onClick={() => setSelectedStatusDetail(null)}
-            className="w-full py-2 bg-[#10367D] hover:bg-[#0C2C66] text-white text-[10px] font-bold rounded-full cursor-pointer mt-2 transition"
+            className="w-full py-2 bg-[#10367D] hover:bg-[#0C2C66] text-white text-[13px] font-bold rounded-full cursor-pointer mt-2 transition"
           >
             Tutup
           </button>

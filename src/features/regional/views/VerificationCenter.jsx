@@ -326,21 +326,21 @@ export default function VerificationCenterPage() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="w-2 h-2 rounded-full bg-[#10367D] animate-pulse"></span>
-            <span className="text-[9px] font-bold uppercase tracking-widest text-[#10367D]">
+            <span className="text-[12px] font-bold uppercase tracking-widest text-[#10367D]">
               PUSAT VERIFIKASI & KEAMANAN REGIONAL
             </span>
           </div>
-          <h1 className="text-[18px] sm:text-[20px] font-bold text-neutral-800">
+          <h1 className="text-[21px] sm:text-[23px] font-bold text-neutral-800">
             Verification Center & Face ID
           </h1>
-          <p className="text-[10px] sm:text-[11px] text-neutral-400 mt-0.5">
+          <p className="text-[13px] sm:text-[14px] text-neutral-400 mt-0.5">
             Tinjau antrean berkas identitas, rekening, dan kendaraan wilayah Anda.
           </p>
         </div>
 
         <div className="flex items-center gap-2 px-3 py-1.5 bg-[#74B4D9]/15 rounded-full shrink-0">
           <Clock className="w-3.5 h-3.5 text-[#10367D]" />
-          <span className="text-[10px] font-bold text-[#10367D]">
+          <span className="text-[13px] font-bold text-[#10367D]">
             {verificationList.filter((v) => v.status === 'Menunggu Review').length} Antrean Pending
           </span>
         </div>
@@ -358,10 +358,10 @@ export default function VerificationCenterPage() {
               setSearchQuery(e.target.value);
               setCurrentPage(1);
             }}
-            className="w-full bg-neutral-50 border border-neutral-200 rounded-full pl-9 pr-8 py-2 text-[10px] sm:text-[11px] font-medium text-neutral-700 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-[#10367D] transition"
+            className="w-full bg-neutral-50 border border-neutral-200 rounded-full pl-9 pr-8 py-2 text-[13px] sm:text-[14px] font-medium text-neutral-700 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-[#10367D] transition"
           />
         </div>
-        <div className="text-[10px] font-semibold text-neutral-400 px-2">
+        <div className="text-[13px] font-semibold text-neutral-400 px-2">
           Total: <span className="font-bold text-neutral-800">{filteredData.length} Pengguna</span>
         </div>
       </div>
@@ -371,7 +371,7 @@ export default function VerificationCenterPage() {
         <div className="hidden sm:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-gray-50/70 text-neutral-400 text-[9px] uppercase tracking-wider font-semibold">
+              <tr className="bg-gray-50/70 text-neutral-400 text-[12px] uppercase tracking-wider font-bold">
                 <th className="py-3 px-5">ID & Nama Pengguna</th>
                 <th className="py-3 px-5">Kontak (PII Protected)</th>
                 <th className="py-3 px-5">Peran Akun</th>
@@ -380,7 +380,7 @@ export default function VerificationCenterPage() {
                 <th className="py-3 px-5 text-center">Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 text-[9px]">
+            <tbody className="divide-y divide-gray-100 text-[12px]">
               {isLoadingVerification ? (
                 <SkeletonTableRows rows={4} columns={6} />
               ) : paginatedData.length > 0 ? (
@@ -392,8 +392,8 @@ export default function VerificationCenterPage() {
                   return (
                     <tr key={group.userId} className="hover:bg-[#74B4D9]/10 transition">
                       <td className="py-3.5 px-5">
-                        <div className="font-bold text-neutral-800 text-[10px]">{group.name}</div>
-                        <div className="text-[8px] font-bold text-[#10367D] font-mono">ID: {group.userId}</div>
+                        <div className="font-bold text-neutral-800 text-[13px]">{group.name}</div>
+                        <div className="text-[11px] font-bold text-[#10367D] font-mono">ID: {group.userId}</div>
                       </td>
                       <td className="py-3.5 px-5 font-mono text-neutral-700">
                         <div className="flex items-center gap-1.5">
@@ -414,7 +414,7 @@ export default function VerificationCenterPage() {
                             <span
                               key={doc.id}
                               title={doc.status}
-                              className={`px-2 py-0.5 rounded-full text-[8px] font-bold border ${
+                              className={`px-2 py-0.5 rounded-full text-[11px] font-bold border ${
                                 doc.status === 'Disetujui'
                                   ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                   : doc.status === 'Ditolak'
@@ -430,7 +430,7 @@ export default function VerificationCenterPage() {
                       <td className="py-3.5 px-5">
                         <StatusBadge variant={getStatusVariant(groupStatus)}>{groupStatus}</StatusBadge>
                         {pendingCount > 0 && groupStatus === 'Menunggu Review' && (
-                          <div className="text-[8px] text-neutral-400 mt-0.5">{pendingCount} dokumen menunggu</div>
+                          <div className="text-[11px] text-neutral-400 mt-0.5">{pendingCount} dokumen menunggu</div>
                         )}
                       </td>
                       <td className="py-3.5 px-5 text-center">
@@ -460,7 +460,7 @@ export default function VerificationCenterPage() {
         </div>
 
         {totalPages > 1 && (
-          <div className="flex items-center justify-between p-4 bg-neutral-50/50 border-t border-neutral-200 text-[10px]">
+          <div className="flex items-center justify-between p-4 bg-neutral-50/50 border-t border-neutral-200 text-[13px]">
             <span className="text-neutral-500">
               Halaman <strong>{currentPage}</strong> dari <strong>{totalPages}</strong> (Total: {filteredData.length} Pengguna)
             </span>
@@ -493,16 +493,16 @@ export default function VerificationCenterPage() {
         maxWidth="max-w-5xl"
       >
         {selectedUserGroup && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 text-[11px] max-h-[72vh] overflow-y-auto overscroll-contain pr-1 -mr-1">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 text-[14px] max-h-[72vh] overflow-y-auto overscroll-contain pr-1 -mr-1">
             
             <div className="lg:col-span-6 space-y-3">
               
               <div className="flex items-center justify-between gap-2 p-3 bg-neutral-50 rounded-xl border border-neutral-200">
-                <span className="px-2.5 py-1 bg-[#74B4D9]/15 text-[#10367D] text-[9px] font-bold rounded-full uppercase tracking-wide">
+                <span className="px-2.5 py-1 bg-[#74B4D9]/15 text-[#10367D] text-[12px] font-bold rounded-full uppercase tracking-wide">
                   {selectedUserGroup.role}
                 </span>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[8px] text-neutral-400 font-medium">Status:</span>
+                  <span className="text-[11px] text-neutral-400 font-medium">Status:</span>
                   <StatusBadge variant={getStatusVariant(getGroupStatus(selectedUserGroup))}>
                     {getGroupStatus(selectedUserGroup)}
                   </StatusBadge>
@@ -510,10 +510,10 @@ export default function VerificationCenterPage() {
               </div>
 
               <div className="p-3.5 bg-white rounded-xl border border-neutral-200 space-y-2 shadow-2xs">
-                <span className="text-[9px] font-bold text-[#10367D] uppercase tracking-wider flex items-center gap-1.5">
+                <span className="text-[12px] font-bold text-[#10367D] uppercase tracking-wider flex items-center gap-1.5">
                   <ShieldCheck className="w-3.5 h-3.5" /> Data Identitas (KTP)
                 </span>
-                <div className="space-y-1 text-neutral-700 text-[10px]">
+                <div className="space-y-1 text-neutral-700 text-[13px]">
                   <div><strong className="text-neutral-400">NIK:</strong> <span className="font-mono font-bold">{selectedUserGroup.identity.ktpNumber}</span></div>
                   <div><strong className="text-neutral-400">Nama KTP:</strong> <span className="font-bold">{selectedUserGroup.identity.fullNameKtp}</span></div>
                   <div><strong className="text-neutral-400">Alamat KTP:</strong> {selectedUserGroup.identity.addressKtp}</div>
@@ -522,10 +522,10 @@ export default function VerificationCenterPage() {
 
               {selectedUserGroup.role === 'MITRA' && (
                 <div className="p-3.5 bg-white rounded-xl border border-neutral-200 space-y-2 shadow-2xs">
-                  <span className="text-[9px] font-bold text-[#10367D] uppercase tracking-wider flex items-center gap-1.5">
+                  <span className="text-[12px] font-bold text-[#10367D] uppercase tracking-wider flex items-center gap-1.5">
                     <Truck className="w-3.5 h-3.5" /> Kendaraan & Rekening Bank
                   </span>
-                  <div className="space-y-1 text-neutral-700 text-[10px]">
+                  <div className="space-y-1 text-neutral-700 text-[13px]">
                     <div><strong className="text-neutral-400">Kendaraan:</strong> {selectedUserGroup.vehicle.type} - {selectedUserGroup.vehicle.model} ({selectedUserGroup.vehicle.plateNumber})</div>
                     <div><strong className="text-neutral-400">Bank:</strong> {selectedUserGroup.identity.bankName} ({selectedUserGroup.identity.bankAccountNumber})</div>
                     <div><strong className="text-neutral-400">Pemilik Rek:</strong> {selectedUserGroup.identity.bankAccountHolder}</div>
@@ -534,21 +534,21 @@ export default function VerificationCenterPage() {
               )}
 
               <div className="space-y-2.5">
-                <h4 className="text-[10px] font-bold text-neutral-700 uppercase tracking-wide">Dokumen Lampiran Upload</h4>
+                <h4 className="text-[13px] font-bold text-neutral-700 uppercase tracking-wide">Dokumen Lampiran Upload</h4>
                 
                 {selectedUserGroup.documents.map((doc) => (
                   <div key={doc.id} className="border border-neutral-200 rounded-xl p-3 space-y-2 bg-neutral-50/50">
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
                         <FileText size={14} className="text-[#10367D]" />
-                        <span className="text-[10px] font-bold text-neutral-800 uppercase">{doc.type}</span>
-                        <span className="text-[8px] text-neutral-400 font-mono">#{doc.id}</span>
+                        <span className="text-[13px] font-bold text-neutral-800 uppercase">{doc.type}</span>
+                        <span className="text-[11px] text-neutral-400 font-mono">#{doc.id}</span>
                       </div>
                       <StatusBadge variant={getStatusVariant(doc.status)}>{doc.status}</StatusBadge>
                     </div>
 
                     {doc.status === 'Ditolak' && doc.rejectionReason && (
-                      <div className="p-2 bg-rose-50 border border-rose-200 rounded-lg text-rose-800 font-medium text-[8px]">
+                      <div className="p-2 bg-rose-50 border border-rose-200 rounded-lg text-rose-800 font-medium text-[11px]">
                         <strong>Alasan Penolakan:</strong> {doc.rejectionReason}
                       </div>
                     )}
@@ -574,14 +574,14 @@ export default function VerificationCenterPage() {
                                   e.target.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa'><rect width='18' height='18' x='3' y='3' rx='2'/></svg>";
                                 }}
                               />
-                              <span className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[7px] text-center font-bold py-0.5">
+                              <span className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[13px] text-center font-bold py-0.5">
                                 #{idx + 1}
                               </span>
                             </div>
                           );
                         })
                       ) : (
-                        <p className="text-[9px] text-neutral-400 italic">Tidak ada file terlampir.</p>
+                        <p className="text-[12px] text-neutral-400 italic">Tidak ada file terlampir.</p>
                       )}
 
                       {selectedUserGroup.identity.faceImageUrl && doc.type === 'ktp' && (
@@ -597,7 +597,7 @@ export default function VerificationCenterPage() {
                             alt="Face ID"
                             className="w-full h-full object-cover"
                           />
-                          <span className="absolute bottom-0 inset-x-0 bg-[#10367D] text-white text-[7px] text-center font-bold py-0.5">
+                          <span className="absolute bottom-0 inset-x-0 bg-[#10367D] text-white text-[13px] text-center font-bold py-0.5">
                             Face ID
                           </span>
                         </div>
@@ -608,13 +608,13 @@ export default function VerificationCenterPage() {
                       <div className="flex items-center justify-end gap-2 pt-2 border-t border-neutral-200/60">
                         <button
                           onClick={() => handleOpenRejectModal(doc)}
-                          className="px-3 py-1.5 text-[8px] font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-lg cursor-pointer transition"
+                          className="px-3 py-1.5 text-[11px] font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-lg cursor-pointer transition"
                         >
                           Tolak
                         </button>
                         <button
                           onClick={() => handleApprove(doc.id)}
-                          className="px-3 py-1.5 text-[8px] font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg cursor-pointer transition shadow-xs"
+                          className="px-3 py-1.5 text-[11px] font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg cursor-pointer transition shadow-xs"
                         >
                           Setujui
                         </button>
@@ -627,7 +627,7 @@ export default function VerificationCenterPage() {
             </div>
 
             <div className="lg:col-span-6 bg-neutral-900 rounded-2xl p-4 flex flex-col items-center justify-between relative min-h-87.5 lg:min-h-112.5">
-              <div className="absolute top-3 left-3 bg-white/10 text-white text-[8px] font-bold px-2.5 py-1 rounded-full backdrop-blur-md">
+              <div className="absolute top-3 left-3 bg-white/10 text-white text-[11px] font-bold px-2.5 py-1 rounded-full backdrop-blur-md">
                 Pratinjau Dokumen Berkas Aktif
               </div>
 
@@ -644,7 +644,7 @@ export default function VerificationCenterPage() {
                       href={activePreviewImage}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="absolute bottom-2 right-2 bg-white/90 hover:bg-white text-neutral-800 p-2 rounded-xl shadow-md text-[9px] font-bold flex items-center gap-1 transition"
+                      className="absolute bottom-2 right-2 bg-white/90 hover:bg-white text-neutral-800 p-2 rounded-xl shadow-md text-[12px] font-bold flex items-center gap-1 transition"
                     >
                       <ZoomIn size={12} /> Buka Tab Baru
                     </a>
@@ -652,12 +652,12 @@ export default function VerificationCenterPage() {
                 ) : (
                   <div className="text-center text-neutral-400 space-y-2">
                     <Camera size={32} className="mx-auto opacity-40" />
-                    <p className="text-[10px]">Pilih salah satu thumbnail berkas di sebelah kiri untuk melihat pratinjau ukuran penuh.</p>
+                    <p className="text-[13px]">Pilih salah satu thumbnail berkas di sebelah kiri untuk melihat pratinjau ukuran penuh.</p>
                   </div>
                 )}
               </div>
 
-              <div className="w-full text-center pt-2 border-t border-white/10 text-[9px] text-neutral-400">
+              <div className="w-full text-center pt-2 border-t border-white/10 text-[12px] text-neutral-400">
                 Tips: Klik ikon perbesar untuk melihat detail teks KTP / wajah dengan jelas.
               </div>
             </div>
@@ -677,7 +677,7 @@ export default function VerificationCenterPage() {
         <form onSubmit={handleConfirmReject} className="space-y-3">
           <div className="space-y-1.5">
             {rejectionReasons.map((reason, idx) => (
-              <label key={idx} className="flex items-center gap-2 text-[9px] text-neutral-700 cursor-pointer">
+              <label key={idx} className="flex items-center gap-2 text-[12px] text-neutral-700 cursor-pointer">
                 <input
                   type="radio"
                   name="reason"
@@ -694,13 +694,13 @@ export default function VerificationCenterPage() {
             <button
               type="button"
               onClick={() => setIsRejectModalOpen(false)}
-              className="px-4 py-2 text-[10px] font-bold text-neutral-500 hover:bg-neutral-100 rounded-full cursor-pointer"
+              className="px-4 py-2 text-[13px] font-bold text-neutral-500 hover:bg-neutral-100 rounded-full cursor-pointer"
             >
               Batal
             </button>
             <button
               type="submit"
-              className="px-4 py-2 text-[10px] font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-full cursor-pointer shadow-sm"
+              className="px-4 py-2 text-[13px] font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-full cursor-pointer shadow-sm"
             >
               Konfirmasi Penolakan
             </button>

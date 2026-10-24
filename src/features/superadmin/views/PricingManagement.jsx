@@ -295,16 +295,16 @@ export default function PricingPolicyManagement() {
           <div className="flex items-center gap-2 mb-1">
             <span className="w-2 h-2 rounded-full bg-[#10367D] animate-pulse"></span>
 
-            <span className="text-[9px] font-bold uppercase tracking-widest text-[#10367D]">
+            <span className="text-[12px] font-bold uppercase tracking-widest text-[#10367D]">
               GLOBAL PRICING POLICY & COMMISSION SETTINGS
             </span>
           </div>
 
-          <h1 className="text-[18px] sm:text-[20px] font-bold text-neutral-800">
+          <h1 className="text-[21px] sm:text-[23px] font-bold text-neutral-800">
             Konfigurasi Tarif Global & Komisi
           </h1>
 
-          <p className="text-[10px] sm:text-[11px] text-neutral-400 mt-0.5">
+          <p className="text-[13px] sm:text-[14px] text-neutral-400 mt-0.5">
             Atur tarif dasar perjalanan, matriks logistik paket berdasarkan batas berat, serta potongan komisi.
           </p>
         </div>
@@ -313,7 +313,7 @@ export default function PricingPolicyManagement() {
           type="button"
           onClick={handleSaveAll}
           disabled={isSubmitting}
-          className="flex items-center gap-2 px-4 py-2 bg-[#10367D] hover:bg-[#0C2C66] text-white rounded-full text-[10px] sm:text-[11px] font-bold transition cursor-pointer shadow-sm shrink-0 disabled:opacity-50"
+          className="flex items-center gap-2 px-4 py-2 bg-[#10367D] hover:bg-[#0C2C66] text-white rounded-full text-[13px] sm:text-[14px] font-bold transition cursor-pointer shadow-sm shrink-0 disabled:opacity-50"
         >
           <Save size={14} />
 
@@ -326,7 +326,7 @@ export default function PricingPolicyManagement() {
       </div>
 
       {notification && (
-        <div className="bg-emerald-50 border border-emerald-200 p-3.5 rounded-2xl flex items-center gap-2.5 text-emerald-800 text-[10px] font-bold">
+        <div className="bg-emerald-50 border border-emerald-200 p-3.5 rounded-2xl flex items-center gap-2.5 text-emerald-800 text-[13px] font-bold">
           <CheckCircle2
             size={16}
             className="text-emerald-600"
@@ -339,7 +339,7 @@ export default function PricingPolicyManagement() {
       )}
 
       {formErrors.length > 0 && (
-        <div className="bg-rose-50 border border-rose-200 p-3.5 rounded-2xl flex items-start gap-2.5 text-rose-800 text-[10px] font-bold">
+        <div className="bg-rose-50 border border-rose-200 p-3.5 rounded-2xl flex items-start gap-2.5 text-rose-800 text-[13px] font-bold">
           <AlertCircle
             size={16}
             className="text-rose-600 shrink-0 mt-0.5"
@@ -350,7 +350,7 @@ export default function PricingPolicyManagement() {
               Gagal menyimpan, periksa nilai berikut:
             </p>
 
-            <ul className="list-disc list-inside font-medium text-[9px]">
+            <ul className="list-disc list-inside font-medium text-[12px]">
               {formErrors.map((err, idx) => (
                 <li key={idx}>{err}</li>
               ))}
@@ -370,11 +370,11 @@ export default function PricingPolicyManagement() {
             </div>
 
             <div>
-              <h2 className="text-[14px] font-bold text-neutral-800">
+              <h2 className="text-[17px] font-bold text-neutral-800">
                 1. Tarif Dasar Perjalanan
               </h2>
 
-              <p className="text-[9px] text-neutral-400">
+              <p className="text-[12px] text-neutral-400">
                 Pengaturan tarif per kilometer dan buka pintu awal.
               </p>
             </div>
@@ -382,14 +382,14 @@ export default function PricingPolicyManagement() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-200/80 space-y-3">
-              <div className="flex items-center gap-1.5 text-[#10367D] font-bold text-[10px]">
+              <div className="flex items-center gap-1.5 text-[#10367D] font-bold text-[13px]">
                 <Bike size={14} />
                 <span>NEBENG MOTOR</span>
               </div>
 
               <div className="space-y-2">
                 <div>
-                  <label className="block text-[8px] font-bold uppercase text-neutral-400 mb-1">
+                  <label className="block text-[11px] font-bold uppercase text-neutral-400 mb-1">
                     Tarif Dasar / Buka Pintu (Rp)
                   </label>
 
@@ -398,12 +398,12 @@ export default function PricingPolicyManagement() {
                     min={0}
                     value={transportPricing.motorBaseFare}
                     onChange={handleFareChange('motorBaseFare')}
-                    className="w-full bg-white border border-neutral-200 rounded-xl px-3 py-1.5 text-[10px] font-bold text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#74B4D9]"
+                    className="w-full bg-white border border-neutral-200 rounded-xl px-3 py-1.5 text-[13px] font-bold text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#74B4D9]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[8px] font-bold uppercase text-neutral-400 mb-1">
+                  <label className="block text-[11px] font-bold uppercase text-neutral-400 mb-1">
                     Tarif Per KM (Rp)
                   </label>
 
@@ -412,21 +412,21 @@ export default function PricingPolicyManagement() {
                     min={0}
                     value={transportPricing.motorPerKm}
                     onChange={handleFareChange('motorPerKm')}
-                    className="w-full bg-white border border-neutral-200 rounded-xl px-3 py-1.5 text-[10px] font-bold text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#74B4D9]"
+                    className="w-full bg-white border border-neutral-200 rounded-xl px-3 py-1.5 text-[13px] font-bold text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#74B4D9]"
                   />
                 </div>
               </div>
             </div>
 
             <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-200/80 space-y-3">
-              <div className="flex items-center gap-1.5 text-[#10367D] font-bold text-[10px]">
+              <div className="flex items-center gap-1.5 text-[#10367D] font-bold text-[13px]">
                 <Car size={14} />
                 <span>NEBENG MOBIL</span>
               </div>
 
               <div className="space-y-2">
                 <div>
-                  <label className="block text-[8px] font-bold uppercase text-neutral-400 mb-1">
+                  <label className="block text-[11px] font-bold uppercase text-neutral-400 mb-1">
                     Tarif Dasar / Buka Pintu (Rp)
                   </label>
 
@@ -435,12 +435,12 @@ export default function PricingPolicyManagement() {
                     min={0}
                     value={transportPricing.carBaseFare}
                     onChange={handleFareChange('carBaseFare')}
-                    className="w-full bg-white border border-neutral-200 rounded-xl px-3 py-1.5 text-[10px] font-bold text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#74B4D9]"
+                    className="w-full bg-white border border-neutral-200 rounded-xl px-3 py-1.5 text-[13px] font-bold text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#74B4D9]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[8px] font-bold uppercase text-neutral-400 mb-1">
+                  <label className="block text-[11px] font-bold uppercase text-neutral-400 mb-1">
                     Tarif Per KM (Rp)
                   </label>
 
@@ -449,7 +449,7 @@ export default function PricingPolicyManagement() {
                     min={0}
                     value={transportPricing.carPerKm}
                     onChange={handleFareChange('carPerKm')}
-                    className="w-full bg-white border border-neutral-200 rounded-xl px-3 py-1.5 text-[10px] font-bold text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#74B4D9]"
+                    className="w-full bg-white border border-neutral-200 rounded-xl px-3 py-1.5 text-[13px] font-bold text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#74B4D9]"
                   />
                 </div>
               </div>
@@ -464,11 +464,11 @@ export default function PricingPolicyManagement() {
             </div>
 
             <div>
-              <h2 className="text-[14px] font-bold text-neutral-800">
+              <h2 className="text-[17px] font-bold text-neutral-800">
                 2. Matriks Biaya Pengiriman Paket & Batas Berat
               </h2>
 
-              <p className="text-[9px] text-neutral-400">
+              <p className="text-[12px] text-neutral-400">
                 Atur batas berat (Kg) dan tarif dasar sesuai kapasitas muatan.
               </p>
             </div>
@@ -477,7 +477,7 @@ export default function PricingPolicyManagement() {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-gray-50/70 text-neutral-400 text-[9px] uppercase tracking-wider font-semibold">
+                <tr className="bg-gray-50/70 text-neutral-400 text-[12px] uppercase tracking-wider font-bold">
                   <th className="py-2.5 px-4">Ukuran</th>
                   <th className="py-2.5 px-4">Batas Berat Maksimum (KG)</th>
                   <th className="py-2.5 px-4">Deskripsi</th>
@@ -485,7 +485,7 @@ export default function PricingPolicyManagement() {
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-gray-100 text-[9px]">
+              <tbody className="divide-y divide-gray-100 text-[12px]">
                 {parcelMatrix.map((item, index) => (
                   <tr key={index} className="hover:bg-gray-50/50">
                     <td className="py-2.5 px-4">
@@ -539,11 +539,11 @@ export default function PricingPolicyManagement() {
             </div>
 
             <div>
-              <h2 className="text-[14px] font-bold text-neutral-800">
+              <h2 className="text-[17px] font-bold text-neutral-800">
                 3. Persentase Komisi Platform
               </h2>
 
-              <p className="text-[9px] text-neutral-400">
+              <p className="text-[12px] text-neutral-400">
                 Potongan komisi aplikasi dari setiap transaksi.
               </p>
             </div>
@@ -551,7 +551,7 @@ export default function PricingPolicyManagement() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-200/80 space-y-2">
-              <label className="block text-[9px] font-bold uppercase text-neutral-500">
+              <label className="block text-[12px] font-bold uppercase text-neutral-500">
                 Komisi Transportasi (%)
               </label>
 
@@ -560,12 +560,12 @@ export default function PricingPolicyManagement() {
                 min={0}
                 value={platformFee.rideFeePercent}
                 onChange={handleFeeChange('rideFeePercent')}
-                className="w-full bg-white border border-neutral-200 rounded-xl px-3 py-1.5 text-[10px] font-bold text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#74B4D9]"
+                className="w-full bg-white border border-neutral-200 rounded-xl px-3 py-1.5 text-[13px] font-bold text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#74B4D9]"
               />
             </div>
 
             <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-200/80 space-y-2">
-              <label className="block text-[9px] font-bold uppercase text-neutral-500">
+              <label className="block text-[12px] font-bold uppercase text-neutral-500">
                 Komisi Pengiriman Paket (%)
               </label>
 
@@ -574,7 +574,7 @@ export default function PricingPolicyManagement() {
                 min={0}
                 value={platformFee.parcelFeePercent}
                 onChange={handleFeeChange('parcelFeePercent')}
-                className="w-full bg-white border border-neutral-200 rounded-xl px-3 py-1.5 text-[10px] font-bold text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#74B4D9]"
+                className="w-full bg-white border border-neutral-200 rounded-xl px-3 py-1.5 text-[13px] font-bold text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#74B4D9]"
               />
             </div>
           </div>

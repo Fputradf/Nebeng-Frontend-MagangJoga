@@ -76,7 +76,7 @@ export default function OperatorProfileModal({
             <X className="w-3.5 h-3.5" />
           </button>
 
-          <div className="w-14 h-14 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center text-white text-[16px] font-extrabold mb-3 overflow-hidden">
+          <div className="w-14 h-14 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center text-white text-[19px] font-extrabold mb-3 overflow-hidden">
             {photoDataUrl ? (
               <img
                 src={photoDataUrl}
@@ -88,12 +88,12 @@ export default function OperatorProfileModal({
             )}
           </div>
 
-          <p className="text-white font-bold text-[15px]">
+          <p className="text-white font-bold text-[18px]">
             {displayName}
           </p>
 
           <span
-            className="mt-1.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide"
+            className="mt-1.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[12px] font-bold uppercase tracking-wide"
             style={{
               backgroundColor: 'rgba(255, 255, 255, 0.1)',
               color: '#74B4D9',
@@ -110,11 +110,11 @@ export default function OperatorProfileModal({
             <Mail className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
 
             <div className="min-w-0">
-              <p className="text-[7px] font-bold text-neutral-400 uppercase tracking-wider">
+              <p className="text-[13px] font-bold text-neutral-400 uppercase tracking-wider">
                 Email
               </p>
 
-              <p className="text-[10px] font-bold text-neutral-800 truncate">
+              <p className="text-[13px] font-bold text-neutral-800 truncate">
                 {displayEmail}
               </p>
             </div>
@@ -124,11 +124,11 @@ export default function OperatorProfileModal({
             <Phone className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
 
             <div className="min-w-0">
-              <p className="text-[7px] font-bold text-neutral-400 uppercase tracking-wider">
+              <p className="text-[13px] font-bold text-neutral-400 uppercase tracking-wider">
                 No. Telepon
               </p>
 
-              <p className="text-[10px] font-bold text-neutral-800 truncate">
+              <p className="text-[13px] font-bold text-neutral-800 truncate">
                 {displayPhone}
               </p>
             </div>
@@ -140,7 +140,7 @@ export default function OperatorProfileModal({
           <button
             type="button"
             onClick={onClose}
-            className="text-[10px] font-bold text-neutral-500 hover:text-neutral-700 transition cursor-pointer px-2 py-2"
+            className="text-[13px] font-bold text-neutral-500 hover:text-neutral-700 transition cursor-pointer px-2 py-2"
           >
             Tutup
           </button>
@@ -148,7 +148,7 @@ export default function OperatorProfileModal({
           <button
             type="button"
             onClick={handleGoToSettings}
-            className="flex items-center gap-1.5 px-4 py-2 text-white rounded-full text-[10px] font-bold transition shadow-sm cursor-pointer"
+            className="flex items-center gap-1.5 px-4 py-2 text-white rounded-full text-[13px] font-bold transition shadow-sm cursor-pointer"
             style={{
               backgroundColor: PRIMARY_COLOR,
             }}

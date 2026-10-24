@@ -1,6 +1,9 @@
+import { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import RegionalSidebar from './components/RegionalSidebar';
-import RegionalTopbar from './components/RegionalTopbar';
+import UserProfileModal from './components/UserProfileModal';
+import AppShell from '../../components/layout/AppShell';
+import AppTopbar from '../../components/layout/AppTopbar';
 import { useAuth } from '../../context/AuthContext';
 
 const REGIONAL_MENU_PATH = {
@@ -41,6 +44,7 @@ export default function RegionalLayout() {
   } = useAuth();
 
   const location = useLocation();
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   const currentPath = location.pathname.replace(/\/$/, '');
 
@@ -82,40 +86,45 @@ export default function RegionalLayout() {
     role: formatRoleLabel(role),
   };
 
+  const handleLogout = () => {
+    logout();
+    navigate('/login', {
+      replace: true,
+    });
+  };
+
+  const handleMenuSelect = (name) => {
+    const targetPath = REGIONAL_MENU_PATH[name];
+    if (!targetPath) {
+      console.warn('Menu tidak dikenal:', name);
+      return;
+    }
+    navigate(`/regional/${targetPath}`);
+  };
+
   return (
-    <div className="flex min-h-screen bg-[#f8f9fa] font-['Inter']">
-
-      {/* SIDEBAR */}
-      <RegionalSidebar
-        activeMenu={activeMenu}
-        onMenuSelect={(name) => {
-          const targetPath = REGIONAL_MENU_PATH[name];
-
-          if (targetPath) {
-            navigate(`/regional/${targetPath}`);
-          }
-        }}
-        onLogout={() => {
-          logout();
-          navigate('/login', {
-            replace: true,
-          });
-        }}
-      />
-
-      {/* MAIN CONTENT */}
-      <div className="flex-1 lg:ml-64 min-h-screen">
-
-        <RegionalTopbar
-          user={currentUser}
-          onSettingsClick={() =>
-            navigate('/regional/profile/pengaturan')
-          }
+    <AppShell
+      sidebar={
+        <RegionalSidebar
+          activeMenu={activeMenu}
+          onMenuSelect={handleMenuSelect}
+          onLogout={handleLogout}
         />
-
-        <Outlet />
-
-      </div>
-    </div>
+      }
+      topbar={
+        <AppTopbar
+          profile={currentUser}
+          roleLabel={currentUser.role}
+          onProfileClick={() => setShowProfileModal(true)}
+        />
+      }
+    >
+      <UserProfileModal
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+        user={currentUser}
+        onSettingsClick={() => navigate('/regional/profile/pengaturan')}
+      />
+    </AppShell>
   );
 }

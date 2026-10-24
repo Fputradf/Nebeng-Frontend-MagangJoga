@@ -256,12 +256,12 @@ export default function SuperadminAccountSettings() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="w-2 h-2 rounded-full bg-[#10367D] animate-pulse"></span>
-            <span className="text-[9px] font-bold uppercase tracking-widest text-[#10367D] flex items-center gap-1">
+            <span className="text-[12px] font-bold uppercase tracking-widest text-[#10367D] flex items-center gap-1">
               <Settings className="w-3 h-3" /> AKUN & KEAMANAN
             </span>
           </div>
-          <h1 className="text-[18px] sm:text-[20px] font-bold text-neutral-800">Pengaturan Akun</h1>
-          <p className="text-[10px] sm:text-[11px] text-neutral-400 mt-0.5">
+          <h1 className="text-[21px] sm:text-[23px] font-bold text-neutral-800">Pengaturan Akun</h1>
+          <p className="text-[13px] sm:text-[14px] text-neutral-400 mt-0.5">
             Ubah foto, nama, email, keamanan login, dan preferensi notifikasi akun Superadmin Anda.
           </p>
         </div>
@@ -269,7 +269,7 @@ export default function SuperadminAccountSettings() {
 
       <div className="space-y-5">
         <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 space-y-4">
-          <h3 className="text-[14px] font-bold text-neutral-800 flex items-center gap-1.5">
+          <h3 className="text-[17px] font-bold text-neutral-800 flex items-center gap-1.5">
             <User className="w-4 h-4 text-[#10367D]" /> Edit Profil
           </h3>
 
@@ -278,7 +278,7 @@ export default function SuperadminAccountSettings() {
               {avatarPreview ? (
                 <img src={avatarPreview} alt="Foto Profil" className="w-16 h-16 rounded-full object-cover border-4 border-sky-50 shadow-sm" />
               ) : (
-                <div className="w-16 h-16 rounded-full bg-[#10367D] text-white flex items-center justify-center text-[20px] font-extrabold shadow-sm">
+                <div className="w-16 h-16 rounded-full bg-[#10367D] text-white flex items-center justify-center text-[23px] font-extrabold shadow-sm">
                   {(profileDraft.name || 'S').trim().charAt(0).toUpperCase()}
                 </div>
               )}
@@ -299,19 +299,19 @@ export default function SuperadminAccountSettings() {
               />
             </div>
             <div>
-              <p className="text-[10px] font-bold text-neutral-700">Foto Profil</p>
-              <p className="text-[8px] text-neutral-400">JPG atau PNG, maksimal 2MB.</p>
-              {avatarError && <p className="text-[8px] text-rose-600 font-bold mt-0.5">{avatarError}</p>}
-              <p className="text-[8px] font-bold text-neutral-400 uppercase tracking-wider flex items-center gap-1 mt-1">
+              <p className="text-[13px] font-bold text-neutral-700">Foto Profil</p>
+              <p className="text-[11px] text-neutral-400">JPG atau PNG, maksimal 2MB.</p>
+              {avatarError && <p className="text-[11px] text-rose-600 font-bold mt-0.5">{avatarError}</p>}
+              <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider flex items-center gap-1 mt-1">
                 <ShieldCheck size={10} /> {displayRole}
               </p>
             </div>
           </div>
 
-          <form onSubmit={handleSaveProfile} className="space-y-3.5 text-[10px] pt-1 border-t border-neutral-100">
+          <form onSubmit={handleSaveProfile} className="space-y-3.5 text-[13px] pt-1 border-t border-neutral-100">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-3.5">
               <div>
-                <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">Nama Lengkap</label>
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">Nama Lengkap</label>
                 <input
                   type="text"
                   value={profileDraft.name}
@@ -321,7 +321,7 @@ export default function SuperadminAccountSettings() {
                 />
               </div>
               <div>
-                <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">Email</label>
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">Email</label>
                 <input
                   type="email"
                   placeholder="nama@email.com"
@@ -345,12 +345,12 @@ export default function SuperadminAccountSettings() {
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 space-y-5">
-          <h3 className="text-[14px] font-bold text-neutral-800 flex items-center gap-1.5">
+          <h3 className="text-[17px] font-bold text-neutral-800 flex items-center gap-1.5">
             <KeyRound className="w-4 h-4 text-[#10367D]" /> Keamanan Akun
           </h3>
 
-          <form onSubmit={handleChangePassword} className="space-y-3 text-[10px]">
-            <p className="text-[9px] font-bold text-neutral-500 uppercase tracking-wider">Ubah Kata Sandi</p>
+          <form onSubmit={handleChangePassword} className="space-y-3 text-[13px]">
+            <p className="text-[12px] font-bold text-neutral-500 uppercase tracking-wider">Ubah Kata Sandi</p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {[
                 { key: 'current', label: 'Kata Sandi Saat Ini' },
@@ -358,7 +358,7 @@ export default function SuperadminAccountSettings() {
                 { key: 'confirm', label: 'Konfirmasi Kata Sandi' },
               ].map(({ key, label }) => (
                 <div key={key} className="relative">
-                  <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">{label}</label>
+                  <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">{label}</label>
                   <input
                     type={showPassword[key] ? 'text' : 'password'}
                     value={passwordForm[key]}
@@ -375,7 +375,7 @@ export default function SuperadminAccountSettings() {
                 </div>
               ))}
             </div>
-            <p className="text-[8px] text-neutral-400">Minimal 8 karakter, kombinasi huruf dan angka disarankan.</p>
+            <p className="text-[11px] text-neutral-400">Minimal 8 karakter, kombinasi huruf dan angka disarankan.</p>
             <div className="flex justify-end">
               <button
                 type="submit"
@@ -393,8 +393,8 @@ export default function SuperadminAccountSettings() {
                 <ShieldCheck className="w-4 h-4" />
               </div>
               <div>
-                <p className="text-[10px] font-bold text-neutral-800">Autentikasi Dua Faktor (2FA)</p>
-                <p className="text-[8px] text-neutral-400 max-w-xs">Tambahan lapisan keamanan berupa kode OTP setiap kali login dari perangkat baru.</p>
+                <p className="text-[13px] font-bold text-neutral-800">Autentikasi Dua Faktor (2FA)</p>
+                <p className="text-[11px] text-neutral-400 max-w-xs">Tambahan lapisan keamanan berupa kode OTP setiap kali login dari perangkat baru.</p>
               </div>
             </div>
             <ToggleSwitch checked={is2FAEnabled} onChange={handleToggle2FA} />
@@ -406,8 +406,8 @@ export default function SuperadminAccountSettings() {
                 <MonitorSmartphone className="w-4 h-4" />
               </div>
               <div>
-                <p className="text-[10px] font-bold text-neutral-800">Sesi Login Saat Ini</p>
-                <p className="text-[8px] text-neutral-400">
+                <p className="text-[13px] font-bold text-neutral-800">Sesi Login Saat Ini</p>
+                <p className="text-[11px] text-neutral-400">
                   Sesi aktif terverifikasi pada perangkat ini.
                 </p>
               </div>
@@ -415,7 +415,7 @@ export default function SuperadminAccountSettings() {
             <button
               type="button"
               onClick={() => setShowLogoutSessionsModal(true)}
-              className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-[9px] font-bold transition cursor-pointer shrink-0"
+              className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-[12px] font-bold transition cursor-pointer shrink-0"
             >
               Keluar dari Perangkat Lain
             </button>
@@ -423,7 +423,7 @@ export default function SuperadminAccountSettings() {
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 space-y-4">
-          <h3 className="text-[14px] font-bold text-neutral-800 flex items-center gap-1.5">
+          <h3 className="text-[17px] font-bold text-neutral-800 flex items-center gap-1.5">
             <Bell className="w-4 h-4 text-[#10367D]" /> Preferensi Notifikasi
           </h3>
           <div className="space-y-2.5">
@@ -435,8 +435,8 @@ export default function SuperadminAccountSettings() {
             ].map((item) => (
               <div key={item.key} className="flex items-center justify-between gap-3 p-3 bg-neutral-50/70 border border-neutral-100 rounded-xl">
                 <div>
-                  <p className="text-[10px] font-bold text-neutral-800">{item.label}</p>
-                  <p className="text-[8px] text-neutral-400">{item.desc}</p>
+                  <p className="text-[13px] font-bold text-neutral-800">{item.label}</p>
+                  <p className="text-[11px] text-neutral-400">{item.desc}</p>
                 </div>
                 <ToggleSwitch checked={notifPrefs[item.key]} onChange={() => handleToggleNotif(item.key)} />
               </div>
@@ -452,7 +452,7 @@ export default function SuperadminAccountSettings() {
         subtitle="Keamanan Tambahan Akun"
         maxWidth="max-w-sm"
       >
-        <div className="space-y-3 text-[10px]">
+        <div className="space-y-3 text-[13px]">
           <p className="text-neutral-600">
             Kode OTP akan dikirim ke email terdaftar ({profileDraft.email || 'email belum diatur'}) setiap kali login dari perangkat baru.
           </p>
@@ -480,7 +480,7 @@ export default function SuperadminAccountSettings() {
         subtitle="Keamanan Sesi"
         maxWidth="max-w-sm"
       >
-        <div className="space-y-3 text-[10px]">
+        <div className="space-y-3 text-[13px]">
           <p className="text-neutral-600">Semua sesi aktif selain perangkat ini akan dipaksa logout. Anda perlu login ulang di perangkat tersebut.</p>
           <div className="flex gap-2 pt-1">
             <button

@@ -9,9 +9,9 @@ export default function BusinessHeader() {
   const pathSegments = location.pathname.split('/').filter(Boolean);
 
   return (
-    <header className="h-14 bg-white border-b border-slate-border px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30 shadow-enterprise font-sans">
+    <header className="h-14 bg-white/85 backdrop-blur-md border-b border-neutral-100/80 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30 font-sans">
       {/* Breadcrumb Navigation */}
-      <nav className="flex items-center gap-1.5 text-[11px] font-medium text-gray-500">
+      <nav className="flex items-center gap-1.5 text-[14px] font-medium text-gray-500">
         <span className="text-gray-400 capitalize">Nebeng</span>
         {pathSegments.map((segment, index) => (
           <div key={index} className="flex items-center gap-1.5 capitalize">
@@ -26,13 +26,13 @@ export default function BusinessHeader() {
       {/* Right Action Bar */}
       <div className="flex items-center gap-3">
         {/* Status System Security Indicator */}
-        <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 border border-emerald-200 rounded-full text-[9px] font-bold text-emerald-700">
+        <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 border border-emerald-200 rounded-full text-[12px] font-bold text-emerald-700">
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
           <span>AES-256 Encrypted</span>
         </div>
 
         {/* Notifications */}
-        <button 
+        <button
           aria-label="Notifikasi Sistem"
           className="relative p-2 rounded-xl text-gray-500 hover:bg-slate-subtle hover:text-brand-600 transition cursor-pointer"
         >
@@ -44,14 +44,14 @@ export default function BusinessHeader() {
 
         {/* User Role Badge */}
         <div className="flex items-center gap-2 pl-1">
-          <div className="w-7 h-7 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center font-bold text-[11px] border border-brand-100">
+          <div className="w-7 h-7 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center font-bold text-[14px] border border-brand-100">
             <User className="w-3.5 h-3.5" />
           </div>
           <div className="hidden sm:block text-left">
-            <p className="text-[10px] font-bold text-gray-800 leading-tight">
+            <p className="text-[13px] font-bold text-gray-800 leading-tight">
               {user?.name || 'Operator Sesi'}
             </p>
-            <p className="text-[8px] font-semibold text-brand-600 uppercase tracking-wider">
+            <p className="text-[11px] font-semibold text-brand-600 uppercase tracking-wider">
               {user?.role || 'Akses Terverifikasi'}
             </p>
           </div>

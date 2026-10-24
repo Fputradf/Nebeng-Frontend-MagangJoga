@@ -11,7 +11,7 @@ export default function ArmadaKurirTabs() {
 
         <button
           onClick={() => setSubTab('armada')}
-          className={`px-4 py-1.5 rounded-full text-[10px] sm:text-[11px] font-bold transition cursor-pointer ${
+          className={`px-4 py-1.5 rounded-full text-[13px] sm:text-[14px] font-bold transition cursor-pointer ${
             subTab === 'armada'
               ? 'bg-[#10367D] hover:bg-[#0C2C66] text-white shadow-sm'
               : 'bg-white text-neutral-600 border border-neutral-200 hover:bg-[#74B4D9]/15'
@@ -22,7 +22,7 @@ export default function ArmadaKurirTabs() {
 
         <button
           onClick={() => setSubTab('kurir')}
-          className={`px-4 py-1.5 rounded-full text-[10px] sm:text-[11px] font-bold transition cursor-pointer ${
+          className={`px-4 py-1.5 rounded-full text-[13px] sm:text-[14px] font-bold transition cursor-pointer ${
             subTab === 'kurir'
               ? 'bg-[#10367D] hover:bg-[#0C2C66] text-white shadow-sm'
               : 'bg-white text-neutral-600 border border-neutral-200 hover:bg-[#74B4D9]/15'

@@ -2,6 +2,10 @@ import { useEffect, useState, useRef } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import MitraSidebar from './components/MitraSidebar';
 import MitraTopbar from './components/MitraTopbar';
+import MitraProfileModal from './components/MitraProfileModal';
+import AppShell from '../../components/layout/AppShell';
+import AppTopbar from '../../components/layout/AppTopbar';
+import VerificationBanner from '../../components/layout/VerificationBanner';
 import { useAuth } from '../../context/AuthContext';
 import { MitraDataProvider } from '../../context/MitraDataContext';
 import apiClient from '../../services/apiClient';
@@ -26,6 +30,7 @@ export default function MitraLayout() {
 
   const [isVerified, setIsVerified] = useState(false);
   const [isLoadingStatus, setIsLoadingStatus] = useState(true);
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   // Menyimpan status verifikasi sebelumnya untuk mendeteksi perubahan status live
   const previousStatusRef = useRef(null);
@@ -78,7 +83,7 @@ export default function MitraLayout() {
   }, [logout, navigate]);
 
   const currentPath = location.pathname.replace(/\/$/, '');
-  
+
   // Tentukan menu aktif, dengan fallback 'Onboarding & Verifikasi' jika belum terverifikasi
   const activeMenu =
     Object.keys(MITRA_MENU_PATH).find((menu) => {
@@ -115,12 +120,20 @@ export default function MitraLayout() {
     navigate(`/mitra/${slug}`);
   };
 
+  const handleSettingsClick = () => {
+    if (isVerified) {
+      navigate('/mitra/profile/pengaturan');
+    } else {
+      alert('Akses pengaturan profil terkunci sampai akun Anda disetujui.');
+    }
+  };
+
   if (isLoadingStatus) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-[#f8f9fa]">
+      <div className="flex h-screen w-full items-center justify-center bg-canvas">
         <div className="flex flex-col items-center space-y-3">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#10367D] border-t-transparent"></div>
-          <p className="text-sm font-medium text-gray-600">Memeriksa hak akses akun...</p>
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-brand-500 border-t-transparent"></div>
+          <p className="text-sm font-medium text-slate-600">Memeriksa hak akses akun...</p>
         </div>
       </div>
     );
@@ -128,30 +141,31 @@ export default function MitraLayout() {
 
   return (
     <MitraDataProvider>
-      <div className="flex min-h-screen bg-[#f8f9fa] font-['Inter'] overflow-x-hidden">
-        <MitraSidebar
-          activeMenu={activeMenu}
-          isVerified={isVerified}
-          onMenuSelect={handleMenuSelect}
-          onLogout={handleLogout}
-        />
-
-        <div className="flex-1 lg:ml-64 min-h-screen w-full flex flex-col pb-20 lg:pb-0">
-          <MitraTopbar
-            profile={user || mitraProfile}
-            onSettingsClick={() => {
-              if (isVerified) {
-                navigate('/mitra/profile/pengaturan');
-              } else {
-                alert('Akses pengaturan profil terkunci sampai akun Anda disetujui.');
-              }
-            }}
+      <MitraTopbar />
+      <AppShell
+        sidebar={
+          <MitraSidebar
+            activeMenu={activeMenu}
+            isVerified={isVerified}
+            onMenuSelect={handleMenuSelect}
+            onLogout={handleLogout}
           />
-          <div className="flex-1">
-            <Outlet />
-          </div>
-        </div>
-      </div>
+        }
+        topbar={
+          <AppTopbar
+            profile={user || mitraProfile}
+            roleLabel="Mitra"
+            onProfileClick={() => setShowProfileModal(true)}
+          />
+        }
+        banner={!isVerified ? <VerificationBanner status="pending" /> : null}
+      >
+        <MitraProfileModal
+          isOpen={showProfileModal}
+          onClose={() => setShowProfileModal(false)}
+          onSettingsClick={handleSettingsClick}
+        />
+      </AppShell>
     </MitraDataProvider>
   );
 }

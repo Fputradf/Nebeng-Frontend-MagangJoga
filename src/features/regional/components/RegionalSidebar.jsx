@@ -102,7 +102,7 @@ export default function RegionalSidebar({
         className={`
           w-64
           h-screen
-          bg-[#10367D]
+          bg-[#0a1e3c]
           text-white
           flex
           flex-col
@@ -111,12 +111,12 @@ export default function RegionalSidebar({
           fixed
           left-0
           top-0
-          shadow-md
+          shadow-soft-lg
           overflow-y-auto
           z-40
           transition-transform
           duration-300
-          font-['Inter']
+          font-sans
           ${
             isMobileOpen
               ? 'translate-x-0'
@@ -135,7 +135,7 @@ export default function RegionalSidebar({
                 className="h-8 w-8 object-contain shrink-0 filter brightness-0 invert"
               />
 
-              <span className="font-bold text-white text-[20px] tracking-wide leading-none">
+              <span className="font-bold text-white text-lg tracking-tight leading-none">
                 Nebeng
               </span>
             </div>
@@ -146,7 +146,7 @@ export default function RegionalSidebar({
                 setIsMobileOpen(false)
               }
               aria-label="Tutup menu navigasi"
-              className="lg:hidden w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition"
+              className="lg:hidden w-8 h-8 rounded-lg bg-white/10 hover:bg-white/15 flex items-center justify-center text-white transition"
             >
               <X className="w-4 h-4" />
             </button>
@@ -156,7 +156,7 @@ export default function RegionalSidebar({
           <div className="space-y-6">
             {MENU_GROUPS.map((group) => (
               <div key={group.label}>
-                <p className="text-[8px] font-semibold uppercase tracking-widest text-[#74B4D9] mb-2.5 px-3">
+                <p className="text-xs font-bold uppercase tracking-wider text-white/50 mb-2.5 px-3">
                   {group.label}
                 </p>
 
@@ -181,14 +181,14 @@ export default function RegionalSidebar({
                           gap-3
                           px-3
                           py-2.5
-                          rounded-xl
-                          text-[12px]
+                          rounded-lg
+                          text-sm
                           transition
                           text-left
                           cursor-pointer
                           ${
                             isActive
-                              ? 'bg-white text-[#10367D] font-semibold shadow-sm'
+                              ? 'bg-white text-[#0a1e3c] font-bold shadow-soft'
                               : 'text-white/85 font-medium hover:bg-white/10 hover:text-white'
                           }
                         `}
@@ -198,7 +198,7 @@ export default function RegionalSidebar({
                             w-4 h-4
                             ${
                               isActive
-                                ? 'text-[#10367D]'
+                                ? 'text-[#0a1e3c]'
                                 : 'text-[#74B4D9]'
                             }
                           `}
@@ -215,13 +215,13 @@ export default function RegionalSidebar({
         </div>
 
         {/* LOGOUT */}
-        <div className="pt-5 border-t border-white/15">
+        <div className="pt-5 border-t border-white/10">
           <button
             onClick={() =>
               setShowLogoutModal(true)
             }
             aria-label="Keluar Sistem"
-            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[12px] font-semibold text-white bg-white/10 hover:bg-white/20 transition cursor-pointer border border-white/10"
+            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-bold text-white bg-white/10 hover:bg-white/20 transition cursor-pointer border border-white/10"
           >
             <LogOut className="w-4 h-4 text-white shrink-0" />
 
@@ -241,11 +241,11 @@ export default function RegionalSidebar({
                 <AlertTriangle size={24} />
               </div>
 
-              <h3 className="text-[14px] font-bold text-gray-900">
+              <h3 className="text-[17px] font-bold text-gray-900">
                 Konfirmasi Keluar Sistem
               </h3>
 
-              <p className="text-[10px] font-normal text-gray-500">
+              <p className="text-[13px] font-normal text-gray-500">
                 Apakah Anda yakin ingin mengakhiri
                 sesi aktif ini? Anda harus masuk kembali
                 untuk mengakses panel regional.
@@ -261,7 +261,7 @@ export default function RegionalSidebar({
                   setShowLogoutModal(false)
                 }
                 disabled={isLoggingOut}
-                className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 text-[10px] font-semibold rounded-full transition cursor-pointer"
+                className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 text-[13px] font-semibold rounded-full transition cursor-pointer"
               >
                 Batal
               </button>
@@ -270,7 +270,7 @@ export default function RegionalSidebar({
               <button
                 onClick={handleConfirmLogout}
                 disabled={isLoggingOut}
-                className="flex-1 py-3 bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-semibold rounded-full transition shadow-sm shadow-rose-200 cursor-pointer flex items-center justify-center gap-2"
+                className="flex-1 py-3 bg-rose-600 hover:bg-rose-700 text-white text-[13px] font-semibold rounded-full transition shadow-sm shadow-rose-200 cursor-pointer flex items-center justify-center gap-2"
               >
                 {isLoggingOut ? (
                   <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>

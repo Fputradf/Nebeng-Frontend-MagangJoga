@@ -468,7 +468,7 @@ export default function MitraAccountSettings() {
             />
 
             <span
-              className="text-[9px] font-bold uppercase tracking-widest flex items-center gap-1"
+              className="text-[12px] font-bold uppercase tracking-widest flex items-center gap-1"
               style={{ color: PRIMARY_COLOR }}
             >
               <Settings className="w-3 h-3" />
@@ -476,11 +476,11 @@ export default function MitraAccountSettings() {
             </span>
           </div>
 
-          <h1 className="text-[18px] sm:text-[20px] font-bold text-neutral-800">
+          <h1 className="text-[21px] sm:text-[23px] font-bold text-neutral-800">
             Pengaturan Akun
           </h1>
 
-          <p className="text-[10px] sm:text-[11px] text-neutral-400 mt-0.5">
+          <p className="text-[13px] sm:text-[14px] text-neutral-400 mt-0.5">
             Ubah data profil & kendaraan, keamanan login, preferensi
             notifikasi, dan sesi aktif akun mitra Anda.
           </p>
@@ -489,7 +489,7 @@ export default function MitraAccountSettings() {
 
       <div className="space-y-5">
         <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 space-y-4">
-          <h3 className="text-[14px] font-bold text-neutral-800 flex items-center gap-1.5">
+          <h3 className="text-[17px] font-bold text-neutral-800 flex items-center gap-1.5">
             <User
               className="w-4 h-4"
               style={{ color: PRIMARY_COLOR }}
@@ -512,7 +512,7 @@ export default function MitraAccountSettings() {
                 />
               ) : (
                 <div
-                  className="w-16 h-16 rounded-full text-white flex items-center justify-center text-[20px] font-extrabold shadow-sm"
+                  className="w-16 h-16 rounded-full text-white flex items-center justify-center text-[23px] font-extrabold shadow-sm"
                   style={{ backgroundColor: PRIMARY_COLOR }}
                 >
                   {displayName.trim().charAt(0).toUpperCase() || 'M'}
@@ -539,16 +539,16 @@ export default function MitraAccountSettings() {
             </div>
 
             <div>
-              <p className="text-[10px] font-bold text-neutral-700">
+              <p className="text-[13px] font-bold text-neutral-700">
                 Foto Profil
               </p>
 
-              <p className="text-[8px] text-neutral-400">
+              <p className="text-[11px] text-neutral-400">
                 JPG atau PNG, maksimal 2MB.
               </p>
 
               {avatarError && (
-                <p className="text-[8px] text-rose-600 font-bold mt-0.5">
+                <p className="text-[11px] text-rose-600 font-bold mt-0.5">
                   {avatarError}
                 </p>
               )}
@@ -557,11 +557,11 @@ export default function MitraAccountSettings() {
 
           <form
             onSubmit={handleSaveProfile}
-            className="space-y-3.5 text-[10px] pt-1 border-t border-neutral-100"
+            className="space-y-3.5 text-[13px] pt-1 border-t border-neutral-100"
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-3.5">
               <div>
-                <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                   Nama Lengkap
                 </label>
 
@@ -586,7 +586,7 @@ export default function MitraAccountSettings() {
               </div>
 
               <div>
-                <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                   Nomor Telepon
                 </label>
 
@@ -612,7 +612,7 @@ export default function MitraAccountSettings() {
               </div>
 
               <div>
-                <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                   Email
                 </label>
 
@@ -638,7 +638,7 @@ export default function MitraAccountSettings() {
               </div>
 
               <div>
-                <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                   Jenis Kendaraan
                 </label>
 
@@ -670,7 +670,7 @@ export default function MitraAccountSettings() {
               </div>
 
               <div>
-                <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                   Model Kendaraan
                 </label>
 
@@ -696,7 +696,7 @@ export default function MitraAccountSettings() {
               </div>
 
               <div>
-                <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                   Warna Kendaraan
                 </label>
 
@@ -722,7 +722,7 @@ export default function MitraAccountSettings() {
               </div>
 
               <div>
-                <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                   Nomor Plat
                 </label>
 
@@ -747,7 +747,7 @@ export default function MitraAccountSettings() {
               </div>
 
               <div className="sm:col-span-2">
-                <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                   Alamat Domisili
                 </label>
 
@@ -795,7 +795,7 @@ export default function MitraAccountSettings() {
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 space-y-5">
-          <h3 className="text-[14px] font-bold text-neutral-800 flex items-center gap-1.5">
+          <h3 className="text-[17px] font-bold text-neutral-800 flex items-center gap-1.5">
             <KeyRound
               className="w-4 h-4"
               style={{ color: PRIMARY_COLOR }}
@@ -805,9 +805,9 @@ export default function MitraAccountSettings() {
 
           <form
             onSubmit={handleChangePassword}
-            className="space-y-3 text-[10px]"
+            className="space-y-3 text-[13px]"
           >
-            <p className="text-[9px] font-bold text-neutral-500 uppercase tracking-wider">
+            <p className="text-[12px] font-bold text-neutral-500 uppercase tracking-wider">
               Ubah Kata Sandi
             </p>
 
@@ -827,7 +827,7 @@ export default function MitraAccountSettings() {
                 },
               ].map((field) => (
                 <div className="relative" key={field.key}>
-                  <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                  <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                     {field.label}
                   </label>
 
@@ -874,7 +874,7 @@ export default function MitraAccountSettings() {
               ))}
             </div>
 
-            <p className="text-[8px] text-neutral-400">
+            <p className="text-[11px] text-neutral-400">
               Minimal 8 karakter, kombinasi huruf dan angka
               disarankan.
             </p>
@@ -913,11 +913,11 @@ export default function MitraAccountSettings() {
               </div>
 
               <div>
-                <p className="text-[10px] font-bold text-neutral-800">
+                <p className="text-[13px] font-bold text-neutral-800">
                   Autentikasi Dua Faktor (2FA)
                 </p>
 
-                <p className="text-[8px] text-neutral-400 max-w-xs">
+                <p className="text-[11px] text-neutral-400 max-w-xs">
                   Tambahan lapisan keamanan berupa kode OTP
                   setiap kali login dari perangkat baru.
                 </p>
@@ -937,11 +937,11 @@ export default function MitraAccountSettings() {
               </div>
 
               <div>
-                <p className="text-[10px] font-bold text-neutral-800">
+                <p className="text-[13px] font-bold text-neutral-800">
                   Sesi Login Saat Ini
                 </p>
 
-                <p className="text-[8px] text-neutral-400">
+                <p className="text-[11px] text-neutral-400">
                   {sessionPersisted
                     ? 'Sesi diingat di perangkat ini ("Ingat Saya" aktif).'
                     : 'Sesi sementara — akan berakhir saat tab ditutup.'}
@@ -954,7 +954,7 @@ export default function MitraAccountSettings() {
               onClick={() =>
                 setShowLogoutSessionsModal(true)
               }
-              className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-[9px] font-bold transition cursor-pointer shrink-0"
+              className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-[12px] font-bold transition cursor-pointer shrink-0"
             >
               Keluar dari Perangkat Lain
             </button>
@@ -962,7 +962,7 @@ export default function MitraAccountSettings() {
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 space-y-4">
-          <h3 className="text-[14px] font-bold text-neutral-800 flex items-center gap-1.5">
+          <h3 className="text-[17px] font-bold text-neutral-800 flex items-center gap-1.5">
             <Bell
               className="w-4 h-4"
               style={{ color: PRIMARY_COLOR }}
@@ -998,11 +998,11 @@ export default function MitraAccountSettings() {
                 className="flex items-center justify-between gap-3 p-3 bg-neutral-50/70 border border-neutral-100 rounded-xl"
               >
                 <div>
-                  <p className="text-[10px] font-bold text-neutral-800">
+                  <p className="text-[13px] font-bold text-neutral-800">
                     {item.label}
                   </p>
 
-                  <p className="text-[8px] text-neutral-400">
+                  <p className="text-[11px] text-neutral-400">
                     {item.desc}
                   </p>
                 </div>
@@ -1019,18 +1019,18 @@ export default function MitraAccountSettings() {
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-rose-200 p-5 sm:p-6 space-y-3">
-          <h3 className="text-[14px] font-bold text-rose-600 flex items-center gap-1.5">
+          <h3 className="text-[17px] font-bold text-rose-600 flex items-center gap-1.5">
             <AlertTriangle className="w-4 h-4" />
             Zona Berbahaya
           </h3>
 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 bg-rose-50/50 border border-rose-100 rounded-xl">
             <div>
-              <p className="text-[10px] font-bold text-neutral-800">
+              <p className="text-[13px] font-bold text-neutral-800">
                 Nonaktifkan Akun Mitra
               </p>
 
-              <p className="text-[8px] text-neutral-400 max-w-md">
+              <p className="text-[11px] text-neutral-400 max-w-md">
                 Akun Anda akan disembunyikan dari sistem
                 pemesanan dan trip baru tidak dapat dibuat
                 sampai diaktifkan kembali oleh Admin Regional.
@@ -1042,7 +1042,7 @@ export default function MitraAccountSettings() {
               onClick={() =>
                 setShowDeactivateModal(true)
               }
-              className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-[9px] font-bold transition shadow-sm cursor-pointer shrink-0"
+              className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-[12px] font-bold transition shadow-sm cursor-pointer shrink-0"
             >
               Ajukan Nonaktifasi
             </button>
@@ -1057,7 +1057,7 @@ export default function MitraAccountSettings() {
         subtitle="Keamanan Tambahan Akun"
         maxWidth="max-w-sm"
       >
-        <div className="space-y-3 text-[10px]">
+        <div className="space-y-3 text-[13px]">
           <p className="text-neutral-600">
             Kode OTP akan dikirim ke nomor telepon terdaftar
             setiap kali login dari perangkat baru.
@@ -1099,7 +1099,7 @@ export default function MitraAccountSettings() {
         subtitle="Keamanan Sesi"
         maxWidth="max-w-sm"
       >
-        <div className="space-y-3 text-[10px]">
+        <div className="space-y-3 text-[13px]">
           <p className="text-neutral-600">
             Semua sesi aktif selain perangkat ini akan dipaksa
             logout.
@@ -1134,7 +1134,7 @@ export default function MitraAccountSettings() {
         subtitle="Tindakan Ini Memerlukan Persetujuan Admin"
         maxWidth="max-w-sm"
       >
-        <div className="space-y-3 text-[10px]">
+        <div className="space-y-3 text-[13px]">
           <p className="text-neutral-600">
             Trip aktif yang sedang berjalan tetap harus
             diselesaikan terlebih dahulu.

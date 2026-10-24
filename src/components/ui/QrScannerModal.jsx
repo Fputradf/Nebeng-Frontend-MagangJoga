@@ -99,7 +99,7 @@ export default function QrScannerModal({ label, onResult, onClose }) {
               id={scannerElementId}
               className="w-full rounded-2xl overflow-hidden bg-neutral-900 min-h-55"
             />
-            <p className="text-[11px] text-neutral-500 text-center mt-3">
+            <p className="text-[14px] text-neutral-500 text-center mt-3">
               {isStarting ? 'Mengaktifkan kamera...' : 'Arahkan kamera ke QR Code hingga terbaca otomatis.'}
             </p>
           </>

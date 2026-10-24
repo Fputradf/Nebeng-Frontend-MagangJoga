@@ -3,10 +3,11 @@ import { ArrowRight } from 'lucide-react';
 import AuthInput from '../../components/ui/AuthInput';
 import AuthLayout from '../../components/layout/AuthLayout';
 import { useAuth } from '../../context/AuthContext';
+import { useNotification } from '../../context/NotificationContext';
 import { loginRequest } from '../../services/authService';
 import logoImage from '../../assets/logo.png';
 
-export default function Login({ onSwitchToRegister, onLogin }) {
+export default function Login({ onSwitchToRegister, onSwitchToForgotPassword, onLogin }) {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -15,6 +16,7 @@ export default function Login({ onSwitchToRegister, onLogin }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { login } = useAuth();
+  const { registerToken } = useNotification();
 
   /* =========================================
      EMAIL CHANGE
@@ -105,6 +107,11 @@ export default function Login({ onSwitchToRegister, onLogin }) {
         rememberMe
       );
 
+      // Register FCM token after successful login
+      registerToken().catch(err => {
+        console.log('FCM token registration will be handled by notification context');
+      });
+
       if (onLogin) {
         onLogin(role);
       }
@@ -170,41 +177,42 @@ export default function Login({ onSwitchToRegister, onLogin }) {
             flex
             items-center
             justify-between
-            px-1
-            pt-0.5
+            pt-1
           "
         >
           {/* Remember Me */}
           <label
+            htmlFor="remember-me"
             className="
               flex
               items-center
-              gap-1.5
+              gap-2
               cursor-pointer
-              select-none
-              text-[9px]
-              leading-none
-              font-normal
-              text-[#999999]
+              text-sm
+              text-slate-600
+              hover:text-slate-700
             "
           >
             <input
+              id="remember-me"
               type="checkbox"
               checked={rememberMe}
               onChange={(e) =>
                 setRememberMe(e.target.checked)
               }
               className="
-                w-3
-                h-3
+                w-4
+                h-4
                 shrink-0
-                rounded-sm
-                border-[#D5D5D5]
-                accent-[#10367D]
+                rounded
+                border-slate-300
+                text-brand-600
+                focus:ring-2
+                focus:ring-brand-500
+                focus:ring-offset-0
                 cursor-pointer
               "
             />
-
             <span>
               Ingat saya
             </span>
@@ -213,17 +221,14 @@ export default function Login({ onSwitchToRegister, onLogin }) {
           {/* Forgot Password */}
           <button
             type="button"
-            disabled
-            title="Fitur ini akan segera hadir"
-            aria-disabled="true"
+            onClick={onSwitchToForgotPassword}
             className="
-              text-[9px]
-              leading-none
+              text-sm
               font-medium
-              text-[#10367D]
-              underline
-              opacity-70
-              cursor-not-allowed
+              text-brand-600
+              hover:text-brand-700
+              cursor-pointer
+              transition-colors
             "
           >
             Lupa password?
@@ -239,18 +244,20 @@ export default function Login({ onSwitchToRegister, onLogin }) {
           aria-busy={isSubmitting}
           className="
             w-full
-            h-10.25
-
+            py-3
             px-4
 
-            rounded-full
+            rounded-xl
 
-            bg-[#10367D]
-            hover:bg-[#0C2C66]
+            bg-brand-900
+            hover:bg-brand-800
+            focus:outline-none
+            focus:ring-2
+            focus:ring-brand-500
+            focus:ring-offset-2
 
             text-white
-            text-[12px]
-            leading-none
+            text-sm
             font-medium
 
             flex
@@ -258,11 +265,12 @@ export default function Login({ onSwitchToRegister, onLogin }) {
             justify-center
             gap-2
 
-            transition-colors
+            transition-all
             duration-200
 
-            disabled:opacity-60
+            disabled:opacity-50
             disabled:cursor-not-allowed
+            disabled:hover:bg-brand-900
 
             cursor-pointer
           "
@@ -271,10 +279,10 @@ export default function Login({ onSwitchToRegister, onLogin }) {
             <>
               <span
                 className="
-                  w-3.5
-                  h-3.5
+                  w-4
+                  h-4
                   border-2
-                  border-white/40
+                  border-white/30
                   border-t-white
                   rounded-full
                   animate-spin
@@ -293,8 +301,8 @@ export default function Login({ onSwitchToRegister, onLogin }) {
 
               <ArrowRight
                 className="
-                  w-3.5
-                  h-3.5
+                  w-4
+                  h-4
                   shrink-0
                 "
               />
@@ -309,13 +317,10 @@ export default function Login({ onSwitchToRegister, onLogin }) {
       <p
         className="
           text-center
-          mt-5
+          mt-6
 
-          text-[9px]
-          leading-[1.4]
-          font-normal
-
-          text-[#999999]
+          text-sm
+          text-slate-500
         "
       >
         Belum punya akun?{' '}
@@ -325,18 +330,15 @@ export default function Login({ onSwitchToRegister, onLogin }) {
           onClick={onSwitchToRegister}
           className="
             font-medium
-            text-[#10367D]
+            text-brand-600
 
-            hover:text-[#0C2C66]
-            hover:underline
+            hover:text-brand-700
 
             transition-colors
-            duration-150
-
             cursor-pointer
           "
         >
-          Gabung sekarang!
+          Gabung sekarang
         </button>
       </p>
     </AuthLayout>

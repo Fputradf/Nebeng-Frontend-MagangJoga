@@ -196,7 +196,7 @@ export default function OperatorHandover() {
             />
 
             <span
-              className="text-[9px] font-bold uppercase tracking-widest flex items-center gap-1 flex-wrap min-w-0"
+              className="text-[12px] font-bold uppercase tracking-widest flex items-center gap-1 flex-wrap min-w-0"
               style={{ color: PRIMARY_COLOR }}
             >
               <UserCheck className="w-3 h-3" />
@@ -204,11 +204,11 @@ export default function OperatorHandover() {
             </span>
           </div>
 
-          <h1 className="text-[18px] sm:text-[20px] font-bold text-neutral-800 break-words">
+          <h1 className="text-[21px] sm:text-[23px] font-bold text-neutral-800 break-words">
             Handover & OTP
           </h1>
 
-          <p className="text-[10px] sm:text-[11px] text-neutral-400 mt-0.5">
+          <p className="text-[13px] sm:text-[14px] text-neutral-400 mt-0.5">
             Validasi OTP untuk pencairan escrow paket.
           </p>
         </div>
@@ -216,7 +216,7 @@ export default function OperatorHandover() {
         <button
           type="button"
           onClick={() => setShowForceModal(true)}
-          className="px-4 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-xl text-[10px] font-bold flex items-center gap-1.5 transition cursor-pointer shrink-0"
+          className="px-4 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-xl text-[13px] font-bold flex items-center gap-1.5 transition cursor-pointer shrink-0"
         >
           <AlertTriangle className="w-3.5 h-3.5" />
           <span>Bantuan Darurat (Force Release HP Rusak)</span>
@@ -225,18 +225,18 @@ export default function OperatorHandover() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <div className="lg:col-span-1 bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 space-y-4">
-          <h2 className="text-[14px] font-bold text-neutral-800">
+          <h2 className="text-[17px] font-bold text-neutral-800">
             Form Serah Terima Paket
           </h2>
 
           <form
             onSubmit={handleHandoverSubmit}
-            className="space-y-3.5 text-[10px]"
+            className="space-y-3.5 text-[13px]"
           >
             <input type="hidden" value={posId} />
 
             <div>
-              <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+              <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                 PENERIMA
               </label>
 
@@ -246,12 +246,12 @@ export default function OperatorHandover() {
                 placeholder="cth: Siti Rahma"
                 value={recipientName}
                 onChange={(e) => setRecipientName(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 focus:outline-none font-medium text-[10px]"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 focus:outline-none font-medium text-[13px]"
               />
             </div>
 
             <div>
-              <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+              <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                 QR CODE TRIP MITRA
               </label>
 
@@ -261,12 +261,12 @@ export default function OperatorHandover() {
                 placeholder="cth: TRIP-A2D4CS13"
                 value={tripQr}
                 onChange={(e) => setTripQr(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 focus:outline-none font-mono font-medium text-[10px] uppercase"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 focus:outline-none font-mono font-medium text-[13px] uppercase"
               />
             </div>
 
             <div>
-              <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+              <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                 QR TIKET / RESI PAKET
               </label>
 
@@ -276,12 +276,12 @@ export default function OperatorHandover() {
                 placeholder="cth: TKT-SDJF12H"
                 value={ticketQr}
                 onChange={(e) => setTicketQr(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 focus:outline-none font-mono font-medium text-[10px] uppercase"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 focus:outline-none font-mono font-medium text-[13px] uppercase"
               />
             </div>
 
             <div>
-              <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+              <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                 KODE OTP 6-DIGIT PENERIMA
               </label>
 
@@ -295,14 +295,14 @@ export default function OperatorHandover() {
                 onChange={(e) =>
                   setOtpCode(e.target.value.replace(/\D/g, ''))
                 }
-                className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 focus:outline-none font-mono tracking-widest text-center text-[12px] font-extrabold"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 focus:outline-none font-mono tracking-widest text-center text-[15px] font-extrabold"
               />
             </div>
 
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-3 disabled:opacity-50 text-white text-[10px] font-bold rounded-xl transition shadow-sm cursor-pointer flex items-center justify-center gap-1.5 mt-1"
+              className="w-full py-3 disabled:opacity-50 text-white text-[13px] font-bold rounded-xl transition shadow-sm cursor-pointer flex items-center justify-center gap-1.5 mt-1"
               style={{
                 backgroundColor: PRIMARY_COLOR,
               }}
@@ -319,14 +319,14 @@ export default function OperatorHandover() {
         </div>
 
         <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 space-y-4">
-          <h2 className="text-[14px] font-bold text-neutral-800">
+          <h2 className="text-[17px] font-bold text-neutral-800">
             Riwayat Serah Terima Sesi Ini
           </h2>
 
           <div className="hidden sm:block overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-neutral-100 text-neutral-400 text-[9px] uppercase tracking-wider font-semibold">
+                <tr className="border-b border-neutral-100 text-neutral-400 text-[12px] uppercase tracking-wider font-bold">
                   <th className="py-3 px-2">ID/WAKTU</th>
                   <th className="py-3 px-2">PENERIMA</th>
                   <th className="py-3 px-2">TIKET</th>
@@ -335,7 +335,7 @@ export default function OperatorHandover() {
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-neutral-100 text-[9px]">
+              <tbody className="divide-y divide-neutral-100 text-[12px]">
                 {handoverHistory.length === 0 ? (
                   <tr>
                     <td colSpan={5}>
@@ -353,11 +353,11 @@ export default function OperatorHandover() {
                       className="hover:bg-neutral-50/60 transition"
                     >
                       <td className="py-3.5 px-4">
-                        <p className="font-bold text-neutral-800 font-mono text-[10px]">
+                        <p className="font-bold text-neutral-800 font-mono text-[13px]">
                           {item.id}
                         </p>
 
-                        <p className="text-[8px] text-neutral-400 font-semibold">
+                        <p className="text-[11px] text-neutral-400 font-semibold">
                           {item.time}
                         </p>
                       </td>
@@ -400,16 +400,16 @@ export default function OperatorHandover() {
       >
         <form
           onSubmit={handleForceReleaseSubmit}
-          className="space-y-3 text-[10px]"
+          className="space-y-3 text-[13px]"
         >
-          <div className="bg-amber-50 p-2.5 rounded-xl border border-amber-200 text-amber-800 text-[9px]">
+          <div className="bg-amber-50 p-2.5 rounded-xl border border-amber-200 text-amber-800 text-[12px]">
             <strong>Perhatian:</strong> Tindakan ini akan memaksa pencairan
             dana escrow dan menyelesaikan pesanan berdasarkan verifikasi manual
             KTP di pos.
           </div>
 
           <div>
-            <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+            <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
               ID POS BERTUGAS
             </label>
 
@@ -418,12 +418,12 @@ export default function OperatorHandover() {
               required
               value={forcePosId}
               onChange={(e) => setForcePosId(e.target.value)}
-              className="w-full px-3.5 py-2 rounded-xl border border-neutral-200 font-mono text-[10px]"
+              className="w-full px-3.5 py-2 rounded-xl border border-neutral-200 font-mono text-[13px]"
             />
           </div>
 
           <div>
-            <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+            <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
               NOMOR TIKET / RESI PAKET
             </label>
 
@@ -433,12 +433,12 @@ export default function OperatorHandover() {
               placeholder="cth: TKT-SDJF12H"
               value={forceTicket}
               onChange={(e) => setForceTicket(e.target.value)}
-              className="w-full px-3.5 py-2 rounded-xl border border-neutral-200 font-mono text-[10px] uppercase"
+              className="w-full px-3.5 py-2 rounded-xl border border-neutral-200 font-mono text-[13px] uppercase"
             />
           </div>
 
           <div>
-            <label className="block text-[8px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+            <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
               KODE OTP MANUAL (JIKA ADA)
             </label>
 
@@ -449,7 +449,7 @@ export default function OperatorHandover() {
               onChange={(e) =>
                 setForceOtp(e.target.value.replace(/\D/g, ''))
               }
-              className="w-full px-3.5 py-2 rounded-xl border border-neutral-200 font-mono text-[10px]"
+              className="w-full px-3.5 py-2 rounded-xl border border-neutral-200 font-mono text-[13px]"
             />
           </div>
 

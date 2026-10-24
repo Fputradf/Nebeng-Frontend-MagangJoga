@@ -1,74 +1,87 @@
 @import "tailwindcss";
 
 /*
- * Skala ukuran font dinaikkan ~1px per step dari default Tailwind supaya
- * body text (banyak dipakai text-xs/text-sm di seluruh app) lebih terbaca,
- * tanpa perlu mengubah className di tiap komponen satu per satu.
- * Default Tailwind -> baru:
- *   text-xs   12px -> 13px
- *   text-sm   14px -> 15px
- *   text-base 16px -> 17px
- *   text-lg   18px -> 19px
+ * Refined Typography Scale
  */
 @theme {
   --text-xs: 0.8125rem;
-  --text-xs--line-height: 1.125rem;
+  --text-xs--line-height: 1.4rem;
   --text-sm: 0.9375rem;
-  --text-sm--line-height: 1.375rem;
-  --text-base: 1.0625rem;
-  --text-base--line-height: 1.625rem;
-  --text-lg: 1.1875rem;
-  --text-lg--line-height: 1.75rem;
+  --text-sm--line-height: 1.5rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.6rem;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.7rem;
 
   /*
-   * TOKEN WARNA BRAND (SUMBER KEBENARAN TUNGGAL)
-   * ---------------------------------------------------------------
-   * Sebelumnya setiap file menuliskan hex yang sama secara manual
-   * berkali-kali (mis. `bg-[#e61994]`, `from-[#b819b8]`), sehingga
-   * beberapa nilai sempat tertulis dengan huruf kapital berbeda
-   * (`#FC156A` vs `#fc156a`) tanpa satu sumber acuan. Token di bawah
-   * ini dipakai lewat class Tailwind biasa, mis. `bg-brand-role-mid`,
-   * `from-brand-auth-deep`, `text-brand-operator` — bukan lagi
-   * `bg-[#e61994]`. Kalau warna brand berubah nanti, cukup ubah di
-   * satu tempat ini.
-   *
-   * - brand-auth-*   : gradient sampul kiri halaman Login/Register
-   *                    dan sidebar Superadmin (indigo tua -> ungu -> pink terang)
-   * - brand-role-*   : gradient sidebar role Customer/Mitra/Regional/
-   *                    Operator Pos (magenta -> pink)
-   * - brand-operator     : aksen warna khas area Operator Pos
-   * - brand-magenta-dark : shade magenta gelap — dipakai sebagai overlay
-   *                        footer di sidebar Customer/Mitra/Operator, DAN
-   *                        sebagai warna hover tombol di area Operator Pos.
-   *                        Nama sengaja netral (bukan "operator-dark")
-   *                        karena dipakai lintas role, bukan eksklusif
-   *                        milik satu role.
-   * - brand-login        : warna judul di halaman Login
-   * - brand-register     : warna judul di halaman Register
+   * NAVY BLUE BRAND COLOR SYSTEM
+   * Professional navy blue palette for Nebeng
    */
-  --color-brand-auth-deep: #322c85;
-  --color-brand-auth-mid: #b019b8;
-  --color-brand-auth-bright: #fc156a;
+  --color-brand-auth-deep: #0a1e3c;
+  --color-brand-auth-mid: #10367d;
+  --color-brand-auth-bright: #1a4a9c;
 
-  --color-brand-role-start: #b819b8;
-  --color-brand-role-mid: #e61994;
-  --color-brand-role-mid-dark: #d01484;
-  --color-brand-role-end: #fc156a;
+  --color-brand-role-start: #0d1f3a;
+  --color-brand-role-mid: #10367d;
+  --color-brand-role-mid-dark: #0c2c66;
+  --color-brand-role-end: #4a7cc9;
 
-  --color-brand-operator: #c91882;
-  --color-brand-magenta-dark: #b51474;
+  --color-brand-operator: #2d5a9e;
+  --color-brand-magenta-dark: #0a1e3c;
 
-  --color-brand-50: #EEF2FF;
-  --color-brand-100: #E0E7FF;
-  --color-brand-500: #6366F1;
-  --color-brand-600: #4338CA;
-  --color-brand-700: #3730A3;
-  --color-brand-900: #312E81;
-  --color-brand-950: #1E1B4B;
+  --color-brand-50: #f0f4f8;
+  --color-brand-100: #e0e8f0;
+  --color-brand-500: #10367d;
+  --color-brand-600: #0c2c66;
+  --color-brand-700: #0a1e3c;
+  --color-brand-900: #061528;
+  --color-brand-950: #030d1a;
+
+  /*
+   * TOKEN BARU (dipindah dari tailwind.config.js karena Tailwind v4
+   * tidak membaca config JS secara otomatis)
+   */
+  --color-canvas: #eef3fa;
+  --color-accent: #74b4d9;
+
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-display: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+
+  --shadow-soft: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+  --shadow-card: 0 1px 2px rgba(16, 54, 125, 0.04), 0 8px 24px -12px rgba(16, 54, 125, 0.14);
 }
 
 body {
   font-size: var(--text-sm);
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Smooth transitions */
+* {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Better scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 @media print {

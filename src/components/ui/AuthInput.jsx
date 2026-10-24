@@ -43,11 +43,10 @@ export default function AuthInput({
           htmlFor={inputId}
           className="
             block
-            mb-1.5
-            text-[11px]
-            leading-[1.4]
-            font-normal
-            text-[#999999]
+            mb-2
+            text-sm
+            font-medium
+            text-slate-600
           "
         >
           {label}
@@ -73,10 +72,9 @@ export default function AuthInput({
           className={`
             w-full
             h-10
-            sm:h-10.25
 
             pl-4
-            ${isPassword ? 'pr-11' : 'pr-4'}
+            ${isPassword ? 'pr-10' : 'pr-4'}
 
             bg-white
             border
@@ -84,31 +82,30 @@ export default function AuthInput({
             ${
               error
                 ? `
-                  border-[#E57373]
-                  focus:border-[#E57373]
-                  focus:ring-[#E57373]/10
+                  border-rose-500
+                  focus:border-rose-500
+                  focus:ring-rose-500/20
                 `
                 : `
-                  border-[#E3E3E3]
-                  focus:border-[#74B4D9]
-                  focus:ring-[#74B4D9]/15
+                  border-slate-300
+                  focus:border-brand-500
+                  focus:ring-brand-500/20
                 `
             }
 
-            rounded-full
+            rounded-lg
 
-            text-[10px]
-            sm:text-[10.5px]
+            text-sm
 
-            leading-none
             font-normal
-            text-[#333333]
+            text-slate-900
 
-            placeholder:text-[#333333]
+            placeholder:text-slate-400
             placeholder:font-normal
 
             outline-none
             focus:ring-2
+            focus:ring-offset-0
 
             transition-all
             duration-200
@@ -130,23 +127,23 @@ export default function AuthInput({
               absolute
               inset-y-0
               right-0
-              w-10.5
+              w-10
 
               flex
               items-center
               justify-center
 
-              text-[#999999]
-              hover:text-[#10367D]
+              text-slate-400
+              hover:text-slate-600
 
               transition-colors
               duration-150
             "
           >
             {isShowPassword ? (
-              <EyeOff className="w-3.75 h-3.75" />
+              <EyeOff className="w-4 h-4" />
             ) : (
-              <Eye className="w-3.75 h-3.75" />
+              <Eye className="w-4 h-4" />
             )}
           </button>
         )}
@@ -161,10 +158,9 @@ export default function AuthInput({
           className="
             mt-1.5
             ml-1
-            text-[9px]
-            leading-[1.4]
+            text-xs
             font-medium
-            text-[#E57373]
+            text-rose-600
           "
         >
           {error}

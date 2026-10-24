@@ -12,7 +12,7 @@ export default function EnterpriseTable({
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-slate-canvas border-b border-slate-border text-[9px] font-bold text-gray-400 uppercase tracking-wider">
+            <tr className="bg-slate-canvas border-b border-slate-border text-[12px] font-bold text-gray-400 uppercase tracking-wider">
               {columns.map((col, idx) => (
                 <th key={idx} className="py-3 px-4 whitespace-nowrap">
                   <div className="flex items-center gap-1.5">
@@ -28,7 +28,7 @@ export default function EnterpriseTable({
               <th className="py-3 px-4 text-right">Aksi</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-border text-[10px] font-medium text-gray-700">
+          <tbody className="divide-y divide-slate-border text-[13px] font-medium text-gray-700">
             {isLoading ? (
               Array.from({ length: 3 }).map((_, rIdx) => (
                 <tr key={rIdx} className="animate-pulse">
@@ -45,8 +45,8 @@ export default function EnterpriseTable({
             ) : data.length === 0 ? (
               <tr>
                 <td colSpan={columns.length + 1} className="py-10 text-center">
-                  <p className="text-[11px] font-bold text-gray-700">{emptyTitle}</p>
-                  <p className="text-[9px] text-gray-400 mt-0.5">{emptyDescription}</p>
+                  <p className="text-[14px] font-bold text-gray-700">{emptyTitle}</p>
+                  <p className="text-[12px] text-gray-400 mt-0.5">{emptyDescription}</p>
                 </td>
               </tr>
             ) : (

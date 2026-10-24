@@ -171,17 +171,17 @@ export default function OperatorPosPage() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="w-2 h-2 rounded-full bg-[#10367D] animate-pulse"></span>
-            <span className="text-[9px] font-bold uppercase tracking-widest text-[#10367D]">
+            <span className="text-[12px] font-bold uppercase tracking-widest text-[#10367D]">
               MANAJEMEN AKUN OPERATOR POS REGIONAL
             </span>
           </div>
-          <h1 className="text-[18px] sm:text-[20px] font-bold text-neutral-800">Akun & Penugasan Operator Pos</h1>
-          <p className="text-[10px] sm:text-[11px] text-neutral-400 mt-0.5">Buat akun operator, tentukan pos penugasan, dan atur shift operasional dengan proteksi data PII.</p>
+          <h1 className="text-[21px] sm:text-[23px] font-bold text-neutral-800">Akun & Penugasan Operator Pos</h1>
+          <p className="text-[13px] sm:text-[14px] text-neutral-400 mt-0.5">Buat akun operator, tentukan pos penugasan, dan atur shift operasional dengan proteksi data PII.</p>
         </div>
 
         <button 
           onClick={handleOpenAdd}
-          className="flex items-center gap-2 px-4 py-2 bg-[#10367D] hover:bg-[#0C2C66] text-white rounded-full text-[10px] sm:text-[11px] font-bold transition cursor-pointer shadow-sm shrink-0"
+          className="flex items-center gap-2 px-4 py-2 bg-[#10367D] hover:bg-[#0C2C66] text-white rounded-full text-[13px] sm:text-[14px] font-bold transition cursor-pointer shadow-sm shrink-0"
         >
           <Plus size={14} />
           <span>Buat Operator Baru</span>
@@ -196,10 +196,10 @@ export default function OperatorPosPage() {
             placeholder="Cari nama, email, atau pos..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-neutral-50 border border-neutral-200 rounded-full pl-9 pr-8 py-2 text-[10px] sm:text-[11px] font-medium text-neutral-700 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-[#10367D] transition"
+            className="w-full bg-neutral-50 border border-neutral-200 rounded-full pl-9 pr-8 py-2 text-[13px] sm:text-[14px] font-medium text-neutral-700 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-[#10367D] transition"
           />
         </div>
-        <div className="text-[10px] font-semibold text-neutral-400 px-2">
+        <div className="text-[13px] font-semibold text-neutral-400 px-2">
           Total: <span className="font-bold text-neutral-800">{filteredOperators.length} Operator</span>
         </div>
       </div>
@@ -208,7 +208,7 @@ export default function OperatorPosPage() {
         <div className="hidden sm:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-gray-50/70 text-neutral-400 text-[9px] uppercase tracking-wider font-semibold">
+              <tr className="bg-gray-50/70 text-neutral-400 text-[12px] uppercase tracking-wider font-bold">
                 <th className="py-3 px-5">ID & Nama Operator</th>
                 <th className="py-3 px-5">Email Akun (PII Protected)</th>
                 <th className="py-3 px-5">Pos Penugasan</th>
@@ -217,7 +217,7 @@ export default function OperatorPosPage() {
                 <th className="py-3 px-5 text-center">Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 text-[9px]">
+            <tbody className="divide-y divide-gray-100 text-[12px]">
               {isLoadingOperators ? (
                 <SkeletonTableRows rows={4} columns={6} />
               ) : filteredOperators.length > 0 ? (
@@ -226,8 +226,8 @@ export default function OperatorPosPage() {
                   return (
                     <tr key={op.id} className="hover:bg-gray-50/50 transition">
                       <td className="py-3.5 px-5">
-                        <div className="font-bold text-neutral-800 text-[10px]">{op.name}</div>
-                        <div className="text-[8px] font-bold text-[#10367D] font-mono">{op.id}</div>
+                        <div className="font-bold text-neutral-800 text-[13px]">{op.name}</div>
+                        <div className="text-[11px] font-bold text-[#10367D] font-mono">{op.id}</div>
                       </td>
                       <td className="py-3.5 px-5 font-semibold text-neutral-700">
                         <div className="flex items-center gap-1.5">
@@ -244,7 +244,7 @@ export default function OperatorPosPage() {
                       <td className="py-3.5 px-5 font-bold text-neutral-800">{op.pos}</td>
                       <td className="py-3.5 px-5 font-medium text-neutral-600">{op.schedule}</td>
                       <td className="py-3.5 px-5">
-                        <span className="px-2 py-0.5 text-[8px] font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <span className="px-2 py-0.5 text-[11px] font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
                           {op.status}
                         </span>
                       </td>
@@ -279,25 +279,25 @@ export default function OperatorPosPage() {
       >
         <form onSubmit={handleSave} className="space-y-3">
           <div className="space-y-1">
-            <label className="text-[9px] font-bold text-neutral-500 uppercase">Nama Lengkap</label>
-            <input type="text" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[10px] font-medium text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#10367D]" />
+            <label className="text-[12px] font-bold text-neutral-500 uppercase">Nama Lengkap</label>
+            <input type="text" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-medium text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#10367D]" />
           </div>
           <div className="space-y-1">
-            <label className="text-[9px] font-bold text-neutral-500 uppercase">Email Akun</label>
-            <input type="email" required value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[10px] font-medium text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#10367D]" />
+            <label className="text-[12px] font-bold text-neutral-500 uppercase">Email Akun</label>
+            <input type="email" required value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-medium text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#10367D]" />
           </div>
           <div className="space-y-1">
-            <label className="text-[9px] font-bold text-neutral-500 uppercase">Nomor Telepon</label>
-            <input type="text" required value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[10px] font-medium text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#10367D]" />
+            <label className="text-[12px] font-bold text-neutral-500 uppercase">Nomor Telepon</label>
+            <input type="text" required value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-medium text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#10367D]" />
           </div>
           <div className="space-y-1">
-            <label className="text-[9px] font-bold text-neutral-500 uppercase">Password Awal</label>
-            <input type="password" required value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[10px] font-medium text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#10367D]" />
+            <label className="text-[12px] font-bold text-neutral-500 uppercase">Password Awal</label>
+            <input type="password" required value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-medium text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#10367D]" />
           </div>
 
           <div className="flex items-center justify-end gap-2 pt-3">
-            <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-[10px] font-bold text-neutral-500 hover:bg-neutral-100 rounded-full cursor-pointer">Batal</button>
-            <button type="submit" className="px-4 py-2 text-[10px] font-bold text-white bg-[#10367D] rounded-full cursor-pointer shadow-sm">Simpan</button>
+            <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-[13px] font-bold text-neutral-500 hover:bg-neutral-100 rounded-full cursor-pointer">Batal</button>
+            <button type="submit" className="px-4 py-2 text-[13px] font-bold text-white bg-[#10367D] rounded-full cursor-pointer shadow-sm">Simpan</button>
           </div>
         </form>
       </BaseModal>
@@ -309,7 +309,7 @@ export default function OperatorPosPage() {
         subtitle="Manajemen Akses Operator Pos"
         maxWidth="max-w-sm"
       >
-        <div className="space-y-3 text-[10px] text-center">
+        <div className="space-y-3 text-[13px] text-center">
           <div className="w-10 h-10 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center mx-auto">
             <AlertTriangle size={20} />
           </div>
