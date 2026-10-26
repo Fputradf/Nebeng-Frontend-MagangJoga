@@ -1,12 +1,32 @@
 import { useState, useRef, useEffect } from 'react';
-import { MessageSquare, Send, CheckCheck, Search, Phone, ArrowLeft } from 'lucide-react';
+import { MessageSquare, Send, CheckCheck, Search, Phone, ArrowLeft, Lock } from 'lucide-react';
 import apiClient from '../../../services/apiClient';
 import { useToast } from '../../../context/ToastContext';
 import { useNotification } from '../../../context/NotificationContext';
+import PhoneCallModal from '../../../components/ui/PhoneCallModal';
 
 const PRIMARY_COLOR = '#10367D';
 const PRIMARY_HOVER = '#0C2C66';
 const PRIMARY_ACCENT = '#74B4D9';
+
+const getTripStatusBadge = (status, isLocked) => {
+  if (status === 'completed') {
+    return { label: 'Selesai', color: 'bg-neutral-100 text-neutral-600 border-neutral-200' };
+  }
+  if (status === 'cancelled' || status === 'cancelled_by_mitra') {
+    return { label: 'Dibatalkan', color: 'bg-rose-50 text-rose-600 border-rose-200' };
+  }
+  if (status === 'in_transit') {
+    return { label: 'Dalam Perjalanan', color: 'bg-blue-50 text-blue-700 border-blue-200' };
+  }
+  if (status === 'in_origin_pos') {
+    return { label: 'Di Pos Asal', color: 'bg-amber-50 text-amber-700 border-amber-200' };
+  }
+  if (isLocked) {
+    return { label: 'Ditutup', color: 'bg-neutral-100 text-neutral-600 border-neutral-200' };
+  }
+  return { label: 'Aktif', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+};
 
 export default function MitraChat() {
   const toast = useToast();
@@ -20,6 +40,7 @@ export default function MitraChat() {
   const [showMobileChat, setShowMobileChat] = useState(false);
   const [isLoadingChats, setIsLoadingChats] = useState(false);
   const [cooldownSeconds, setCooldownSeconds] = useState(0);
+  const [isPhoneModalOpen, setIsPhoneModalOpen] = useState(false);
 
   const messagesEndRef = useRef(null);
 
@@ -319,22 +340,27 @@ export default function MitraChat() {
                           {custName}
                         </span>
 
-                        <span className="text-[11px] text-neutral-400 font-medium">
-                          Aktif
-                        </span>
+                        {(() => {
+                          const statusInfo = getTripStatusBadge(chat.trip?.status, chat.isLocked);
+                          return (
+                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${statusInfo.color}`}>
+                              {statusInfo.label}
+                            </span>
+                          );
+                        })()}
                       </div>
 
                       <p
-                        className="text-[11px] font-bold mb-0.5"
+                        className="text-[11px] font-bold mb-0.5 truncate"
                         style={{ color: PRIMARY_COLOR }}
                       >
                         TRIP-{chat.trip?.id} •{' '}
-                        {chat.trip?.originPoint?.name} &rarr;{' '}
-                        {chat.trip?.destinationPoint?.name}
+                        {chat.trip?.originPoint?.name || 'Pos Asal'} &rarr;{' '}
+                        {chat.trip?.destinationPoint?.name || 'Pos Tujuan'}
                       </p>
 
                       <p className="text-[12px] text-neutral-400 truncate">
-                        Ketuk untuk melihat pesan
+                        {chat.lastMessage?.messageText || 'Ketuk untuk melihat pesan'}
                       </p>
                     </div>
                   </button>
@@ -368,15 +394,25 @@ export default function MitraChat() {
               </div>
 
               <div>
-                <h2 className="text-[14px] font-bold text-neutral-800">
-                  {activeChat?.customer?.name || 'Pilih Percakapan'}
-                </h2>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-[14px] font-bold text-neutral-800">
+                    {activeChat?.customer?.name || 'Pilih Percakapan'}
+                  </h2>
+                  {activeChat && (() => {
+                    const statusInfo = getTripStatusBadge(activeChat.trip?.status, activeChat.isLocked);
+                    return (
+                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${statusInfo.color}`}>
+                        {statusInfo.label}
+                      </span>
+                    );
+                  })()}
+                </div>
 
                 <p
                   className="text-[11px] font-bold"
                   style={{ color: PRIMARY_COLOR }}
                 >
-                  TRIP-{activeChat?.trip?.id}
+                  TRIP-{activeChat?.trip?.id} • {activeChat?.trip?.originPoint?.name || 'Pos Asal'} &rarr; {activeChat?.trip?.destinationPoint?.name || 'Pos Tujuan'}
                 </p>
               </div>
             </div>
@@ -388,7 +424,7 @@ export default function MitraChat() {
                   toast.error('Nomor telepon pelanggan tidak tersedia.', { title: 'Panggilan' });
                   return;
                 }
-                window.location.href = `tel:${phone}`;
+                setIsPhoneModalOpen(true);
               }}
               title="Hubungi Pelanggan via Telepon"
               className="p-2 rounded-xl border border-neutral-200 text-neutral-600 hover:bg-neutral-50 transition cursor-pointer flex items-center gap-1.5 text-xs font-semibold"
@@ -468,47 +504,70 @@ export default function MitraChat() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input Chat */}
-          <form
-            onSubmit={handleSendMessage}
-            className="p-3.5 border-t border-neutral-100 bg-white flex items-center gap-2.5 shrink-0"
-          >
-            <input
-              type="text"
-              value={messageText}
-              onChange={(e) => setMessageText(e.target.value)}
-              placeholder={cooldownSeconds > 0 ? `Tunggu ${cooldownSeconds} detik sebelum mengirim lagi...` : "Ketik pesan balasan ke pelanggan..."}
-              disabled={cooldownSeconds > 0}
-              className="flex-1 px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl text-[13px] font-medium text-neutral-800 focus:outline-none disabled:bg-neutral-100 disabled:cursor-not-allowed"
-              onFocus={(e) => {
-                e.currentTarget.style.borderColor = PRIMARY_COLOR;
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.borderColor = '';
-              }}
-            />
-
-            <button
-              type="submit"
-              disabled={!messageText.trim() || cooldownSeconds > 0}
-              className="p-2.5 text-white rounded-xl transition shadow-sm cursor-pointer flex items-center justify-center disabled:opacity-50 min-w-[38px]"
-              style={{
-                backgroundColor: PRIMARY_COLOR,
-              }}
-              onMouseEnter={(e) => {
-                if (!e.currentTarget.disabled) {
-                  e.currentTarget.style.backgroundColor = PRIMARY_HOVER;
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = PRIMARY_COLOR;
-              }}
+          {/* Input Chat / Status Trip Selesai */}
+          {activeChat?.trip?.status === 'completed' || activeChat?.trip?.status === 'cancelled' || activeChat?.trip?.status === 'cancelled_by_mitra' || activeChat?.isLocked ? (
+            <div className="p-3.5 border-t border-neutral-100 bg-neutral-50 flex items-center justify-center gap-2 text-[13px] text-neutral-500 shrink-0">
+              <Lock className="w-4 h-4 text-neutral-400" />
+              <span>
+                Percakapan ini telah dikunci karena trip telah{' '}
+                <strong className="font-semibold text-neutral-700">
+                  {activeChat?.trip?.status === 'completed' ? 'selesai' : 'dibatalkan'}
+                </strong>
+                .
+              </span>
+            </div>
+          ) : (
+            <form
+              onSubmit={handleSendMessage}
+              className="p-3.5 border-t border-neutral-100 bg-white flex items-center gap-2.5 shrink-0"
             >
-              <Send className="w-3.5 h-3.5" />
-            </button>
-          </form>
+              <input
+                type="text"
+                value={messageText}
+                onChange={(e) => setMessageText(e.target.value)}
+                placeholder={cooldownSeconds > 0 ? `Tunggu ${cooldownSeconds} detik sebelum mengirim lagi...` : "Ketik pesan balasan ke pelanggan..."}
+                disabled={cooldownSeconds > 0}
+                className="flex-1 px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl text-[13px] font-medium text-neutral-800 focus:outline-none disabled:bg-neutral-100 disabled:cursor-not-allowed"
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = PRIMARY_COLOR;
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = '';
+                }}
+              />
+
+              <button
+                type="submit"
+                disabled={!messageText.trim() || cooldownSeconds > 0}
+                className="p-2.5 text-white rounded-xl transition shadow-sm cursor-pointer flex items-center justify-center disabled:opacity-50 min-w-[38px]"
+                style={{
+                  backgroundColor: PRIMARY_COLOR,
+                }}
+                onMouseEnter={(e) => {
+                  if (!e.currentTarget.disabled) {
+                    e.currentTarget.style.backgroundColor = PRIMARY_HOVER;
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = PRIMARY_COLOR;
+                }}
+              >
+                <Send className="w-3.5 h-3.5" />
+              </button>
+            </form>
+          )}
         </div>
       </div>
+
+      {/* Modal Kustom Panggilan Telepon / Kontak Pelanggan */}
+      <PhoneCallModal
+        isOpen={isPhoneModalOpen}
+        onClose={() => setIsPhoneModalOpen(false)}
+        targetName={activeChat?.customer?.name || 'Pelanggan'}
+        phoneNumber={activeChat?.customer?.phone || ''}
+        role="pelanggan"
+        tripId={activeChat?.trip?.id ? String(activeChat.trip.id) : ''}
+      />
     </div>
   );
 }

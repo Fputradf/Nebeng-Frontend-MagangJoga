@@ -1,4 +1,4 @@
-import { BASE_URL } from '../../../config/env';
+﻿import { BASE_URL } from '../../../config/env';
 import { useState, useRef, useEffect } from 'react';
 import {
   Settings,
@@ -63,6 +63,13 @@ export default function MitraAccountSettings() {
 
   const [existingVehicle, setExistingVehicle] = useState(null);
 
+  // Fase 10: Riwayat Sanksi & Banding
+  const [sanctionSummary, setSanctionSummary] = useState({ currentScore: 100, baseScore: 100, isSuspended: false, suspendedUntil: null, sanctions: [] });
+  const [appealModalTarget, setAppealModalTarget] = useState(null);
+  const [appealReason, setAppealReason] = useState('');
+  const [appealEvidenceUrl, setAppealEvidenceUrl] = useState('');
+  const [isSubmittingAppeal, setIsSubmittingAppeal] = useState(false);
+
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [selectedAvatarFile, setSelectedAvatarFile] = useState(null);
   const [avatarError, setAvatarError] = useState('');
@@ -98,9 +105,16 @@ export default function MitraAccountSettings() {
 
     const fetchUserData = async () => {
       try {
-        const res = await apiClient.get('/auth/me');
+        const [res, resSanctions] = await Promise.all([
+          apiClient.get('/auth/me').catch(() => ({ data: null })),
+          apiClient.get('/users/me/sanctions').catch(() => ({ data: null })),
+        ]);
 
-        if (isMounted && res.data) {
+        if (isMounted && resSanctions?.data) {
+          setSanctionSummary(resSanctions.data);
+        }
+
+        if (isMounted && res?.data) {
           setLiveUser(res.data);
 
           setProfileDraft((prev) => ({
@@ -339,6 +353,40 @@ export default function MitraAccountSettings() {
 
     const previewUrl = URL.createObjectURL(file);
     setAvatarPreview(previewUrl);
+  };
+
+  const handleOpenAppeal = (sanction) => {
+    setAppealModalTarget(sanction);
+    setAppealReason('');
+    setAppealEvidenceUrl('');
+  };
+
+  const handleSubmitAppeal = async (e) => {
+    e.preventDefault();
+    if (!appealModalTarget || !appealReason.trim()) {
+      toast.warning('Alasan banding wajib diisi.', { title: 'Peringatan' });
+      return;
+    }
+
+    setIsSubmittingAppeal(true);
+    try {
+      const res = await apiClient.post('/users/me/sanctions/' + appealModalTarget.id + '/appeal', {
+        reason: appealReason.trim(),
+        ...(appealEvidenceUrl.trim() ? { evidenceUrl: appealEvidenceUrl.trim() } : {})
+      });
+      toast.success(res.data?.message || 'Banding berhasil diajukan.', { title: 'Sukses' });
+      setAppealModalTarget(null);
+
+      // Refresh sanctions
+      const freshSanctions = await apiClient.get('/users/me/sanctions').catch(() => ({ data: null }));
+      if (freshSanctions?.data) {
+        setSanctionSummary(freshSanctions.data);
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Gagal mengajukan banding.', { title: 'Gagal' });
+    } finally {
+      setIsSubmittingAppeal(false);
+    }
   };
 
   const handleChangePassword = async (e) => {
@@ -944,7 +992,7 @@ export default function MitraAccountSettings() {
                 <p className="text-[11px] text-neutral-400">
                   {sessionPersisted
                     ? 'Sesi diingat di perangkat ini ("Ingat Saya" aktif).'
-                    : 'Sesi sementara — akan berakhir saat tab ditutup.'}
+                    : 'Sesi sementara â€” akan berakhir saat tab ditutup.'}
                 </p>
               </div>
             </div>
@@ -1159,6 +1207,69 @@ export default function MitraAccountSettings() {
           </div>
         </div>
       </BaseModal>
+        {/* Modal Ajukan Banding Sanksi Mitra */}
+        <BaseModal
+          isOpen={Boolean(appealModalTarget)}
+          onClose={() => { if (!isSubmittingAppeal) setAppealModalTarget(null); }}
+          title="Ajukan Banding Sanksi"
+          subtitle={'Sanksi #' + (appealModalTarget ? appealModalTarget.id : '')}
+          maxWidth="max-w-md"
+        >
+          <form onSubmit={handleSubmitAppeal} className="space-y-3.5 text-[13px]">
+            <p className="text-neutral-600 text-[12px] leading-relaxed">
+              Jika pembatalan trip terjadi karena kendala darurat / force majeure dengan bukti sah, Admin dapat menyetujui banding untuk mencabut sanksi dan memulihkan skor reputasi Anda. Refund dan poin yang telah diterima penumpang tidak akan ditarik kembali.
+            </p>
+
+            <div>
+              <label className="block text-[12px] font-bold text-neutral-700 mb-1">
+                Alasan & Kronologi Banding <span className="text-rose-500">*</span>
+              </label>
+              <textarea
+                required
+                rows={3}
+                value={appealReason}
+                onChange={(e) => setAppealReason(e.target.value)}
+                placeholder="Tuliskan alasan lengkap dan kronologi kendala darurat Anda..."
+                className="w-full px-3 py-2 border border-neutral-300 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-blue-600"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[12px] font-bold text-neutral-700 mb-1">
+                Tautan Bukti Dokumen / Foto (Opsional)
+              </label>
+              <input
+                type="url"
+                value={appealEvidenceUrl}
+                onChange={(e) => setAppealEvidenceUrl(e.target.value)}
+                placeholder="https://contoh.com/bukti-bengkel.jpg"
+                className="w-full px-3 py-2 border border-neutral-300 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-blue-600"
+              />
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <button
+                type="button"
+                disabled={isSubmittingAppeal}
+                onClick={() => setAppealModalTarget(null)}
+                className="flex-1 py-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-xl font-bold transition cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmittingAppeal}
+                className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition cursor-pointer shadow-sm flex items-center justify-center gap-1.5"
+              >
+                {isSubmittingAppeal ? (
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  'Kirim Banding'
+                )}
+              </button>
+            </div>
+          </form>
+        </BaseModal>
     </div>
   );
 }

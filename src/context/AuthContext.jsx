@@ -32,7 +32,25 @@ export function AuthProvider({ children }) {
   const [customerStatusChecked, setCustomerStatusChecked] = useState(false);
 
   const login = useCallback((role, extra = {}, remember = false) => {
-    const nextSession = { role, loggedInAt: Date.now(), ...extra };
+    const isCustomerApproved =
+      role === 'customer' &&
+      String(
+        extra.user?.statusVerification ||
+          extra.customerProfile?.statusVerification ||
+          ''
+      ).toLowerCase() === 'approved';
+
+    const nextSession = {
+      role,
+      loggedInAt: Date.now(),
+      ...(role === 'customer'
+        ? {
+            customerVerified: isCustomerApproved,
+            customerProfile: extra.user || extra.customerProfile || null,
+          }
+        : {}),
+      ...extra,
+    };
 
     if (remember) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(nextSession));
@@ -42,8 +60,8 @@ export function AuthProvider({ children }) {
       localStorage.removeItem(STORAGE_KEY);
     }
 
-    // Login baru: status verifikasi customer harus dicek ulang ke server.
-    setCustomerStatusChecked(false);
+    // Jika sudah verified dari data login, tandai customerStatusChecked true
+    setCustomerStatusChecked(isCustomerApproved);
     setAuthState({ session: nextSession, persisted: remember });
     // Emit event for push notification resubscription
     window.dispatchEvent(new CustomEvent('nebeng-login'));

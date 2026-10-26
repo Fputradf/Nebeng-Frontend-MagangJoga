@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+﻿import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Compass, 
   Search, 
@@ -33,11 +33,17 @@ const inferServiceType = (trip) => {
 
 export default function SearchTrip() {
   const navigate = useNavigate();
+  const location = useLocation();
   const toast = useToast();
 
-  const [origin, setOrigin] = useState('');
-  const [destination, setDestination] = useState('');
-  const [date, setDate] = useState('');
+  const queryParams = new URLSearchParams(location.search);
+  const initialOrigin = location.state?.origin || queryParams.get('origin') || '';
+  const initialDestination = location.state?.destination || queryParams.get('destination') || '';
+  const initialDate = location.state?.date || queryParams.get('date') || '';
+
+  const [origin, setOrigin] = useState(initialOrigin);
+  const [destination, setDestination] = useState(initialDestination);
+  const [date, setDate] = useState(initialDate);
   const [activeService, setActiveService] = useState('motor');
 
   const [pickupPoints, setPickupPoints] = useState([]);
@@ -102,14 +108,14 @@ export default function SearchTrip() {
 
         setPickupPoints(resPoints.data || []);
 
-        const activeOrders = (resMyOrders.data || []).filter(o => o.status !== 'cancelled');
+        const activeOrders = (resMyOrders.data || []).filter(o => o.status !== 'cancelled' && o.status !== 'cancelled_by_mitra');
         const bookedIds = new Set(activeOrders.map(o => String(o.tripId || o.trip?.id)));
         setMyBookedTripIds(bookedIds);
 
         const list = resTrips.data?.data || resTrips.data || [];
         
         const activeList = list.filter((t) => {
-          if (t.status === 'cancelled' || t.status === 'CANCELLED') return false;
+          if (t.status === 'cancelled' || t.status === 'CANCELLED' || t.status === 'cancelled_by_mitra') return false;
           
           const rawType = (t.serviceType || '').toLowerCase();
           const vehicleType = (t.vehicleType || t.vehicle?.type || '').toLowerCase();
@@ -285,7 +291,7 @@ export default function SearchTrip() {
 
   return (
     <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-sans">
-      {/* ── BANNER ── */}
+      {/* â”€â”€ BANNER â”€â”€ */}
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] p-6 text-white shadow-card sm:p-8">
         <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10" />
         <div className="absolute bottom-0 right-32 h-28 w-28 rounded-full bg-accent/20" />
@@ -386,10 +392,10 @@ export default function SearchTrip() {
                     </div>
 
                     <div className="flex flex-wrap gap-4 text-xs text-slate-500 font-medium">
-                      <span>📅 {trip.departureDate?.split('T')[0]}</span>
-                      <span>🚗 {trip.vehicle ? `${trip.vehicle.model}` : '-'}</span>
+                      <span>ðŸ“… {trip.departureDate?.split('T')[0]}</span>
+                      <span>ðŸš— {trip.vehicle ? `${trip.vehicle.model}` : '-'}</span>
                       <span>
-                        ⚡ Sisa Kuota: {' '}
+                        âš¡ Sisa Kuota: {' '}
                         <strong style={{ color: PRIMARY_COLOR }}>
                           {activeService === 'barang'
                             ? `${trip.remainingWeightCapacityKg ?? trip.maxWeightCapacityKg ?? 0} Kg`

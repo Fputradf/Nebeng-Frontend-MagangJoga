@@ -53,6 +53,7 @@
 │   │       ├── 📄 EmptyState.jsx
 │   │       ├── 📄 EnterpriseTable.jsx
 │   │       ├── 📄 NotificationBell.jsx
+│   │       ├── 📄 PhoneCallModal.jsx
 │   │       ├── 📄 QrScannerModal.jsx
 │   │       ├── 📄 Skeleton.jsx
 │   │       ├── 📄 StatCard.jsx

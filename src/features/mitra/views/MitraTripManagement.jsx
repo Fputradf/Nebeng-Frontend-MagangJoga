@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { Calendar, MapPin, Car, Bike, Plus, XCircle, Users, Package, Navigation, Radio, PauseCircle, PlayCircle } from 'lucide-react';
 import { useToast } from '../../../context/ToastContext';
 import { useGPS } from '../../../context/GPSContext';
@@ -48,6 +48,10 @@ export default function MitraTripManagement() {
   });
 
   const [cancelConfirmTarget, setCancelConfirmTarget] = useState(null);
+  const [cancelReasonOption, setCancelReasonOption] = useState('Kendaraan bermasalah / rusak teknis');
+  const [cancelCustomReason, setCancelCustomReason] = useState('');
+  const [cancelEvidenceUrl, setCancelEvidenceUrl] = useState('');
+  const [isCancellingTrip, setIsCancellingTrip] = useState(false);
   const [isPriceManual, setIsPriceManual] = useState(false);
   const todayISO = new Date().toISOString().slice(0, 10);
 
@@ -394,7 +398,7 @@ export default function MitraTripManagement() {
                 white-space:nowrap;
                 margin-bottom:4px;
               ">
-                📍 ${activeTrackingTrip.originPoint?.name || 'Asal'}
+                ðŸ“ ${activeTrackingTrip.originPoint?.name || 'Asal'}
               </div>
               <div style="
                 width:20px;
@@ -434,7 +438,7 @@ export default function MitraTripManagement() {
                 white-space:nowrap;
                 margin-bottom:4px;
               ">
-                🏁 ${activeTrackingTrip.destinationPoint?.name || 'Tujuan'}
+                ðŸ ${activeTrackingTrip.destinationPoint?.name || 'Tujuan'}
               </div>
               <div style="
                 width:20px;
@@ -484,7 +488,7 @@ export default function MitraTripManagement() {
                   white-space:nowrap;
                   margin-bottom:4px;
                 ">
-                  🚗 Lokasi Saya
+                  ðŸš— Lokasi Saya
                 </div>
                 <div style="
                   width:24px;
@@ -565,7 +569,7 @@ export default function MitraTripManagement() {
                 white-space:nowrap;
                 margin-bottom:4px;
               ">
-                🚗 Lokasi Saya
+                ðŸš— Lokasi Saya
               </div>
               <div style="
                 width:24px;
@@ -878,11 +882,11 @@ export default function MitraTripManagement() {
 
                       {trip.serviceType === 'barang' ? (
                         <StatusBadge variant="purple">
-                          <Package className="w-2.5 h-2.5" /> Barang • Kursi: {trip.seatTotal ?? trip.totalSeats} | Bagasi: {trip.remainingWeightCapacityKg ?? trip.maxWeightCapacityKg} Kg
+                          <Package className="w-2.5 h-2.5" /> Barang â€¢ Kursi: {trip.seatTotal ?? trip.totalSeats} | Bagasi: {trip.remainingWeightCapacityKg ?? trip.maxWeightCapacityKg} Kg
                         </StatusBadge>
                       ) : (
                         <span className="px-2 py-0.5 rounded-full text-[11px] font-bold flex items-center gap-1" style={{ backgroundColor: `${PRIMARY_ACCENT}18`, color: PRIMARY_COLOR, border: `1px solid ${PRIMARY_ACCENT}35` }}>
-                          <Users className="w-2.5 h-2.5" /> {trip.serviceType?.toUpperCase()} • Kursi: {trip.seatTotal ?? trip.totalSeats}
+                          <Users className="w-2.5 h-2.5" /> {trip.serviceType?.toUpperCase()} â€¢ Kursi: {trip.seatTotal ?? trip.totalSeats}
                         </span>
                       )}
                     </div>
@@ -893,7 +897,7 @@ export default function MitraTripManagement() {
                     </div>
 
                     <div className="flex items-center gap-3 text-[12px] text-neutral-400 font-medium">
-                      <span>{trip.departureDate?.split('T')[0]} • {trip.departureTime ? trip.departureTime.split('T')[1]?.substring(0,5) : '-'} WIB</span>
+                      <span>{trip.departureDate?.split('T')[0]} â€¢ {trip.departureTime ? trip.departureTime.split('T')[1]?.substring(0,5) : '-'} WIB</span>
                       <span>Kursi: {trip.seatAvailable ?? trip.totalSeats}/{trip.seatTotal ?? trip.totalSeats} | Bagasi: {trip.remainingWeightCapacityKg ?? trip.maxWeightCapacityKg} Kg</span>
                     </div>
                   </div>
@@ -980,7 +984,7 @@ export default function MitraTripManagement() {
         isOpen={isSelfTrackingModalOpen}
         onClose={closeSelfTrackingModal}
         title={`Self Tracking - Trip #${activeTrackingTrip?.id}`}
-        subtitle={`${activeTrackingTrip?.originPoint?.name} → ${activeTrackingTrip?.destinationPoint?.name}`}
+        subtitle={`${activeTrackingTrip?.originPoint?.name} â†’ ${activeTrackingTrip?.destinationPoint?.name}`}
         maxWidth="max-w-2xl"
       >
         {activeTrackingTrip && (
@@ -1035,7 +1039,7 @@ export default function MitraTripManagement() {
                           <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
                           Heading
                         </div>
-                        <div className="font-mono text-[13px] font-bold text-white">{currentPosition.heading.toFixed(0)}°</div>
+                        <div className="font-mono text-[13px] font-bold text-white">{currentPosition.heading.toFixed(0)}Â°</div>
                       </div>
                     )}
                   </div>

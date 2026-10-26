@@ -162,6 +162,7 @@ export default function OperatorDashboard() {
         };
       case 'cancelled':
       case 'canceled':
+      case 'cancelled_by_mitra':
         return {
           label: 'Dibatalkan',
           bg: 'bg-rose-50',

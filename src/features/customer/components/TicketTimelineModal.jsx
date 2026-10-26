@@ -1,4 +1,4 @@
-import { X, CheckCircle2, Clock, MapPin, ShieldCheck, UserCheck, AlertCircle } from 'lucide-react';
+﻿import { X, CheckCircle2, Clock, MapPin, ShieldCheck, UserCheck, AlertCircle } from 'lucide-react';
 import BaseModal from '../../../components/ui/BaseModal';
 
 // const PRIMARY_COLOR = '#10367D';
@@ -14,6 +14,7 @@ export default function TicketTimelineModal({ isOpen, onClose, ticket }) {
   const isCheckedInOrigin = ['checked_in_origin', 'in_transit', 'arrived_destination', 'completed'].includes(status);
   const isCompleted = status === 'completed';
   const isCancelled = status === 'cancelled';
+  const isCancelledByMitra = status === 'cancelled_by_mitra' || ticket.status === 'Dibatalkan oleh Mitra';
   const isNoShow = status === 'no_show';
 
   // Temukan detail log spesifik jika ada
@@ -23,7 +24,7 @@ export default function TicketTimelineModal({ isOpen, onClose, ticket }) {
   const formatTime = (isoString) => {
     if (!isoString) return '-';
     const d = new Date(isoString);
-    return `${d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })} • ${d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`;
+    return `${d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })} â€¢ ${d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`;
   };
 
   const steps = [
@@ -62,7 +63,7 @@ export default function TicketTimelineModal({ isOpen, onClose, ticket }) {
     {
       id: 'in_transit',
       title: 'Dalam Perjalanan Menuju Pos Tujuan',
-      subtitle: `Armada: ${ticket.vehicle || 'Mitra'} • Sopir: ${ticket.mitra || 'Mitra'}`,
+      subtitle: `Armada: ${ticket.vehicle || 'Mitra'} â€¢ Sopir: ${ticket.mitra || 'Mitra'}`,
       time: isCheckedInOrigin && !isCompleted ? 'Sedang Bergerak' : isCompleted ? 'Selesai' : '--:--',
       isDone: isCheckedInOrigin,
       isActive: status === 'in_transit',
@@ -95,7 +96,7 @@ export default function TicketTimelineModal({ isOpen, onClose, ticket }) {
               Riwayat & Audit Checkpoint Tiket
             </h3>
             <p className="text-xs text-gray-500 mt-0.5">
-              ID Pesanan: #{ticket.id} • {ticket.title}
+              ID Pesanan: #{ticket.id} â€¢ {ticket.title}
             </p>
           </div>
           <button

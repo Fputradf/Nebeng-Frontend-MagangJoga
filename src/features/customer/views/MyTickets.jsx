@@ -1,3 +1,4 @@
+﻿import { useNavigate } from 'react-router-dom';
 import { BASE_URL } from '../../../config/env';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
@@ -33,6 +34,7 @@ import BaseModal from '../../../components/ui/BaseModal';
 import StatCard from '../../../components/ui/StatCard';
 import apiClient from '../../../services/apiClient';
 import TicketTimelineModal from '../components/TicketTimelineModal';
+import PhoneCallModal from '../../../components/ui/PhoneCallModal';
 
 const PRIMARY_COLOR = '#10367D';
 const PRIMARY_ACCENT = '#74B4D9';
@@ -44,6 +46,7 @@ const CANCELLABLE_STATUS_TEXT = 'pending_payment';
 
 export default function MyTickets() {
   const toast = useToast();
+  const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState('aktif');
   const [searchQuery, setSearchQuery] = useState('');
@@ -73,6 +76,7 @@ export default function MyTickets() {
   const [chatMessages, setChatMessages] = useState([]);
   const [newMessageText, setNewMessageText] = useState('');
   const [isLoadingChat, setIsLoadingChat] = useState(false);
+  const [isPhoneModalOpen, setIsPhoneModalOpen] = useState(false);
 
   const chatBottomRef = useRef(null);
   const conversationIdRef = useRef(chatConversationId);
@@ -114,7 +118,7 @@ export default function MyTickets() {
           : 'Kendaraan Resmi';
 
         let statusText = 'Aktif';
-        if (order.status === 'cancelled') {
+        if (order.status === 'cancelled' || order.status === 'cancelled_by_mitra') {
           statusText = 'Batal';
         } else if (order.status === 'completed') {
           statusText = 'Selesai';
@@ -137,7 +141,7 @@ export default function MyTickets() {
           mitra: mitraName,
           mitraPhone: trip.mitra?.phone || null,
           vehicle: vehicleModel,
-          schedule: `${trip.departureDate?.split('T')[0] || 'Segera'} • Sesuai Jadwal`,
+          schedule: `${trip.departureDate?.split('T')[0] || 'Segera'} â€¢ Sesuai Jadwal`,
           totalPrice: formatRupiah(order.totalPrice),
           detail: isParcel
             ? `${order.totalItemsCount || 1} Item (${order.totalWeightKg || 1} Kg)`
@@ -308,7 +312,7 @@ export default function MyTickets() {
 
     // Listen for location updates
     socket.on('locationUpdated', (data) => {
-      console.log('[Customer GPS] ✅ Received location update:', data);
+      console.log('[Customer GPS] âœ… Received location update:', data);
       console.log('[Customer GPS] Current tracking trip ID:', String(trackingTicket.tripId));
       console.log('[Customer GPS] Current tracking order ID:', String(trackingTicket.rawId));
       console.log('[Customer GPS] Data trip ID:', data.tripId);
@@ -325,21 +329,21 @@ export default function MyTickets() {
                      data.tripId === Number(trackingTicket.rawId);
 
       if (isSubscribed && isMatch) {
-        console.log('[Customer GPS] ✅ Position update matched! Updating map.');
+        console.log('[Customer GPS] âœ… Position update matched! Updating map.');
         receivedUpdate = true;
         setLivePosition({
           lat: Number(data.latitude),
           lng: Number(data.longitude)
         });
       } else {
-        console.log('[Customer GPS] ❌ Position update NOT matched. Ignoring.');
+        console.log('[Customer GPS] âŒ Position update NOT matched. Ignoring.');
       }
     });
 
     // Warning if no updates received after 5 seconds
     const warningTimeout = setTimeout(() => {
       if (isSubscribed && !receivedUpdate) {
-        console.log('[Customer GPS] ⚠️ Warning: No location updates received after 5 seconds');
+        console.log('[Customer GPS] âš ï¸ Warning: No location updates received after 5 seconds');
         console.log('[Customer GPS] This is likely a BACKEND issue. Please check:');
         console.log('[Customer GPS] 1. Backend is running on', socketUrl);
         console.log('[Customer GPS] 2. Backend /tracking namespace is accessible');
@@ -461,7 +465,7 @@ export default function MyTickets() {
                 white-space:nowrap;
                 margin-bottom:4px;
               ">
-                🚗 ${trackingTicket.mitra}
+                ðŸš— ${trackingTicket.mitra}
               </div>
               <div style="
                 width:24px;
@@ -513,7 +517,7 @@ export default function MyTickets() {
                 white-space:nowrap;
                 margin-bottom:4px;
               ">
-                📍 Asal
+                ðŸ“ Asal
               </div>
               <div style="
                 width:20px;
@@ -550,7 +554,7 @@ export default function MyTickets() {
                 white-space:nowrap;
                 margin-bottom:4px;
               ">
-                🏁 Tujuan
+                ðŸ Tujuan
               </div>
               <div style="
                 width:20px;
@@ -627,7 +631,7 @@ export default function MyTickets() {
                   white-space:nowrap;
                   margin-bottom:4px;
                 ">
-                  🚗 ${trackingTicket.mitra}
+                  ðŸš— ${trackingTicket.mitra}
                 </div>
                 <div style="
                   width:24px;
@@ -1169,7 +1173,7 @@ export default function MyTickets() {
           setChatConversationId(null);
         }}
         title={`Chat dengan Mitra (${selectedTicket?.mitra})`}
-        subtitle={`Trip: ${selectedTicket?.from} ➔ ${selectedTicket?.to}`}
+        subtitle={`Trip: ${selectedTicket?.from} âž” ${selectedTicket?.to}`}
         maxWidth="max-w-lg"
       >
         <div className="space-y-3 text-[13px]">
@@ -1189,7 +1193,7 @@ export default function MyTickets() {
                   toast.error('Nomor telepon mitra tidak tersedia.', { title: 'Panggilan' });
                   return;
                 }
-                window.location.href = `tel:${phone}`;
+                setIsPhoneModalOpen(true);
               }}
               title="Hubungi Mitra via Telepon Langsung"
               className="px-3 py-1.5 rounded-lg border border-neutral-200 bg-white hover:bg-neutral-100 text-neutral-700 text-xs font-semibold flex items-center gap-1.5 transition shadow-xs cursor-pointer"
@@ -1355,7 +1359,7 @@ export default function MyTickets() {
             <AlertTriangle size={22} />
           </div>
           <p className="text-neutral-500">
-            Yakin ingin membatalkan pesanan <strong className="text-neutral-800">{selectedTicket?.from} → {selectedTicket?.to}</strong>? Kuota kursi/bagasi akan dikembalikan.
+            Yakin ingin membatalkan pesanan <strong className="text-neutral-800">{selectedTicket?.from} â†’ {selectedTicket?.to}</strong>? Kuota kursi/bagasi akan dikembalikan.
           </p>
           <div className="flex gap-2">
             <button onClick={() => setSelectedTicket(null)} disabled={isCancelling} className="flex-1 py-2.5 bg-neutral-100 text-neutral-700 rounded-xl font-bold">Tidak, Kembali</button>
@@ -1407,7 +1411,7 @@ export default function MyTickets() {
 
                 <div className="flex items-center gap-2 pt-2 border-t border-neutral-700">
                   <MapPin size={14} className="text-neutral-400" />
-                  <span className="text-[12px] font-medium text-neutral-300">{trackingTicket.from} → {trackingTicket.to}</span>
+                  <span className="text-[12px] font-medium text-neutral-300">{trackingTicket.from} â†’ {trackingTicket.to}</span>
                 </div>
               </div>
             </div>
@@ -1423,6 +1427,16 @@ export default function MyTickets() {
           </div>
         )}
       </BaseModal>
+
+      {/* Modal Kustom Panggilan Telepon / Kontak Mitra */}
+      <PhoneCallModal
+        isOpen={isPhoneModalOpen}
+        onClose={() => setIsPhoneModalOpen(false)}
+        targetName={selectedTicket?.mitra || 'Mitra'}
+        phoneNumber={selectedTicket?.mitraPhone || ''}
+        role="mitra"
+        tripId={selectedTicket?.tripId ? String(selectedTicket.tripId) : ''}
+      />
     </div>
   );
 }

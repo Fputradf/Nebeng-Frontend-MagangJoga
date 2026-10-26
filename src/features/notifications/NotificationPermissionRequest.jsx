@@ -1,18 +1,20 @@
+import { useState } from 'react';
 import { useNotification } from '../../context/NotificationContext';
-import { Bell, X, ArrowRight, AlertCircle } from 'lucide-react';
+import { Bell, X, Check, ShieldCheck, Sparkles } from 'lucide-react';
 
-// Fitur notifikasi dinonaktifkan sementara — ubah ke true untuk mengaktifkan
-const ENABLE_NOTIFICATION_REQUEST = true;
+const PRIMARY_COLOR = '#10367D';
+const PRIMARY_HOVER = '#0C2C66';
 
-// Inner component — hook dipanggil di sini agar aman di dalam Provider
+// Inner component — modal kustom elegan non-template
 export default function NotificationPermissionRequest() {
   const {
     permission,
     requestPermission,
-    registerToken,
     notificationSupported,
     errorMessage,
   } = useNotification();
+
+  const [isRequesting, setIsRequesting] = useState(false);
 
   // Sudah granted atau denied — tidak perlu tampil
   if (permission === 'granted' || permission === 'denied') {
@@ -25,83 +27,126 @@ export default function NotificationPermissionRequest() {
   }
 
   const handleAllow = async () => {
+    setIsRequesting(true);
     try {
       const granted = await requestPermission();
       if (granted) {
-        // Token will be registered after login
-        console.log('Notification permission granted. Token will be registered after login.');
+        console.log('[NotificationPermissionRequest] Izin diberikan pengguna');
       }
     } catch (error) {
-      console.error('Error in handleAllow:', error);
-      alert('Terjadi kesalahan saat mengaktifkan notifikasi: ' + error.message);
+      console.error('Error saat meminta izin notifikasi:', error);
+    } finally {
+      setIsRequesting(false);
     }
   };
 
   const handleDismiss = () => {
     localStorage.setItem('notification_permission_dismissed', 'true');
+    // Force re-render dengan memicu event storage atau state lokal
+    window.dispatchEvent(new Event('storage'));
   };
 
-  // Notifikasi tidak didukung browser ini
   if (errorMessage && !notificationSupported) {
-    return (
-      <div className="fixed top-4 right-4 left-4 md:left-auto md:w-96 bg-yellow-50 rounded-xl shadow-lg border border-yellow-200 p-4 z-50">
-        <button
-          onClick={handleDismiss}
-          className="absolute top-2 right-2 p-1 hover:bg-yellow-100 rounded-full transition-colors"
-        >
-          <X className="w-4 h-4 text-gray-400" />
-        </button>
-        <div className="flex items-start gap-3">
-          <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center shrink-0">
-            <AlertCircle className="w-5 h-5 text-yellow-600" />
-          </div>
-          <div className="flex-1">
-            <h3 className="font-semibold text-gray-900 mb-1 text-sm">Notifikasi Tidak Tersedia</h3>
-            <p className="text-xs text-gray-600 mb-3">{errorMessage}</p>
-            <button
-              onClick={handleDismiss}
-              className="px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-yellow-100 rounded-lg transition-colors"
-            >
-              Tutup
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+    return null;
   }
 
-  // Popup izin notifikasi
   return (
-    <div className="fixed top-4 right-4 left-4 md:left-auto md:w-96 bg-white rounded-xl shadow-lg border border-gray-200 p-4 z-50">
-      <button
-        onClick={handleDismiss}
-        className="absolute top-2 right-2 p-1 hover:bg-gray-100 rounded-full transition-colors"
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 font-['Inter']">
+      <div 
+        className="bg-white rounded-3xl p-6 sm:p-7 w-full max-w-md shadow-2xl border border-neutral-100 relative overflow-hidden flex flex-col space-y-5 animate-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
       >
-        <X className="w-4 h-4 text-gray-400" />
-      </button>
-      <div className="flex items-start gap-3">
-        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
-          <Bell className="w-5 h-5 text-blue-600" />
-        </div>
-        <div className="flex-1">
-          <h3 className="font-semibold text-gray-900 mb-1 text-sm">Aktifkan Notifikasi</h3>
-          <p className="text-xs text-gray-600 mb-3">
-            Dapatkan notifikasi real-time untuk pesanan, perjalanan, dan pembayaran Anda.
-          </p>
-          <div className="flex gap-2">
-            <button
-              onClick={handleAllow}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Izinkan <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onClick={handleDismiss}
-              className="px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              Nanti
-            </button>
+        {/* Dekorasi Aksen Latar Belakang */}
+        <div 
+          className="absolute -top-16 -right-16 w-36 h-36 rounded-full blur-2xl opacity-20 pointer-events-none"
+          style={{ backgroundColor: PRIMARY_COLOR }}
+        />
+
+        {/* Tombol Close */}
+        <button
+          onClick={handleDismiss}
+          aria-label="Tutup"
+          className="absolute top-4 right-4 w-8 h-8 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-500 flex items-center justify-center transition cursor-pointer"
+        >
+          <X className="w-4 h-4" />
+        </button>
+
+        {/* Header Icon & Brand */}
+        <div className="flex items-center gap-3.5 pt-1">
+          <div 
+            className="w-13 h-13 rounded-2xl flex items-center justify-center shadow-md relative"
+            style={{ backgroundColor: `${PRIMARY_COLOR}12` }}
+          >
+            <Bell className="w-6 h-6 animate-bounce" style={{ color: PRIMARY_COLOR }} />
+            <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full" />
           </div>
+          <div>
+            <div className="flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-widest text-emerald-600">
+              <Sparkles className="w-3 h-3" />
+              <span>Nebeng Real-Time</span>
+            </div>
+            <h3 className="text-[19px] font-bold text-neutral-900 leading-tight">
+              Aktifkan Notifikasi Web
+            </h3>
+          </div>
+        </div>
+
+        {/* Deskripsi & Manfaat */}
+        <div className="space-y-2 text-[13px] text-neutral-600 leading-relaxed bg-neutral-50/70 p-3.5 rounded-2xl border border-neutral-100">
+          <p className="font-medium text-neutral-700">
+            Dapatkan pembaruan langsung tanpa harus membuka ulang aplikasi:
+          </p>
+          <div className="space-y-1.5 pt-1">
+            <div className="flex items-start gap-2">
+              <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+              <span>Pesan baru masuk dari Mitra atau Pelanggan</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+              <span>Status keberangkatan, tracking GPS, dan scan pos</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+              <span>Konfirmasi pembayaran & pelepasan dana escrow aman</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Keamanan Privacy Badge */}
+        <div className="flex items-center gap-2 text-[11px] text-neutral-400">
+          <ShieldCheck className="w-3.5 h-3.5 text-neutral-500" />
+          <span>Izin dapat diatur atau dinonaktifkan kapan saja melalui browser.</span>
+        </div>
+
+        {/* Tombol Aksi */}
+        <div className="flex gap-2.5 pt-1">
+          <button
+            type="button"
+            onClick={handleDismiss}
+            disabled={isRequesting}
+            className="flex-1 py-3 px-4 rounded-xl border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 text-[13px] font-bold transition cursor-pointer disabled:opacity-50"
+          >
+            Nanti Saja
+          </button>
+          <button
+            type="button"
+            onClick={handleAllow}
+            disabled={isRequesting}
+            className="flex-1 py-3 px-4 rounded-xl text-white text-[13px] font-bold transition shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+            style={{ backgroundColor: PRIMARY_COLOR }}
+            onMouseEnter={(e) => {
+              if (!isRequesting) e.currentTarget.style.backgroundColor = PRIMARY_HOVER;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = PRIMARY_COLOR;
+            }}
+          >
+            {isRequesting ? (
+              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              'Izinkan Sekarang'
+            )}
+          </button>
         </div>
       </div>
     </div>

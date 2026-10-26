@@ -40,6 +40,7 @@ export async function loginRequest({ email, password }) {
     refreshToken: refreshToken,
     email: userObj?.email || email,
     name: userObj?.name,
+    user: userObj,
   };
 }
 

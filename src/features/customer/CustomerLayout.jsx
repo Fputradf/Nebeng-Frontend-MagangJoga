@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 
 import CustomerSidebar from './components/CustomerSidebar';
@@ -23,6 +23,13 @@ export default function CustomerLayout() {
   const [showProfileModal, setShowProfileModal] = useState(false);
 
   const currentPath = location.pathname.replace(/\/$/, '');
+
+  // Redirect jika sudah verified tapi membuka halaman onboarding
+  useEffect(() => {
+    if (isCustomerVerified && (currentPath.endsWith('/customer/onboarding') || currentPath === '/customer/onboarding')) {
+      navigate('/customer/booking', { replace: true });
+    }
+  }, [isCustomerVerified, currentPath, navigate]);
   const activeMenu = Object.keys(CUSTOMER_MENU_PATH).find((menu) => {
     const slug = CUSTOMER_MENU_PATH[menu];
     return currentPath.endsWith(`/customer/${slug}`) || currentPath.includes(`/customer/${slug}/`);
