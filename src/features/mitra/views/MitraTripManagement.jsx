@@ -1,5 +1,5 @@
-﻿import { useState, useEffect, useRef } from 'react';
-import { Calendar, MapPin, Car, Bike, Plus, XCircle, Users, Package, Navigation, Radio, PauseCircle, PlayCircle } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Calendar, MapPin, Car, Bike, Plus, XCircle, Users, Package, Navigation, Radio, PauseCircle, PlayCircle, AlertTriangle } from 'lucide-react';
 import { useToast } from '../../../context/ToastContext';
 import { useGPS } from '../../../context/GPSContext';
 import EmptyState from '../../../components/ui/EmptyState';
@@ -25,6 +25,7 @@ export default function MitraTripManagement() {
   const [trips, setTrips] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [points, setPoints] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -70,10 +71,11 @@ export default function MitraTripManagement() {
   const loadMitraData = async (isMounted = true) => {
     setIsLoading(true);
     try {
-      const [resPoints, resVehicles, resMyTrips] = await Promise.all([
+      const [resPoints, resVehicles, resMyTrips, resUserMe] = await Promise.all([
         apiClient.get('/pickup-points').catch(() => ({ data: [] })),
         apiClient.get('/vehicles/me').catch(() => ({ data: [] })),
         apiClient.get('/trips/me').catch(() => ({ data: [] })),
+        apiClient.get('/auth/me').catch(() => ({ data: null })),
       ]);
 
       if (!isMounted) return;
@@ -85,6 +87,9 @@ export default function MitraTripManagement() {
       setPoints(allPoints);
       setVehicles(myVehicles);
       setTrips(myTrips);
+      if (resUserMe?.data) {
+        setCurrentUser(resUserMe.data);
+      }
 
       if (allPoints.length >= 2 && myVehicles.length > 0) {
         const initialOrigin = String(allPoints[0].id);
@@ -188,10 +193,30 @@ export default function MitraTripManagement() {
   const isSameOriginDestination = formData.originPointId && formData.destinationPointId && formData.originPointId === formData.destinationPointId;
   const isPastDate = Boolean(formData.date) && formData.date < todayISO;
 
+  const originPointObj = points.find(p => String(p.id) === String(formData.originPointId));
+  const destPointObj = points.find(p => String(p.id) === String(formData.destinationPointId));
+  const mitraRegionId = currentUser?.regionId ? String(currentUser.regionId) : null;
+  const isOriginMatchHome = Boolean(mitraRegionId && originPointObj?.regionId && String(originPointObj.regionId) === mitraRegionId);
+  const isDestMatchHome = Boolean(mitraRegionId && destPointObj?.regionId && String(destPointObj.regionId) === mitraRegionId);
+  const isOutsideHomeBase = Boolean(
+    mitraRegionId && 
+    originPointObj && 
+    destPointObj && 
+    !isOriginMatchHome && 
+    !isDestMatchHome
+  );
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isSameOriginDestination) {
       toast.warning('Pos Asal dan Pos Tujuan tidak boleh sama.', { title: 'Rute Tidak Valid' });
+      return;
+    }
+    if (isOutsideHomeBase) {
+      toast.warning(
+        `Sesuai aturan wilayah (Home Base), salah satu pos harus berada di wilayah asal Anda (${currentUser?.region?.name || 'wilayah terdaftar'}).`,
+        { title: 'Di Luar Wilayah Operasi' }
+      );
       return;
     }
     if (isPastDate) {
@@ -208,25 +233,31 @@ export default function MitraTripManagement() {
       const finalServiceType = layananCategory === 'barang' ? 'barang' : vehType;
       const isPenumpang = layananCategory === 'penumpang';
 
-      const totalSeatsPayload = isPenumpang 
-        ? (isMotor ? 1 : Math.max(1, Number(formData.totalSeats) || 1)) 
-        : (selectedVeh?.capacitySeats || 1);
+      const totalSeatsPayload = isPenumpang
+        ? (isMotor ? 1 : Math.max(1, Number(formData.totalSeats) || 1))
+        : undefined; // Barang tidak punya kursi
 
-      const maxWeightCapacityKgPayload = isPenumpang 
-        ? Number(selectedVeh?.maxWeightCapacityKg || 15) 
+      const maxWeightCapacityKgPayload = isPenumpang
+        ? Number(selectedVeh?.maxWeightCapacityKg || 15)
         : Math.max(1, Number(formData.maxWeightCapacityKg) || 1);
 
-      await apiClient.post('/trips', {
+      const payload = {
         vehicleId: String(formData.vehicleId),
         originPointId: String(formData.originPointId),
         destinationPointId: String(formData.destinationPointId),
         departureDate: formData.date,
         departureTime: `${formData.date}T${formData.time}:00.000Z`,
         price: Number(formData.price),
-        totalSeats: totalSeatsPayload,
         maxWeightCapacityKg: maxWeightCapacityKgPayload,
         serviceType: finalServiceType,
-      });
+      };
+
+      // Hanya kirim totalSeats untuk trip penumpang
+      if (isPenumpang) {
+        payload.totalSeats = totalSeatsPayload;
+      }
+
+      await apiClient.post('/trips', payload);
 
       toast.success('Trip baru berhasil dibuat dan dipublikasikan!', { title: 'Sukses' });
       setFormData(prev => ({ ...prev, date: '' }));
@@ -714,6 +745,20 @@ export default function MitraTripManagement() {
               </select>
             </div>
 
+            {isOutsideHomeBase && (
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-[12px] flex items-start gap-2">
+                <AlertTriangle size={15} className="text-amber-600 shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <span className="font-bold block text-[11px] uppercase tracking-wide text-amber-900">
+                    Aturan Wilayah Operasi (Home Base)
+                  </span>
+                  <span className="text-[12px] text-amber-800 leading-snug block">
+                    Salah satu pos (Asal atau Tujuan) harus berada di wilayah domisili terdaftar Anda (<strong>{currentUser?.region?.name || 'Wilayah Terdaftar'}</strong>). Anda dapat membuat perjalanan berangkat dari wilayah asal atau pulang menuju wilayah asal Anda.
+                  </span>
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-2.5">
               <div>
                 <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">Tanggal</label>
@@ -882,7 +927,7 @@ export default function MitraTripManagement() {
 
                       {trip.serviceType === 'barang' ? (
                         <StatusBadge variant="purple">
-                          <Package className="w-2.5 h-2.5" /> Barang â€¢ Kursi: {trip.seatTotal ?? trip.totalSeats} | Bagasi: {trip.remainingWeightCapacityKg ?? trip.maxWeightCapacityKg} Kg
+                          <Package className="w-2.5 h-2.5" /> Barang â€¢ Bagasi: {trip.remainingWeightCapacityKg ?? trip.maxWeightCapacityKg} Kg
                         </StatusBadge>
                       ) : (
                         <span className="px-2 py-0.5 rounded-full text-[11px] font-bold flex items-center gap-1" style={{ backgroundColor: `${PRIMARY_ACCENT}18`, color: PRIMARY_COLOR, border: `1px solid ${PRIMARY_ACCENT}35` }}>
@@ -898,7 +943,11 @@ export default function MitraTripManagement() {
 
                     <div className="flex items-center gap-3 text-[12px] text-neutral-400 font-medium">
                       <span>{trip.departureDate?.split('T')[0]} â€¢ {trip.departureTime ? trip.departureTime.split('T')[1]?.substring(0,5) : '-'} WIB</span>
-                      <span>Kursi: {trip.seatAvailable ?? trip.totalSeats}/{trip.seatTotal ?? trip.totalSeats} | Bagasi: {trip.remainingWeightCapacityKg ?? trip.maxWeightCapacityKg} Kg</span>
+                      {trip.serviceType === 'barang' ? (
+                        <span>Bagasi: {trip.remainingWeightCapacityKg ?? trip.maxWeightCapacityKg} Kg</span>
+                      ) : (
+                        <span>Kursi: {trip.seatAvailable ?? trip.totalSeats}/{trip.seatTotal ?? trip.totalSeats}</span>
+                      )}
                     </div>
                   </div>
 

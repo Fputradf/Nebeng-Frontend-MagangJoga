@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { MapPin, Search, Plus, QrCode, Trash2, Pencil, AlertTriangle, Building2, UserCheck, Globe, Loader2, Save } from 'lucide-react';
+import { MapContainer, TileLayer, Marker, GeoJSON, Circle, useMap } from 'react-leaflet';
+import L from 'leaflet';
+import { MapPin, Search, Plus, QrCode, Trash2, Pencil, AlertTriangle, Building2, UserCheck, Globe, Loader2, Save, Layers } from 'lucide-react';
 import { useToast } from '../../../context/ToastContext';
 import { SkeletonTableRows } from '../../../components/ui/Skeleton';
 import EmptyState from '../../../components/ui/EmptyState';
@@ -7,6 +9,23 @@ import BaseModal from '../../../components/ui/BaseModal';
 import { regionalService } from '../../../services/regionalService';
 import { useAuth } from '../../../context/AuthContext';
 import apiClient from '../../../services/apiClient';
+import { parseGeoJSON } from '../../../utils/geoJsonUtil';
+
+// Fix icon default Leaflet
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
+function ChangeMapView({ center, zoom = 12 }) {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center, zoom);
+  }, [center, map, zoom]);
+  return null;
+}
 
 export default function PosMitraManagement() {
   const toast = useToast();
@@ -15,6 +34,7 @@ export default function PosMitraManagement() {
   const [posList, setPosList] = useState([]);
   const [cityList, setCityList] = useState([]);
   const [operatorList, setOperatorList] = useState([]); 
+  const [currentRegionInfo, setCurrentRegionInfo] = useState(null);
   const [isLoadingPos, setIsLoadingPos] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -40,10 +60,11 @@ export default function PosMitraManagement() {
         if (isMounted) setIsLoadingPos(true);
         const regId = adminProfile?.regionId || session?.regionId ? String(adminProfile?.regionId || session?.regionId) : null;
         
-        const [posData, cityRes, userRes] = await Promise.all([
+        const [posData, cityRes, userRes, regionRes] = await Promise.all([
           regionalService.getPickupPoints(regId).catch(() => []),
           apiClient.get('/cities').catch(() => ({ data: [] })),
-          apiClient.get('/users', { params: { role: 'operator' } }).catch(() => ({ data: [] }))
+          apiClient.get('/users', { params: { role: 'operator' } }).catch(() => ({ data: [] })),
+          regId ? apiClient.get(`/regions/${regId}`).catch(() => ({ data: null })) : Promise.resolve({ data: null })
         ]);
 
         const rawPos = Array.isArray(posData) ? posData : (posData?.data || []);
@@ -75,6 +96,9 @@ export default function PosMitraManagement() {
           setCityList(citiesData);
           setOperatorList(validOperators);
           setActiveRegionId(regId);
+          if (regionRes?.data) {
+            setCurrentRegionInfo(regionRes.data);
+          }
         }
       } catch (error) {
         if (isMounted) {
@@ -494,17 +518,42 @@ export default function PosMitraManagement() {
           </div>
 
           <div className="space-y-1">
-            <label className="text-[12px] font-bold text-neutral-500 uppercase">Preview Titik Pos di Peta</label>
-            <div className="rounded-xl overflow-hidden border border-neutral-200 h-36 relative">
-              <div className="absolute inset-0 overflow-hidden">
-                <iframe
-                  title="Pos Live Map Preview"
-                  width="100%"
-                  height="135%"
-                  frameBorder="0"
-                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${Number(formData.longitude || 110.83) - 0.05}%2C${Number(formData.latitude || -7.56) - 0.05}%2C${Number(formData.longitude || 110.83) + 0.05}%2C${Number(formData.latitude || -7.56) + 0.05}&layer=mapnik&marker=${formData.latitude}%2C${formData.longitude}`}
-                  style={{ border: 0, marginTop: '-25px' }}
-                ></iframe>
+            <div className="flex justify-between items-center">
+              <label className="text-[12px] font-bold text-neutral-500 uppercase flex items-center gap-1">
+                <Layers size={12} className="text-[#10367D]" />
+                Preview Pos & Batas Wilayah di Peta
+              </label>
+              {currentRegionInfo?.boundaryPolygon && (
+                <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full">
+                  Batas Poligon Aktif
+                </span>
+              )}
+            </div>
+            <div className="rounded-xl overflow-hidden border border-neutral-200 h-44 relative z-0">
+              <div className="absolute inset-0 z-0">
+                <MapContainer 
+                  center={[Number(formData.latitude) || -7.5666, Number(formData.longitude) || 110.8316]} 
+                  zoom={12} 
+                  style={{ height: '100%', width: '100%', zIndex: 0 }}
+                >
+                  <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                  <Marker position={[Number(formData.latitude) || -7.5666, Number(formData.longitude) || 110.8316]} />
+                  
+                  {currentRegionInfo?.boundaryPolygon && parseGeoJSON(currentRegionInfo.boundaryPolygon) ? (
+                    <GeoJSON 
+                      key={JSON.stringify(currentRegionInfo.boundaryPolygon)}
+                      data={parseGeoJSON(currentRegionInfo.boundaryPolygon)}
+                      pathOptions={{ color: '#10367D', fillColor: '#10367D', fillOpacity: 0.15, weight: 2 }}
+                    />
+                  ) : currentRegionInfo?.latitude && currentRegionInfo?.longitude ? (
+                    <Circle 
+                      center={[Number(currentRegionInfo.latitude), Number(currentRegionInfo.longitude)]} 
+                      radius={(currentRegionInfo.radiusKm || 20) * 1000} 
+                      pathOptions={{ color: '#10367D', fillColor: '#10367D', fillOpacity: 0.12 }}
+                    />
+                  ) : null}
+                  <ChangeMapView center={[Number(formData.latitude) || -7.5666, Number(formData.longitude) || 110.8316]} />
+                </MapContainer>
               </div>
             </div>
           </div>

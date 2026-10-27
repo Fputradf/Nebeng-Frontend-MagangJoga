@@ -1,11 +1,14 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Compass, 
   Search, 
   ArrowRight,    
   CheckCircle2, 
-  AlertCircle
+  AlertCircle,
+  Lock,
+  KeyRound,
+  ShieldCheck
 } from 'lucide-react';
 import { Skeleton } from '../../../components/ui/Skeleton';
 import EmptyState from '../../../components/ui/EmptyState';
@@ -14,8 +17,9 @@ import BaseModal from '../../../components/ui/BaseModal';
 import { BannerSlider } from '../../../components/ui/BannerSlider';
 import { useToast } from '../../../context/ToastContext';
 import apiClient from '../../../services/apiClient';
+import { walletService } from '../../../services/walletService';
 
-const PHONE_REGEX = /^(\+62|62|0)8[1-9][0-9]{7,11}$/;
+const PHONE_REGEX = /^(\+?62|0)?8[1-9][0-9]{7,11}$/;
 const TODAY_ISO = new Date().toISOString().split('T')[0];
 const PRIMARY_COLOR = '#10367D';
 const PRIMARY_HOVER = '#0C2C66';
@@ -52,6 +56,7 @@ export default function SearchTrip() {
   const [isLoadingTrips, setIsLoadingTrips] = useState(false);
 
   const [userProfile, setUserProfile] = useState(null);
+  const [customerWallet, setCustomerWallet] = useState(null);
   const customerName = userProfile?.name || userProfile?.fullName || 'Pelanggan';
 
   const [selectedTrip, setSelectedTrip] = useState(null);
@@ -72,6 +77,9 @@ export default function SearchTrip() {
 
   const [paymentMethod, setPaymentMethod] = useState('xendit');
   const [pin, setPin] = useState('');
+  const [newPin, setNewPin] = useState('');
+  const [confirmPin, setConfirmPin] = useState('');
+  const [isSavingPin, setIsSavingPin] = useState(false);
 
   const sizeOptions = [
     { code: 'XXS', label: 'XXS (< 1 kg)', weight: 1 },
@@ -92,18 +100,26 @@ export default function SearchTrip() {
         if (date) params.date = date;
         if (origin) params.originPointId = origin;
         if (destination) params.destinationPointId = destination;
+        if (activeService === 'barang') params.serviceType = 'barang';
+        if (activeService === 'motor') params.serviceType = 'motor';
+        if (activeService === 'mobil') params.serviceType = 'mobil';
 
-        const [resMe, resPoints, resMyOrders, resTrips] = await Promise.all([
+        const [resMe, resPoints, resMyOrders, resTrips, resWallet] = await Promise.all([
           apiClient.get('/auth/me').catch(() => ({ data: null })),
           apiClient.get('/pickup-points', { params: { onlyActive: true } }).catch(() => ({ data: [] })),
           apiClient.get('/orders/me').catch(() => ({ data: [] })),
           apiClient.get('/trips', { params }).catch(() => ({ data: { data: [] } })),
+          walletService.getMyWallet().catch(() => null),
         ]);
 
         if (ignore) return;
 
         if (resMe.data) {
           setUserProfile(resMe.data);
+        }
+
+        if (resWallet) {
+          setCustomerWallet(resWallet);
         }
 
         setPickupPoints(resPoints.data || []);
@@ -113,23 +129,10 @@ export default function SearchTrip() {
         setMyBookedTripIds(bookedIds);
 
         const list = resTrips.data?.data || resTrips.data || [];
-        
+
+        // Filter status saja, serviceType sudah difilter di backend
         const activeList = list.filter((t) => {
-          if (t.status === 'cancelled' || t.status === 'CANCELLED' || t.status === 'cancelled_by_mitra') return false;
-          
-          const rawType = (t.serviceType || '').toLowerCase();
-          const vehicleType = (t.vehicleType || t.vehicle?.type || '').toLowerCase();
-          
-          if (activeService === 'barang') {
-             return inferServiceType(t) === 'barang';
-          }
-          if (activeService === 'motor') {
-             return rawType === 'motor' || vehicleType === 'motor';
-          }
-          if (activeService === 'mobil') {
-             return rawType === 'mobil' || vehicleType === 'mobil';
-          }
-          return false;
+          return t.status !== 'cancelled' && t.status !== 'CANCELLED' && t.status !== 'cancelled_by_mitra';
         });
 
         setTrips(activeList);
@@ -169,6 +172,13 @@ export default function SearchTrip() {
 
   const isOverCapacity = isOverWeightCapacity || isOverSeatCapacity;
 
+  const quantity = !isPassengerService ? safeItemCount : safeSeatCount;
+  const basePrice = selectedTrip?.price || 0;
+  const totalPrice = basePrice * quantity;
+
+  const walletBalance = Number(customerWallet?.balance || 0);
+  const isWalletBalanceSufficient = walletBalance >= totalPrice;
+
   const isPassengerPhoneValid =
     isPassengerService ? PHONE_REGEX.test(passengerPhone.trim()) : true;
 
@@ -181,13 +191,33 @@ export default function SearchTrip() {
   const isBarangValid =
     !isPassengerService ? receiverName.trim() !== '' && isReceiverPhoneValid : true;
 
-  const isPaymentValid = paymentMethod === 'xendit' ? true : pin.length === 6;
+  const isPaymentValid =
+    paymentMethod === 'xendit'
+      ? true
+      : isWalletBalanceSufficient && Boolean(userProfile?.hasPin) && pin.length === 6;
 
   const isFormValid = !isOverCapacity && isPassengerValid && isBarangValid && isPaymentValid;
 
-  const quantity = !isPassengerService ? safeItemCount : safeSeatCount;
-  const basePrice = selectedTrip?.price || 0;
-  const totalPrice = basePrice * quantity;
+  const getFormValidationMessage = () => {
+    if (isOverCapacity) {
+      return isPassengerService ? 'Jumlah kursi melebihi kuota tersedia.' : 'Berat barang melebihi kapasitas kuota.';
+    }
+    if (isPassengerService) {
+      if (!passengerName.trim()) return 'Nama penumpang wajib diisi.';
+      if (!passengerPhone.trim()) return 'Nomor WhatsApp penumpang wajib diisi.';
+      if (!isPassengerPhoneValid) return 'Format nomor WhatsApp tidak valid (contoh: 08123456789).';
+    } else {
+      if (!receiverName.trim()) return 'Nama penerima barang wajib diisi.';
+      if (!receiverPhone.trim()) return 'Nomor HP penerima barang wajib diisi.';
+      if (!isReceiverPhoneValid) return 'Format nomor HP tidak valid (contoh: 08123456789).';
+    }
+    if (paymentMethod === 'wallet') {
+      if (!isWalletBalanceSufficient) return 'Saldo dompet tidak mencukupi untuk total pesanan ini.';
+      if (!userProfile?.hasPin) return 'Silakan buat PIN transaksi terlebih dahulu di bawah.';
+      if (pin.length < 6) return 'Masukkan 6 digit PIN transaksi Anda.';
+    }
+    return null;
+  };
 
   const handleSeatChange = (e) => {
     const val = parseInt(e.target.value, 10);
@@ -213,18 +243,51 @@ export default function SearchTrip() {
     if (selectedOpt) setItemWeight(selectedOpt.weight);
   };
 
+  const handleCreatePin = async () => {
+    if (newPin.length !== 6 || !/^\d{6}$/.test(newPin)) {
+      toast.warning('PIN harus berupa 6 digit angka.');
+      return;
+    }
+    if (newPin !== confirmPin) {
+      toast.warning('Konfirmasi PIN tidak cocok.');
+      return;
+    }
+
+    setIsSavingPin(true);
+    try {
+      await apiClient.post('/users/me/pin', { pin: newPin });
+      toast.success('PIN transaksi berhasil dibuat!', { title: 'PIN Aktif' });
+      setUserProfile((prev) => ({ ...prev, hasPin: true }));
+      setPin(newPin);
+      setNewPin('');
+      setConfirmPin('');
+    } catch (err) {
+      const errMsg = err.response?.data?.message || err.message || 'Gagal membuat PIN transaksi.';
+      toast.error(errMsg, { title: 'Gagal Membuat PIN' });
+    } finally {
+      setIsSavingPin(false);
+    }
+  };
+
   const handleOpenBooking = (trip) => {
     setSelectedTrip(trip);
     setIsCheckingOut(false);
+    setPaymentMethod('xendit');
+    setPin('');
+    setNewPin('');
+    setConfirmPin('');
     setSeatCount(1);
     setPassengerName(customerName || '');
-    setPassengerPhone(userProfile?.phone || '');
+    const cleanPhone = (userProfile?.phone || '').replace(/[^0-9+]/g, '');
+    setPassengerPhone(cleanPhone);
     setItemCategory('Elektronik');
     setItemCount(1);
     setItemWeight(7);
     setItemSize('M');
     setReceiverName('');
     setReceiverPhone('');
+
+    walletService.getMyWallet().then((w) => setCustomerWallet(w)).catch(() => {});
   };
 
   const handleCheckout = async (e) => {
@@ -261,29 +324,29 @@ export default function SearchTrip() {
       if (paymentMethod === 'xendit') {
         // 2. Request Xendit Invoice URL
         const resPayment = await apiClient.post('/payments/xendit/create-invoice', {
-          orderId: orderIdStr
+          orderId: orderIdStr,
         });
         
-        const invoiceUrl = resPayment.data.invoiceUrl;
+        const invoiceUrl = resPayment.data?.invoiceUrl;
+        if (!invoiceUrl || invoiceUrl === '/customer/tickets') {
+          throw new Error('Gagal mendapatkan tautan pembayaran Xendit yang valid.');
+        }
   
         // 3. Redirect ke Payment Gateway (Xendit)
         toast.success('Mengalihkan ke halaman pembayaran...', { title: 'Tunggu Sebentar' });
         window.location.href = invoiceUrl;
-      } else {
-        // Dev Mode / Simulasi PIN
-        await apiClient.post('/payments/checkout', {
-          orderId: orderIdStr,
-          paymentGateway: 'MANUAL_SIMULATION',
-          pin: pin
-        });
+      } else if (paymentMethod === 'wallet') {
+        // Pembayaran Saldo Dompet
+        await walletService.payWithWallet(orderIdStr, pin);
         
-        toast.success('Pembayaran Simulasi Berhasil!', { title: 'Berhasil' });
+        toast.success('Pembayaran dengan Saldo Dompet berhasil!', { title: 'Berhasil' });
         setSelectedTrip(null);
         navigate('/customer/tickets');
       }
 
     } catch (error) {
-      const errorMsg = error.response?.data?.message || 'Gagal memproses transaksi.';
+      const errorMsg =
+        error.response?.data?.message || error.message || 'Gagal memproses transaksi.';
       toast.error(errorMsg, { title: 'Gagal' });
       setIsCheckingOut(false);
     }
@@ -553,36 +616,127 @@ export default function SearchTrip() {
               <button
                 type="button"
                 onClick={() => setPaymentMethod('xendit')}
-                className={`py-2 px-3 border rounded-xl text-[13px] font-bold transition ${
-                  paymentMethod === 'xendit' ? 'border-[#10367D] bg-blue-50 text-[#10367D]' : 'border-neutral-200 text-neutral-500'
+                className={`py-2 px-3 border rounded-xl text-[13px] font-bold transition text-left cursor-pointer ${
+                  paymentMethod === 'xendit'
+                    ? 'border-[#10367D] bg-blue-50 text-[#10367D]'
+                    : 'border-neutral-200 text-neutral-500 hover:border-neutral-300'
                 }`}
               >
-                Virtual Account / E-Wallet (Xendit)
+                <div>Virtual Account / QRIS</div>
+                <div className="text-[11px] font-normal text-neutral-400">Via Xendit Gateway</div>
               </button>
+
               <button
                 type="button"
-                onClick={() => setPaymentMethod('dev_mode')}
-                className={`py-2 px-3 border rounded-xl text-[13px] font-bold transition ${
-                  paymentMethod === 'dev_mode' ? 'border-[#10367D] bg-blue-50 text-[#10367D]' : 'border-neutral-200 text-neutral-500'
+                onClick={() => {
+                  if (isWalletBalanceSufficient) {
+                    setPaymentMethod('wallet');
+                  }
+                }}
+                disabled={!isWalletBalanceSufficient}
+                className={`py-2 px-3 border rounded-xl text-[13px] font-bold transition text-left ${
+                  !isWalletBalanceSufficient
+                    ? 'border-neutral-200 bg-neutral-100 text-neutral-400 cursor-not-allowed opacity-75'
+                    : paymentMethod === 'wallet'
+                    ? 'border-[#10367D] bg-blue-50 text-[#10367D] cursor-pointer'
+                    : 'border-neutral-200 text-neutral-500 hover:border-neutral-300 cursor-pointer'
                 }`}
               >
-                Bypass Pembayaran (Dev Mode)
+                <div>Saldo Dompet</div>
+                <div
+                  className={`text-[11px] font-mono font-medium ${
+                    isWalletBalanceSufficient ? 'text-emerald-600' : 'text-rose-500'
+                  }`}
+                >
+                  {formatRupiah(walletBalance)}
+                </div>
               </button>
             </div>
+
+            {!isWalletBalanceSufficient && (
+              <p className="text-[11px] text-rose-500 flex items-center gap-1.5 mt-1">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                Saldo dompet tidak mencukupi (Tersedia: {formatRupiah(walletBalance)}, Total: {formatRupiah(totalPrice)}).
+              </p>
+            )}
           </div>
 
-          {paymentMethod === 'dev_mode' && (
+          {paymentMethod === 'wallet' && (
             <div>
-              <label className="block text-[11px] font-bold text-neutral-400 uppercase mb-1">PIN Transaksi (6 Digit)</label>
-              <input
-                type="password"
-                maxLength={6}
-                required
-                value={pin}
-                onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-                placeholder="Masukkan 6 digit PIN"
-                className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded-xl font-bold focus:outline-none tracking-widest text-center"
-              />
+              {!userProfile?.hasPin ? (
+                <div className="p-3 bg-blue-50/80 border border-blue-200 rounded-xl space-y-2.5">
+                  <div className="flex items-start gap-2">
+                    <KeyRound className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-[12px] font-bold text-blue-900">Buat PIN Transaksi Terlebih Dahulu</p>
+                      <p className="text-[11px] text-blue-700">
+                        Akun Anda belum memiliki PIN transaksi untuk otorisasi pembayaran dompet.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <div>
+                      <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-1">
+                        PIN Baru (6 Digit)
+                      </label>
+                      <input
+                        type="password"
+                        maxLength={6}
+                        value={newPin}
+                        onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ''))}
+                        placeholder="Contoh: 123456"
+                        className="w-full p-2 bg-white border border-blue-200 rounded-lg font-bold text-center tracking-widest text-[12px] focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-1">
+                        Konfirmasi PIN
+                      </label>
+                      <input
+                        type="password"
+                        maxLength={6}
+                        value={confirmPin}
+                        onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, ''))}
+                        placeholder="Ulangi 6 digit"
+                        className="w-full p-2 bg-white border border-blue-200 rounded-lg font-bold text-center tracking-widest text-[12px] focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleCreatePin}
+                    disabled={isSavingPin || newPin.length !== 6 || confirmPin.length !== 6}
+                    className="w-full py-1.5 px-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-[12px] rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer disabled:cursor-not-allowed shadow-sm"
+                  >
+                    {isSavingPin ? (
+                      <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                    )}
+                    Simpan & Gunakan PIN
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-[11px] font-bold text-neutral-400 uppercase">
+                      PIN Transaksi (6 Digit)
+                    </label>
+                    <span className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
+                      <ShieldCheck className="w-3 h-3" /> PIN Terverifikasi
+                    </span>
+                  </div>
+                  <input
+                    type="password"
+                    maxLength={6}
+                    required
+                    value={pin}
+                    onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
+                    placeholder="Masukkan 6 digit PIN"
+                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded-xl font-bold focus:outline-none tracking-widest text-center"
+                  />
+                </div>
+              )}
             </div>
           )}
 
@@ -590,6 +744,13 @@ export default function SearchTrip() {
             <span className="text-neutral-700">Total Biaya:</span>
             <span style={{ color: PRIMARY_COLOR }}>{formatRupiah(totalPrice)}</span>
           </div>
+
+          {getFormValidationMessage() && (
+            <div className="flex items-center gap-1.5 text-[11px] text-amber-700 bg-amber-50 px-3 py-2 rounded-xl border border-amber-200 font-medium">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0 text-amber-600" />
+              <span>{getFormValidationMessage()}</span>
+            </div>
+          )}
 
           <button
             type="submit"

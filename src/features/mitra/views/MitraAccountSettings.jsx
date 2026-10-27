@@ -9,8 +9,15 @@ import {
   Eye,
   EyeOff,
   ShieldCheck,
+  ShieldAlert,
+  CheckCircle2,
   MonitorSmartphone,
   Camera,
+  Car,
+  Bike,
+  Plus,
+  Trash2,
+  Pencil,
 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
@@ -62,6 +69,18 @@ export default function MitraAccountSettings() {
   });
 
   const [existingVehicle, setExistingVehicle] = useState(null);
+  const [vehiclesList, setVehiclesList] = useState([]);
+  const [editingVehicleId, setEditingVehicleId] = useState(null);
+  const [showAddVehicleModal, setShowAddVehicleModal] = useState(false);
+  const [isSubmittingVehicle, setIsSubmittingVehicle] = useState(false);
+  const [newVehicleForm, setNewVehicleForm] = useState({
+    type: 'motor',
+    model: '',
+    plateNumber: '',
+    color: '',
+    capacitySeats: 1,
+    maxWeightCapacityKg: 15,
+  });
 
   // Fase 10: Riwayat Sanksi & Banding
   const [sanctionSummary, setSanctionSummary] = useState({ currentScore: 100, baseScore: 100, isSuspended: false, suspendedUntil: null, sanctions: [] });
@@ -137,20 +156,27 @@ export default function MitraAccountSettings() {
     const fetchVehicleData = async () => {
       try {
         const res = await apiClient.get('/vehicles/me');
-        const vehicles = Array.isArray(res.data) ? res.data : [];
+        const list = Array.isArray(res.data)
+          ? res.data
+          : Array.isArray(res.data?.data)
+          ? res.data.data
+          : [];
 
-        if (isMounted && vehicles.length > 0) {
-          const v = vehicles[0];
+        if (isMounted) {
+          setVehiclesList(list);
 
-          setExistingVehicle(v);
+          if (list.length > 0) {
+            const v = list[0];
+            setExistingVehicle(v);
 
-          setProfileDraft((prev) => ({
-            ...prev,
-            vehicleType: v.type || 'motor',
-            plateNumber: v.plateNumber || '',
-            vehicleModel: v.model || '',
-            vehicleColor: v.color || '',
-          }));
+            setProfileDraft((prev) => ({
+              ...prev,
+              vehicleType: v.type || 'motor',
+              plateNumber: v.plateNumber || '',
+              vehicleModel: v.model || '',
+              vehicleColor: v.color || '',
+            }));
+          }
         }
       } catch (err) {
         console.error('Gagal mengambil data kendaraan mitra:', err);
@@ -164,6 +190,101 @@ export default function MitraAccountSettings() {
       isMounted = false;
     };
   }, []);
+
+  const handleOpenAddVehicle = () => {
+    setEditingVehicleId(null);
+    setNewVehicleForm({
+      type: 'motor',
+      model: '',
+      plateNumber: '',
+      color: '',
+      capacitySeats: 1,
+      maxWeightCapacityKg: 15,
+    });
+    setShowAddVehicleModal(true);
+  };
+
+  const handleOpenEditVehicle = (veh) => {
+    setEditingVehicleId(veh.id);
+    const isMotor = (veh.type || '').toLowerCase() === 'motor';
+    setNewVehicleForm({
+      type: isMotor ? 'motor' : 'mobil',
+      model: veh.model || '',
+      plateNumber: veh.plateNumber || '',
+      color: veh.color || '',
+      capacitySeats: veh.capacitySeats || (isMotor ? 1 : 4),
+      maxWeightCapacityKg: veh.maxWeightCapacityKg || (isMotor ? 15 : 50),
+    });
+    setShowAddVehicleModal(true);
+  };
+
+  const handleSaveVehicle = async (e) => {
+    e.preventDefault();
+    if (!newVehicleForm.model.trim() || !newVehicleForm.plateNumber.trim() || !newVehicleForm.color.trim()) {
+      toast.warning('Model, plat nomor, dan warna kendaraan wajib diisi.', { title: 'Data Belum Lengkap' });
+      return;
+    }
+
+    setIsSubmittingVehicle(true);
+    try {
+      const payload = {
+        type: newVehicleForm.type,
+        model: newVehicleForm.model.trim(),
+        plateNumber: newVehicleForm.plateNumber.trim().toUpperCase(),
+        color: newVehicleForm.color.trim(),
+        capacitySeats: Number(newVehicleForm.capacitySeats) || (newVehicleForm.type === 'mobil' ? 4 : 1),
+        maxWeightCapacityKg: Number(newVehicleForm.maxWeightCapacityKg) || (newVehicleForm.type === 'mobil' ? 50 : 15),
+      };
+
+      if (editingVehicleId) {
+        await apiClient.patch(`/vehicles/${editingVehicleId}`, payload);
+        toast.success('Data kendaraan berhasil diperbarui!', { title: 'Sukses' });
+      } else {
+        await apiClient.post('/vehicles', payload);
+        toast.success('Kendaraan baru berhasil didaftarkan!', { title: 'Sukses' });
+      }
+
+      setShowAddVehicleModal(false);
+      setEditingVehicleId(null);
+      setNewVehicleForm({
+        type: 'motor',
+        model: '',
+        plateNumber: '',
+        color: '',
+        capacitySeats: 1,
+        maxWeightCapacityKg: 15,
+      });
+
+      // Refresh list kendaraan
+      const freshRes = await apiClient.get('/vehicles/me');
+      const updatedList = Array.isArray(freshRes.data) ? freshRes.data : (Array.isArray(freshRes.data?.data) ? freshRes.data.data : []);
+      setVehiclesList(updatedList);
+      if (updatedList.length > 0) {
+        setExistingVehicle(updatedList[0]);
+      }
+      if (updatedList.length > 0) {
+        setExistingVehicle(updatedList[0]);
+      }
+    } catch (err) {
+      console.error('Gagal menyimpan kendaraan:', err);
+      toast.error(err.response?.data?.message || 'Gagal menyimpan kendaraan.', { title: 'Gagal' });
+    } finally {
+      setIsSubmittingVehicle(false);
+    }
+  };
+
+  const handleDeleteVehicle = async (vehicleId) => {
+    if (!window.confirm('Apakah Anda yakin ingin menghapus kendaraan ini?')) return;
+    try {
+      await apiClient.delete(`/vehicles/${vehicleId}`);
+      toast.success('Kendaraan berhasil dihapus.', { title: 'Sukses' });
+      const freshRes = await apiClient.get('/vehicles/me');
+      const updatedList = Array.isArray(freshRes.data) ? freshRes.data : (freshRes.data?.data || []);
+      setVehiclesList(updatedList);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Gagal menghapus kendaraan. Pastikan kendaraan tidak sedang terikat perjalanan aktif.', { title: 'Gagal' });
+    }
+  };
 
   const handleProfileFieldChange = (field, value) => {
     setProfileDraft((prev) => ({
@@ -542,7 +663,7 @@ export default function MitraAccountSettings() {
               className="w-4 h-4"
               style={{ color: PRIMARY_COLOR }}
             />
-            Edit Profil & Kendaraan
+            Edit Profil Pribadi
           </h3>
 
           <div className="flex items-center gap-4">
@@ -659,144 +780,22 @@ export default function MitraAccountSettings() {
                 />
               </div>
 
-              <div>
+              <div className="sm:col-span-2">
                 <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
-                  Email
+                  Email Akun (Tidak Dapat Diubah)
                 </label>
 
                 <input
                   type="email"
-                  placeholder="nama@email.com"
+                  disabled
                   value={profileDraft.email}
-                  onChange={(e) =>
-                    handleProfileFieldChange(
-                      'email',
-                      e.target.value
-                    )
-                  }
-                  className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none"
-                  onFocus={(e) =>
-                    (e.currentTarget.style.borderColor =
-                      PRIMARY_COLOR)
-                  }
-                  onBlur={(e) =>
-                    (e.currentTarget.style.borderColor = '')
-                  }
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
-                  Jenis Kendaraan
-                </label>
-
-                <select
-                  value={profileDraft.vehicleType}
-                  onChange={(e) =>
-                    handleProfileFieldChange(
-                      'vehicleType',
-                      e.target.value
-                    )
-                  }
-                  className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none"
-                  onFocus={(e) =>
-                    (e.currentTarget.style.borderColor =
-                      PRIMARY_COLOR)
-                  }
-                  onBlur={(e) =>
-                    (e.currentTarget.style.borderColor = '')
-                  }
-                >
-                  <option value="motor">
-                    Sepeda Motor
-                  </option>
-
-                  <option value="mobil">
-                    Mobil / Minibus
-                  </option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
-                  Model Kendaraan
-                </label>
-
-                <input
-                  type="text"
-                  placeholder="mis. Honda Beat, Avanza"
-                  value={profileDraft.vehicleModel}
-                  onChange={(e) =>
-                    handleProfileFieldChange(
-                      'vehicleModel',
-                      e.target.value
-                    )
-                  }
-                  className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none"
-                  onFocus={(e) =>
-                    (e.currentTarget.style.borderColor =
-                      PRIMARY_COLOR)
-                  }
-                  onBlur={(e) =>
-                    (e.currentTarget.style.borderColor = '')
-                  }
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
-                  Warna Kendaraan
-                </label>
-
-                <input
-                  type="text"
-                  placeholder="mis. Hitam"
-                  value={profileDraft.vehicleColor}
-                  onChange={(e) =>
-                    handleProfileFieldChange(
-                      'vehicleColor',
-                      e.target.value
-                    )
-                  }
-                  className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none"
-                  onFocus={(e) =>
-                    (e.currentTarget.style.borderColor =
-                      PRIMARY_COLOR)
-                  }
-                  onBlur={(e) =>
-                    (e.currentTarget.style.borderColor = '')
-                  }
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
-                  Nomor Plat
-                </label>
-
-                <input
-                  type="text"
-                  value={profileDraft.plateNumber}
-                  onChange={(e) =>
-                    handleProfileFieldChange(
-                      'plateNumber',
-                      e.target.value
-                    )
-                  }
-                  className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none"
-                  onFocus={(e) =>
-                    (e.currentTarget.style.borderColor =
-                      PRIMARY_COLOR)
-                  }
-                  onBlur={(e) =>
-                    (e.currentTarget.style.borderColor = '')
-                  }
+                  className="w-full px-3.5 py-2.5 bg-neutral-100 border border-neutral-200 rounded-xl font-bold text-neutral-400 cursor-not-allowed select-none focus:outline-none"
                 />
               </div>
 
               <div className="sm:col-span-2">
                 <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
-                  Alamat Domisili
+                  Alamat Domisili (KTP)
                 </label>
 
                 <textarea
@@ -820,10 +819,10 @@ export default function MitraAccountSettings() {
               </div>
             </div>
 
-            <div className="flex justify-end">
+            <div className="flex justify-end pt-1">
               <button
                 type="submit"
-                className="px-4 py-2.5 text-white rounded-xl font-bold transition shadow-sm cursor-pointer"
+                className="px-5 py-2.5 text-white rounded-xl font-bold transition shadow-sm cursor-pointer"
                 style={{
                   backgroundColor: PRIMARY_COLOR,
                 }}
@@ -836,179 +835,117 @@ export default function MitraAccountSettings() {
                     PRIMARY_COLOR)
                 }
               >
-                Simpan Perubahan
+                Simpan Perubahan Profil
               </button>
             </div>
           </form>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 space-y-5">
-          <h3 className="text-[17px] font-bold text-neutral-800 flex items-center gap-1.5">
-            <KeyRound
-              className="w-4 h-4"
-              style={{ color: PRIMARY_COLOR }}
-            />
-            Keamanan Akun
-          </h3>
-
-          <form
-            onSubmit={handleChangePassword}
-            className="space-y-3 text-[13px]"
-          >
-            <p className="text-[12px] font-bold text-neutral-500 uppercase tracking-wider">
-              Ubah Kata Sandi
-            </p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {[
-                {
-                  key: 'current',
-                  label: 'Kata Sandi Saat Ini',
-                },
-                {
-                  key: 'next',
-                  label: 'Kata Sandi Baru',
-                },
-                {
-                  key: 'confirm',
-                  label: 'Konfirmasi Kata Sandi',
-                },
-              ].map((field) => (
-                <div className="relative" key={field.key}>
-                  <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
-                    {field.label}
-                  </label>
-
-                  <input
-                    type={
-                      showPassword[field.key]
-                        ? 'text'
-                        : 'password'
-                    }
-                    value={passwordForm[field.key]}
-                    onChange={(e) =>
-                      setPasswordForm((prev) => ({
-                        ...prev,
-                        [field.key]: e.target.value,
-                      }))
-                    }
-                    className="w-full px-3 py-2.5 pr-9 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none"
-                    onFocus={(e) =>
-                      (e.currentTarget.style.borderColor =
-                        PRIMARY_COLOR)
-                    }
-                    onBlur={(e) =>
-                      (e.currentTarget.style.borderColor = '')
-                    }
-                  />
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setShowPassword((prev) => ({
-                        ...prev,
-                        [field.key]: !prev[field.key],
-                      }))
-                    }
-                    className="absolute right-2.5 bottom-2.5 text-neutral-400 cursor-pointer"
-                  >
-                    {showPassword[field.key] ? (
-                      <EyeOff size={13} />
-                    ) : (
-                      <Eye size={13} />
-                    )}
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            <p className="text-[11px] text-neutral-400">
-              Minimal 8 karakter, kombinasi huruf dan angka
-              disarankan.
-            </p>
-
-            <div className="flex justify-end">
-              <button
-                type="submit"
-                className="px-4 py-2 text-white rounded-xl font-bold transition shadow-sm cursor-pointer"
-                style={{
-                  backgroundColor: PRIMARY_COLOR,
-                }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.backgroundColor =
-                    PRIMARY_HOVER)
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.backgroundColor =
-                    PRIMARY_COLOR)
-                }
-              >
-                Perbarui Kata Sandi
-              </button>
-            </div>
-          </form>
-
-          <div className="pt-4 border-t border-neutral-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-start gap-2.5">
-              <div
-                className="p-2 rounded-xl shrink-0"
-                style={{
-                  backgroundColor: `${PRIMARY_ACCENT}22`,
-                  color: PRIMARY_COLOR,
-                }}
-              >
-                <ShieldCheck className="w-4 h-4" />
+                {/* KENDARAAN MITRA TERDAFTAR */}
+        <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-neutral-100 pb-4">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 bg-[#10367D]/10 text-[#10367D] rounded-xl shrink-0">
+                <Car className="w-5 h-5" />
               </div>
-
               <div>
-                <p className="text-[13px] font-bold text-neutral-800">
-                  Autentikasi Dua Faktor (2FA)
-                </p>
-
-                <p className="text-[11px] text-neutral-400 max-w-xs">
-                  Tambahan lapisan keamanan berupa kode OTP
-                  setiap kali login dari perangkat baru.
-                </p>
-              </div>
-            </div>
-
-            <ToggleSwitch
-              checked={is2FAEnabled}
-              onChange={handleToggle2FA}
-            />
-          </div>
-
-          <div className="pt-4 border-t border-neutral-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-start gap-2.5">
-              <div className="p-2 bg-neutral-100 text-neutral-600 rounded-xl shrink-0">
-                <MonitorSmartphone className="w-4 h-4" />
-              </div>
-
-              <div>
-                <p className="text-[13px] font-bold text-neutral-800">
-                  Sesi Login Saat Ini
-                </p>
-
-                <p className="text-[11px] text-neutral-400">
-                  {sessionPersisted
-                    ? 'Sesi diingat di perangkat ini ("Ingat Saya" aktif).'
-                    : 'Sesi sementara â€” akan berakhir saat tab ditutup.'}
+                <h3 className="text-[17px] font-bold text-neutral-800">
+                  Kendaraan Mitra Terdaftar
+                </h3>
+                <p className="text-[12px] text-neutral-400">
+                  Daftar armada kendaraan yang Anda gunakan untuk mengangkut penumpang atau barang.
                 </p>
               </div>
             </div>
 
             <button
               type="button"
-              onClick={() =>
-                setShowLogoutSessionsModal(true)
-              }
-              className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-[12px] font-bold transition cursor-pointer shrink-0"
+              onClick={handleOpenAddVehicle}
+              className="px-4 py-2 bg-[#10367D] hover:bg-[#0C2C66] text-white text-[12px] font-bold rounded-xl transition shadow-sm cursor-pointer flex items-center gap-1.5 self-start sm:self-auto"
             >
-              Keluar dari Perangkat Lain
+              <Plus className="w-4 h-4" />
+              Tambah Kendaraan Baru
             </button>
           </div>
+
+          {vehiclesList.length === 0 ? (
+            <div className="p-6 bg-neutral-50 rounded-xl text-center border border-dashed border-neutral-200">
+              <Car className="w-8 h-8 text-neutral-400 mx-auto mb-2" />
+              <p className="text-[13px] font-bold text-neutral-700">Belum Ada Kendaraan Terdaftar</p>
+              <p className="text-[11px] text-neutral-400 mt-0.5">Daftarkan kendaraan pertama Anda untuk mulai menjadwalkan perjalanan.</p>
+              <button
+                type="button"
+                onClick={handleOpenAddVehicle}
+                className="mt-3 px-4 py-1.5 bg-[#10367D] text-white rounded-xl text-xs font-bold transition shadow-xs"
+              >
+                + Daftarkan Kendaraan
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+              {vehiclesList.map((veh) => {
+                const isMotor = (veh.type || '').toLowerCase() === 'motor';
+                return (
+                  <div
+                    key={veh.id}
+                    className="p-4 rounded-xl border border-neutral-200 bg-neutral-50/70 hover:bg-neutral-50 transition space-y-3"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2.5 rounded-xl shrink-0 ${
+                          isMotor ? 'bg-amber-100 text-amber-800' : 'bg-indigo-100 text-indigo-800'
+                        }`}>
+                          {isMotor ? <Bike className="w-5 h-5" /> : <Car className="w-5 h-5" />}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-bold text-[14px] text-neutral-800">{veh.model}</h4>
+                            <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full ${
+                              isMotor ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                            }`}>
+                              {isMotor ? 'Motor' : 'Mobil'}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-neutral-400 font-mono mt-0.5">
+                            Plat: <span className="font-bold text-neutral-700">{veh.plateNumber}</span> · Warna: {veh.color}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEditVehicle(veh)}
+                          className="p-1.5 text-neutral-400 hover:text-[#10367D] hover:bg-neutral-100 rounded-lg transition cursor-pointer"
+                          title="Edit informasi kendaraan ini"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        {vehiclesList.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteVehicle(veh.id)}
+                            className="p-1.5 text-neutral-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                            title="Hapus kendaraan ini"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-neutral-200/60 flex items-center justify-between text-[11px] text-neutral-500">
+                      <span>Kapasitas Kursi: <strong className="text-neutral-700">{veh.capacitySeats || (isMotor ? 1 : 4)} Kursi</strong></span>
+                      <span>Maks. Bagasi: <strong className="text-neutral-700">{veh.maxWeightCapacityKg || (isMotor ? 15 : 50)} kg</strong></span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
+        {/* REPUTASI & SANKSI POIN MITRA */}
         <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 space-y-4">
           <h3 className="text-[17px] font-bold text-neutral-800 flex items-center gap-1.5">
             <Bell
@@ -1207,6 +1144,154 @@ export default function MitraAccountSettings() {
           </div>
         </div>
       </BaseModal>
+        {/* Modal Tambah Kendaraan Baru */}
+        <BaseModal
+          isOpen={showAddVehicleModal}
+          onClose={() => { if (!isSubmittingVehicle) setShowAddVehicleModal(false); }}
+          title={editingVehicleId ? "Edit Informasi Kendaraan" : "Tambah Kendaraan Baru"}
+          subtitle={editingVehicleId ? "Perbarui informasi kendaraan yang terdaftar" : "Daftarkan jenis armada kendaraan baru Anda"}
+          maxWidth="max-w-md"
+        >
+          <form onSubmit={handleSaveVehicle} className="space-y-3.5 text-[13px]">
+            <div>
+              <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1.5">
+                Jenis Kendaraan <span className="text-rose-500">*</span>
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setNewVehicleForm(prev => ({
+                    ...prev,
+                    type: 'motor',
+                    capacitySeats: 1,
+                    maxWeightCapacityKg: 15
+                  }))}
+                  className={`py-2.5 px-3 rounded-xl border text-left font-bold transition flex items-center gap-2 cursor-pointer ${
+                    newVehicleForm.type === 'motor'
+                      ? 'border-[#10367D] bg-blue-50/50 text-[#10367D]'
+                      : 'border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50'
+                  }`}
+                >
+                  <Bike className="w-4 h-4" />
+                  <span>Sepeda Motor</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setNewVehicleForm(prev => ({
+                    ...prev,
+                    type: 'mobil',
+                    capacitySeats: 4,
+                    maxWeightCapacityKg: 50
+                  }))}
+                  className={`py-2.5 px-3 rounded-xl border text-left font-bold transition flex items-center gap-2 cursor-pointer ${
+                    newVehicleForm.type === 'mobil'
+                      ? 'border-[#10367D] bg-blue-50/50 text-[#10367D]'
+                      : 'border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50'
+                  }`}
+                >
+                  <Car className="w-4 h-4" />
+                  <span>Mobil / Minibus</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                  Model Kendaraan <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="mis. Honda Beat, Avanza"
+                  value={newVehicleForm.model}
+                  onChange={(e) => setNewVehicleForm({ ...newVehicleForm, model: e.target.value })}
+                  className="w-full px-3 py-2 border border-neutral-300 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-blue-600"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                  Nomor Plat <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="mis. AD 1234 XY"
+                  value={newVehicleForm.plateNumber}
+                  onChange={(e) => setNewVehicleForm({ ...newVehicleForm, plateNumber: e.target.value })}
+                  className="w-full px-3 py-2 border border-neutral-300 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-blue-600 font-mono uppercase"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2.5">
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                  Warna <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="mis. Hitam"
+                  value={newVehicleForm.color}
+                  onChange={(e) => setNewVehicleForm({ ...newVehicleForm, color: e.target.value })}
+                  className="w-full px-3 py-2 border border-neutral-300 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-blue-600"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                  Kursi
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="12"
+                  value={newVehicleForm.capacitySeats}
+                  onChange={(e) => setNewVehicleForm({ ...newVehicleForm, capacitySeats: e.target.value })}
+                  className="w-full px-3 py-2 border border-neutral-300 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-blue-600"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                  Bagasi (kg)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="500"
+                  value={newVehicleForm.maxWeightCapacityKg}
+                  onChange={(e) => setNewVehicleForm({ ...newVehicleForm, maxWeightCapacityKg: e.target.value })}
+                  className="w-full px-3 py-2 border border-neutral-300 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-blue-600"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <button
+                type="button"
+                disabled={isSubmittingVehicle}
+                onClick={() => setShowAddVehicleModal(false)}
+                className="flex-1 py-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-xl font-bold transition cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmittingVehicle}
+                className="flex-1 py-2.5 bg-[#10367D] hover:bg-[#0C2C66] text-white rounded-xl font-bold transition cursor-pointer shadow-sm flex items-center justify-center gap-1.5"
+              >
+                {isSubmittingVehicle ? (
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  editingVehicleId ? 'Simpan Perubahan' : 'Daftarkan Kendaraan'
+                )}
+              </button>
+            </div>
+          </form>
+        </BaseModal>
         {/* Modal Ajukan Banding Sanksi Mitra */}
         <BaseModal
           isOpen={Boolean(appealModalTarget)}

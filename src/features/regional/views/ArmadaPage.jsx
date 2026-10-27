@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Truck, Search, ShieldAlert } from 'lucide-react';
+import { Truck, Search, ShieldAlert, CheckCircle2, AlertTriangle, ExternalLink } from 'lucide-react';
+import apiClient from '../../../services/apiClient';
+import BaseModal from '../../../components/ui/BaseModal';
 import { useToast } from '../../../context/ToastContext';
 import { SkeletonTableRows } from '../../../components/ui/Skeleton';
 import EmptyState from '../../../components/ui/EmptyState';
@@ -15,6 +17,48 @@ export default function FleetCourierPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [paginationMeta, setPaginationMeta] = useState(null);
+  const [selectedMitraForSanctions, setSelectedMitraForSanctions] = useState(null);
+  const [mitraSanctionsData, setMitraSanctionsData] = useState(null);
+  const [isLoadingSanctions, setIsLoadingSanctions] = useState(false);
+  const [reviewNotesMap, setReviewNotesMap] = useState({});
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+
+  const handleOpenSanctionsModal = async (mitra) => {
+    setSelectedMitraForSanctions(mitra);
+    setIsLoadingSanctions(true);
+    try {
+      const res = await apiClient.get('/admin/mitra/' + mitra.id + '/sanctions');
+      setMitraSanctionsData(res.data);
+    } catch (err) {
+      console.error('Gagal mengambil data sanksi mitra:', err);
+      toast.error(err.response?.data?.message || 'Gagal mengambil data sanksi mitra.', { title: 'Gagal' });
+    } finally {
+      setIsLoadingSanctions(false);
+    }
+  };
+
+  const handleReviewAppeal = async (appealId, approved) => {
+    setIsSubmittingReview(true);
+    try {
+      const notes = reviewNotesMap[appealId] || '';
+      const res = await apiClient.patch('/admin/sanctions/appeals/' + appealId + '/review', {
+        approved,
+        reviewNotes: notes.trim() ? notes.trim() : (approved ? 'Banding disetujui oleh Admin Regional' : 'Banding ditolak oleh Admin Regional')
+      });
+      toast.success(res.data?.message || 'Review banding berhasil diproses.', { title: 'Sukses' });
+
+      // Refresh data sanksi
+      if (selectedMitraForSanctions) {
+        const fresh = await apiClient.get('/admin/mitra/' + selectedMitraForSanctions.id + '/sanctions');
+        setMitraSanctionsData(fresh.data);
+      }
+    } catch (err) {
+      console.error('Gagal meninjau banding:', err);
+      toast.error(err.response?.data?.message || 'Gagal memproses review banding.', { title: 'Gagal' });
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -188,12 +232,13 @@ export default function FleetCourierPage() {
                 <th className="py-3 px-5">Plat Nomor</th>
                 <th className="py-3 px-5">Status Kendaraan</th>
                 <th className="py-3 px-5">Status Akun</th>
+                <th className="py-3 px-5 text-center">Sanksi & Poin</th>
               </tr>
             </thead>
 
             <tbody className="divide-y divide-gray-100 text-[12px]">
               {isLoading ? (
-                <SkeletonTableRows rows={4} columns={6} />
+                <SkeletonTableRows rows={4} columns={7} />
               ) : filteredData.length > 0 ? (
                 filteredData.map((item) => (
                   <tr key={item.id} className="hover:bg-[#74B4D9]/10 transition">
@@ -226,7 +271,7 @@ export default function FleetCourierPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="6">
+                  <td colSpan="7">
                     <EmptyState
                       icon={Truck}
                       title="Tidak Ada Mitra"
@@ -266,6 +311,200 @@ export default function FleetCourierPage() {
         )}
       </div>
 
+      {/* MODAL SANKSI & BANDING MITRA */}
+      <BaseModal
+        isOpen={Boolean(selectedMitraForSanctions)}
+        onClose={() => { if (!isSubmittingReview) setSelectedMitraForSanctions(null); }}
+        title="Riwayat Sanksi & Skor Integritas"
+        subtitle={selectedMitraForSanctions ? `${selectedMitraForSanctions.name} (ID: ${selectedMitraForSanctions.id})` : ''}
+        maxWidth="max-w-2xl"
+      >
+        <div className="space-y-4 text-[13px]">
+          {isLoadingSanctions ? (
+            <div className="py-8 text-center text-neutral-400">
+              <span className="w-6 h-6 border-2 border-[#10367D] border-t-transparent rounded-full animate-spin inline-block mb-2" />
+              <p>Memuat rekam jejak integritas mitra...</p>
+            </div>
+          ) : mitraSanctionsData ? (
+            <div className="space-y-4">
+              {/* Ringkasan Skor & Status */}
+              <div className="p-4 bg-neutral-50 rounded-xl border border-neutral-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">Status Akun</p>
+                  <p className="text-[14px] font-bold text-neutral-800">
+                    {mitraSanctionsData.isSuspended ? (
+                      <span className="text-rose-600 flex items-center gap-1 mt-0.5">
+                        <AlertTriangle className="w-4 h-4" /> TERSUSPENSI AKTIF
+                      </span>
+                    ) : (
+                      <span className="text-emerald-600 flex items-center gap-1 mt-0.5">
+                        <CheckCircle2 className="w-4 h-4" /> AKTIF & BEREPUTASI
+                      </span>
+                    )}
+                  </p>
+                  {mitraSanctionsData.suspendedUntil && (
+                    <p className="text-[11px] text-rose-500 mt-0.5">
+                      Suspensi hingga: {new Date(mitraSanctionsData.suspendedUntil).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })} WIB
+                    </p>
+                  )}
+                </div>
+
+                <div className="text-right">
+                  <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">Skor Integritas</p>
+                  <p className={`text-[22px] font-extrabold ${
+                    mitraSanctionsData.currentScore >= 80 ? 'text-emerald-600' :
+                    mitraSanctionsData.currentScore >= 50 ? 'text-amber-600' : 'text-rose-600'
+                  }`}>
+                    {mitraSanctionsData.currentScore} <span className="text-[13px] text-neutral-400 font-normal">/ {mitraSanctionsData.baseScore}</span>
+                  </p>
+                </div>
+              </div>
+
+              {/* Daftar Sanksi */}
+              <div className="space-y-3">
+                <h4 className="text-[14px] font-bold text-neutral-800">Daftar Sanksi Pelanggaran</h4>
+                {(!mitraSanctionsData.sanctions || mitraSanctionsData.sanctions.length === 0) ? (
+                  <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 flex items-center gap-2">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                    <span>Mitra ini belum pernah menerima sanksi atau potongan poin (Rekam jejak bersih).</span>
+                  </div>
+                ) : (
+                  <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
+                    {mitraSanctionsData.sanctions.map((s) => {
+                      const latestAppeal = s.appeals?.[0];
+                      const isWaived = s.status === 'WAIVED';
+
+                      return (
+                        <div key={s.id} className="p-3.5 bg-white border border-neutral-200 rounded-xl space-y-2.5 shadow-2xs">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className={`px-2 py-0.5 rounded text-[11px] font-extrabold uppercase ${
+                                isWaived ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+                              }`}>
+                                {s.violationType === 'MITRA_CANCEL_EARLY' ? 'Batal Awal' :
+                                 s.violationType === 'MITRA_CANCEL_LATE' ? 'Batal Mendadak' :
+                                 s.violationType === 'MITRA_NO_SHOW' ? 'Tidak Hadir (No-Show)' : s.violationType}
+                              </span>
+                              <span className="text-[11px] text-neutral-400">
+                                {new Date(s.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })} WIB
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                                isWaived ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'
+                              }`}>
+                                {isWaived ? 'Sanksi Dicabut' : `-${s.scoreDeduction} Poin`}
+                              </span>
+                              {s.isSuspended && !isWaived && (
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-600 text-white">
+                                  Suspensi
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {s.tripDetails && (
+                            <div className="text-[12px] text-neutral-600 bg-neutral-50 p-2 rounded-lg border border-neutral-100 flex items-center justify-between">
+                              <span>Trip #{s.tripDetails.id}: {s.tripDetails.from} &rarr; {s.tripDetails.to}</span>
+                              <span className="text-[11px] text-neutral-400">{s.tripDetails.date ? s.tripDetails.date.split('T')[0] : ''}</span>
+                            </div>
+                          )}
+
+                          {/* Bagian Banding */}
+                          {latestAppeal ? (
+                            <div className="p-3 bg-blue-50/50 border border-blue-100 rounded-xl space-y-2 text-[12px]">
+                              <div className="flex items-center justify-between">
+                                <span className="font-bold text-neutral-800">Pengajuan Banding Mitra:</span>
+                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                  latestAppeal.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-800' :
+                                  latestAppeal.status === 'REJECTED' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'
+                                }`}>
+                                  {latestAppeal.status === 'APPROVED' ? 'DISETUJUI' :
+                                   latestAppeal.status === 'REJECTED' ? 'DITOLAK' : 'MENUNGGU TINJAUAN ADMIN'}
+                                </span>
+                              </div>
+
+                              <p className="text-neutral-700 bg-white p-2 rounded border border-neutral-200/60 text-[11px]">
+                                "{latestAppeal.reason}"
+                              </p>
+
+                              {latestAppeal.evidenceUrl && (
+                                <a
+                                  href={latestAppeal.evidenceUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:underline inline-flex items-center gap-1 text-[11px] font-bold"
+                                >
+                                  <ExternalLink className="w-3 h-3" /> Lihat Bukti Dokumen / Foto
+                                </a>
+                              )}
+
+                              {/* Form Review Jika Masih Pending */}
+                              {latestAppeal.status === 'PENDING' && (
+                                <div className="pt-2 border-t border-blue-200/50 space-y-2">
+                                  <label className="block text-[11px] font-bold text-neutral-700">
+                                    Catatan Tinjauan Admin:
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={reviewNotesMap[latestAppeal.id] || ''}
+                                    onChange={(e) => setReviewNotesMap({ ...reviewNotesMap, [latestAppeal.id]: e.target.value })}
+                                    placeholder="Contoh: Bukti bengkel terverifikasi sah / Alasan ditolak..."
+                                    className="w-full px-3 py-1.5 text-xs border border-neutral-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-600 bg-white"
+                                  />
+                                  <div className="flex items-center gap-2 pt-1">
+                                    <button
+                                      type="button"
+                                      disabled={isSubmittingReview}
+                                      onClick={() => handleReviewAppeal(latestAppeal.id, true)}
+                                      className="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs transition shadow-xs cursor-pointer flex items-center justify-center gap-1"
+                                    >
+                                      Setujui Banding (Cabut Sanksi)
+                                    </button>
+                                    <button
+                                      type="button"
+                                      disabled={isSubmittingReview}
+                                      onClick={() => handleReviewAppeal(latestAppeal.id, false)}
+                                      className="flex-1 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-bold text-xs transition shadow-xs cursor-pointer flex items-center justify-center gap-1"
+                                    >
+                                      Tolak Banding
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+
+                              {latestAppeal.reviewNotes && latestAppeal.status !== 'PENDING' && (
+                                <p className="text-[11px] text-neutral-500 italic">
+                                  Catatan Tinjauan: "{latestAppeal.reviewNotes}"
+                                </p>
+                              )}
+                            </div>
+                          ) : (
+                            <p className="text-[11px] text-neutral-400 italic">Mitra belum mengajukan banding untuk sanksi ini.</p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <p className="text-neutral-500 text-center py-4">Data tidak tersedia.</p>
+          )}
+
+          <div className="flex justify-end pt-2 border-t border-neutral-200">
+            <button
+              type="button"
+              onClick={() => setSelectedMitraForSanctions(null)}
+              className="px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-bold rounded-xl transition cursor-pointer text-xs"
+            >
+              Tutup
+            </button>
+          </div>
+        </div>
+      </BaseModal>
     </div>
   );
 }

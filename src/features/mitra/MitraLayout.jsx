@@ -17,11 +17,12 @@ const MITRA_MENU_PATH = {
   'Digital QR Trip': 'qr',
   'Saldo & Komisi': 'saldo',
   'Chat Pelanggan': 'chat',
-  'Profil & Pengaturan': 'profile',
+  'Pengaturan Akun': 'profile/pengaturan',
+  'Profil & Pengaturan': 'profile/pengaturan',
 };
 
 // Kunci SEMUA menu selain onboarding jika mitra belum disetujui Admin Regional
-const VERIFIED_ONLY_SLUGS = ['dashboard', 'trip', 'qr', 'saldo', 'chat', 'profile'];
+const VERIFIED_ONLY_SLUGS = ['dashboard', 'trip', 'qr', 'saldo', 'chat', 'profile', 'profile/pengaturan'];
 
 export default function MitraLayout() {
   const navigate = useNavigate();

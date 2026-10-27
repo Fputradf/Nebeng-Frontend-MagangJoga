@@ -212,38 +212,49 @@ export default function SuperadminDashboard() {
       return { label, fullLabel, pemasukanTotal: jt, pemasukanBersih: jt * 0.9 };
     };
 
-    const genHarian = () => {
-      const bw = [1.2,0.9,0.7,0.6,0.8,1.4,2.6,4.5,6.8,8.2,9.0,9.6,9.2,8.6,8.0,8.4,9.4,10.2,10.8,9.6,7.4,5.2,3.4,2.0];
-      const w = bw.map((b,i) => getWeight(b, i, selectedChartRegion));
-      const tw = w.reduce((a,b) => a+b, 0);
-      return w.map((wv, i) => make(`${String(i).padStart(2,'0')}:00`, `27 Agu 2026, ${String(i).padStart(2,'0')}:00`, wv, tw));
-    };
-    const genMingguan = () => {
-      const bw = [95,108,101,122,138,119,131,150];
-      const w = bw.map((b,i) => getWeight(b,i,selectedChartRegion));
-      const tw = w.reduce((a,b)=>a+b,0);
-      return w.map((wv,i) => {
-        const s = new Date(2026,5,8+i*7), e = new Date(2026,5,14+i*7);
-        return make(`M${i+1}`, `${s.getDate()}–${e.getDate()} ${MONTHS_ID[e.getMonth()]} ${e.getFullYear()}`, wv, tw);
-      });
-    };
     const genBulanan = () => {
-      const bw = [12,13,15,14,16,18,20,15,14,13,17,19,22,24,16,15,14,18,21,23,25,17,16,15,19,22,24,26,18,17];
-      const w = bw.map((b,i) => getWeight(b,i,selectedChartRegion));
-      const tw = w.reduce((a,b)=>a+b,0);
-      return w.map((wv,i) => {
-        const d = new Date(2026,5,i+1);
-        return make(formatTgl(d), formatTglPenuh(d), wv, tw);
-      });
-    };
-    const genTahunan = () => {
-      const bw = [320,295,350,380,410,452,470,431,462,508,480,538];
-      const w = bw.map((b,i) => getWeight(b,i,selectedChartRegion));
-      const tw = w.reduce((a,b)=>a+b,0);
-      return w.map((wv,i) => make(MONTHS_ID[i], `${MONTHS_ID_FULL[i]} 2026`, wv, tw));
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth();
+      const monthName = MONTHS_ID_FULL[currentMonth];
+      const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+      const weeks = [
+        { label: 'Minggu 1', range: `1–7 ${monthName} ${currentYear}`, baseWeight: 23 },
+        { label: 'Minggu 2', range: `8–14 ${monthName} ${currentYear}`, baseWeight: 28 },
+        { label: 'Minggu 3', range: `15–21 ${monthName} ${currentYear}`, baseWeight: 25 },
+        { label: 'Minggu 4', range: `22–28 ${monthName} ${currentYear}`, baseWeight: 30 },
+      ];
+
+      if (daysInMonth > 28) {
+        const remainingDays = daysInMonth - 28;
+        weeks.push({
+          label: 'Minggu 5',
+          range: `29–${daysInMonth} ${monthName} ${currentYear}`,
+          baseWeight: Math.round(26 * (remainingDays / 7)),
+        });
+      }
+
+      const w = weeks.map((week, i) => getWeight(week.baseWeight, i, selectedChartRegion));
+      const tw = w.reduce((a, b) => a + b, 0);
+
+      return weeks.map((week, i) => make(week.label, week.range, w[i], tw));
     };
 
-    const gen = { Hari: genHarian, Minggu: genMingguan, Bulan: genBulanan, Tahun: genTahunan };
+    const genTahunan = () => {
+      const currentYear = new Date().getFullYear();
+      const bw = [320,295,350,380,410,452,470,431,462,508,480,538];
+      const w = bw.map((b, i) => getWeight(b, i, selectedChartRegion));
+      const tw = w.reduce((a, b) => a + b, 0);
+      return w.map((wv, i) => make(MONTHS_ID[i], `${MONTHS_ID_FULL[i]} ${currentYear}`, wv, tw));
+    };
+
+    const gen = {
+      Bulan: genBulanan,
+      Bulanan: genBulanan,
+      Tahun: genTahunan,
+      Tahunan: genTahunan,
+    };
     return (gen[activeRange] || genBulanan)();
   }, [activeRange, targetRevenueJt, selectedChartRegion]);
 
@@ -360,10 +371,20 @@ export default function SuperadminDashboard() {
             </div>
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-0.5 bg-neutral-50 border border-neutral-200 rounded-full p-1">
-                {['Hari','Minggu','Bulan','Tahun'].map(r => (
-                  <button key={r} onClick={() => setActiveRange(r)}
-                    className={`text-[12px] font-semibold px-3 py-1 rounded-full transition cursor-pointer ${activeRange === r ? 'bg-[#10367D] text-white shadow-sm' : 'text-neutral-400 hover:text-neutral-600'}`}>
-                    {r}
+                {[
+                  { id: 'Bulan', label: 'Bulanan' },
+                  { id: 'Tahun', label: 'Tahunan' },
+                ].map((r) => (
+                  <button
+                    key={r.id}
+                    onClick={() => setActiveRange(r.id)}
+                    className={`text-[12px] font-semibold px-3.5 py-1 rounded-full transition cursor-pointer ${
+                      activeRange === r.id
+                        ? 'bg-[#10367D] text-white shadow-sm'
+                        : 'text-neutral-400 hover:text-neutral-600'
+                    }`}
+                  >
+                    {r.label}
                   </button>
                 ))}
               </div>

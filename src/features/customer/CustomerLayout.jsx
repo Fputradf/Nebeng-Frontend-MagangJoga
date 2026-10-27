@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 import CustomerSidebar from './components/CustomerSidebar';
 import CustomerProfileModal from './components/CustomerProfileModal';
@@ -13,6 +13,7 @@ const CUSTOMER_MENU_PATH = {
   'Cari & Booking Trip': 'booking',
   'Tickets & Digital QR': 'tickets',
   'Rewards & Penukaran': 'rewards',
+  'Dompet Saya': 'wallet',
   'Profil Saya': 'profile',
 };
 

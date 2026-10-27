@@ -56,6 +56,7 @@ import MyTickets from './features/customer/views/MyTickets';
 import CustomerAccountSettings from './features/customer/views/CustomerAccountSettings';
 import CustomerRewards from './features/customer/views/CustomerRewards';
 import CustomerChat from './features/customer/views/CustomerChat';
+import CustomerWallet from './features/customer/views/CustomerWallet';
 import { NotificationSettings, NotificationHistory, NotificationPermissionRequest } from './features/notifications';
 
 function CustomerIndexRedirect() {
@@ -240,6 +241,7 @@ export default function App() {
         <Route path="tickets" element={<MyTickets />} />
         <Route path="chat" element={<CustomerChat />} />
         <Route path="rewards" element={<CustomerRewards />} />
+        <Route path="wallet" element={<CustomerWallet />} />
         <Route path="notifications" element={<NotificationHistory />} />
         <Route path="notifications/settings" element={<NotificationSettings />} />
         <Route path="profile" element={<Navigate to="pengaturan" replace />} />

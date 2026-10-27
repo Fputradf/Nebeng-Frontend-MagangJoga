@@ -15,6 +15,8 @@ import StatCard from '../../../components/ui/StatCard';
 import StatusBadge from '../../../components/ui/StatusBadge';
 import { getEscrowLedgerData } from '../../../services/auditService';
 
+const ITEMS_PER_PAGE = 5;
+
 export default function AuditFinancialReport() {
   const [activeTab, setActiveTab] = useState('escrow');
   const [searchTerm, setSearchTerm] = useState('');
@@ -41,7 +43,7 @@ export default function AuditFinancialReport() {
           setIsFetchingPage(true);
         }
 
-        const res = await getEscrowLedgerData(currentPage, 20);
+        const res = await getEscrowLedgerData(currentPage, ITEMS_PER_PAGE);
 
         if (isMounted && res) {
           const rawTransactions =
@@ -58,6 +60,14 @@ export default function AuditFinancialReport() {
 
           if (res.pagination) {
             setPaginationMeta(res.pagination);
+          } else {
+            const totalCount = Array.isArray(res) ? res.length : rawTransactions.length;
+            setPaginationMeta({
+              totalData: totalCount,
+              currentPage: currentPage,
+              totalPages: Math.max(1, Math.ceil(totalCount / ITEMS_PER_PAGE)),
+              limit: ITEMS_PER_PAGE,
+            });
           }
 
           const mappedLedger = rawTransactions.map((tx) => ({
@@ -196,6 +206,7 @@ export default function AuditFinancialReport() {
             onClick={() => {
               setActiveTab('escrow');
               setStatusFilter('All');
+              setCurrentPage(1);
             }}
             className={`px-4 py-1.5 rounded-full text-[13px] font-bold transition cursor-pointer flex items-center gap-1.5 ${
               activeTab === 'escrow'
@@ -218,12 +229,18 @@ export default function AuditFinancialReport() {
               type="text"
               placeholder="Cari ID ledger, order, atau referensi..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
               className="w-full bg-white border border-neutral-200 rounded-full pl-9 pr-8 py-1.5 text-[13px] font-medium text-neutral-700 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-[#74B4D9]"
             />
             {searchTerm && (
               <button
-                onClick={() => setSearchTerm('')}
+                onClick={() => {
+                  setSearchTerm('');
+                  setCurrentPage(1);
+                }}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
               >
                 <X size={12} />
@@ -233,7 +250,10 @@ export default function AuditFinancialReport() {
 
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setCurrentPage(1);
+            }}
             className="bg-white border border-neutral-200 rounded-full px-3 py-1.5 text-[13px] font-semibold text-neutral-700 focus:outline-none focus:ring-2 focus:ring-[#74B4D9] cursor-pointer"
           >
             <option value="All">Semua Status</option>
@@ -245,7 +265,7 @@ export default function AuditFinancialReport() {
 
       <div className="space-y-4">
         <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 overflow-hidden print:border print:shadow-none print:rounded-none">
-          <div className={`hidden sm:block overflow-x-auto transition-opacity duration-200 ${isFetchingPage ? 'opacity-40' : 'opacity-100'}`}>
+          <div className={`overflow-x-auto transition-opacity duration-200 ${isFetchingPage ? 'opacity-40' : 'opacity-100'}`}>
             <table className="w-full text-left border-collapse print:text-black">
               <thead>
                 <tr className="bg-gray-50/70 text-neutral-400 text-[12px] uppercase tracking-wider font-bold print:bg-neutral-100 print:text-neutral-800">
@@ -258,7 +278,7 @@ export default function AuditFinancialReport() {
               </thead>
               <tbody className="divide-y divide-gray-100 text-[12px] print:divide-neutral-300">
                 {isLoadingLedger ? (
-                  <SkeletonTableRows rows={4} columns={5} />
+                  <SkeletonTableRows rows={5} columns={5} />
                 ) : filteredEscrow.length > 0 ? (
                   filteredEscrow.map((item) => (
                     <tr key={item.id} className="hover:bg-[#74B4D9]/10 transition-colors">
@@ -314,24 +334,44 @@ export default function AuditFinancialReport() {
           </div>
 
           {paginationMeta && paginationMeta.totalPages > 1 && (
-            <div className="flex items-center justify-between p-4 bg-neutral-50/50 border-t border-neutral-200 text-[13px] print:hidden">
+            <div className="flex flex-col sm:flex-row items-center justify-between p-4 bg-neutral-50/50 border-t border-neutral-200 text-[13px] gap-3 print:hidden">
               <span className="text-neutral-500">
                 Halaman <strong>{paginationMeta.currentPage}</strong> dari{' '}
                 <strong>{paginationMeta.totalPages}</strong> (Total: {paginationMeta.totalData} Transaksi)
               </span>
 
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1.5">
                 <button
                   disabled={currentPage <= 1 || isFetchingPage}
                   onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                  className="px-3 py-1 bg-white border border-neutral-200 rounded-lg font-bold disabled:opacity-40 cursor-pointer shadow-sm"
+                  className="px-3 py-1.5 bg-white border border-neutral-200 rounded-lg text-neutral-600 font-bold disabled:opacity-40 cursor-pointer shadow-sm hover:bg-neutral-50 transition"
                 >
                   Sebelumnya
                 </button>
+
+                {Array.from({ length: paginationMeta.totalPages }, (_, i) => i + 1)
+                  .filter((p) => p === 1 || p === paginationMeta.totalPages || Math.abs(p - currentPage) <= 1)
+                  .map((p, idx, arr) => (
+                    <span key={p} className="flex items-center">
+                      {idx > 0 && arr[idx - 1] !== p - 1 && <span className="px-1 text-neutral-400">...</span>}
+                      <button
+                        disabled={isFetchingPage}
+                        onClick={() => setCurrentPage(p)}
+                        className={`w-8 h-8 rounded-lg text-[13px] font-bold transition cursor-pointer ${
+                          currentPage === p
+                            ? 'bg-[#10367D] text-white shadow-sm'
+                            : 'bg-white border border-neutral-200 text-neutral-600 hover:bg-neutral-50'
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    </span>
+                  ))}
+
                 <button
                   disabled={currentPage >= paginationMeta.totalPages || isFetchingPage}
                   onClick={() => setCurrentPage((prev) => prev + 1)}
-                  className="px-3 py-1 bg-white border border-neutral-200 rounded-lg font-bold disabled:opacity-40 cursor-pointer shadow-sm"
+                  className="px-3 py-1.5 bg-white border border-neutral-200 rounded-lg text-neutral-600 font-bold disabled:opacity-40 cursor-pointer shadow-sm hover:bg-neutral-50 transition"
                 >
                   Selanjutnya
                 </button>

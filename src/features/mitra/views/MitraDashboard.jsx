@@ -9,7 +9,9 @@ import {
   Clock,
   MapPin,
   Package,
-  ArrowRight
+  ArrowRight,
+  ShieldAlert,
+  AlertTriangle
 } from 'lucide-react';
 import StatCard from '../../../components/ui/StatCard';
 import StatusBadge from '../../../components/ui/StatusBadge';
@@ -62,6 +64,13 @@ export default function MitraDashboard() {
     balance: 0,
     heldEscrowBalance: 0
   });
+  const [sanctionData, setSanctionData] = useState({
+    currentScore: 100,
+    baseScore: 100,
+    isSuspended: false,
+    suspendedUntil: null,
+    sanctions: [],
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [activeService, setActiveService] = useState('all');
 
@@ -73,13 +82,16 @@ export default function MitraDashboard() {
     const fetchMitraData = async () => {
       setIsLoading(true);
       try {
-        const [resMyTrips, resWallet, resRating] = await Promise.all([
+        const [resMyTrips, resWallet, resRating, resSanctions] = await Promise.all([
           apiClient.get('/trips/me').catch(() => ({ data: [] })),
           apiClient.get('/wallets/me').catch(() => ({
             data: { balance: 0, heldEscrowBalance: 0 }
           })),
           apiClient.get('/reviews/me').catch(() => ({
             data: { averageRating: 0, totalReviews: 0, reviews: [] }
+          })),
+          apiClient.get('/users/me/sanctions').catch(() => ({
+            data: { currentScore: 100, baseScore: 100, isSuspended: false, suspendedUntil: null, sanctions: [] }
           })),
         ]);
 
@@ -104,6 +116,9 @@ export default function MitraDashboard() {
             averageRating: ratingData.averageRating || 0,
             totalReviews: ratingData.totalReviews ?? ratingData.totalReviewa ?? 0
           });
+          if (resSanctions?.data) {
+            setSanctionData(resSanctions.data);
+          }
         }
       } catch (err) {
         console.error('Gagal memuat data dashboard mitra:', err);
@@ -190,6 +205,50 @@ export default function MitraDashboard() {
       </section>
       <BannerSlider role="mitra" />
 
+      {/* ── BANNER PERINGATAN SANKSI JIKA AKTIF ── */}
+      {sanctionData.isSuspended ? (
+        <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-rose-800 shadow-sm">
+          <div className="flex items-start sm:items-center gap-3">
+            <div className="p-2 bg-rose-100 text-rose-700 rounded-xl shrink-0">
+              <AlertTriangle className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-[14px] font-bold">Akun Anda Dalam Masa Penangguhan (Suspensi)</p>
+              <p className="text-[12px] text-rose-600">
+                Skor integritas Anda terpotong. Anda tidak dapat membuat jadwal trip baru
+                {sanctionData.suspendedUntil && ` sampai ${new Date(sanctionData.suspendedUntil).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })} WIB`}.
+              </p>
+            </div>
+          </div>
+          <Link
+            to="/mitra/profile/pengaturan"
+            className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-[12px] font-bold rounded-xl shadow-sm transition shrink-0 text-center"
+          >
+            Lihat Sanksi & Banding
+          </Link>
+        </div>
+      ) : (sanctionData.currentScore < 100) ? (
+        <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-amber-900 shadow-sm">
+          <div className="flex items-start sm:items-center gap-3">
+            <div className="p-2 bg-amber-100 text-amber-700 rounded-xl shrink-0">
+              <ShieldAlert className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-[14px] font-bold">Perhatian: Terjadi Pemotongan Skor Integritas</p>
+              <p className="text-[12px] text-amber-700">
+                Skor reputasi Anda saat ini {sanctionData.currentScore} / {sanctionData.baseScore || 100}. Hindari pembatalan mendadak atau ajukan banding jika mengalami kendala darurat.
+              </p>
+            </div>
+          </div>
+          <Link
+            to="/mitra/profile/pengaturan"
+            className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-[12px] font-bold rounded-xl shadow-sm transition shrink-0 text-center"
+          >
+            Riwayat Sanksi
+          </Link>
+        </div>
+      ) : null}
+
       <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-neutral-200">
         <h2 className="text-[17px] font-extrabold text-neutral-800 mb-4 uppercase tracking-tight">Layanan Kami</h2>
         <div className="flex justify-around items-center">
@@ -214,18 +273,30 @@ export default function MitraDashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
         <StatCard
           title="TOTAL SALDO WALLET"
           value={formatRupiah(totalWallet)}
           subtitle={`${formatRupiah(availableBalance)} siap ditarik, ${formatRupiah(escrowHold)} tertahan (escrow)`}
           icon={Wallet}
         />
+        <StatCard
+          title="STATISTIK RATING MITRA"
+          value={ratingDisplay}
+          subtitle={ratingSubtitle}
+          icon={Star}
+        />
         <StatCard
-          title="STATISTIK RATING MITRA"
-          value={ratingDisplay}
-          subtitle={ratingSubtitle}
-          icon={Star}
+          title="REPUTASI & SANKSI POIN"
+          value={`${sanctionData?.currentScore ?? 100} / ${sanctionData?.baseScore || 100}`}
+          subtitle={
+            sanctionData?.isSuspended
+              ? 'Akun Sedang Tersuspensi'
+              : (sanctionData?.currentScore ?? 100) >= 80
+              ? 'Integritas Sangat Baik'
+              : 'Peringatan Pemotongan Poin'
+          }
+          icon={ShieldAlert}
         />
       </div>
 

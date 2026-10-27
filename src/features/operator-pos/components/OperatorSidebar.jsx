@@ -74,7 +74,7 @@ export default function OperatorSidebar({
         />
       )}
 
-      <aside className={`w-64 h-screen bg-[#0a1e3c] text-white flex flex-col justify-between p-5 fixed left-0 top-0 shadow-soft-lg overflow-y-auto z-40 transition-transform duration-300 font-sans print:hidden select-none ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
+      <aside className={`w-64 h-screen bg-gradient-to-b from-[#0c2353] via-[#10367D] to-[#18458f] border-r border-blue-400/20 shadow-2xl text-white flex flex-col justify-between p-5 fixed left-0 top-0 overflow-y-auto z-40 transition-transform duration-300 font-sans print:hidden select-none ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
         <div>
           <div className="mb-8 px-2 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -103,7 +103,7 @@ export default function OperatorSidebar({
           <div className="space-y-6">
             {MENU_GROUPS.map((group) => (
               <div key={group.label}>
-                <p className="text-xs font-bold uppercase tracking-wider text-white/50 mb-2.5 px-3">
+                <p className="text-xs font-bold uppercase tracking-wider text-blue-200/60 mb-2.5 px-3">
                   {group.label}
                 </p>
                 <nav className="space-y-1">
@@ -114,13 +114,13 @@ export default function OperatorSidebar({
                       <button
                         key={item.name}
                         onClick={() => handleMenuSelect(item.name)}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition text-left cursor-pointer ${
+                        className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm transition text-left cursor-pointer ${
                           isActive
-                            ? 'bg-white text-[#0a1e3c] font-bold shadow-soft'
-                            : 'text-white/80 font-medium hover:bg-white/10 hover:text-white'
+                            ? 'bg-white text-[#10367D] font-bold shadow-md'
+                            : 'text-white/85 font-medium hover:bg-white/10 hover:text-white'
                         }`}
                       >
-                        <IconComponent className={`w-4 h-4 ${isActive ? 'text-[#0a1e3c]' : 'text-white/70'}`} />
+                        <IconComponent className={`w-4 h-4 ${isActive ? 'text-[#10367D]' : 'text-white/80'}`} />
                         {item.name}
                       </button>
                     );
@@ -135,7 +135,7 @@ export default function OperatorSidebar({
           <button
             onClick={() => setShowLogoutModal(true)}
             aria-label="Keluar Sistem"
-            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-bold text-white bg-white/10 hover:bg-white/20 transition cursor-pointer border border-white/10"
+            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold text-white bg-white/10 hover:bg-white/20 transition cursor-pointer border border-white/10 shadow-2xs"
           >
             <LogOut className="w-4 h-4 text-white shrink-0" />
             <span>Log Out</span>

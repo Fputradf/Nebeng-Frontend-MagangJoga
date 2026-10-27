@@ -11,12 +11,9 @@ import {
   ShieldCheck,
   Menu,
   X,
-  Bell,
-  BellOff,
+  Wallet,
 } from 'lucide-react';
 import logoAsset from '../../../assets/logo.png';
-import { useNotification } from '../../../context/NotificationContext';
-import { useToast } from '../../../context/ToastContext';
 
 export default function CustomerSidebar({
   activeMenu = 'Cari & Booking Trip',
@@ -28,61 +25,6 @@ export default function CustomerSidebar({
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const toast = useToast();
-
-  const {
-    fcmToken,
-    permission,
-    notificationSupported,
-    errorMessage,
-    requestPermission,
-    registerToken,
-  } = useNotification();
-
-  const handleTogglePush = async () => {
-    console.log('CLICK toggle notif');
-    console.log('[CustomerSidebar] TOGGLE CLICKED - fcmToken:', fcmToken, 'notificationSupported:', notificationSupported, 'permission:', permission, 'errorMessage:', errorMessage);
-    
-    try {
-      if (fcmToken) {
-        console.log('[CustomerSidebar] Token already exists');
-        toast.info('Notifikasi sudah aktif. Logout untuk menonaktifkan.');
-        return;
-      }
-      
-      if (!notificationSupported) {
-        console.log('[CustomerSidebar] Notifications not supported');
-        toast.error('Browser tidak mendukung notifikasi');
-        return;
-      }
-      
-      if (permission === 'denied') {
-        console.log('[CustomerSidebar] Permission denied');
-        toast.error('Notifikasi ditolak. Aktifkan di pengaturan browser.');
-        return;
-      }
-      
-      console.log('[CustomerSidebar] Calling requestPermission...');
-      const hasPermission = await requestPermission();
-      console.log('[CustomerSidebar] Permission result:', hasPermission);
-      
-      if (hasPermission) {
-        console.log('[CustomerSidebar] Calling registerToken...');
-        const success = await registerToken();
-        console.log('[CustomerSidebar] Register token result:', success);
-        if (success) {
-          toast.success('Notifikasi berhasil diaktifkan!');
-        } else {
-          toast.error(errorMessage || 'Gagal mendaftarkan token notifikasi.');
-        }
-      } else {
-        toast.error('Izin notifikasi ditolak. Aktifkan di pengaturan browser.');
-      }
-    } catch (err) {
-      console.error('[CustomerSidebar] Gagal mengubah notifikasi:', err);
-      toast.error(err.message || 'Gagal mengubah status notifikasi.');
-    }
-  };
 
   const MENU_GROUPS = [
     {
@@ -106,6 +48,7 @@ export default function CustomerSidebar({
       items: [
         { name: 'Tickets & Digital QR', icon: Ticket, locked: !isCustomerVerified },
         { name: 'Rewards & Penukaran', icon: Gift, locked: !isCustomerVerified },
+        { name: 'Dompet Saya', icon: Wallet, locked: !isCustomerVerified },
       ],
     },
     {
@@ -151,7 +94,7 @@ export default function CustomerSidebar({
         />
       )}
 
-      <aside className={`w-64 h-screen bg-[#0a1e3c] text-white flex flex-col justify-between p-5 fixed left-0 top-0 shadow-soft-lg overflow-y-auto z-40 transition-transform duration-300 font-sans print:hidden select-none ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
+      <aside className={`w-64 h-screen bg-gradient-to-b from-[#0c2353] via-[#10367D] to-[#18458f] text-white flex flex-col justify-between p-5 fixed left-0 top-0 shadow-2xl border-r border-blue-400/20 overflow-y-auto z-40 transition-transform duration-300 font-sans print:hidden select-none ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
         <div>
           <div className="mb-8 px-2 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -178,7 +121,7 @@ export default function CustomerSidebar({
           </div>
 
           {customerProfile?.fullName && (
-            <div className="mx-2 mb-5 p-3 rounded-lg bg-white/10 flex items-center gap-2.5">
+            <div className="mx-2 mb-5 p-3 rounded-xl bg-white/10 backdrop-blur-md border border-white/10 flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center shrink-0 overflow-hidden">
                 {customerProfile?.photoDataUrl ? (
                   <img src={customerProfile.photoDataUrl} alt="Foto Profil" className="w-full h-full object-cover" />
@@ -192,10 +135,10 @@ export default function CustomerSidebar({
                 </p>
                 <p
                   className={`text-xs font-bold flex items-center gap-1 ${
-                    isCustomerVerified ? 'text-[#74B4D9]' : 'text-white/50'
+                    isCustomerVerified ? 'text-blue-200' : 'text-white/50'
                   }`}
                 >
-                  {isCustomerVerified ? <ShieldCheck size={12} /> : <Lock size={12} />}
+                  {isCustomerVerified ? <ShieldCheck size={12} className="text-emerald-400" /> : <Lock size={12} />}
                   {isCustomerVerified ? 'Terverifikasi' : 'Belum Terverifikasi'}
                 </p>
               </div>
@@ -205,7 +148,7 @@ export default function CustomerSidebar({
           <div className="space-y-6">
             {MENU_GROUPS.map((group) => (
               <div key={group.label}>
-                <p className="text-xs font-bold uppercase tracking-wider text-white/50 mb-2.5 px-3">
+                <p className="text-xs font-bold uppercase tracking-wider text-blue-200/60 mb-2.5 px-3">
                   {group.label}
                 </p>
                 <nav className="space-y-1">
@@ -224,17 +167,17 @@ export default function CustomerSidebar({
                               : 'Selesaikan verifikasi biometrik untuk membuka menu ini'
                             : undefined
                         }
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition text-left ${
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition text-left ${
                           isActive
-                            ? 'bg-white text-[#0a1e3c] font-bold shadow-soft cursor-default'
+                            ? 'bg-white text-[#10367D] font-bold shadow-md cursor-default'
                             : item.locked
                             ? 'text-white/40 font-medium cursor-not-allowed opacity-60'
-                            : 'text-white/80 font-medium hover:bg-white/10 hover:text-white cursor-pointer'
+                            : 'text-white/85 font-medium hover:bg-white/10 hover:text-white cursor-pointer'
                         }`}
                       >
                         <IconComponent
                           className={`w-4 h-4 ${
-                            isActive ? 'text-[#0a1e3c]' : item.locked ? 'text-white/30' : 'text-white/70'
+                            isActive ? 'text-[#10367D]' : item.locked ? 'text-white/30' : 'text-white/80'
                           }`}
                         />
                         <span className="flex-1">{item.label || item.name}</span>
@@ -253,32 +196,11 @@ export default function CustomerSidebar({
           </div>
         </div>
 
-        <div className="pt-5 border-t border-white/10 space-y-3">
-          <button
-            onClick={() => {
-              console.log('CLICK toggle notif (CustomerSidebar JSX)');
-              handleTogglePush();
-            }}
-            disabled={permission === 'denied' || !!errorMessage}
-            aria-label={fcmToken ? 'Notifikasi aktif' : 'Aktifkan notifikasi'}
-            className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-bold transition cursor-pointer border ${
-              fcmToken
-                ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/30'
-                : 'bg-white/10 text-white/80 border-white/10 hover:bg-white/20'
-            } ${errorMessage ? 'opacity-50 cursor-not-allowed' : ''}`}
-          >
-            {fcmToken ? (
-              <Bell className="w-4 h-4 shrink-0" />
-            ) : (
-              <BellOff className="w-4 h-4 shrink-0" />
-            )}
-            <span>{fcmToken ? 'Notifikasi Aktif' : 'Aktifkan Notifikasi'}</span>
-          </button>
-
+        <div className="pt-5 border-t border-white/10">
           <button
             onClick={() => setShowLogoutModal(true)}
             aria-label="Keluar Sistem"
-            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-bold text-white bg-white/10 hover:bg-white/20 transition cursor-pointer border border-white/10"
+            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold text-white bg-white/10 hover:bg-white/20 transition cursor-pointer border border-white/10 shadow-2xs"
           >
             <LogOut className="w-4 h-4 text-white shrink-0" />
             <span>Log Out</span>
