@@ -1,8 +1,21 @@
 import { useState, useRef, useEffect } from 'react';
-import { Bell, MessageCircle, ShoppingCart } from 'lucide-react';
+import {
+  Bell,
+  MessageCircle,
+  ShoppingCart,
+  Wallet,
+  Clock,
+  AlertTriangle,
+  MapPin,
+} from 'lucide-react';
 import { useNotification } from '../../context/NotificationContext';
+import { useAuth } from '../../context/AuthContext';
 
-export default function NotificationBell({ basePath = '/customer' }) {
+export default function NotificationBell({ basePath }) {
+  const { user } = useAuth();
+  const resolvedBasePath =
+    basePath || (user?.role === 'mitra' ? '/mitra' : '/customer');
+
   const {
     unreadCount,
     notifications,
@@ -66,26 +79,102 @@ export default function NotificationBell({ basePath = '/customer' }) {
     await markAsRead(notification.id);
     setIsOpen(false);
 
-    // Navigate based on notification type
+    const isMitra = user?.role === 'mitra';
+    const dataType = notification.data?.type;
+
+    // 1. If explicit actionUrl provided
+    if (notification.data?.actionUrl) {
+      let targetUrl = notification.data.actionUrl;
+      if (targetUrl === '/wallet') {
+        targetUrl = isMitra ? '/mitra/saldo' : '/customer/wallet';
+      }
+      window.location.href = targetUrl;
+      return;
+    }
+
+    // 2. Chat messages
     if (notification.type === 'chat_message' && notification.conversationId) {
-      window.location.href = `${basePath}/chat?conversation=${notification.conversationId}`;
-    } else if (notification.data?.orderId) {
-      window.location.href = `${basePath}/tickets`;
+      window.location.href = `${resolvedBasePath}/chat?conversation=${notification.conversationId}`;
+      return;
+    }
+
+    // 3. Wallet / Financial (topup, withdrawal, escrow)
+    if (
+      notification.type === 'payment_success' ||
+      notification.type === 'payment_failed' ||
+      notification.type === 'escrow_released' ||
+      dataType === 'wallet_topup' ||
+      dataType === 'wallet_withdrawal'
+    ) {
+      window.location.href = isMitra ? '/mitra/saldo' : '/customer/wallet';
+      return;
+    }
+
+    // 4. Trip alerts (H-30, H-0, late sanction)
+    if (
+      dataType === 'trip_departure_reminder_h30' ||
+      dataType === 'trip_departure_urgency_h0' ||
+      dataType === 'mitra_late_sanction'
+    ) {
+      window.location.href = isMitra ? '/mitra/trip' : '/customer/tickets';
+      return;
+    }
+
+    // 5. Trip arrival
+    if (
+      notification.type === 'trip_arrived' ||
+      dataType === 'mitra_arrived_origin' ||
+      dataType === 'trip_arrived_destination'
+    ) {
+      window.location.href = isMitra ? '/mitra/trip' : '/customer/tickets';
+      return;
+    }
+
+    // 6. Generic order / trip fallback
+    if (notification.data?.orderId) {
+      window.location.href = isMitra ? '/mitra/trip' : '/customer/tickets';
     } else if (notification.data?.tripId) {
-      window.location.href = `${basePath}/tickets`;
+      window.location.href = isMitra ? '/mitra/trip' : '/customer/tickets';
+    } else {
+      window.location.href = `${resolvedBasePath}/notifications`;
     }
   };
 
-  const getNotificationIcon = (type) => {
-    switch (type) {
-      case 'chat_message':
-        return <MessageCircle className="w-4 h-4 text-blue-500" />;
-      case 'order_created':
-      case 'order_paid':
-        return <ShoppingCart className="w-4 h-4 text-green-500" />;
-      default:
-        return <Bell className="w-4 h-4 text-gray-500" />;
+  const getNotificationIcon = (type, data) => {
+    const dataType = data?.type;
+    if (type === 'chat_message') {
+      return <MessageCircle className="w-4 h-4 text-blue-500" />;
     }
+    if (
+      type === 'payment_success' ||
+      type === 'payment_failed' ||
+      type === 'escrow_released' ||
+      dataType === 'wallet_topup' ||
+      dataType === 'wallet_withdrawal'
+    ) {
+      return <Wallet className="w-4 h-4 text-emerald-600" />;
+    }
+    if (
+      dataType === 'trip_departure_urgency_h0' ||
+      dataType === 'mitra_late_sanction' ||
+      data?.priority === 'high'
+    ) {
+      return <AlertTriangle className="w-4 h-4 text-red-500" />;
+    }
+    if (dataType === 'trip_departure_reminder_h30') {
+      return <Clock className="w-4 h-4 text-amber-500" />;
+    }
+    if (
+      type === 'trip_arrived' ||
+      dataType === 'mitra_arrived_origin' ||
+      dataType === 'trip_arrived_destination'
+    ) {
+      return <MapPin className="w-4 h-4 text-indigo-500" />;
+    }
+    if (type === 'order_created' || type === 'order_paid') {
+      return <ShoppingCart className="w-4 h-4 text-green-500" />;
+    }
+    return <Bell className="w-4 h-4 text-gray-500" />;
   };
 
   const formatRelativeTime = (dateString) => {
@@ -187,13 +276,20 @@ export default function NotificationBell({ basePath = '/customer' }) {
                 >
                   <div className="flex items-start gap-3">
                     <div className="mt-0.5 shrink-0">
-                      {getNotificationIcon(notification.type)}
+                      {getNotificationIcon(notification.type, notification.data)}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
-                        <p className="text-sm font-medium text-gray-900 line-clamp-1">
-                          {notification.title}
-                        </p>
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          {notification.data?.priority === 'high' && (
+                            <span className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-600">
+                              URGENT
+                            </span>
+                          )}
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {notification.title}
+                          </p>
+                        </div>
                         {!notification.isRead && (
                           <div className="w-2 h-2 bg-blue-500 rounded-full shrink-0 mt-1.5" />
                         )}
@@ -216,7 +312,7 @@ export default function NotificationBell({ basePath = '/customer' }) {
             <button
               onClick={() => {
                 setIsOpen(false);
-                window.location.href = `${basePath}/notifications`;
+                window.location.href = `${resolvedBasePath}/notifications`;
               }}
               className="w-full text-center text-sm text-blue-600 hover:text-blue-700 font-medium"
             >

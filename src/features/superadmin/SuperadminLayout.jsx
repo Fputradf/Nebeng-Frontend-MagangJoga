@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SuperadminSidebar from './components/SuperadminSidebar';
 import SuperadminProfileModal from './components/SuperadminProfileModal';
@@ -14,8 +14,10 @@ const SUPERADMIN_MENU_PATH = {
   'Konfigurasi Tarif': 'tarif',
   'Manajemen Merchandise': 'merchandise',
   'Manajemen Banner': 'banner',
+  Voucher: 'voucher',
   'Audit & Keuangan': 'audit',
   'User Governance': 'governance',
+  'Pengaturan Akun': 'profile/pengaturan',
 };
 
 export default function SuperadminLayout() {

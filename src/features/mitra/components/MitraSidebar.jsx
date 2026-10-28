@@ -13,6 +13,7 @@ import {
   Menu,
   X,
   Settings,
+  HelpCircle,
 } from 'lucide-react';
 import logoAsset from '../../../assets/logo.png';
 import apiClient from '../../../services/apiClient';
@@ -47,12 +48,14 @@ export default function MitraSidebar({
       items: [
         { name: 'Saldo & Komisi', icon: Wallet, locked: !isVerified, lockMessage: 'Fitur terkunci. Memerlukan verifikasi Admin Regional.' },
         { name: 'Chat Pelanggan', icon: MessageSquare, locked: !isVerified, lockMessage: 'Fitur terkunci. Memerlukan verifikasi Admin Regional.' },
+        { name: 'Pusat Bantuan & FAQ', icon: HelpCircle, locked: false },
       ],
     },
     {
       label: 'Pengaturan',
       items: [
-        { name: 'Pengaturan Akun', icon: Settings, locked: !isVerified, lockMessage: 'Fitur terkunci. Memerlukan verifikasi Admin Regional.' },
+        { name: 'Pengaturan Akun', icon: Settings,
+locked: !isVerified, lockMessage: 'Fitur terkunci. Memerlukan verifikasi Admin Regional.' },
       ],
     },
   ];

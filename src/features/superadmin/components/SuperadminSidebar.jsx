@@ -11,7 +11,9 @@ import {
   AlertTriangle,
   Menu,
   X,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Ticket,
+  Settings
 } from 'lucide-react';
 import logoImage from '../../../assets/LOGO.png';
 
@@ -30,8 +32,10 @@ const MENU_GROUPS = [
       { name: 'Konfigurasi Tarif', icon: ShoppingBag },
       { name: 'Manajemen Merchandise', icon: Gift },
       { name: 'Manajemen Banner', icon: ImageIcon },
+      { name: 'Voucher', icon: Ticket },
       { name: 'Audit & Keuangan', icon: Receipt },
       { name: 'User Governance', icon: Users },
+      { name: 'Pengaturan Akun', icon: Settings },
     ],
   },
 ];

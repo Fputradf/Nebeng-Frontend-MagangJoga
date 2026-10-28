@@ -13,6 +13,8 @@ const REGIONAL_MENU_PATH = {
   'Verifikasi ID & Face': 'verifikasi',
   'Pemantauan Trip': 'trip-order',
   'Laporan Keuangan': 'laporan',
+  'Bantuan Chat Wilayah': 'bantuan-chat',
+  'Pengaturan Akun': 'profile/pengaturan',
 };
 
 const ROLE_LABELS = {
@@ -54,7 +56,8 @@ export default function RegionalLayout() {
 
       return (
         currentPath.endsWith(`/regional/${slug}`) ||
-        currentPath.includes(`/regional/${slug}/`)
+        currentPath.includes(`/regional/${slug}/`) ||
+        (menu === 'Pengaturan Akun' && (currentPath.includes('/regional/profile') || currentPath.includes('/regional/pengaturan')))
       );
     }) || 'Dashboard Wilayah';
 

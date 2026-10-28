@@ -239,34 +239,39 @@ export default function MerchandiseManagement() {
 
   return (
     <div className="p-6 lg:p-8 space-y-6 max-w-7xl mx-auto font-['Inter']">
-      {/* Header Halaman */}
-      <div className="bg-white p-6 rounded-2xl border border-neutral-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <Gift className="w-4 h-4 text-indigo-600" />
-            <span className="text-[12px] font-bold uppercase tracking-widest text-indigo-600">
-              MODUL SUPERADMIN
-            </span>
+      {/* ── BANNER GRADIENT ── */}
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] p-6 text-white shadow-card sm:p-8">
+        <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10" />
+        <div className="absolute bottom-0 right-32 h-28 w-28 rounded-full bg-accent/20" />
+        <div className="relative flex flex-col gap-4 pb-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-accent flex items-center gap-1.5">
+                <Gift className="w-3.5 h-3.5" /> MODUL SUPERADMIN
+              </span>
+            </div>
+            <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
+              Manajemen Merchandise & Antrean Hadiah
+            </h1>
+            <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
+              Atur stok produk reward loyalti dan proses pengiriman merchandise ke customer.
+            </p>
           </div>
-          <h1 className="text-[23px] font-bold text-neutral-800">
-            Manajemen Merchandise & Antrean Hadiah
-          </h1>
-          <p className="text-[14px] text-neutral-500 mt-0.5">
-            Atur stok produk reward loyalti dan proses pengiriman merchandise ke customer.
-          </p>
-        </div>
 
-        {activeTab === 'items' && (
-          <button
-            onClick={handleOpenCreateModal}
-            className="px-4 py-2.5 text-white rounded-xl text-[13px] font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer self-start sm:self-auto"
-            style={{ backgroundColor: PRIMARY_COLOR }}
-          >
-            <Plus className="w-3.5 h-3.5" />
-            Tambah Merchandise
-          </button>
-        )}
-      </div>
+          {activeTab === 'items' && (
+            <button
+              onClick={handleOpenCreateModal}
+              className="px-4 py-2.5 bg-accent hover:bg-accent/90 text-slate-900 rounded-2xl text-xs sm:text-sm font-bold shadow-sm transition flex items-center gap-2 cursor-pointer self-start sm:self-auto shrink-0"
+            >
+              <Plus className="w-4 h-4" />
+              Tambah Merchandise
+            </button>
+          )}
+        </div>
+        <div className="absolute bottom-4 left-6 right-6 border-t border-dashed border-white/25 sm:left-8 sm:right-8" />
+        <span className="absolute bottom-[11px] right-6 h-2.5 w-2.5 rounded-full border-2 border-white bg-accent sm:right-8" />
+      </section>
 
       {/* Tab Navigasi */}
       <div className="flex gap-2">

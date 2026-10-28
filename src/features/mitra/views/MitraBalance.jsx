@@ -19,7 +19,6 @@ import {
   Ticket,
   ShieldCheck,
   Clock,
-  Sparkles,
   ChevronLeft,
   ChevronRight,
   TrendingUp,
@@ -491,35 +490,7 @@ export default function MitraBalance() {
 
   return (
     <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
-      {/* ──────────────── HEADER ──────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
-              <Sparkles className="w-3 h-3 text-blue-600" />
-              NEBENG PAY MITRA
-            </span>
-            <span className="text-[12px] text-neutral-400 font-medium">Saldo & Komisi Terintegrasi</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 tracking-tight">
-            Saldo & Komisi Saya
-          </h1>
-          <p className="text-[13px] text-neutral-500 mt-0.5">
-            Kelola pendapatan komisi perjalanan, pantau dana auto-escrow, lakukan pencairan ke rekening bank terdaftar, dan lihat riwayat mutasi keuangan.
-          </p>
-        </div>
-
-        <button
-          onClick={handleManualSync}
-          disabled={isSyncing || isLoading}
-          className="self-start sm:self-center px-3.5 py-2 rounded-xl text-[12px] font-bold text-neutral-700 bg-white hover:bg-neutral-50 border border-neutral-200 shadow-sm flex items-center gap-2 cursor-pointer transition disabled:opacity-50"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 text-blue-600 ${isSyncing ? 'animate-spin' : ''}`} />
-          <span>{isSyncing ? 'Menyinkronkan...' : 'Sinkronkan Saldo'}</span>
-        </button>
-      </div>
-
-      {/* ──────────────── HERO CARD SALDO UTAMA & ACTIONS ──────────────── */}
+      {/* ── KARTU SALDO DOMPET MITRA UTAMA ── */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0c2353] via-[#10367D] to-[#1c4e9e] p-6 sm:p-8 text-white shadow-xl border border-blue-400/20">
         {/* Dekorasi Aksen Lingkaran Glow */}
         <div className="absolute -right-12 -top-12 w-64 h-64 rounded-full bg-blue-400/10 blur-3xl pointer-events-none" />
@@ -529,29 +500,42 @@ export default function MitraBalance() {
           <div className="space-y-3">
             <div className="flex items-center gap-3">
               <div className="w-9 h-6 rounded bg-gradient-to-r from-amber-300 via-amber-400 to-amber-200 shadow-inner flex items-center justify-center">
-                <div className="w-5 h-3 border border-amber-600/40 rounded-sm" />
+                <div className="w-5 h-3 border border-amber-600/40 rounded-xs" />
               </div>
-              <span className="text-[12px] font-mono tracking-widest text-blue-200 font-bold uppercase">
+              <span className="text-xs font-mono tracking-widest text-blue-200 font-bold uppercase">
                 DOMPET MITRA UTAMA
               </span>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-[10px] font-semibold text-emerald-300">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Aktif & Terproteksi
+              </span>
+              <button
+                onClick={handleManualSync}
+                disabled={isSyncing || isLoading}
+                title="Sinkronkan Saldo"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl backdrop-blur text-blue-100 text-[11px] font-medium transition cursor-pointer disabled:opacity-50 ml-auto sm:ml-0"
+              >
+                <RefreshCw className={`w-3 h-3 text-accent ${isSyncing ? 'animate-spin' : ''}`} />
+                <span className="hidden sm:inline">{isSyncing ? 'Menyinkronkan...' : 'Sinkronkan'}</span>
+              </button>
             </div>
 
             <div>
-              <p className="text-[12px] font-semibold text-blue-200 uppercase tracking-wider">
+              <p className="text-xs font-semibold text-blue-200 uppercase tracking-wider">
                 Total Saldo Dapat Ditarik
               </p>
-              <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white mt-0.5">
+              <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white mt-1">
                 {isLoading ? '...' : formatRupiah(availableBalance)}
               </h2>
             </div>
 
-            <div className="flex flex-wrap items-center gap-4 text-[12px] text-blue-100/90 pt-1">
-              <span className="flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+            <div className="flex flex-wrap items-center gap-2.5 pt-1">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/10 backdrop-blur-xs border border-white/15 text-xs text-blue-100">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                 Saldo Siap Dicairkan
               </span>
-              <span className="flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 text-blue-300 shrink-0" />
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/10 backdrop-blur-xs border border-white/15 text-xs text-blue-100">
+                <Clock className="w-3.5 h-3.5 text-accent shrink-0" />
                 Pencairan Otomatis via Auto-Escrow
               </span>
             </div>
@@ -562,10 +546,10 @@ export default function MitraBalance() {
             <button
               onClick={handleOpenWithdrawModal}
               disabled={isLoading || availableBalance < MIN_WITHDRAWAL}
-              className="px-6 py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[13px] rounded-2xl shadow-lg shadow-emerald-950/20 transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              className="px-6 py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs sm:text-sm rounded-2xl shadow-lg shadow-emerald-950/20 transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
-              Tarik Saldo
+              <span>Tarik Saldo</span>
             </button>
 
             <button
@@ -573,10 +557,10 @@ export default function MitraBalance() {
                 setTopUpAmount('');
                 setIsTopUpModalOpen(true);
               }}
-              className="px-6 py-3.5 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white font-bold text-[13px] rounded-2xl border border-white/20 shadow-md transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 cursor-pointer"
+              className="px-6 py-3.5 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white font-bold text-xs sm:text-sm rounded-2xl border border-white/20 shadow-md transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 cursor-pointer"
             >
               <PlusCircle className="w-4 h-4 stroke-[2.5]" />
-              Top Up Saldo
+              <span>Top Up Saldo</span>
             </button>
           </div>
         </div>

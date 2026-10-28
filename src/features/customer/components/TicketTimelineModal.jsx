@@ -1,4 +1,4 @@
-﻿import { X, CheckCircle2, Clock, MapPin, ShieldCheck, UserCheck, AlertCircle } from 'lucide-react';
+import { X, CheckCircle2, Clock, MapPin, ShieldCheck, UserCheck, AlertCircle } from 'lucide-react';
 import BaseModal from '../../../components/ui/BaseModal';
 
 // const PRIMARY_COLOR = '#10367D';
@@ -68,7 +68,7 @@ export default function TicketTimelineModal({ isOpen, onClose, ticket }) {
       isDone: isCheckedInOrigin,
       isActive: status === 'in_transit',
       icon: MapPin,
-      color: 'bg-amber-600',
+      color: 'bg-blue-600',
     },
     {
       id: 'dest_scan',

@@ -266,6 +266,8 @@ export default function ForgotPassword({ onSwitchToLogin }) {
       brandName="Nebeng"
       title={headerInfo.title}
       subtitle={headerInfo.subtitle}
+      authMode="forgot"
+      onSwitchMode={onSwitchToLogin}
     >
       {/* =========================================
           STEP INDICATOR (Steps 1, 2, 3)

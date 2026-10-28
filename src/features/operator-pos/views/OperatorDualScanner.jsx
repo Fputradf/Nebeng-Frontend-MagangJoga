@@ -139,9 +139,9 @@ export default function OperatorDualScanner() {
     const cleanTrip = tripQr.trim().toUpperCase();
     const cleanTicket = ticketQr.trim().toUpperCase();
 
-    if (!cleanTrip || !cleanTicket) {
+    if (!cleanTicket) {
       toast.warning(
-        'Mohon pastikan QR Trip Mitra dan QR Tiket/Paket Customer telah terisi!',
+        'Mohon masukkan atau scan QR Tiket/Paket Customer!',
         { title: 'Data Belum Lengkap' }
       );
       return;
@@ -158,7 +158,7 @@ export default function OperatorDualScanner() {
       const scanType = scanMode === 'origin' ? 'checkin_origin' : 'checkin_destination';
 
       const payload = {
-        qrCodeTrip: cleanTrip,
+        ...(cleanTrip ? { qrCodeTrip: cleanTrip } : {}),
         qrCodeTicket: cleanTicket,
         posId: String(posId),
         scanType: scanType,
@@ -171,7 +171,7 @@ export default function OperatorDualScanner() {
           ? String(response.data.checkpoint.id)
           : `LOG-${Math.floor(100 + Math.random() * 900)}`,
         type: scanMode === 'origin' ? 'Scan 1 (Origin)' : 'Scan 2 (Destination / Selesai)',
-        trip: cleanTrip,
+        trip: cleanTrip || response.data?.checkpoint?.trip?.qrCodeTrip || '(Otomatis dari Tiket)',
         ticket: cleanTicket,
         status: scanMode === 'origin' ? 'IN_TRANSIT (Berangkat)' : 'SUCCESS (Trip Selesai & Escrow Released)',
         time: 'Baru saja',
@@ -197,68 +197,55 @@ export default function OperatorDualScanner() {
 
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter'] relative">
-      <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-neutral-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <span
-              className="w-2 h-2 rounded-full animate-pulse"
-              style={{ backgroundColor: PRIMARY_COLOR }}
-            />
-
-            <span
-              className="text-[12px] font-bold uppercase tracking-widest flex items-center gap-1 flex-wrap min-w-0"
-              style={{ color: PRIMARY_COLOR }}
-            >
-              <QrCode className="w-3 h-3" />
-              Sistem Keamanan Pos
-            </span>
+      {/* ── BANNER GRADIENT ── */}
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] p-6 text-white shadow-card sm:p-8">
+        <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10" />
+        <div className="absolute bottom-0 right-32 h-28 w-28 rounded-full bg-accent/20" />
+        <div className="relative flex flex-col gap-4 pb-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
+              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-accent flex items-center gap-1.5">
+                <QrCode className="w-3.5 h-3.5" /> Sistem Keamanan Pos
+              </span>
+            </div>
+            <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight break-words">
+              Dual QR Scanner
+            </h1>
+            <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
+              Validasi check-in keberangkatan pos asal & pelepasan dana escrow di pos tujuan.
+            </p>
           </div>
 
-          <h1 className="text-[21px] sm:text-[23px] font-bold text-neutral-800 break-words">
-            Dual QR Scanner
-          </h1>
+          <div className="flex bg-black/20 p-1 rounded-2xl gap-1 shrink-0 backdrop-blur border border-white/10 self-start sm:self-auto">
+            <button
+              type="button"
+              onClick={() => setScanMode('origin')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer ${
+                scanMode === 'origin'
+                  ? 'bg-accent text-slate-900 shadow-sm'
+                  : 'text-white/80 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              Scan 1 Asal
+            </button>
 
-          <p className="text-[13px] sm:text-[14px] text-neutral-400 mt-0.5">
-            Validasi check-in & pelepasan escrow.
-          </p>
+            <button
+              type="button"
+              onClick={() => setScanMode('destination')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer ${
+                scanMode === 'destination'
+                  ? 'bg-accent text-slate-900 shadow-sm'
+                  : 'text-white/80 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              Scan 2 Tujuan
+            </button>
+          </div>
         </div>
-
-        <div className="flex bg-neutral-100 p-1 rounded-xl gap-1 shrink-0">
-          <button
-            type="button"
-            onClick={() => setScanMode('origin')}
-            className={`px-3 py-1.5 rounded-lg text-[13px] font-bold transition cursor-pointer ${
-              scanMode === 'origin'
-                ? 'text-white shadow-sm'
-                : 'text-neutral-500 hover:text-neutral-800'
-            }`}
-            style={
-              scanMode === 'origin'
-                ? { backgroundColor: PRIMARY_COLOR }
-                : undefined
-            }
-          >
-            Scan 1 Asal
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setScanMode('destination')}
-            className={`px-3 py-1.5 rounded-lg text-[13px] font-bold transition cursor-pointer ${
-              scanMode === 'destination'
-                ? 'text-white shadow-sm'
-                : 'text-neutral-500 hover:text-neutral-800'
-            }`}
-            style={
-              scanMode === 'destination'
-                ? { backgroundColor: PRIMARY_COLOR }
-                : undefined
-            }
-          >
-            Scan 2 Tujuan
-          </button>
-        </div>
-      </div>
+        <div className="absolute bottom-4 left-6 right-6 border-t border-dashed border-white/25 sm:left-8 sm:right-8" />
+        <span className="absolute bottom-[11px] right-6 h-2.5 w-2.5 rounded-full border-2 border-white bg-accent sm:right-8" />
+      </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <div className="lg:col-span-1 bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 space-y-4">
@@ -270,9 +257,9 @@ export default function OperatorDualScanner() {
             </h2>
 
             <StatusBadge
-              variant={scanMode === 'origin' ? 'purple' : 'blue'}
+              variant={scanMode === 'origin' ? 'blue' : 'emerald'}
             >
-              {scanMode === 'origin' ? 'IN_TRANSIT' : 'Destination'}
+              {scanMode === 'origin' ? 'IN_TRANSIT' : 'DESTINATION'}
             </StatusBadge>
           </div>
 
@@ -283,7 +270,7 @@ export default function OperatorDualScanner() {
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider">
-                  QR TRIP MITRA
+                  QR TRIP MITRA (OPSIONAL)
                 </label>
 
                 <button
@@ -299,8 +286,7 @@ export default function OperatorDualScanner() {
 
               <input
                 type="text"
-                required
-                placeholder="cth: TRIP-A2D4CS13"
+                placeholder="cth: TRIP-A2D4CS13 (Opsional)"
                 value={tripQr}
                 onChange={(e) => setTripQr(e.target.value)}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 focus:outline-none font-mono text-[13px] font-medium uppercase"
@@ -418,7 +404,7 @@ export default function OperatorDualScanner() {
 
                         <td className="py-3.5 px-4">
                           <StatusBadge
-                            variant={isSuccess ? 'emerald' : 'purple'}
+                            variant={isSuccess ? 'emerald' : 'blue'}
                           >
                             {log.type}
                           </StatusBadge>
@@ -434,7 +420,7 @@ export default function OperatorDualScanner() {
 
                         <td className="py-3.5 px-4">
                           <StatusBadge
-                            variant={isSuccess ? 'emerald' : 'amber'}
+                            variant={log.status.includes('IN_TRANSIT') ? 'blue' : isSuccess ? 'emerald' : 'amber'}
                           >
                             {log.status}
                           </StatusBadge>

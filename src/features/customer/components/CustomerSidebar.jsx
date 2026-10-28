@@ -12,6 +12,8 @@ import {
   Menu,
   X,
   Wallet,
+  Tag,
+  HelpCircle,
 } from 'lucide-react';
 import logoAsset from '../../../assets/logo.png';
 
@@ -47,13 +49,15 @@ export default function CustomerSidebar({
       label: 'Transaksi & Rewards',
       items: [
         { name: 'Tickets & Digital QR', icon: Ticket, locked: !isCustomerVerified },
+        { name: 'Voucher Saya', icon: Tag, locked: !isCustomerVerified },
         { name: 'Rewards & Penukaran', icon: Gift, locked: !isCustomerVerified },
         { name: 'Dompet Saya', icon: Wallet, locked: !isCustomerVerified },
       ],
     },
     {
-      label: 'Akun',
+      label: 'Bantuan & Akun',
       items: [
+        { name: 'Pusat Bantuan & FAQ', icon: HelpCircle, locked: false },
         { name: 'Profil Saya', icon: User, locked: !isCustomerVerified },
       ],
     },

@@ -126,12 +126,12 @@ export const NotificationProvider = ({ children }) => {
         let swRegistration;
         if ('serviceWorker' in navigator) {
           try {
-            // Cek apakah sudah ada registration
-            const existingRegistration = await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js');
+            // Cek apakah sudah ada registration (utamakan /sw.js yang menyatukan PWA & Firebase)
+            const existingRegistration = await navigator.serviceWorker.getRegistration();
             if (existingRegistration) {
               swRegistration = existingRegistration;
             } else {
-              swRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+              swRegistration = await navigator.serviceWorker.register('/sw.js');
             }
 
             // Tunggu service worker aktif
@@ -393,26 +393,51 @@ export const NotificationProvider = ({ children }) => {
   }, [fetchUnreadCount]);
 
   const handleNotificationNavigation = useCallback((data) => {
-    const { type, orderId, tripId } = data;
+    let isMitra = false;
+    try {
+      const rawAuth = localStorage.getItem('nebeng_auth') || sessionStorage.getItem('nebeng_auth');
+      if (rawAuth) {
+        const parsed = JSON.parse(rawAuth);
+        isMitra = parsed?.user?.role === 'mitra';
+      }
+    } catch {}
+
+    const { type, orderId, tripId, actionUrl } = data;
+
+    if (actionUrl) {
+      let target = actionUrl;
+      if (target === '/wallet') {
+        target = isMitra ? '/mitra/saldo' : '/customer/wallet';
+      }
+      window.location.href = target;
+      return;
+    }
+
     switch (type) {
       case 'order_created':
       case 'order_paid':
       case 'order_cancelled':
-        if (orderId) window.location.href = '/customer/tickets';
+        window.location.href = isMitra ? '/mitra/trip' : '/customer/tickets';
         break;
       case 'trip_started':
       case 'trip_arrived':
       case 'trip_completed':
       case 'checkpoint_scanned':
-        if (tripId) window.location.href = '/customer/tickets';
+      case 'mitra_arrived_origin':
+      case 'trip_arrived_destination':
+      case 'trip_departure_reminder_h30':
+      case 'trip_departure_urgency_h0':
+        window.location.href = isMitra ? '/mitra/trip' : '/customer/tickets';
         break;
       case 'chat_message':
-        window.location.href = '/customer/chat';
+        window.location.href = isMitra ? '/mitra/chat' : '/customer/chat';
         break;
       case 'payment_success':
       case 'payment_failed':
       case 'escrow_released':
-        window.location.href = '/customer/tickets';
+      case 'wallet_topup':
+      case 'wallet_withdrawal':
+        window.location.href = isMitra ? '/mitra/saldo' : '/customer/wallet';
         break;
       case 'reward_earned':
       case 'reward_redeemed':
@@ -420,10 +445,10 @@ export const NotificationProvider = ({ children }) => {
         break;
       case 'verification_approved':
       case 'verification_rejected':
-        window.location.href = '/customer/profile/pengaturan';
+        window.location.href = isMitra ? '/mitra/onboarding' : '/customer/profile/pengaturan';
         break;
       default:
-        window.location.href = '/customer/notifications';
+        window.location.href = isMitra ? '/mitra/notifications' : '/customer/notifications';
     }
   }, []);
 
@@ -464,14 +489,14 @@ export const NotificationProvider = ({ children }) => {
 
     // Register service worker on mount (only once)
     if ('serviceWorker' in navigator) {
-      // Cek apakah sudah ada registration
-      navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js')
+      // Cek apakah sudah ada registration (utamakan unified PWA SW)
+      navigator.serviceWorker.getRegistration()
         .then((existingRegistration) => {
           if (existingRegistration) {
             console.log('Service Worker already registered:', existingRegistration);
           } else {
-            console.log('Registering new Service Worker...');
-            return navigator.serviceWorker.register('/firebase-messaging-sw.js');
+            console.log('Registering PWA Service Worker...');
+            return navigator.serviceWorker.register('/sw.js');
           }
         })
         .then((registration) => {
@@ -544,11 +569,14 @@ export const NotificationProvider = ({ children }) => {
       if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
         try {
           const swReg = await navigator.serviceWorker.getRegistration();
+          const isUrgent = notification.data?.priority === 'high';
           const notifOptions = {
             body: notification.body || '',
             icon: '/favicon.svg',
+            badge: '/favicon.svg',
             tag: notification.conversationId ? `chat-${notification.conversationId}` : `notif-${notification.id}`,
             data: notification.data || {},
+            requireInteraction: isUrgent,
           };
 
           if (swReg && swReg.showNotification) {

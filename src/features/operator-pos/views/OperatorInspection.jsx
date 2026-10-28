@@ -1,11 +1,13 @@
-import { useState, useEffect } from 'react';
-import { PackageCheck, Camera, QrCode, X as XIcon } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { PackageCheck, Camera, QrCode, X as XIcon, ScanLine, CheckCircle, X } from 'lucide-react';
 import { useToast } from '../../../context/ToastContext';
 import StatusBadge from '../../../components/ui/StatusBadge';
 import { operatorService } from '../../../services/operatorService';
 import apiClient from '../../../services/apiClient';
+import { Html5Qrcode } from 'html5-qrcode';
 
 const PRIMARY_COLOR = '#10367D';
+const PRIMARY_HOVER = '#0C2C66';
 const PRIMARY_ACCENT = '#74B4D9';
 
 export default function OperatorInspection() {
@@ -22,6 +24,11 @@ export default function OperatorInspection() {
   const [itemPhotoPreviewUrl, setItemPhotoPreviewUrl] = useState(null);
   const [latestScanResult, setLatestScanResult] = useState(null);
   const [isCompressing, setIsCompressing] = useState(false);
+
+  // Camera QR Scanner State
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  const [activeTargetField, setActiveTargetField] = useState(null);
+  const html5QrCode = useRef(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -52,6 +59,74 @@ export default function OperatorInspection() {
       isMounted = false;
     };
   }, []);
+
+  const startCamera = async (target) => {
+    setActiveTargetField(target);
+    setIsCameraActive(true);
+
+    setTimeout(() => {
+      html5QrCode.current = new Html5Qrcode('qr-reader-inspection');
+      html5QrCode.current
+        .start(
+          { facingMode: 'environment' },
+          {
+            fps: 10,
+            qrbox: { width: 250, height: 250 },
+          },
+          (decodedText) => {
+            const cleanText = decodedText.trim().toUpperCase();
+            if (target === 'trip') {
+              setFormData((prev) => ({ ...prev, qrCodeTrip: cleanText }));
+            } else if (target === 'ticket') {
+              setFormData((prev) => ({ ...prev, qrCodeTicket: cleanText }));
+            } else if (target === 'seal') {
+              setFormData((prev) => ({ ...prev, securitySealQr: cleanText }));
+            }
+            toast.success(`Berhasil memindai QR secara langsung!`, { title: 'Scan Sukses' });
+            stopCamera();
+          },
+          () => {}
+        )
+        .catch((err) => {
+          console.warn('Gagal akses kamera langsung:', err);
+          toast.info(
+            'Kamera fisik tidak terdeteksi/izin diblokir. Gunakan tombol simulasi cepat di bawah.',
+            { title: 'Mode Alternatif Aktif' }
+          );
+        });
+    }, 100);
+  };
+
+  const stopCamera = () => {
+    if (html5QrCode.current) {
+      html5QrCode.current
+        .stop()
+        .then(() => {
+          html5QrCode.current.clear();
+          html5QrCode.current = null;
+        })
+        .catch((err) => console.error('Failed to stop camera', err));
+    }
+    setIsCameraActive(false);
+    setActiveTargetField(null);
+  };
+
+  const handleCaptureMockQr = () => {
+    let sampleCode = '';
+    if (activeTargetField === 'trip') {
+      sampleCode = `TRIP-${Math.floor(100000 + Math.random() * 900000)}`;
+      setFormData((prev) => ({ ...prev, qrCodeTrip: sampleCode }));
+    } else if (activeTargetField === 'ticket') {
+      sampleCode = `TKT-${Math.floor(100000 + Math.random() * 900000)}`;
+      setFormData((prev) => ({ ...prev, qrCodeTicket: sampleCode }));
+    } else {
+      sampleCode = `SEAL-${Math.floor(100000 + Math.random() * 900000)}`;
+      setFormData((prev) => ({ ...prev, securitySealQr: sampleCode }));
+    }
+
+    toast.success(`Berhasil memindai ${sampleCode} secara instan!`, { title: 'Scan Sukses' });
+    stopCamera();
+  };
 
   const compressImage = (file) => {
     return new Promise((resolve) => {
@@ -140,6 +215,11 @@ export default function OperatorInspection() {
   const handleScanAndSeal = async (e) => {
     e.preventDefault();
 
+    if (!formData.qrCodeTicket.trim()) {
+      toast.warning('Nomor QR Tiket / Resi Paket wajib diisi atau dipindai!', { title: 'Tiket Diperlukan' });
+      return;
+    }
+
     if (!itemPhoto) {
       toast.warning(
         'Wajib mengunggah foto fisik barang sebelum melakukan sealing & check-in!',
@@ -173,9 +253,12 @@ export default function OperatorInspection() {
         }
       }
 
+      const cleanTrip = formData.qrCodeTrip.trim().toUpperCase();
+      const cleanTicket = formData.qrCodeTicket.trim().toUpperCase();
+
       const payload = {
-        qrCodeTrip: formData.qrCodeTrip.trim().toUpperCase(),
-        qrCodeTicket: formData.qrCodeTicket.trim().toUpperCase(),
+        ...(cleanTrip ? { qrCodeTrip: cleanTrip } : {}),
+        qrCodeTicket: cleanTicket,
         posId: formData.posId.trim(),
         scanType: 'checkin_origin',
         securitySealQr:
@@ -192,10 +275,11 @@ export default function OperatorInspection() {
           'CHK-' + Date.now().toString().slice(-4),
         trip:
           response.checkpoint?.trip?.qrCodeTrip ||
-          formData.qrCodeTrip,
+          cleanTrip ||
+          '(Otomatis dari Tiket)',
         order:
           response.checkpoint?.order?.qrCodeTiket ||
-          formData.qrCodeTicket,
+          cleanTicket,
         status: 'Check-in Asal & Segel Aktif',
         date: 'Baru saja'
       });
@@ -215,10 +299,7 @@ export default function OperatorInspection() {
         { title: 'Berhasil' }
       );
     } catch (error) {
-      console.error(
-        'Gagal melakukan scan checkpoint:',
-        error
-      );
+      console.error('Gagal melakukan scan checkpoint:', error);
 
       toast.error(
         error.response?.data?.message ||
@@ -231,34 +312,30 @@ export default function OperatorInspection() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
-      <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-neutral-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <span
-              className="w-2 h-2 rounded-full animate-pulse"
-              style={{ backgroundColor: PRIMARY_ACCENT }}
-            />
-
-            <span
-              className="text-[12px] font-bold uppercase tracking-widest flex items-center gap-1 flex-wrap min-w-0"
-              style={{ color: PRIMARY_COLOR }}
-            >
-              <PackageCheck className="w-3 h-3" />
-              Inspeksi & Segel
-            </span>
+    <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter'] relative">
+      {/* ── BANNER GRADIENT ── */}
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] p-6 text-white shadow-card sm:p-8">
+        <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10" />
+        <div className="absolute bottom-0 right-32 h-28 w-28 rounded-full bg-accent/20" />
+        <div className="relative flex flex-col gap-4 pb-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
+              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-accent flex items-center gap-1.5">
+                <PackageCheck className="w-3.5 h-3.5" /> Inspeksi & Segel
+              </span>
+            </div>
+            <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight break-words">
+              Inspeksi & Sealing Checkpoint
+            </h1>
+            <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
+              Validasi fisik paket pos asal, foto kondisi barang, dan sinkronkan segel QR langsung ke database.
+            </p>
           </div>
-
-          <h1 className="text-[21px] sm:text-[23px] font-bold text-neutral-800 break-words">
-            Inspeksi & Sealing Checkpoint
-          </h1>
-
-          <p className="text-[13px] sm:text-[14px] text-neutral-400 mt-0.5">
-            Validasi fisik paket pos asal, unggah foto kondisi, dan
-            sinkronkan segel QR langsung ke database.
-          </p>
         </div>
-      </div>
+        <div className="absolute bottom-4 left-6 right-6 border-t border-dashed border-white/25 sm:left-8 sm:right-8" />
+        <span className="absolute bottom-[11px] right-6 h-2.5 w-2.5 rounded-full border-2 border-white bg-accent sm:right-8" />
+      </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <div className="lg:col-span-1 bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 space-y-4">
@@ -272,15 +349,27 @@ export default function OperatorInspection() {
           >
             <input type="hidden" value={formData.posId} />
 
+            {/* QR TRIP MITRA (OPTIONAL) */}
             <div>
-              <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
-                KODE QR TRIP MITRA
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider">
+                  KODE QR TRIP MITRA (OPSIONAL)
+                </label>
+
+                <button
+                  type="button"
+                  onClick={() => startCamera('trip')}
+                  className="flex items-center gap-1 text-[11px] font-bold hover:underline cursor-pointer"
+                  style={{ color: PRIMARY_COLOR }}
+                >
+                  <ScanLine className="w-3 h-3" />
+                  Buka Kamera
+                </button>
+              </div>
 
               <input
                 type="text"
-                required
-                placeholder="cth: TRIP-A2D4CS13"
+                placeholder="cth: TRIP-A2D4CS13 (Opsional)"
                 value={formData.qrCodeTrip}
                 onChange={(e) =>
                   setFormData({
@@ -292,10 +381,23 @@ export default function OperatorInspection() {
               />
             </div>
 
+            {/* QR TIKET / PARCEL (REQUIRED) */}
             <div>
-              <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
-                KODE QR TIKET / PARCEL
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider">
+                  KODE QR TIKET / PARCEL *
+                </label>
+
+                <button
+                  type="button"
+                  onClick={() => startCamera('ticket')}
+                  className="flex items-center gap-1 text-[11px] font-bold hover:underline cursor-pointer"
+                  style={{ color: PRIMARY_COLOR }}
+                >
+                  <ScanLine className="w-3 h-3" />
+                  Buka Kamera
+                </button>
+              </div>
 
               <input
                 type="text"
@@ -312,9 +414,10 @@ export default function OperatorInspection() {
               />
             </div>
 
+            {/* UPLOAD FOTO */}
             <div>
               <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
-                UPLOAD FOTO KONDISI BARANG
+                UPLOAD FOTO KONDISI BARANG *
               </label>
 
               {itemPhotoPreviewUrl ? (
@@ -372,10 +475,23 @@ export default function OperatorInspection() {
               )}
             </div>
 
+            {/* NOMOR SEGEL */}
             <div>
-              <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
-                NOMOR SEGEL
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider">
+                  NOMOR SEGEL (SEAL QR)
+                </label>
+
+                <button
+                  type="button"
+                  onClick={() => startCamera('seal')}
+                  className="flex items-center gap-1 text-[11px] font-bold hover:underline cursor-pointer"
+                  style={{ color: PRIMARY_COLOR }}
+                >
+                  <ScanLine className="w-3 h-3" />
+                  Scan Segel
+                </button>
+              </div>
 
               <div className="flex gap-2">
                 <input
@@ -397,8 +513,7 @@ export default function OperatorInspection() {
                     setFormData({
                       ...formData,
                       securitySealQr: `SEAL-${Math.floor(
-                        100000 +
-                          Math.random() * 900000
+                        100000 + Math.random() * 900000
                       )}`
                     })
                   }
@@ -420,6 +535,12 @@ export default function OperatorInspection() {
               className="w-full py-3 text-white text-[13px] font-bold rounded-xl transition shadow-sm cursor-pointer mt-1 disabled:opacity-50"
               style={{
                 backgroundColor: PRIMARY_COLOR
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = PRIMARY_HOVER;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = PRIMARY_COLOR;
               }}
             >
               {isLoading
@@ -478,7 +599,7 @@ export default function OperatorInspection() {
                     </td>
 
                     <td className="py-3.5 px-4">
-                      <StatusBadge variant="emerald">
+                      <StatusBadge variant="blue">
                         {latestScanResult.status}
                       </StatusBadge>
                     </td>
@@ -493,7 +614,74 @@ export default function OperatorInspection() {
           </div>
         </div>
       </div>
+
+      {/* CAMERA SCANNER MODAL OVERLAY */}
+      {isCameraActive && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-4 space-y-4 text-center shadow-2xl">
+            <div className="flex items-center justify-between">
+              <h3 className="text-[15px] font-bold text-neutral-800">
+                Pindai{' '}
+                {activeTargetField === 'trip'
+                  ? 'QR Trip Mitra'
+                  : activeTargetField === 'ticket'
+                  ? 'QR Tiket / Resi'
+                  : 'QR Segel Pengaman'}
+              </h3>
+
+              <button
+                type="button"
+                onClick={stopCamera}
+                className="p-1 rounded-full bg-neutral-100 hover:bg-neutral-200 cursor-pointer"
+              >
+                <X className="w-4 h-4 text-neutral-600" />
+              </button>
+            </div>
+
+            <div className="relative w-full h-56 bg-neutral-900 rounded-xl overflow-hidden flex items-center justify-center border border-neutral-200">
+              <div
+                id="qr-reader-inspection"
+                className="w-full h-full object-cover"
+              ></div>
+
+              <div
+                className="absolute inset-0 border-2 border-dashed m-6 rounded-lg pointer-events-none flex items-center justify-center"
+                style={{ borderColor: `${PRIMARY_COLOR}99` }}
+              >
+                <p className="text-[12px] text-white bg-black/60 px-2 py-1 rounded">
+                  Arahkan QR ke Kotak Ini
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={handleCaptureMockQr}
+                className="w-full py-2.5 text-white text-[13px] font-bold rounded-xl shadow cursor-pointer flex items-center justify-center gap-1.5 transition"
+                style={{ backgroundColor: PRIMARY_COLOR }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = PRIMARY_HOVER;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = PRIMARY_COLOR;
+                }}
+              >
+                <CheckCircle className="w-3.5 h-3.5" />
+                <span>Simulasikan Tangkap QR (Cepat / Alternatif)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={stopCamera}
+                className="w-full py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-[12px] font-bold rounded-xl transition cursor-pointer"
+              >
+                Tutup Kamera
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-

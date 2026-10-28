@@ -154,33 +154,39 @@ export default function FinancialReportPage() {
         }
       `}</style>
 
-      {/* HEADER */}
-      <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-neutral-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 print-hidden">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="w-2 h-2 rounded-full bg-[#10367D] animate-pulse"></span>
-            <span className="text-[12px] font-bold uppercase tracking-widest text-[#10367D]">
-              LAPORAN FINANSIAL & PENDAPATAN
-            </span>
+      {/* ── BANNER GRADIENT ── */}
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] p-6 text-white shadow-card sm:p-8 print-hidden">
+        <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10" />
+        <div className="absolute bottom-0 right-32 h-28 w-28 rounded-full bg-accent/20" />
+        <div className="relative flex flex-col gap-4 pb-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-accent flex items-center gap-1.5">
+                <FileText className="w-3.5 h-3.5" /> LAPORAN FINANSIAL & PENDAPATAN
+              </span>
+            </div>
+            <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
+              Laporan Keuangan Wilayah
+            </h1>
+            <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
+              Pantau arus kas, total transaksi, dan komisi regional langsung dari server.
+            </p>
           </div>
 
-          <h1 className="text-[21px] sm:text-[23px] font-bold text-neutral-800">
-            Laporan Keuangan Wilayah (Database)
-          </h1>
-
-          <p className="text-[13px] sm:text-[14px] text-neutral-400 mt-0.5">
-            Pantau arus kas, total transaksi, dan komisi regional langsung dari server.
-          </p>
+          <div className="flex items-center gap-2.5 self-start sm:self-auto">
+            <button
+              onClick={() => window.print()}
+              className="flex items-center gap-2 px-4 py-2.5 bg-white/15 hover:bg-white/25 border border-white/25 text-white rounded-2xl backdrop-blur text-xs font-bold transition cursor-pointer shadow-sm"
+            >
+              <Printer size={14} className="text-accent" />
+              <span>Cetak PDF</span>
+            </button>
+          </div>
         </div>
-
-        <button
-          onClick={() => window.print()}
-          className="flex items-center gap-2 px-4 py-2 bg-[#10367D] hover:bg-[#0C2C66] text-white rounded-full text-[13px] sm:text-[14px] font-bold transition cursor-pointer shadow-sm shrink-0 print-hidden"
-        >
-          <Printer size={14} />
-          <span>Cetak PDF</span>
-        </button>
-      </div>
+        <div className="absolute bottom-4 left-6 right-6 border-t border-dashed border-white/25 sm:left-8 sm:right-8" />
+        <span className="absolute bottom-[11px] right-6 h-2.5 w-2.5 rounded-full border-2 border-white bg-accent sm:right-8" />
+      </section>
 
       {/* STAT CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 print:grid-cols-3">

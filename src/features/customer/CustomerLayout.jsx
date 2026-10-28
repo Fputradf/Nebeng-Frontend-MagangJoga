@@ -12,8 +12,10 @@ const CUSTOMER_MENU_PATH = {
   'Onboarding Biometrik': 'onboarding',
   'Cari & Booking Trip': 'booking',
   'Tickets & Digital QR': 'tickets',
+  'Voucher Saya': 'vouchers',
   'Rewards & Penukaran': 'rewards',
   'Dompet Saya': 'wallet',
+  'Pusat Bantuan & FAQ': 'bantuan',
   'Profil Saya': 'profile',
 };
 

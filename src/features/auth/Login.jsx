@@ -132,8 +132,10 @@ export default function Login({ onSwitchToRegister, onSwitchToForgotPassword, on
     <AuthLayout
       logo={logoImage}
       brandName="Nebeng"
-      title={<>Halo lagi!</>}
-      subtitle="Udah siap lanjut perjalanan?"
+      title="Selamat Datang Kembali!"
+      subtitle="Masuk ke akun Anda untuk melanjutkan perjalanan atau kelola kiriman."
+      authMode="login"
+      onSwitchMode={onSwitchToRegister}
     >
       {/* =====================================
           LOGIN FORM
@@ -224,9 +226,10 @@ export default function Login({ onSwitchToRegister, onSwitchToForgotPassword, on
             onClick={onSwitchToForgotPassword}
             className="
               text-sm
-              font-medium
-              text-brand-600
-              hover:text-brand-700
+              font-semibold
+              text-blue-600
+              hover:text-blue-700
+              hover:underline
               cursor-pointer
               transition-colors
             "
@@ -236,7 +239,7 @@ export default function Login({ onSwitchToRegister, onSwitchToForgotPassword, on
         </div>
 
         {/* =================================
-            LOGIN BUTTON
+            LOGIN BUTTON (CERAH & INTERAKTIF)
         ================================== */}
         <button
           type="submit"
@@ -244,34 +247,40 @@ export default function Login({ onSwitchToRegister, onSwitchToForgotPassword, on
           aria-busy={isSubmitting}
           className="
             w-full
-            py-3
-            px-4
-
+            py-3.5
+            px-5
             rounded-xl
-
-            bg-brand-900
-            hover:bg-brand-800
+            bg-gradient-to-r
+            from-blue-600
+            via-[#1D4ED8]
+            to-blue-500
+            hover:from-blue-500
+            hover:to-blue-600
             focus:outline-none
             focus:ring-2
-            focus:ring-brand-500
+            focus:ring-blue-500/50
             focus:ring-offset-2
-
             text-white
             text-sm
-            font-medium
-
+            font-bold
+            tracking-wide
             flex
             items-center
             justify-center
             gap-2
-
+            shadow-lg
+            shadow-blue-500/30
+            hover:shadow-xl
+            hover:shadow-blue-500/40
+            hover:-translate-y-0.5
+            active:translate-y-0
+            active:scale-[0.99]
             transition-all
             duration-200
-
             disabled:opacity-50
             disabled:cursor-not-allowed
-            disabled:hover:bg-brand-900
-
+            disabled:hover:translate-y-0
+            disabled:hover:shadow-none
             cursor-pointer
           "
         >
@@ -318,7 +327,6 @@ export default function Login({ onSwitchToRegister, onSwitchToForgotPassword, on
         className="
           text-center
           mt-6
-
           text-sm
           text-slate-500
         "
@@ -329,11 +337,10 @@ export default function Login({ onSwitchToRegister, onSwitchToForgotPassword, on
           type="button"
           onClick={onSwitchToRegister}
           className="
-            font-medium
-            text-brand-600
-
-            hover:text-brand-700
-
+            font-bold
+            text-blue-600
+            hover:text-blue-700
+            hover:underline
             transition-colors
             cursor-pointer
           "

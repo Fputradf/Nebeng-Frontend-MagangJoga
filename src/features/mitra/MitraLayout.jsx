@@ -17,6 +17,7 @@ const MITRA_MENU_PATH = {
   'Digital QR Trip': 'qr',
   'Saldo & Komisi': 'saldo',
   'Chat Pelanggan': 'chat',
+  'Pusat Bantuan & FAQ': 'bantuan',
   'Pengaturan Akun': 'profile/pengaturan',
   'Profil & Pengaturan': 'profile/pengaturan',
 };

@@ -4,11 +4,14 @@ import {
   QrCode,
   LogOut,
   ClipboardCheck,
+  ClipboardList,
   AlertTriangle,
   Menu,
   X,
   UserCheck,
   FileText,
+  BookOpen,
+  Settings,
 } from 'lucide-react';
 import logoAsset from '../../../assets/logo.png';
 
@@ -26,15 +29,23 @@ export default function OperatorSidebar({
     label: 'Menu Utama',
     items: [
       { name: 'Dashboard Pos', icon: LayoutDashboard },
-      { name: 'Inspection & Sealing', icon: ClipboardCheck },
+      { name: 'Manifes & No-Show', icon: ClipboardList },
       { name: 'Dual QR Scanner', icon: QrCode },
     ],
   },
   {
-    label: 'Operasional',
+    label: 'Logistik & Operasional',
     items: [
+      { name: 'Inspection & Sealing', icon: ClipboardCheck },
       { name: 'Handover & OTP', icon: UserCheck },
       { name: 'Laporan Kas Pos', icon: FileText },
+    ],
+  },
+  {
+    label: 'Bantuan & Akun',
+    items: [
+      { name: 'Panduan Pos', icon: BookOpen },
+      { name: 'Pengaturan Akun', icon: Settings },
     ],
   },
 ];

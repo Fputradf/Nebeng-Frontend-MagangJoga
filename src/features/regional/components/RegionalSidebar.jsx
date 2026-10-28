@@ -10,6 +10,8 @@ import {
   AlertTriangle,
   Menu,
   X,
+  Settings,
+  Headset,
 } from 'lucide-react';
 
 import logoImage from '../../../assets/LOGO.png';
@@ -46,6 +48,14 @@ const MENU_GROUPS = [
       {
         name: 'Laporan Keuangan',
         icon: FileText,
+      },
+      {
+        name: 'Bantuan Chat Wilayah',
+        icon: Headset,
+      },
+      {
+        name: 'Pengaturan Akun',
+        icon: Settings,
       },
     ],
   },
