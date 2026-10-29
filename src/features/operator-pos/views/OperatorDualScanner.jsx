@@ -139,9 +139,9 @@ export default function OperatorDualScanner() {
     const cleanTrip = tripQr.trim().toUpperCase();
     const cleanTicket = ticketQr.trim().toUpperCase();
 
-    if (!cleanTicket) {
+    if (!cleanTrip && !cleanTicket) {
       toast.warning(
-        'Mohon masukkan atau scan QR Tiket/Paket Customer!',
+        'Mohon masukkan atau scan salah satu: QR Trip Mitra atau QR Tiket Customer!',
         { title: 'Data Belum Lengkap' }
       );
       return;
@@ -159,7 +159,7 @@ export default function OperatorDualScanner() {
 
       const payload = {
         ...(cleanTrip ? { qrCodeTrip: cleanTrip } : {}),
-        qrCodeTicket: cleanTicket,
+        ...(cleanTicket ? { qrCodeTicket: cleanTicket } : {}),
         posId: String(posId),
         scanType: scanType,
       };
@@ -171,8 +171,8 @@ export default function OperatorDualScanner() {
           ? String(response.data.checkpoint.id)
           : `LOG-${Math.floor(100 + Math.random() * 900)}`,
         type: scanMode === 'origin' ? 'Scan 1 (Origin)' : 'Scan 2 (Destination / Selesai)',
-        trip: cleanTrip || response.data?.checkpoint?.trip?.qrCodeTrip || '(Otomatis dari Tiket)',
-        ticket: cleanTicket,
+        trip: cleanTrip || response.data?.checkpoint?.trip?.qrCodeTrip || response.data?.trip?.qrCodeTrip || '(Otomatis dari Tiket)',
+        ticket: cleanTicket || response.data?.checkpoint?.order?.qrCodeTicket || '(Scan Trip Mitra)',
         status: scanMode === 'origin' ? 'IN_TRANSIT (Berangkat)' : 'SUCCESS (Trip Selesai & Escrow Released)',
         time: 'Baru saja',
       };
@@ -302,7 +302,7 @@ export default function OperatorDualScanner() {
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider">
-                  QR TIKET/PAKET
+                  QR TIKET/PAKET (OPSIONAL)
                 </label>
 
                 <button
@@ -318,8 +318,7 @@ export default function OperatorDualScanner() {
 
               <input
                 type="text"
-                required
-                placeholder="cth: TKT-SDJF12H"
+                placeholder="cth: TKT-SDJF12H (Opsional)"
                 value={ticketQr}
                 onChange={(e) => setTicketQr(e.target.value)}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 focus:outline-none font-mono text-[13px] font-medium uppercase"

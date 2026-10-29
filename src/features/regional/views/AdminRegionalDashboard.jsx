@@ -16,9 +16,11 @@ import {
 } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { useToast } from '../../../context/ToastContext';
+import { useConfirm } from '../../../context/ConfirmContext';
 import { Skeleton } from '../../../components/ui/Skeleton';
 import BaseModal from '../../../components/ui/BaseModal';
 import { regionalService } from '../../../services/regionalService';
+import { disruptedTripsService } from '../../../services/disruptedTripsService';
 import { useAuth } from '../../../context/AuthContext';
 
 const DAYS_ID = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
@@ -29,9 +31,10 @@ const MONTHS_FULL = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Ju
 // ─── Custom Tooltip untuk Area/Bar Chart ──────────────────────────────────────
 function CustomTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
+  const displayLabel = payload[0]?.payload?.fullLabel || label;
   return (
     <div className="bg-[#10367D] rounded-xl shadow-xl px-3 py-2.5 text-white text-[12px] min-w-[130px]">
-      <p className="font-bold mb-1.5 text-white/80">{label}</p>
+      <p className="font-bold mb-1.5 text-white/80">{displayLabel}</p>
       {payload.map((p) => (
         <div key={p.dataKey} className="flex justify-between gap-3 items-center mb-0.5">
           <span className="flex items-center gap-1 text-white/80">
@@ -75,7 +78,7 @@ export default function AdminRegionalDashboard() {
   const [dashboardData, setDashboardData] = useState(null);
 
   const [disruptedTrips, setDisruptedTrips] = useState([]);
-  const [selectedResolveTrip, setSelectedResolveTrip] = useState(null);
+  const confirm = useConfirm();
   const [selectedAssistTrip, setSelectedAssistTrip] = useState(null);
   const [unmaskedPhone, setUnmaskedPhone] = useState(false);
   const [emergencyLogs, setEmergencyLogs] = useState([]);
@@ -95,12 +98,17 @@ export default function AdminRegionalDashboard() {
       const data = await regionalService.getRegionalDashboard(regionId);
       if (data) {
         setDashboardData(data);
-        if (data.disruptedTrips) setDisruptedTrips(Array.isArray(data.disruptedTrips) ? data.disruptedTrips : []);
+        if (data.disruptedTrips && Array.isArray(data.disruptedTrips) && data.disruptedTrips.length > 0) {
+          setDisruptedTrips(data.disruptedTrips);
+        } else {
+          setDisruptedTrips(disruptedTripsService.getDisruptedTrips(regionId));
+        }
         if (data.activities) setRecentRegionalActivities(Array.isArray(data.activities) ? data.activities : []);
       }
     } catch (err) {
       console.error('[AdminRegionalDashboard]', err);
       toast.error('Gagal mengambil data dari server backend.', { title: 'Koneksi Gagal' });
+      setDisruptedTrips(disruptedTripsService.getDisruptedTrips(regionId));
     } finally {
       setIsLoading(false);
     }
@@ -109,6 +117,11 @@ export default function AdminRegionalDashboard() {
   useEffect(() => {
     let isMounted = true;
     fetchDashboard();
+
+    const unsubDisrupted = disruptedTripsService.subscribe((updated) => {
+      if (!isMounted) return;
+      setDisruptedTrips(regionId ? updated.filter(t => !t.regionId || String(t.regionId) === String(regionId)) : updated);
+    });
 
     const baseUrl = import.meta.env.VITE_API_URL
       ? import.meta.env.VITE_API_URL.replace(/\/api$/, '')
@@ -129,7 +142,11 @@ export default function AdminRegionalDashboard() {
         setRecentRegionalActivities(prev => [newActivity, ...prev].slice(0, 15));
       });
     }
-    return () => { isMounted = false; socket.disconnect(); };
+    return () => {
+      isMounted = false;
+      unsubDisrupted();
+      socket.disconnect();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [regionId]);
 
@@ -142,37 +159,132 @@ export default function AdminRegionalDashboard() {
   const totalTrips = departedCount + arrivedCount;
   const complianceRate = dashboardData?.complianceRate ?? 98.4;
 
-  // ── Chart Data (simulated visual, scaled to real metric) ───────────────────
+  // ── Chart Data (simulated visual, scaled to real metric & disrupted trips) ─
   const chartData = useMemo(() => {
     const base = Math.max(totalTrips, 20);
     const wk = [0.6, 0.85, 1.0, 1.3, 1.5, 1.8, 1.2];
-    const mo = [0.7,0.8,0.9,1.0,1.1,0.95,1.2,1.3,1.1,0.9,0.85,1.0,1.2,1.4,1.1,0.95,0.85,1.0,1.3,1.5,1.2,1.0,0.9,1.1,1.3,1.2,0.95,1.0,1.2,1.4];
-    const yr = [0.6,0.65,0.8,0.9,1.0,1.1,1.2,1.1,0.95,0.85,0.9,1.0];
+    const yr = [0.6, 0.65, 0.8, 0.9, 1.0, 1.1, 1.2, 1.1, 0.95, 0.85, 0.9, 1.0];
 
-    const makeRow = (label, w, divisor) => {
-      const total = Math.max(1, Math.round((base / divisor) * w));
-      const selesai = Math.round(total * (0.82 + Math.random() * 0.12));
-      const gangguan = Math.max(0, Math.round(total * 0.05));
-      return { label, total, selesai, gangguan };
+    const getDisruptedTripDate = (trip) => {
+      if (trip?.createdAt) {
+        const d = new Date(trip.createdAt);
+        if (!isNaN(d.getTime())) return d;
+      }
+      return new Date();
     };
 
-    if (activeRange === 'Minggu') return DAYS_ID.map((l, i) => makeRow(l, wk[i], 7));
-    if (activeRange === 'Bulan') return mo.map((w, i) => makeRow(String(i + 1), w, 30));
-    return MONTHS_ID.map((l, i) => makeRow(l, yr[i], 12));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeRange, totalTrips]);
+    if (activeRange === 'Minggu') {
+      const gangguanPerDay = [0, 0, 0, 0, 0, 0, 0];
+      disruptedTrips.forEach((trip) => {
+        const d = getDisruptedTripDate(trip);
+        const dayIdx = (d.getDay() + 6) % 7; // 0: Sen, 1: Sel, ..., 6: Min
+        gangguanPerDay[dayIdx] = (gangguanPerDay[dayIdx] || 0) + 1;
+      });
+
+      return DAYS_ID.map((l, i) => {
+        const gangguan = gangguanPerDay[i] || 0;
+        let total = Math.max(1, Math.round((base / 7) * wk[i]));
+        const varianceFactor = 0.85 + ((i * 3) % 5) * 0.02;
+        let selesai = Math.round(total * varianceFactor);
+
+        if (selesai + gangguan > total) {
+          total = selesai + gangguan;
+        } else if (gangguan > 0 && total === selesai) {
+          selesai = Math.max(0, total - gangguan);
+        }
+
+        return {
+          label: l,
+          fullLabel: DAYS_FULL[i] || l,
+          total,
+          selesai,
+          gangguan,
+        };
+      });
+    }
+
+    if (activeRange === 'Bulan') {
+      const monthWeeks = [
+        { label: 'Minggu 1', fullLabel: 'Minggu 1 (Tgl 1–7)', w: 1.0 },
+        { label: 'Minggu 2', fullLabel: 'Minggu 2 (Tgl 8–14)', w: 1.15 },
+        { label: 'Minggu 3', fullLabel: 'Minggu 3 (Tgl 15–21)', w: 1.05 },
+        { label: 'Minggu 4', fullLabel: 'Minggu 4 (Tgl 22–28)', w: 1.2 },
+        { label: 'Minggu 5', fullLabel: 'Minggu 5 (Tgl 29–31)', w: 0.5 },
+      ];
+
+      const gangguanPerWeek = [0, 0, 0, 0, 0];
+      disruptedTrips.forEach((trip) => {
+        const d = getDisruptedTripDate(trip);
+        const dayOfMonth = d.getDate(); // 1 - 31
+        const weekIdx = Math.min(4, Math.floor((dayOfMonth - 1) / 7));
+        gangguanPerWeek[weekIdx] = (gangguanPerWeek[weekIdx] || 0) + 1;
+      });
+
+      return monthWeeks.map((mw, i) => {
+        const gangguan = gangguanPerWeek[i] || 0;
+        let total = Math.max(1, Math.round((base / 4.9) * mw.w));
+        const varianceFactor = 0.86 + ((i * 2) % 4) * 0.02;
+        let selesai = Math.round(total * varianceFactor);
+
+        if (selesai + gangguan > total) {
+          total = selesai + gangguan;
+        } else if (gangguan > 0 && total === selesai) {
+          selesai = Math.max(0, total - gangguan);
+        }
+
+        return {
+          label: mw.label,
+          fullLabel: mw.fullLabel,
+          total,
+          selesai,
+          gangguan,
+        };
+      });
+    }
+
+    const gangguanPerMonth = new Array(12).fill(0);
+    disruptedTrips.forEach((trip) => {
+      const d = getDisruptedTripDate(trip);
+      const m = d.getMonth();
+      if (m >= 0 && m < 12) {
+        gangguanPerMonth[m] += 1;
+      }
+    });
+
+    return MONTHS_ID.map((l, i) => {
+      const gangguan = gangguanPerMonth[i] || 0;
+      let total = Math.max(1, Math.round((base / 12) * yr[i]));
+      const varianceFactor = 0.85 + ((i * 3) % 5) * 0.02;
+      let selesai = Math.round(total * varianceFactor);
+
+      if (selesai + gangguan > total) {
+        total = selesai + gangguan;
+      } else if (gangguan > 0 && total === selesai) {
+        selesai = Math.max(0, total - gangguan);
+      }
+
+      return {
+        label: l,
+        fullLabel: `${MONTHS_FULL[i]} ${new Date().getFullYear()}`,
+        total,
+        selesai,
+        gangguan,
+      };
+    });
+  }, [activeRange, totalTrips, disruptedTrips]);
 
   const chartSummary = useMemo(() => {
     const t = chartData.reduce((s, d) => s + d.total, 0);
     const c = chartData.reduce((s, d) => s + d.selesai, 0);
-    return { total: t, selesai: c, rate: t > 0 ? Math.round((c / t) * 100) : 0 };
+    const g = chartData.reduce((s, d) => s + d.gangguan, 0);
+    return { total: t, selesai: c, gangguan: g, rate: t > 0 ? Math.round((c / t) * 100) : 0 };
   }, [chartData]);
 
   // ── Pie Chart data (Trip Status Breakdown) ─────────────────────────────────
   const pieData = useMemo(() => [
     { name: 'Selesai', value: arrivedCount || chartSummary.selesai, color: '#10b981' },
     { name: 'Berangkat', value: departedCount || Math.round(chartSummary.total * 0.15), color: '#10367D' },
-    { name: 'Gangguan', value: disruptedTrips.length || Math.round(chartSummary.total * 0.05), color: '#ef4444' },
+    { name: 'Gangguan', value: disruptedTrips.length, color: '#ef4444' },
     { name: 'Pending KYC', value: pendingVerif, color: '#f59e0b' },
   ].filter(d => d.value > 0), [arrivedCount, departedCount, disruptedTrips.length, pendingVerif, chartSummary]);
 
@@ -194,19 +306,27 @@ export default function AdminRegionalDashboard() {
   // ── Event handlers ─────────────────────────────────────────────────────────
   const maskPhone = (p) => p?.length >= 8 ? `${p.slice(0, 4)}****${p.slice(-3)}` : p;
 
-  const handleConfirmResolveTrip = () => {
-    if (!selectedResolveTrip) return;
+  const handleResolveTrip = async (trip) => {
+    const isConfirmed = await confirm({
+      title: 'Konfirmasi Resolusi Trip',
+      message: `Apakah Anda yakin ingin menandai rute untuk ${trip?.mitra} (${trip?.id}) telah kembali normal?`,
+      confirmText: 'Ya, Selesaikan',
+      cancelText: 'Batal',
+      variant: 'info',
+    });
+    if (!isConfirmed) return;
     setEmergencyLogs([{
       id: `LOG-EMG-${Date.now().toString().slice(-4)}`,
-      tripId: selectedResolveTrip.id,
-      mitra: selectedResolveTrip.mitra,
+      tripId: trip.id,
+      mitra: trip.mitra,
       action: 'RUTE RESOLVED',
       timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
       admin: adminName,
     }, ...emergencyLogs]);
-    setDisruptedTrips(disruptedTrips.filter(t => t.id !== selectedResolveTrip.id));
-    toast.success(`Kendala Trip ${selectedResolveTrip.id} telah diselesaikan.`, { title: 'Trip Dipulihkan' });
-    setSelectedResolveTrip(null);
+    disruptedTripsService.resolveDisruptedTrip(trip.id);
+    setDisruptedTrips(prev => prev.filter(t => t.id !== trip.id));
+    toast.success(`Kendala Trip ${trip.id} telah diselesaikan.`, { title: 'Trip Dipulihkan' });
+
   };
 
   const handleDispatchAssistance = () => {
@@ -361,7 +481,7 @@ export default function AdminRegionalDashboard() {
                 <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
                 <span className="text-[12px] font-medium text-neutral-500">Gangguan</span>
               </div>
-              <p className="text-[22px] font-bold text-neutral-800">{chartData.reduce((s, d) => s + d.gangguan, 0)}</p>
+              <p className="text-[22px] font-bold text-neutral-800">{chartSummary.gangguan}</p>
             </div>
             <div className="ml-auto text-right">
               <p className="text-[11px] text-neutral-400 mb-0.5">Tingkat Selesai</p>
@@ -397,7 +517,26 @@ export default function AdminRegionalDashboard() {
                   <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12, fontFamily: 'Inter' }} />
                   <Area type="monotone" dataKey="total" name="Total Trip" stroke="#10367D" strokeWidth={2.5} fill="url(#gradTotal)" dot={false} activeDot={{ r: 5, strokeWidth: 2, stroke: '#fff' }} />
                   <Area type="monotone" dataKey="selesai" name="Selesai" stroke="#10b981" strokeWidth={2} fill="url(#gradSelesai)" dot={false} activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff' }} />
-                  <Area type="monotone" dataKey="gangguan" name="Gangguan" stroke="#ef4444" strokeWidth={1.5} fill="url(#gradGangguan)" dot={false} activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff' }} />
+                  <Area
+                    type="monotone"
+                    dataKey="gangguan"
+                    name="Gangguan"
+                    stroke="#ef4444"
+                    strokeWidth={2}
+                    fill="url(#gradGangguan)"
+                    dot={(props) => (props.payload?.gangguan > 0 ? (
+                      <circle
+                        key={props.key || `dot-gangguan-${props.index}`}
+                        cx={props.cx}
+                        cy={props.cy}
+                        r={3.5}
+                        fill="#ef4444"
+                        stroke="#fff"
+                        strokeWidth={1.5}
+                      />
+                    ) : null)}
+                    activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff' }}
+                  />
                 </AreaChart>
               ) : (
                 <BarChart data={chartData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }} barGap={2}>
@@ -538,7 +677,7 @@ export default function AdminRegionalDashboard() {
                       className="flex-1 py-1.5 px-3 bg-white hover:bg-neutral-50 text-neutral-700 border border-neutral-200 rounded-full text-[12px] font-bold transition cursor-pointer flex items-center justify-center gap-1">
                       <PhoneCall className="w-3 h-3 text-[#10367D]" /> Kirim Bantuan
                     </button>
-                    <button onClick={() => setSelectedResolveTrip(trip)}
+                    <button onClick={() => handleResolveTrip(trip)}
                       className="flex-1 py-1.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-[12px] font-bold transition shadow-sm cursor-pointer flex items-center justify-center gap-1">
                       <CheckCircle2 className="w-3 h-3" /> Selesaikan
                     </button>
@@ -720,27 +859,6 @@ export default function AdminRegionalDashboard() {
       </div>
 
       {/* ── MODALS ── */}
-      <BaseModal
-        isOpen={Boolean(selectedResolveTrip)}
-        onClose={() => setSelectedResolveTrip(null)}
-        title="Konfirmasi Resolusi Trip"
-        subtitle={`Trip ${selectedResolveTrip?.id}`}
-        maxWidth="max-w-sm"
-      >
-        <div className="space-y-3 text-[13px] text-center">
-          <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
-            <CheckCircle2 size={20} />
-          </div>
-          <p className="text-neutral-600">
-            Apakah Anda yakin ingin menandai rute untuk{' '}
-            <strong>{selectedResolveTrip?.mitra}</strong> ({selectedResolveTrip?.id}) telah kembali normal?
-          </p>
-          <div className="flex gap-2 pt-2">
-            <button onClick={() => setSelectedResolveTrip(null)} className="flex-1 py-2 bg-neutral-100 text-neutral-700 rounded-full font-bold cursor-pointer">Batal</button>
-            <button onClick={handleConfirmResolveTrip} className="flex-1 py-2 bg-emerald-600 text-white rounded-full font-bold cursor-pointer shadow-sm">Ya, Selesaikan</button>
-          </div>
-        </div>
-      </BaseModal>
 
       <BaseModal
         isOpen={Boolean(selectedAssistTrip)}

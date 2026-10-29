@@ -45,7 +45,7 @@ export default function OperatorLayout() {
   };
 
   return (
-    <AppShell
+    <AppShell role="operator"
       sidebar={
         <OperatorSidebar
           activeMenu={activeMenu}

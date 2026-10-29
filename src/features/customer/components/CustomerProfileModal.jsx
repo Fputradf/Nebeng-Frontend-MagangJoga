@@ -36,6 +36,15 @@ export default function CustomerProfileModal({
 
   useEffect(() => {
     if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
+  useEffect(() => {
+    if (!isOpen) return;
     let isMounted = true;
 
     const fetchModalData = async () => {
@@ -112,11 +121,14 @@ export default function CustomerProfileModal({
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="customer-profile-modal-title"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 font-['Inter']"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-sm bg-white rounded-2xl shadow-xl overflow-hidden"
+        className="w-full max-w-sm bg-white rounded-2xl shadow-xl overflow-hidden animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
         <div
@@ -128,9 +140,10 @@ export default function CustomerProfileModal({
           <button
             type="button"
             onClick={onClose}
-            className="absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition cursor-pointer"
+            aria-label="Tutup modal profil"
+            className="absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center text-white/80 hover:text-white hover:bg-white/15 transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
           >
-            <X className="w-3.5 h-3.5" />
+            <X className="w-4 h-4" />
           </button>
 
           <div

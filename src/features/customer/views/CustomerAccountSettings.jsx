@@ -17,7 +17,6 @@ import {
   Camera,
   KeyRound,
   RotateCw,
-  Sparkles,
 } from 'lucide-react';
 
 import { useAuth } from '../../../context/AuthContext';
@@ -305,7 +304,7 @@ export default function CustomerAccountSettings() {
 
   return (
     <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
-      {/* ── BANNER GRADIENT ── */}
+      {/* ── BANNER ── */}
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] p-6 text-white shadow-card sm:p-8">
         <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10" />
         <div className="absolute bottom-0 right-32 h-28 w-28 rounded-full bg-accent/20" />
@@ -327,7 +326,7 @@ export default function CustomerAccountSettings() {
 
           <div className="flex items-center gap-3 self-start sm:self-auto">
             {/* Status Verifikasi Pill */}
-            <div className="px-4 py-2 rounded-2xl bg-white/15 backdrop-blur border border-white/25 flex items-center gap-2.5 shadow-xs">
+            <div className="px-4 py-2 rounded-2xl bg-white/15 border border-white/25 flex items-center gap-2.5 shadow-xs">
               <div className="w-8 h-8 rounded-xl bg-accent text-brand-900 flex items-center justify-center font-black shrink-0 shadow-xs">
                 <ShieldCheck className="w-4 h-4 text-brand-900" />
               </div>
@@ -343,9 +342,10 @@ export default function CustomerAccountSettings() {
 
             {/* Refresh Button */}
             <button
+              type="button"
               onClick={refreshAccountData}
               disabled={isRefreshing}
-              className="p-3 bg-white/15 hover:bg-white/25 border border-white/25 rounded-2xl backdrop-blur text-white transition cursor-pointer shadow-xs disabled:opacity-50"
+              className="p-3 bg-white/15 hover:bg-white/25 border border-white/25 rounded-2xl text-white transition cursor-pointer shadow-xs disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
               title="Segarkan data akun"
             >
               <RotateCw className={`w-4 h-4 text-white ${isRefreshing ? 'animate-spin' : ''}`} />
@@ -496,9 +496,7 @@ export default function CustomerAccountSettings() {
                   type="text"
                   value={draft.fullName}
                   onChange={(e) => setDraft({ ...draft, fullName: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none"
-                  onFocus={(e) => (e.currentTarget.style.borderColor = PRIMARY_COLOR)}
-                  onBlur={(e) => (e.currentTarget.style.borderColor = '#e5e7eb')}
+                  className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all"
                 />
               ) : (
                 <p className="px-3.5 py-2.5 bg-neutral-50 rounded-xl font-bold text-neutral-800 border border-transparent">
@@ -516,8 +514,7 @@ export default function CustomerAccountSettings() {
                 <button
                   type="button"
                   onClick={() => setShowNik(!showNik)}
-                  className="text-[11px] font-bold flex items-center gap-1 cursor-pointer"
-                  style={{ color: PRIMARY_COLOR }}
+                  className="text-[11px] font-bold flex items-center gap-1 cursor-pointer text-brand-600 hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded"
                 >
                   {showNik ? <EyeOff size={11} /> : <Eye size={11} />}
                   <span>{showNik ? 'Sembunyikan' : 'Tampilkan'}</span>
@@ -541,15 +538,11 @@ export default function CustomerAccountSettings() {
                     type="text"
                     value={draft.phone}
                     onChange={(e) => setDraft({ ...draft, phone: e.target.value.replace(/[^\d+]/g, '') })}
-                    className={`w-full px-3.5 py-2.5 bg-neutral-50 border rounded-xl font-bold text-neutral-800 focus:outline-none ${
-                      draft.phone.trim() && !isPhoneValid ? 'border-rose-300 focus:border-rose-400' : 'border-neutral-200'
+                    className={`w-full px-3.5 py-2.5 bg-neutral-50 border rounded-xl font-bold text-neutral-800 focus:outline-none transition-all ${
+                      draft.phone.trim() && !isPhoneValid
+                        ? 'border-rose-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
+                        : 'border-neutral-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'
                     }`}
-                    onFocus={(e) => {
-                      if (!(draft.phone.trim() && !isPhoneValid)) e.currentTarget.style.borderColor = PRIMARY_COLOR;
-                    }}
-                    onBlur={(e) => {
-                      if (!(draft.phone.trim() && !isPhoneValid)) e.currentTarget.style.borderColor = '#e5e7eb';
-                    }}
                   />
                   {draft.phone.trim() && !isPhoneValid && (
                     <p className="text-[11px] text-rose-600 font-bold mt-1">Format nomor tidak valid. Contoh: 081234567890</p>
@@ -609,9 +602,7 @@ export default function CustomerAccountSettings() {
                   onChange={(e) =>
                     setPinForm({ ...pinForm, pin: e.target.value.replace(/\D/g, '').slice(0, 6) })
                   }
-                  className="w-full px-3.5 py-2.5 pr-9 bg-neutral-50 border border-neutral-200 rounded-xl font-mono font-bold text-neutral-800 focus:outline-none"
-                  onFocus={(e) => (e.currentTarget.style.borderColor = PRIMARY_COLOR)}
-                  onBlur={(e) => (e.currentTarget.style.borderColor = '#e5e7eb')}
+                  className="w-full px-3.5 py-2.5 pr-9 bg-neutral-50 border border-neutral-200 rounded-xl font-mono font-bold text-neutral-800 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all"
                 />
 
                 <button
@@ -638,9 +629,7 @@ export default function CustomerAccountSettings() {
                 onChange={(e) =>
                   setPinForm({ ...pinForm, confirmPin: e.target.value.replace(/\D/g, '').slice(0, 6) })
                 }
-                className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-mono font-bold text-neutral-800 focus:outline-none"
-                onFocus={(e) => (e.currentTarget.style.borderColor = PRIMARY_COLOR)}
-                onBlur={(e) => (e.currentTarget.style.borderColor = '#e5e7eb')}
+                className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-mono font-bold text-neutral-800 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all"
               />
             </div>
 

@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+﻿import { useEffect, useState, useRef } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import MitraSidebar from './components/MitraSidebar';
 import MitraTopbar from './components/MitraTopbar';
@@ -144,7 +144,7 @@ export default function MitraLayout() {
   return (
     <MitraDataProvider>
       <MitraTopbar />
-      <AppShell
+      <AppShell role="mitra"
         sidebar={
           <MitraSidebar
             activeMenu={activeMenu}

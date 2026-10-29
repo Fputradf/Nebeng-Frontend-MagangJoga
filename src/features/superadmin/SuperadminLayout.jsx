@@ -12,12 +12,17 @@ const SUPERADMIN_MENU_PATH = {
   'Manajemen Wilayah': 'wilayah',
   'Admin Wilayah': 'admin-wilayah',
   'Konfigurasi Tarif': 'tarif',
-  'Manajemen Merchandise': 'merchandise',
-  'Manajemen Banner': 'banner',
+  Merchandise: 'merchandise',
+  Banner: 'banner',
   Voucher: 'voucher',
+  'Sosial Link': 'sosial-link',
   'Audit & Keuangan': 'audit',
   'User Governance': 'governance',
   'Pengaturan Akun': 'profile/pengaturan',
+  // Aliases
+  'Manajemen Merchandise': 'merchandise',
+  'Manajemen Banner': 'banner',
+  'Manajemen Voucher': 'voucher',
 };
 
 export default function SuperadminLayout() {
@@ -26,12 +31,21 @@ export default function SuperadminLayout() {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const { activeMenu } = useActiveMenu('/admin', SUPERADMIN_MENU_PATH, 'Dashboard');
 
+  const handleMenuSelect = (name) => {
+    const slug = SUPERADMIN_MENU_PATH[name];
+    if (!slug) {
+      console.warn(`Menu path tidak ditemukan untuk: ${name}`);
+      return;
+    }
+    navigate(`/admin/${slug}`);
+  };
+
   return (
-    <AppShell
+    <AppShell role="superadmin"
       sidebar={
         <SuperadminSidebar
           activeMenu={activeMenu}
-          onMenuSelect={(name) => navigate(`/admin/${SUPERADMIN_MENU_PATH[name]}`)}
+          onMenuSelect={handleMenuSelect}
           onLogout={() => {
             logout();
             navigate('/login', { replace: true });

@@ -18,6 +18,7 @@ import BaseModal from '../../../components/ui/BaseModal';
 import EmptyState from '../../../components/ui/EmptyState';
 import { SkeletonTableRows } from '../../../components/ui/Skeleton';
 import { useToast } from '../../../context/ToastContext';
+import { useConfirm } from '../../../context/ConfirmContext';
 import { voucherService } from '../../../services/voucherService';
 
 const formatRp = (value) => `Rp ${Math.round(Number(value || 0)).toLocaleString('id-ID')}`;
@@ -60,13 +61,10 @@ export default function VoucherManagement() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingVoucher, setEditingVoucher] = useState(null);
-  const [voucherToToggle, setVoucherToToggle] = useState(null);
-  const [voucherToDelete, setVoucherToDelete] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isTogglingStatus, setIsTogglingStatus] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   const toast = useToast();
+  const confirm = useConfirm();
 
   // Form State
   const initialFormState = {
@@ -337,41 +335,55 @@ export default function VoucherManagement() {
   };
 
   // Konfirmasi Toggle Status
-  const handleConfirmToggleStatus = async () => {
-    if (!voucherToToggle) return;
-    setIsTogglingStatus(true);
+  const handleToggleVoucher = async (voucher) => {
+    const isActivating = !voucher.isActive;
+    const isConfirmed = await confirm({
+      title: isActivating ? 'Aktifkan Voucher' : 'Nonaktifkan Voucher',
+      message: `Apakah Anda yakin ingin ${isActivating ? 'mengaktifkan kembali' : 'menonaktifkan'} voucher "${voucher.code}"?`,
+      confirmText: isActivating ? 'Ya, Aktifkan' : 'Ya, Nonaktifkan',
+      cancelText: 'Batal',
+      variant: isActivating ? 'info' : 'warning',
+    });
+    if (!isConfirmed) return;
 
     try {
-      const newStatus = !voucherToToggle.isActive;
-      await voucherService.updateVoucherStatus(voucherToToggle.id, newStatus);
+      await voucherService.updateVoucherStatus(voucher.id, isActivating);
       toast.success(
-        `Voucher ${voucherToToggle.code} berhasil ${newStatus ? 'diaktifkan' : 'dinonaktifkan'}!`
+        `Voucher ${voucher.code} berhasil ${isActivating ? 'diaktifkan' : 'dinonaktifkan'}!`
       );
-      setVoucherToToggle(null);
       refreshVouchers();
     } catch (err) {
       const errMsg = err.response?.data?.message || err.message || 'Gagal mengubah status voucher.';
       toast.error(Array.isArray(errMsg) ? errMsg.join(', ') : errMsg);
-    } finally {
-      setIsTogglingStatus(false);
     }
   };
 
   // Konfirmasi Hapus Voucher
-  const handleConfirmDelete = async () => {
-    if (!voucherToDelete) return;
-    setIsDeleting(true);
+  const handleDeleteVoucher = async (voucher) => {
+    const usageCount = (Number(voucher.reservedCount) || 0) + (Number(voucher.usedCount) || 0);
+    if (usageCount > 0) {
+      toast.warning(
+        `Voucher ${voucher.code} sudah memiliki riwayat penggunaan (${usageCount} kali) dan tidak dapat dihapus demi audit transaksi. Silakan nonaktifkan voucher sebagai gantinya.`
+      );
+      return;
+    }
+
+    const isConfirmed = await confirm({
+      title: 'Hapus Voucher',
+      message: `Apakah Anda yakin ingin menghapus voucher "${voucher.code}" (${voucher.title})? Tindakan ini permanen dan data voucher akan dihapus dari sistem.`,
+      confirmText: 'Ya, Hapus Voucher',
+      cancelText: 'Batal',
+      variant: 'danger',
+    });
+    if (!isConfirmed) return;
 
     try {
-      await voucherService.deleteVoucher(voucherToDelete.id);
-      toast.success(`Voucher ${voucherToDelete.code} berhasil dihapus!`);
-      setVoucherToDelete(null);
+      await voucherService.deleteVoucher(voucher.id);
+      toast.success(`Voucher ${voucher.code} berhasil dihapus!`);
       refreshVouchers();
     } catch (err) {
       const errMsg = err.response?.data?.message || err.message || 'Gagal menghapus voucher.';
       toast.error(Array.isArray(errMsg) ? errMsg.join(', ') : errMsg);
-    } finally {
-      setIsDeleting(false);
     }
   };
 
@@ -618,7 +630,7 @@ export default function VoucherManagement() {
                             <Edit3 className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => setVoucherToToggle(voucher)}
+                            onClick={() => handleToggleVoucher(voucher)}
                             className={`p-1.5 rounded-lg transition cursor-pointer hover:bg-slate-100 ${
                               voucher.isActive ? 'text-slate-400 hover:text-slate-700' : 'text-emerald-600'
                             }`}
@@ -631,7 +643,7 @@ export default function VoucherManagement() {
                             )}
                           </button>
                           <button
-                            onClick={() => setVoucherToDelete(voucher)}
+                            onClick={() => handleDeleteVoucher(voucher)}
                             className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition cursor-pointer"
                             title="Hapus Voucher"
                           >
@@ -1239,171 +1251,6 @@ export default function VoucherManagement() {
         </form>
       </BaseModal>
 
-      {/* Modal Konfirmasi Toggle Status */}
-      {voucherToToggle && (
-        <BaseModal
-          isOpen={Boolean(voucherToToggle)}
-          onClose={() => {
-            if (!isTogglingStatus) setVoucherToToggle(null);
-          }}
-          title={voucherToToggle.isActive ? 'Nonaktifkan Voucher' : 'Aktifkan Voucher'}
-          subtitle={`Kode: ${voucherToToggle.code}`}
-          maxWidth="max-w-sm"
-        >
-          <div className="space-y-4 text-center text-[13px]">
-            <div
-              className={`w-12 h-12 rounded-2xl mx-auto flex items-center justify-center ${
-                voucherToToggle.isActive
-                  ? 'bg-amber-50 text-amber-600'
-                  : 'bg-emerald-50 text-emerald-600'
-              }`}
-            >
-              {voucherToToggle.isActive ? (
-                <AlertTriangle className="w-6 h-6" />
-              ) : (
-                <CheckCircle2 className="w-6 h-6" />
-              )}
-            </div>
-
-            <p className="text-slate-600">
-              Apakah Anda yakin ingin{' '}
-              <strong className="text-slate-900">
-                {voucherToToggle.isActive ? 'menonaktifkan' : 'mengaktifkan kembali'}
-              </strong>{' '}
-              voucher <span className="font-mono font-bold text-[#10367D]">{voucherToToggle.code}</span>?
-              {voucherToToggle.isActive && (
-                <span className="block text-xs text-slate-400 mt-1">
-                  Customer tidak akan dapat menggunakan kode ini selama status nonaktif.
-                </span>
-              )}
-            </p>
-
-            <div className="flex items-center gap-2 pt-2">
-              <button
-                type="button"
-                disabled={isTogglingStatus}
-                onClick={() => setVoucherToToggle(null)}
-                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition cursor-pointer"
-              >
-                Batal
-              </button>
-              <button
-                type="button"
-                disabled={isTogglingStatus}
-                onClick={handleConfirmToggleStatus}
-                className={`flex-1 py-2.5 text-white font-bold rounded-xl transition shadow-sm cursor-pointer flex items-center justify-center gap-1.5 ${
-                  voucherToToggle.isActive
-                    ? 'bg-amber-600 hover:bg-amber-700'
-                    : 'bg-emerald-600 hover:bg-emerald-700'
-                }`}
-              >
-                {isTogglingStatus ? (
-                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  voucherToToggle.isActive ? 'Ya, Nonaktifkan' : 'Ya, Aktifkan'
-                )}
-              </button>
-            </div>
-          </div>
-        </BaseModal>
-      )}
-
-      {/* Modal Konfirmasi Hapus Voucher */}
-      {voucherToDelete && (
-        <BaseModal
-          isOpen={Boolean(voucherToDelete)}
-          onClose={() => {
-            if (!isDeleting) setVoucherToDelete(null);
-          }}
-          title="Hapus Voucher"
-          subtitle={`Kode: ${voucherToDelete.code}`}
-          maxWidth="max-w-md"
-        >
-          <div className="space-y-4 text-center text-[13px]">
-            <div className="w-12 h-12 rounded-2xl mx-auto flex items-center justify-center bg-rose-50 text-rose-600 border border-rose-200">
-              <Trash2 className="w-6 h-6" />
-            </div>
-
-            {(Number(voucherToDelete.reservedCount) || 0) + (Number(voucherToDelete.usedCount) || 0) > 0 ? (
-              <div className="space-y-3 text-left">
-                <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs flex items-start gap-2.5">
-                  <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-amber-600" />
-                  <div>
-                    <span className="font-bold block">Voucher Tidak Dapat Dihapus</span>
-                    <span>
-                      Voucher <strong className="font-mono">{voucherToDelete.code}</strong> sudah memiliki riwayat penggunaan sebanyak{' '}
-                      <strong>
-                        {(Number(voucherToDelete.reservedCount) || 0) + (Number(voucherToDelete.usedCount) || 0)} kali
-                      </strong>{' '}
-                      pada pesanan customer.
-                    </span>
-                  </div>
-                </div>
-                <p className="text-slate-600 text-xs">
-                  Sesuai integritas data keuangan dan audit pesanan, voucher yang memiliki riwayat transaksi tidak dapat dihapus dari sistem. Anda disarankan untuk <strong>menonaktifkan</strong> voucher ini agar tidak dapat digunakan lagi.
-                </p>
-
-                <div className="flex items-center gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setVoucherToDelete(null)}
-                    className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition cursor-pointer"
-                  >
-                    Tutup
-                  </button>
-                  {voucherToDelete.isActive && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const v = voucherToDelete;
-                        setVoucherToDelete(null);
-                        setVoucherToToggle(v);
-                      }}
-                      className="flex-1 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl transition shadow-sm cursor-pointer"
-                    >
-                      Nonaktifkan Saja
-                    </button>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <>
-                <p className="text-slate-600">
-                  Apakah Anda yakin ingin menghapus voucher{' '}
-                  <span className="font-mono font-bold text-rose-600">{voucherToDelete.code}</span> (
-                  <strong>{voucherToDelete.title}</strong>)?
-                  <span className="block text-xs text-rose-600/80 mt-1 font-medium">
-                    Tindakan ini permanen dan data voucher akan dihapus dari sistem.
-                  </span>
-                </p>
-
-                <div className="flex items-center gap-2 pt-2">
-                  <button
-                    type="button"
-                    disabled={isDeleting}
-                    onClick={() => setVoucherToDelete(null)}
-                    className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition cursor-pointer"
-                  >
-                    Batal
-                  </button>
-                  <button
-                    type="button"
-                    disabled={isDeleting}
-                    onClick={handleConfirmDelete}
-                    className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl transition shadow-sm cursor-pointer flex items-center justify-center gap-1.5"
-                  >
-                    {isDeleting ? (
-                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      'Ya, Hapus Voucher'
-                    )}
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </BaseModal>
-      )}
-    </div>
+      </div>
   );
 }

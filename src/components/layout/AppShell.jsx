@@ -1,12 +1,31 @@
-﻿import { Outlet } from 'react-router-dom';
+import { useState, cloneElement, isValidElement } from 'react';
+import { Outlet } from 'react-router-dom';
+import AppBottomNav from './AppBottomNav';
 
 /**
  * Kerangka halaman bersama untuk semua role.
  * Sidebar tetap milik masing-masing role (prop `sidebar`).
  * Latar memakai token `canvas` plus dua pendar warna brand yang tetap di layar.
- * Ruang bawah disisakan untuk bottom-nav mobile.
+ * Ruang bawah disisakan untuk bottom-nav mobile (pb-20 lg:pb-0).
  */
-export default function AppShell({ sidebar, topbar, banner = null, children = null }) {
+export default function AppShell({ sidebar, topbar, banner = null, children = null, role = null }) {
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+  // Suntikkan handler buka-tutup mobile drawer ke sidebar jika berupa React element
+  const enhancedSidebar = isValidElement(sidebar)
+    ? cloneElement(sidebar, {
+        isOpen: isMobileSidebarOpen,
+        onClose: () => setIsMobileSidebarOpen(false),
+      })
+    : sidebar;
+
+  // Suntikkan toggle handler ke topbar jika berupa React element
+  const enhancedTopbar = isValidElement(topbar)
+    ? cloneElement(topbar, {
+        onToggleSidebar: () => setIsMobileSidebarOpen((prev) => !prev),
+      })
+    : topbar;
+
   return (
     <div className="relative isolate flex min-h-screen overflow-x-hidden bg-canvas font-sans text-slate-900">
       <div
@@ -25,15 +44,20 @@ export default function AppShell({ sidebar, topbar, banner = null, children = nu
         Lewati ke konten
       </a>
 
-      {sidebar}
+      {enhancedSidebar}
 
       <div className="flex min-h-screen w-full min-w-0 flex-1 flex-col pb-20 lg:ml-64 lg:pb-0">
-        {topbar}
+        {enhancedTopbar}
         {banner}
         <div id="konten" className="flex-1">
           <Outlet />
         </div>
       </div>
+
+      <AppBottomNav
+        role={role}
+        onOpenSidebar={() => setIsMobileSidebarOpen(true)}
+      />
 
       {children}
     </div>

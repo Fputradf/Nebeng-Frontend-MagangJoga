@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { User, Mail, Phone, Lock, ArrowRight, ChevronDown, MapPin, Search, Car, ShieldCheck, X, FileText, CheckCircle2 } from 'lucide-react';
+import { User, Mail, Phone, Lock, ChevronDown, MapPin, Search, Car } from 'lucide-react';
 import AuthInput from '../../components/ui/AuthInput';
 import AuthLayout from '../../components/layout/AuthLayout';
+import TermsOfServiceModal from '../../components/layout/TermsOfServiceModal';
 import { useToast } from '../../context/ToastContext';
 import { registerRequest } from '../../services/authService';
+import { socialLinkService } from '../../services/socialLinkService';
 import apiClient from '../../services/apiClient';
 import logoImage from '../../assets/logo.png';
 import registerIllustration from '../../assets/Daftar.png';
@@ -25,6 +27,25 @@ export default function Register({ onSwitchToLogin }) {
   // State untuk Syarat & Ketentuan
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
+  const [socialLinks, setSocialLinks] = useState([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchSocialLinks = async () => {
+      try {
+        const data = await socialLinkService.getPublicSocialLinks();
+        if (isMounted && Array.isArray(data)) {
+          setSocialLinks(data.slice(0, 5));
+        }
+      } catch (err) {
+        console.warn('Gagal memuat link sosial media:', err);
+      }
+    };
+    fetchSocialLinks();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const [form, setForm] = useState({
     name: '',
@@ -158,6 +179,7 @@ export default function Register({ onSwitchToLogin }) {
       authMode="register"
       onSwitchMode={onSwitchToLogin}
       maxWidth="max-w-2xl"
+      socialLinks={socialLinks}
     >
       <form className="space-y-2.5" onSubmit={handleSubmit} noValidate>
         {/* 2-Column Responsive Grid */}
@@ -199,39 +221,65 @@ export default function Register({ onSwitchToLogin }) {
 
           {/* Kolom 4: Wilayah Operasional (Region) */}
           <div className="w-full relative" ref={regionDropdownRef}>
-            <label className="block mb-1 text-xs font-semibold text-slate-600">
+            <label id="region-label" className="block mb-1 text-xs font-semibold text-slate-600">
               Wilayah Operasional <span className="text-rose-600 font-bold">*Wajib</span>
             </label>
 
             <div className="relative">
-              <div
+              <button
+                type="button"
+                id="region-select-button"
+                aria-haspopup="listbox"
+                aria-expanded={isRegionDropdownOpen}
+                aria-controls="region-listbox"
+                aria-labelledby="region-label region-select-button"
+                disabled={isLoadingRegions || regions.length === 0}
                 onClick={() => {
                   if (!isLoadingRegions && regions.length > 0) {
                     setIsRegionDropdownOpen((prev) => !prev);
                   }
                 }}
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    if (!isLoadingRegions && regions.length > 0) {
+                      setIsRegionDropdownOpen(true);
+                    }
+                  }
+                }}
                 className={`w-full h-9 px-3 bg-white border ${
                   errors.regionId ? 'border-rose-500' : 'border-slate-300'
-                } rounded-lg flex items-center justify-between cursor-pointer focus-within:border-brand-500 transition-all duration-200 ${
+                } rounded-lg flex items-center justify-between cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:border-brand-500 transition-all duration-200 ${
                   isLoadingRegions || regions.length === 0 ? 'bg-slate-100 cursor-not-allowed' : ''
                 }`}
               >
-                <div className="flex items-center gap-1.5 overflow-hidden pr-2">
+                <span className="flex items-center gap-1.5 overflow-hidden pr-2 text-left">
                   <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                  <span className={`text-xs sm:text-sm truncate ${selectedRegionName ? 'text-slate-900 font-medium' : 'text-slate-400'}`}>
+                  <span className={`text-xs sm:text-sm truncate ${selectedRegionName ? 'text-slate-900 font-medium' : 'text-slate-500'}`}>
                     {isLoadingRegions
                       ? 'Memuat...'
                       : regions.length === 0
                       ? 'Tidak ada wilayah'
                       : selectedRegionName || 'Pilih wilayah...'}
                   </span>
-                </div>
+                </span>
                 <ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200 ${isRegionDropdownOpen ? 'rotate-180' : ''}`} />
-              </div>
+              </button>
 
-              {/* Dropdown Menu List dengan Fitur Filter Search */}
+              {/* Dropdown Menu List dengan Fitur Filter Search & Aksesibilitas Keyboard */}
               {isRegionDropdownOpen && (
-                <div className="absolute z-50 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-elevated overflow-hidden transition-all duration-200">
+                <div
+                  id="region-listbox"
+                  role="listbox"
+                  aria-label="Daftar wilayah operasional"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      setIsRegionDropdownOpen(false);
+                      document.getElementById('region-select-button')?.focus();
+                    }
+                  }}
+                  className="absolute z-50 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden transition-all duration-200"
+                >
                   <div className="p-2 border-b border-slate-100 flex items-center gap-2 bg-slate-50">
                     <Search className="w-3.5 h-3.5 text-slate-400 ml-1 shrink-0" />
                     <input
@@ -244,23 +292,32 @@ export default function Register({ onSwitchToLogin }) {
                     />
                   </div>
 
-                  <div className="max-h-36 overflow-y-auto divide-y divide-slate-100">
+                  <div className="max-h-40 overflow-y-auto divide-y divide-slate-100">
                     {filteredRegions.length === 0 ? (
                       <div className="p-2.5 text-center text-xs text-slate-500">
                         Wilayah tidak ditemukan
                       </div>
                     ) : (
                       filteredRegions.map((reg) => (
-                        <div
+                        <button
                           key={reg.id}
+                          type="button"
+                          role="option"
+                          aria-selected={String(form.regionId) === String(reg.id)}
                           onClick={() => handleSelectRegion(reg)}
-                          className={`px-3 py-1.5 text-xs cursor-pointer hover:bg-slate-50 transition-colors flex items-center justify-between ${
-                            String(form.regionId) === String(reg.id) ? 'bg-brand-50 font-medium text-brand-700' : 'text-slate-700'
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              handleSelectRegion(reg);
+                            }
+                          }}
+                          className={`w-full text-left px-3 py-2 text-xs cursor-pointer hover:bg-slate-100 focus-visible:bg-slate-100 focus-visible:outline-none transition-colors flex items-center justify-between ${
+                            String(form.regionId) === String(reg.id) ? 'bg-brand-50 font-semibold text-brand-700' : 'text-slate-700'
                           }`}
                         >
                           <span>{reg.name}</span>
                           <span className="text-[10px] text-slate-400 font-mono">({reg.code})</span>
-                        </div>
+                        </button>
                       ))
                     )}
                   </div>
@@ -273,7 +330,7 @@ export default function Register({ onSwitchToLogin }) {
             )}
           </div>
 
-          {/* Kolom 5: Daftar Sebagai (Spans 2 Kolom) */}
+          {/* Kolom 5: Daftar Sebagai (Spans 2 Kolom, Target Sentuh Minimum 44px) */}
           <div className="w-full col-span-1 sm:col-span-2">
             <label className="block mb-1 text-xs font-semibold text-slate-600">
               Daftar Sebagai
@@ -285,13 +342,13 @@ export default function Register({ onSwitchToLogin }) {
                   setForm((prev) => ({ ...prev, role: 'customer' }));
                   if (errors.role) setErrors((prev) => ({ ...prev, role: undefined }));
                 }}
-                className={`py-1.5 px-3 rounded-md text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                className={`min-h-[44px] py-2 px-3 rounded-md text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
                   form.role === 'customer'
-                    ? 'bg-white text-blue-600 shadow-xs border border-slate-200/80'
-                    : 'text-slate-500 hover:text-slate-800'
+                    ? 'bg-white text-brand-700 shadow-xs border border-slate-200'
+                    : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                <User className="w-3.5 h-3.5" />
+                <User className="w-4 h-4" />
                 <span>Customer</span>
               </button>
               <button
@@ -300,13 +357,13 @@ export default function Register({ onSwitchToLogin }) {
                   setForm((prev) => ({ ...prev, role: 'mitra' }));
                   if (errors.role) setErrors((prev) => ({ ...prev, role: undefined }));
                 }}
-                className={`py-1.5 px-3 rounded-md text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                className={`min-h-[44px] py-2 px-3 rounded-md text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
                   form.role === 'mitra'
-                    ? 'bg-white text-blue-600 shadow-xs border border-slate-200/80'
-                    : 'text-slate-500 hover:text-slate-800'
+                    ? 'bg-white text-brand-700 shadow-xs border border-slate-200'
+                    : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                <Car className="w-3.5 h-3.5" />
+                <Car className="w-4 h-4" />
                 <span>Mitra (Driver)</span>
               </button>
             </div>
@@ -406,7 +463,7 @@ export default function Register({ onSwitchToLogin }) {
               <button
                 type="button"
                 onClick={() => setIsTermsModalOpen(true)}
-                className="text-blue-600 font-semibold hover:text-blue-700 hover:underline cursor-pointer transition-colors"
+                className="text-brand-600 font-semibold hover:text-brand-700 hover:underline cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1 rounded"
               >
                 Syarat dan Ketentuan
               </button>{' '}
@@ -424,21 +481,18 @@ export default function Register({ onSwitchToLogin }) {
           disabled={isSubmitting || isLoadingRegions || regions.length === 0}
           className="
             w-full
-            py-2.5
+            min-h-[44px]
+            py-3
             px-4
-            bg-gradient-to-r
-            from-blue-600
-            via-[#1D4ED8]
-            to-blue-500
-            hover:from-blue-500
-            hover:to-blue-600
-            focus:outline-none
-            focus:ring-2
-            focus:ring-blue-500/50
-            focus:ring-offset-2
+            bg-brand-600
+            hover:bg-brand-700
+            active:bg-brand-800
+            focus-visible:outline-none
+            focus-visible:ring-2
+            focus-visible:ring-brand-500
+            focus-visible:ring-offset-2
             disabled:opacity-50
             disabled:cursor-not-allowed
-            disabled:hover:translate-y-0
             disabled:hover:shadow-none
             text-white
             text-xs sm:text-sm
@@ -449,155 +503,48 @@ export default function Register({ onSwitchToLogin }) {
             items-center
             justify-center
             gap-2
-            shadow-md
-            shadow-blue-500/25
-            hover:shadow-lg
-            hover:shadow-blue-500/35
-            hover:-translate-y-0.5
-            active:translate-y-0
+            shadow-sm
+            hover:shadow
             active:scale-[0.99]
             transition-all
-            duration-200
+            duration-150
             mt-1
             cursor-pointer
           "
         >
           {isSubmitting ? (
-            <>
-              <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              <span>MEMPROSES...</span>
-            </>
+            <span className="flex items-center gap-2">
+              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <span>Memproses...</span>
+            </span>
           ) : (
-            <>
-              <span>Daftar Sekarang</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </>
+            <span>Daftar Sekarang</span>
           )}
         </button>
       </form>
 
-      <p className="text-center text-xs text-slate-500 mt-2.5">
+      <p className="text-center text-xs text-slate-600 mt-3">
         Sudah punya akun?{' '}
         <button
+          type="button"
           onClick={onSwitchToLogin}
-          className="font-bold text-blue-600 hover:text-blue-700 hover:underline cursor-pointer transition-colors"
+          className="font-bold text-brand-600 hover:text-brand-700 hover:underline cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1 rounded"
         >
           Masuk di sini
         </button>
       </p>
 
-      {/* MODAL POP-UP SYARAT DAN KETENTUAN */}
-      {isTermsModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
-          <div
-            className="w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <div className="px-5 py-3.5 border-b border-slate-200 bg-slate-50/80 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
-                  <FileText className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-slate-950">Syarat & Ketentuan Layanan</h3>
-                  <p className="text-[11px] text-slate-500">Kebijakan penggunaan platform Nebeng</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsTermsModalOpen(false)}
-                className="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 flex items-center justify-center transition cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Modal Content - List Syarat & Ketentuan */}
-            <div className="px-5 py-4 overflow-y-auto space-y-3.5 text-xs text-slate-600 leading-relaxed">
-              <div className="p-2.5 bg-blue-50/60 rounded-xl border border-blue-100/80 text-blue-900 flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-blue-600 shrink-0" />
-                <span>Harap baca dengan cermat ketentuan sebelum menggunakan platform Nebeng.</span>
-              </div>
-
-              <div className="space-y-1">
-                <h4 className="font-bold text-slate-900 flex items-center gap-1.5">
-                  <span className="w-4 h-4 rounded-full bg-slate-100 text-[10px] text-slate-600 flex items-center justify-center font-bold">1</span>
-                  Ketentuan Akun & Pendaftaran
-                </h4>
-                <p className="pl-5 text-slate-600">
-                  Pengguna wajib mendaftarkan data identitas asli yang valid (nama lengkap, nomor telepon aktif, dan email resmi). Penyalahgunaan identitas orang lain dapat mengakibatkan pemblokiran akun permanen.
-                </p>
-              </div>
-
-              <div className="space-y-1">
-                <h4 className="font-bold text-slate-900 flex items-center gap-1.5">
-                  <span className="w-4 h-4 rounded-full bg-slate-100 text-[10px] text-slate-600 flex items-center justify-center font-bold">2</span>
-                  Sistem Escrow & Transaksi Aman
-                </h4>
-                <p className="pl-5 text-slate-600">
-                  Semua transaksi ongkos perjalanan dan kargo wajib melalui dompet digital Nebeng yang dilindungi proteksi escrow. Dana pengemudi dicairkan hanya setelah perjalanan dikonfirmasi tiba dengan sukses.
-                </p>
-              </div>
-
-              <div className="space-y-1">
-                <h4 className="font-bold text-slate-900 flex items-center gap-1.5">
-                  <span className="w-4 h-4 rounded-full bg-slate-100 text-[10px] text-slate-600 flex items-center justify-center font-bold">3</span>
-                  Peraturan Mitra Pengemudi
-                </h4>
-                <p className="pl-5 text-slate-600">
-                  Mitra pengemudi wajib memiliki SIM aktif, kondisi kendaraan laik jalan, tiba di pos penjemputan tepat waktu, dan tidak mengubah tarif sepihak di luar kesepakatan tiket aplikasi.
-                </p>
-              </div>
-
-              <div className="space-y-1">
-                <h4 className="font-bold text-slate-900 flex items-center gap-1.5">
-                  <span className="w-4 h-4 rounded-full bg-slate-100 text-[10px] text-slate-600 flex items-center justify-center font-bold">4</span>
-                  Peraturan Penumpang & Kargo Barang
-                </h4>
-                <p className="pl-5 text-slate-600">
-                  Dilarang keras membawa narkotika, barang terlarang, senjata tajam/api, atau benda berbahaya lainnya. Muatan kargo tidak boleh melebihi batas bobot/dimensi yang dipesan.
-                </p>
-              </div>
-
-              <div className="space-y-1">
-                <h4 className="font-bold text-slate-900 flex items-center gap-1.5">
-                  <span className="w-4 h-4 rounded-full bg-slate-100 text-[10px] text-slate-600 flex items-center justify-center font-bold">5</span>
-                  Kebijakan Pembatalan & Pengembalian Dana
-                </h4>
-                <p className="pl-5 text-slate-600">
-                  Pembatalan trip oleh customer atau mitra wajib mematuhi batas waktu toleransi sistem untuk kelayakan pengembalian dana (refund) otomatis ke saldo dompet.
-                </p>
-              </div>
-            </div>
-
-            {/* Modal Footer */}
-            <div className="px-5 py-3 border-t border-slate-200 bg-slate-50 flex items-center justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setIsTermsModalOpen(false)}
-                className="px-3.5 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-200/50 rounded-lg transition cursor-pointer"
-              >
-                Tutup
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setAcceptTerms(true);
-                  if (errors.terms) {
-                    setErrors((prev) => ({ ...prev, terms: undefined }));
-                  }
-                  setIsTermsModalOpen(false);
-                }}
-                className="px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition flex items-center gap-1.5 cursor-pointer"
-              >
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>Saya Mengerti & Setujui</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Syarat & Ketentuan Modal Component */}
+      <TermsOfServiceModal
+        isOpen={isTermsModalOpen}
+        onClose={() => setIsTermsModalOpen(false)}
+        onAccept={() => {
+          setAcceptTerms(true);
+          if (errors.terms) {
+            setErrors((prev) => ({ ...prev, terms: undefined }));
+          }
+        }}
+      />
     </AuthLayout>
   );
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Search, 
@@ -10,18 +10,12 @@ import {
   Tag,
   Trash2,
   Calendar,
-  Clock,
   Car,
   Bike,
   Package,
-  Users,
-  User,
-  MapPin,
-  Zap
+  Users
 } from 'lucide-react';
-import { Skeleton } from '../../../components/ui/Skeleton';
 import EmptyState from '../../../components/ui/EmptyState';
-import StatusBadge from '../../../components/ui/StatusBadge';
 import BaseModal from '../../../components/ui/BaseModal';
 import { BannerSlider } from '../../../components/ui/BannerSlider';
 import { useToast } from '../../../context/ToastContext';
@@ -34,9 +28,6 @@ const TODAY_ISO = new Date().toISOString().split('T')[0];
 const PRIMARY_COLOR = '#10367D';
 const PRIMARY_HOVER = '#0C2C66';
 const formatRupiah = (value) => `Rp ${Math.max(0, Math.round(value || 0)).toLocaleString('id-ID')}`;
-
-const DAYS_FULL = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
-const MONTHS_FULL = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
 const inferServiceType = (trip) => {
   const rawType = (trip?.serviceType || '').toLowerCase();
@@ -148,6 +139,9 @@ export default function SearchTrip() {
   const [voucherError, setVoucherError] = useState('');
   const [voucherNotice, setVoucherNotice] = useState('');
   const [cooldownSeconds, setCooldownSeconds] = useState(0);
+  const [availableVouchers, setAvailableVouchers] = useState([]);
+  const [isLoadingVouchers, setIsLoadingVouchers] = useState(false);
+  const [showManualInput, setShowManualInput] = useState(false);
   const validatedParamsRef = useRef(null);
 
   const sizeOptions = [
@@ -219,6 +213,13 @@ export default function SearchTrip() {
         });
 
         setTrips(activeList);
+
+        voucherService
+          .getMyVouchers()
+          .then((v) => {
+            if (!ignore) setAvailableVouchers(Array.isArray(v) ? v : []);
+          })
+          .catch(() => {});
       } catch (err) {
         console.error('Gagal memuat trip:', err);
       } finally {
@@ -236,6 +237,15 @@ export default function SearchTrip() {
   }, [origin, destination, date, activeService]);
 
   const isPassengerService = activeService === 'motor' || activeService === 'mobil';
+
+  const applicableVouchers = useMemo(() => {
+    const currentOrderType = isPassengerService ? 'passenger' : 'parcel';
+    return availableVouchers.filter((v) => {
+      if (!v.isAvailable) return false;
+      if (v.appliesTo && v.appliesTo !== currentOrderType) return false;
+      return true;
+    });
+  }, [availableVouchers, isPassengerService]);
 
   const maxAllowedSeats = selectedTrip?.vehicle?.type === 'motor' 
     ? 1 
@@ -375,8 +385,9 @@ export default function SearchTrip() {
     }
   };
 
-  const handleApplyVoucher = async () => {
-    const trimmedCode = (voucherInput || '').trim().toUpperCase();
+  const handleApplyVoucher = async (codeOverride) => {
+    const rawCode = typeof codeOverride === 'string' ? codeOverride : voucherInput;
+    const trimmedCode = (rawCode || '').trim().toUpperCase();
     if (!trimmedCode || isValidatingVoucher || cooldownSeconds > 0) return;
 
     setVoucherError('');
@@ -398,6 +409,7 @@ export default function SearchTrip() {
         totalPrice: Number(res.totalPrice || 0),
       });
       setVoucherInput('');
+      setShowManualInput(false);
       toast.success(`Voucher ${trimmedCode} berhasil diterapkan!`);
     } catch (err) {
       if (err.response?.status === 429) {
@@ -442,9 +454,17 @@ export default function SearchTrip() {
     setAppliedVoucher(null);
     setVoucherError('');
     setVoucherNotice('');
+    setShowManualInput(false);
     validatedParamsRef.current = null;
 
     walletService.getMyWallet().then((w) => setCustomerWallet(w)).catch(() => {});
+
+    setIsLoadingVouchers(true);
+    voucherService
+      .getMyVouchers()
+      .then((v) => setAvailableVouchers(Array.isArray(v) ? v : []))
+      .catch(() => {})
+      .finally(() => setIsLoadingVouchers(false));
   };
 
   const handleCheckout = async (e) => {
@@ -514,10 +534,8 @@ export default function SearchTrip() {
 
   return (
     <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-sans">
-      {/* â”€â”€ BANNER â”€â”€ */}
+      {/* ── BANNER ── */}
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] p-6 text-white shadow-card sm:p-8">
-        <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10" />
-        <div className="absolute bottom-0 right-32 h-28 w-28 rounded-full bg-accent/20" />
         <div className="relative flex flex-col gap-3 pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="font-display text-2xl font-bold">Cari & Booking Trip</h1>
@@ -531,20 +549,41 @@ export default function SearchTrip() {
 
       <div className="bg-white p-5 sm:p-6 rounded-xl shadow-card border border-slate-200">
         <h2 className="text-sm font-bold text-slate-700 mb-4 uppercase tracking-wider">Layanan Kami</h2>
-        <div className="flex justify-around items-center">
-          <button className="flex flex-col items-center gap-2.5 hover:opacity-90 transition cursor-pointer group" onClick={() => setActiveService('motor')}>
+        <div role="tablist" aria-label="Pilih Jenis Layanan" className="flex justify-around items-center">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeService === 'motor'}
+            aria-label="Layanan Nebeng Motor"
+            className="flex flex-col items-center gap-2.5 hover:opacity-90 transition cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded-2xl p-1"
+            onClick={() => setActiveService('motor')}
+          >
             <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-white shadow-soft transition-all duration-200 ${activeService === 'motor' ? 'bg-[#262160] scale-105' : 'bg-slate-200 group-hover:bg-slate-300'}`}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5V14l-3-3 4-3 2 3h2"/></svg>
             </div>
             <span className={`text-sm font-bold ${activeService === 'motor' ? 'text-[#262160]' : 'text-slate-500'}`}>Nebeng Motor</span>
           </button>
-          <button className="flex flex-col items-center gap-2.5 hover:opacity-90 transition cursor-pointer group" onClick={() => setActiveService('mobil')}>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeService === 'mobil'}
+            aria-label="Layanan Nebeng Mobil"
+            className="flex flex-col items-center gap-2.5 hover:opacity-90 transition cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded-2xl p-1"
+            onClick={() => setActiveService('mobil')}
+          >
             <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-white shadow-soft transition-all duration-200 ${activeService === 'mobil' ? 'bg-[#262160] scale-105' : 'bg-slate-200 group-hover:bg-slate-300'}`}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>
             </div>
             <span className={`text-sm font-bold ${activeService === 'mobil' ? 'text-[#262160]' : 'text-slate-500'}`}>Nebeng Mobil</span>
           </button>
-          <button className="flex flex-col items-center gap-2.5 hover:opacity-90 transition cursor-pointer group" onClick={() => setActiveService('barang')}>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeService === 'barang'}
+            aria-label="Layanan Nebeng Barang"
+            className="flex flex-col items-center gap-2.5 hover:opacity-90 transition cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded-2xl p-1"
+            onClick={() => setActiveService('barang')}
+          >
             <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-white shadow-soft transition-all duration-200 ${activeService === 'barang' ? 'bg-[#262160] scale-105' : 'bg-slate-200 group-hover:bg-slate-300'}`}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
             </div>
@@ -776,14 +815,11 @@ export default function SearchTrip() {
                         </button>
                       ) : (
                         <button
+                          type="button"
                           onClick={() => handleOpenBooking(trip)}
-                          className="py-2.5 px-4 text-white rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 shadow-sm hover:shadow cursor-pointer"
-                          style={{ backgroundColor: PRIMARY_COLOR }}
-                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = PRIMARY_HOVER)}
-                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = PRIMARY_COLOR)}
+                          className="min-h-[44px] py-2.5 px-4 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center shadow-sm hover:shadow active:scale-[0.99] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
                         >
                           <span>Pesan Sekarang</span>
-                          <ArrowRight className="w-3.5 h-3.5" />
                         </button>
                       )}
                     </div>
@@ -997,7 +1033,7 @@ export default function SearchTrip() {
                     type="button"
                     onClick={handleCreatePin}
                     disabled={isSavingPin || newPin.length !== 6 || confirmPin.length !== 6}
-                    className="w-full py-1.5 px-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-[12px] rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer disabled:cursor-not-allowed shadow-sm"
+                    className="w-full min-h-[44px] py-2.5 px-3 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer disabled:cursor-not-allowed shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
                   >
                     {isSavingPin ? (
                       <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -1032,28 +1068,48 @@ export default function SearchTrip() {
           )}
 
           {/* Voucher Section */}
-          <div className="space-y-1.5 pt-2 border-t border-neutral-100">
-            <label className="block text-[11px] font-bold text-neutral-400 uppercase">
-              Kode Voucher
-            </label>
+          <div className="space-y-2 pt-2 border-t border-neutral-100">
+            <div className="flex items-center justify-between">
+              <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-wider">
+                Voucher Promo
+              </label>
+              {!appliedVoucher && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowManualInput(!showManualInput);
+                    setVoucherError('');
+                  }}
+                  className="text-[11px] font-semibold text-[#10367D] hover:underline cursor-pointer"
+                >
+                  {showManualInput ? 'Pilih dari daftar voucher' : 'Punya kode lain?'}
+                </button>
+              )}
+            </div>
+
             {appliedVoucher ? (
-              <div className="flex items-center justify-between p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl">
-                <div className="flex items-center gap-2">
-                  <Tag className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span className="text-[12px] font-bold text-emerald-800">
-                    Voucher <span className="font-mono uppercase">{appliedVoucher.code}</span> diterapkan
-                  </span>
+              <div className="flex items-center justify-between p-2.5 border border-slate-200 rounded-xl bg-white">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Tag className="w-4 h-4 text-[#10367D] shrink-0" />
+                  <div className="truncate text-xs">
+                    <span className="font-mono font-bold text-[#10367D] mr-1.5">
+                      {appliedVoucher.code}
+                    </span>
+                    <span className="text-emerald-600 font-bold">
+                      (-{formatRupiah(appliedVoucher.discountAmount)})
+                    </span>
+                  </div>
                 </div>
                 <button
                   type="button"
                   onClick={handleRemoveVoucher}
-                  className="p-1 text-neutral-400 hover:text-rose-600 transition cursor-pointer"
+                  className="p-1 text-slate-400 hover:text-rose-600 transition cursor-pointer"
                   title="Hapus voucher"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
-            ) : (
+            ) : showManualInput ? (
               <div className="space-y-1">
                 <div className="flex gap-2">
                   <input
@@ -1065,13 +1121,13 @@ export default function SearchTrip() {
                     }}
                     placeholder="Masukkan kode voucher"
                     disabled={isValidatingVoucher || cooldownSeconds > 0}
-                    className="flex-1 p-2 bg-neutral-50 border border-neutral-200 rounded-xl font-bold uppercase text-[12px] focus:outline-none focus:border-blue-500 tracking-wider disabled:bg-neutral-100"
+                    className="flex-1 p-2 bg-neutral-50 border border-neutral-200 rounded-xl font-mono font-bold uppercase text-[12px] focus:outline-none focus:border-[#10367D] tracking-wider disabled:bg-neutral-100"
                   />
                   <button
                     type="button"
-                    onClick={handleApplyVoucher}
+                    onClick={() => handleApplyVoucher()}
                     disabled={!voucherInput.trim() || isValidatingVoucher || cooldownSeconds > 0}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-neutral-200 disabled:text-neutral-400 disabled:cursor-not-allowed text-white text-[12px] font-bold rounded-xl transition flex items-center justify-center shrink-0 shadow-sm cursor-pointer"
+                    className="px-4 py-2 bg-[#10367D] hover:bg-[#0C2C66] disabled:bg-neutral-200 disabled:text-neutral-400 disabled:cursor-not-allowed text-white text-[12px] font-bold rounded-xl transition flex items-center justify-center shrink-0 shadow-sm cursor-pointer"
                   >
                     {isValidatingVoucher ? (
                       <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -1082,40 +1138,104 @@ export default function SearchTrip() {
                     )}
                   </button>
                 </div>
-                {voucherError && (
-                  <p className="text-[11px] text-rose-500 flex items-center gap-1 mt-1">
-                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                    <span>{voucherError}</span>
-                  </p>
-                )}
-                {voucherNotice && !voucherError && (
-                  <p className="text-[11px] text-amber-600 flex items-center gap-1 mt-1">
-                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                    <span>{voucherNotice}</span>
-                  </p>
-                )}
               </div>
+            ) : isLoadingVouchers ? (
+              <div className="p-3 border border-slate-200 rounded-xl text-center text-xs text-slate-400">
+                Memuat daftar voucher...
+              </div>
+            ) : applicableVouchers.length > 0 ? (
+              <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                {applicableVouchers.map((v) => {
+                  const isEligible = subtotalPrice >= (v.minOrderAmount || 0);
+
+                  return (
+                    <div
+                      key={v.id}
+                      className={`p-2.5 rounded-xl border transition-all flex items-center justify-between gap-2.5 bg-white ${
+                        isEligible
+                          ? 'border-slate-200 hover:border-blue-400'
+                          : 'border-slate-200 opacity-60'
+                      }`}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="font-mono font-bold text-xs text-[#10367D]">
+                            {v.code}
+                          </span>
+                          <span className="text-xs font-bold text-emerald-600">
+                            {v.discountType === 'percentage'
+                              ? `${v.discountValue}% OFF`
+                              : `Potongan ${formatRupiah(v.discountValue)}`}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-slate-500 truncate" title={v.title}>
+                          {v.title}
+                        </div>
+                        {Number(v.minOrderAmount) > 0 && (
+                          <div className="text-[10px] text-slate-400">
+                            Min. transaksi {formatRupiah(v.minOrderAmount)}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="shrink-0">
+                        {isEligible ? (
+                          <button
+                            type="button"
+                            onClick={() => handleApplyVoucher(v.code)}
+                            disabled={isValidatingVoucher || cooldownSeconds > 0}
+                            className="min-h-[40px] px-3.5 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-lg transition shadow-xs cursor-pointer disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                          >
+                            {isValidatingVoucher ? '...' : 'Gunakan'}
+                          </button>
+                        ) : (
+                          <span className="text-[10px] text-slate-400 italic">
+                            Belum capai min.
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="p-3 border border-dashed border-slate-200 rounded-xl text-center text-xs text-slate-400">
+                Belum ada voucher yang tersedia untuk perjalanan ini.
+              </div>
+            )}
+
+            {voucherError && (
+              <p className="text-[11px] text-rose-500 flex items-center gap-1 mt-1">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                <span>{voucherError}</span>
+              </p>
+            )}
+            {voucherNotice && !voucherError && (
+              <p className="text-[11px] text-amber-600 flex items-center gap-1 mt-1">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                <span>{voucherNotice}</span>
+              </p>
             )}
           </div>
 
           {appliedVoucher ? (
-            <div className="p-3 bg-emerald-50 rounded-xl space-y-1.5 border border-emerald-100 text-[13px]">
-              <div className="flex justify-between text-neutral-600">
+            <div className="p-3 bg-white rounded-xl space-y-1.5 border border-slate-200 text-[13px]">
+              <div className="flex justify-between text-slate-600">
                 <span>Subtotal:</span>
-                <span className="font-semibold text-neutral-800">{formatRupiah(subtotalPrice)}</span>
+                <span className="font-semibold text-slate-800">{formatRupiah(subtotalPrice)}</span>
               </div>
-              <div className="flex justify-between text-emerald-700 font-semibold">
+              <div className="flex justify-between text-emerald-600 font-semibold">
                 <span>Diskon ({appliedVoucher.code}):</span>
                 <span>- {formatRupiah(appliedVoucher.discountAmount)}</span>
               </div>
-              <div className="flex justify-between font-bold text-neutral-800 pt-1.5 border-t border-emerald-200/60">
-                <span className="text-neutral-700">Total Bayar:</span>
+              <div className="flex justify-between font-bold text-slate-800 pt-1.5 border-t border-slate-200">
+                <span className="text-slate-700">Total Bayar:</span>
                 <span style={{ color: PRIMARY_COLOR }}>{formatRupiah(effectiveTotalPrice)}</span>
               </div>
             </div>
           ) : (
-            <div className="p-3 bg-emerald-50 rounded-xl flex justify-between font-bold border border-emerald-100">
-              <span className="text-neutral-700">Total Biaya:</span>
+            <div className="p-3 bg-white rounded-xl flex justify-between font-bold border border-slate-200">
+              <span className="text-slate-700">Total Biaya:</span>
               <span style={{ color: PRIMARY_COLOR }}>{formatRupiah(subtotalPrice)}</span>
             </div>
           )}

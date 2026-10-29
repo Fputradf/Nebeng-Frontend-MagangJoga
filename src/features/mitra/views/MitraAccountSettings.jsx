@@ -18,9 +18,13 @@ import {
   Plus,
   Trash2,
   Pencil,
+  FileText,
+  Send,
+  Link as LinkIcon,
 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
+import { useConfirm } from '../../../context/ConfirmContext';
 import BaseModal from '../../../components/ui/BaseModal';
 import ToggleSwitch from '../../../components/ui/ToggleSwitch';
 import apiClient from '../../../services/apiClient';
@@ -53,6 +57,7 @@ const getFullFileUrl = (path) => {
 
 export default function MitraAccountSettings() {
   const toast = useToast();
+  const confirm = useConfirm();
   const { sessionPersisted, updateMitraProfile } = useAuth();
 
   const [liveUser, setLiveUser] = useState(null);
@@ -118,6 +123,17 @@ export default function MitraAccountSettings() {
   const [show2FAModal, setShow2FAModal] = useState(false);
   const [showDeactivateModal, setShowDeactivateModal] = useState(false);
   const [showLogoutSessionsModal, setShowLogoutSessionsModal] = useState(false);
+
+  useEffect(() => {
+    if (window.location.hash === '#sanksi') {
+      setTimeout(() => {
+        const el = document.getElementById('sanksi');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 300);
+    }
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -274,7 +290,14 @@ export default function MitraAccountSettings() {
   };
 
   const handleDeleteVehicle = async (vehicleId) => {
-    if (!window.confirm('Apakah Anda yakin ingin menghapus kendaraan ini?')) return;
+    const isConfirmed = await confirm({
+      title: 'Hapus Kendaraan',
+      message: 'Apakah Anda yakin ingin menghapus kendaraan ini? Tindakan ini tidak dapat dibatalkan.',
+      confirmText: 'Hapus Kendaraan',
+      cancelText: 'Batal',
+      variant: 'danger',
+    });
+    if (!isConfirmed) return;
     try {
       await apiClient.delete(`/vehicles/${vehicleId}`);
       toast.success('Kendaraan berhasil dihapus.', { title: 'Sukses' });
@@ -959,6 +982,164 @@ export default function MitraAccountSettings() {
         </div>
 
         {/* REPUTASI & SANKSI POIN MITRA */}
+        <div id="sanksi" className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-neutral-100">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 bg-blue-50 text-brand-700 rounded-xl shrink-0">
+                <ShieldAlert className="w-5 h-5 text-[#10367D]" />
+              </div>
+              <div>
+                <h3 className="text-[17px] font-bold text-neutral-800">
+                  Reputasi & Skor Integritas
+                </h3>
+                <p className="text-[12px] text-neutral-400">
+                  Rekam jejak kepatuhan mitra, riwayat sanksi pembatalan, dan pengajuan banding
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 self-start sm:self-auto">
+              <div className="text-left sm:text-right">
+                <span className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider block">Skor Saat Ini</span>
+                <span className={`text-[18px] font-extrabold ${
+                  sanctionSummary.currentScore >= 80 ? 'text-emerald-600' :
+                  sanctionSummary.currentScore >= 50 ? 'text-amber-600' : 'text-rose-600'
+                }`}>
+                  {sanctionSummary.currentScore} <span className="text-xs font-normal text-neutral-400">/ {sanctionSummary.baseScore || 100}</span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Status Suspensi jika aktif */}
+          {sanctionSummary.isSuspended && (
+            <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 flex items-start gap-2.5">
+              <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-[13px] font-bold">Akun Dalam Masa Penangguhan (Suspensi)</p>
+                <p className="text-[12px] text-rose-600">
+                  Anda tidak dapat membuat atau mengoperasikan trip baru
+                  {sanctionSummary.suspendedUntil && ` sampai ${new Date(sanctionSummary.suspendedUntil).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })} WIB`}.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Daftar Riwayat Sanksi */}
+          <div className="space-y-3 pt-1">
+            <h4 className="text-[14px] font-bold text-neutral-800">Riwayat Sanksi Pelanggaran</h4>
+            {(!sanctionSummary.sanctions || sanctionSummary.sanctions.length === 0) ? (
+              <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                <span>Rekam jejak bersih. Anda belum pernah menerima sanksi atau pemotongan skor reputasi.</span>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {sanctionSummary.sanctions.map((s) => {
+                  const latestAppeal = s.appeals?.[0];
+                  const isWaived = s.status === 'WAIVED';
+
+                  return (
+                    <div key={s.id} className="p-3.5 bg-neutral-50/70 border border-neutral-200 rounded-xl space-y-2.5">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className={`px-2 py-0.5 rounded text-[11px] font-extrabold uppercase ${
+                            isWaived ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+                          }`}>
+                            {s.violationType === 'MITRA_CANCEL_EARLY' ? 'Batal Awal' :
+                             s.violationType === 'MITRA_CANCEL_LATE' ? 'Batal Mendadak' :
+                             s.violationType === 'MITRA_NO_SHOW' ? 'Tidak Hadir (No-Show)' : s.violationType}
+                          </span>
+                          <span className="text-[11px] text-neutral-400">
+                            {new Date(s.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })} WIB
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                            isWaived ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'
+                          }`}>
+                            {isWaived ? 'Sanksi Dicabut' : `-${s.scoreDeduction} Poin`}
+                          </span>
+                          {s.isSuspended && !isWaived && (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-600 text-white">
+                              Suspensi
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {s.tripDetails && (
+                        <div className="text-[12px] text-neutral-600 bg-white p-2.5 rounded-lg border border-neutral-200 flex items-center justify-between flex-wrap gap-2">
+                          <span>Trip #{s.tripDetails.id}: <strong>{s.tripDetails.from} &rarr; {s.tripDetails.to}</strong></span>
+                          <span className="text-[11px] text-neutral-400">{s.tripDetails.date ? s.tripDetails.date.split('T')[0] : ''}</span>
+                        </div>
+                      )}
+
+                      {/* Status Banding */}
+                      {isWaived ? (
+                        <div className="p-2.5 bg-emerald-50 border border-emerald-100 rounded-lg text-emerald-800 text-[12px] flex items-center gap-2">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                          <span>Sanksi telah dicabut oleh Admin Regional dan skor integritas telah dipulihkan.</span>
+                        </div>
+                      ) : latestAppeal ? (
+                        <div className="p-3 bg-white border border-neutral-200 rounded-xl space-y-2 text-[12px]">
+                          <div className="flex items-center justify-between flex-wrap gap-1">
+                            <span className="font-bold text-neutral-800">Status Banding Anda:</span>
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                              latestAppeal.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-800' :
+                              latestAppeal.status === 'REJECTED' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'
+                            }`}>
+                              {latestAppeal.status === 'APPROVED' ? 'Disetujui' :
+                               latestAppeal.status === 'REJECTED' ? 'Ditolak' : 'Menunggu Review Admin'}
+                            </span>
+                          </div>
+
+                          <p className="text-neutral-600">
+                            <strong>Alasan:</strong> &ldquo;{latestAppeal.reason}&rdquo;
+                          </p>
+
+                          {latestAppeal.evidenceUrl && (
+                            <div>
+                              <a
+                                href={latestAppeal.evidenceUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-blue-600 hover:underline text-[11px] inline-flex items-center gap-1 font-bold"
+                              >
+                                Lihat Bukti Lampiran &rarr;
+                              </a>
+                            </div>
+                          )}
+
+                          {latestAppeal.adminNote && (
+                            <div className="p-2 bg-neutral-50 rounded border border-neutral-200 text-neutral-700 text-[11px]">
+                              <strong>Catatan Admin:</strong> {latestAppeal.adminNote}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="pt-1 flex items-center justify-between flex-wrap gap-2">
+                          <p className="text-[11px] text-neutral-400 italic">
+                            Belum ada pengajuan banding untuk sanksi ini.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenAppeal(s)}
+                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[12px] font-bold transition cursor-pointer shadow-xs"
+                          >
+                            Ajukan Banding
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
         <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 space-y-4">
           <h3 className="text-[17px] font-bold text-neutral-800 flex items-center gap-1.5">
             <Bell
@@ -1311,58 +1492,102 @@ export default function MitraAccountSettings() {
           onClose={() => { if (!isSubmittingAppeal) setAppealModalTarget(null); }}
           title="Ajukan Banding Sanksi"
           subtitle={'Sanksi #' + (appealModalTarget ? appealModalTarget.id : '')}
-          maxWidth="max-w-md"
+          maxWidth="max-w-lg"
         >
-          <form onSubmit={handleSubmitAppeal} className="space-y-3.5 text-[13px]">
-            <p className="text-neutral-600 text-[12px] leading-relaxed">
-              Jika pembatalan trip terjadi karena kendala darurat / force majeure dengan bukti sah, Admin dapat menyetujui banding untuk mencabut sanksi dan memulihkan skor reputasi Anda. Refund dan poin yang telah diterima penumpang tidak akan ditarik kembali.
-            </p>
+          <form onSubmit={handleSubmitAppeal} className="space-y-4 pt-1">
+            {/* Header Card Bergaya Sidebar Biru */}
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#0c2353] via-[#10367D] to-[#18458f] p-4 text-white shadow-md">
+              <div className="absolute -right-6 -top-10 h-28 w-28 rounded-full bg-white/10 pointer-events-none" />
+              <div className="absolute bottom-0 right-16 h-16 w-16 rounded-full bg-cyan-400/20 pointer-events-none" />
+              <div className="relative z-10">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-300">
+                    TATA KELOLA INTEGRITAS & BANDING
+                  </span>
+                  <span className="ml-auto px-2 py-0.5 rounded-full bg-white/20 backdrop-blur text-[10px] font-mono font-bold text-white border border-white/25">
+                    ID: #{appealModalTarget?.id}
+                  </span>
+                </div>
+                <h4 className="text-[16px] font-bold text-white">
+                  Permohonan Banding Sanksi
+                </h4>
+                <p className="text-[11px] text-blue-100/90 mt-0.5 leading-relaxed">
+                  Jelaskan kendala darurat yang dialami dan lampirkan bukti pendukung untuk ditinjau oleh Admin Wilayah.
+                </p>
+              </div>
+            </div>
 
-            <div>
-              <label className="block text-[12px] font-bold text-neutral-700 mb-1">
-                Alasan & Kronologi Banding <span className="text-rose-500">*</span>
+            {/* Info Banner */}
+            <div className="p-3 bg-blue-50/80 border border-blue-200/80 rounded-xl text-blue-900 text-[12px] flex items-start gap-2.5 shadow-2xs">
+              <ShieldCheck className="w-4 h-4 text-[#10367D] shrink-0 mt-0.5" />
+              <p className="leading-relaxed">
+                Jika pembatalan trip terjadi karena <strong>force majeure / kendala darurat</strong> dengan bukti sah, Admin Wilayah dapat menyetujui banding untuk mencabut sanksi dan memulihkan skor reputasi Anda.
+              </p>
+            </div>
+
+            {/* Field: Alasan & Kronologi */}
+            <div className="space-y-1.5">
+              <label className="flex items-center justify-between text-[12px] font-bold text-neutral-700">
+                <span className="flex items-center gap-1.5">
+                  <FileText className="w-3.5 h-3.5 text-[#10367D]" />
+                  Alasan & Kronologi Banding
+                </span>
+                <span className="text-[10px] font-semibold text-rose-500 uppercase tracking-wide">Wajib Diisi</span>
               </label>
               <textarea
                 required
                 rows={3}
                 value={appealReason}
                 onChange={(e) => setAppealReason(e.target.value)}
-                placeholder="Tuliskan alasan lengkap dan kronologi kendala darurat Anda..."
-                className="w-full px-3 py-2 border border-neutral-300 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-blue-600"
+                placeholder="Tuliskan secara lengkap kronologi kendala darurat, alasan pembatalan, atau kendala kendaraan Anda..."
+                className="w-full px-3.5 py-2.5 border border-neutral-300 rounded-xl text-[13px] text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#10367D] focus:border-[#10367D] bg-white transition shadow-2xs"
               />
             </div>
 
-            <div>
-              <label className="block text-[12px] font-bold text-neutral-700 mb-1">
-                Tautan Bukti Dokumen / Foto (Opsional)
+            {/* Field: Bukti Foto / Dokumen */}
+            <div className="space-y-1.5">
+              <label className="flex items-center justify-between text-[12px] font-bold text-neutral-700">
+                <span className="flex items-center gap-1.5">
+                  <LinkIcon className="w-3.5 h-3.5 text-[#10367D]" />
+                  Tautan Bukti Dokumen / Foto
+                </span>
+                <span className="text-[10px] font-semibold text-neutral-400">Opsional</span>
               </label>
               <input
                 type="url"
                 value={appealEvidenceUrl}
                 onChange={(e) => setAppealEvidenceUrl(e.target.value)}
-                placeholder="https://contoh.com/bukti-bengkel.jpg"
-                className="w-full px-3 py-2 border border-neutral-300 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-blue-600"
+                placeholder="https://contoh.com/foto-bukti-bengkel.jpg"
+                className="w-full px-3.5 py-2.5 border border-neutral-300 rounded-xl text-[13px] text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#10367D] focus:border-[#10367D] bg-white transition shadow-2xs"
               />
+              <p className="text-[11px] text-neutral-400">
+                Masukkan tautan Google Drive publik, link gambar kuitansi bengkel, atau surat dokter.
+              </p>
             </div>
 
-            <div className="flex gap-2 pt-2">
+            {/* Actions */}
+            <div className="flex items-center gap-2.5 pt-2">
               <button
                 type="button"
                 disabled={isSubmittingAppeal}
                 onClick={() => setAppealModalTarget(null)}
-                className="flex-1 py-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-xl font-bold transition cursor-pointer"
+                className="flex-1 py-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-xl font-bold text-[13px] transition cursor-pointer"
               >
                 Batal
               </button>
               <button
                 type="submit"
                 disabled={isSubmittingAppeal}
-                className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition cursor-pointer shadow-sm flex items-center justify-center gap-1.5"
+                className="flex-1 py-2.5 bg-gradient-to-r from-[#0c2353] via-[#10367D] to-[#18458f] hover:brightness-110 text-white rounded-xl font-bold text-[13px] transition cursor-pointer shadow-md flex items-center justify-center gap-2"
               >
                 {isSubmittingAppeal ? (
                   <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
-                  'Kirim Banding'
+                  <>
+                    <Send className="w-3.5 h-3.5" />
+                    <span>Kirim Banding</span>
+                  </>
                 )}
               </button>
             </div>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import ConfirmModal from '../../../components/ui/ConfirmModal';
 import {
   LayoutDashboard,
   ShieldCheck,
@@ -139,45 +140,18 @@ export default function SuperadminSidebar({ activeMenu = 'Dashboard', onMenuSele
         </div>
       </aside>
 
-      {showLogoutModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-xl max-w-sm w-full p-6 shadow-modal space-y-6 text-slate-900">
-            <div className="text-center space-y-2">
-              <div className="w-12 h-12 bg-rose-50 text-rose-600 rounded-xl mx-auto flex items-center justify-center shadow-soft">
-                <AlertTriangle size={24} />
-              </div>
-              <h3 className="text-lg font-semibold text-slate-900">Konfirmasi Keluar Sistem</h3>
-              <p className="text-sm leading-relaxed text-slate-500">
-                Apakah Anda yakin ingin mengakhiri sesi aktif ini? Anda harus masuk kembali untuk mengakses panel superadmin.
-              </p>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setShowLogoutModal(false)}
-                disabled={isLoggingOut}
-                className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-lg transition cursor-pointer"
-              >
-                Batal
-              </button>
-              <button
-                onClick={handleConfirmLogout}
-                disabled={isLoggingOut}
-                className="flex-1 py-3 bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold rounded-lg transition shadow-soft cursor-pointer flex items-center justify-center gap-2"
-              >
-                {isLoggingOut ? (
-                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                ) : (
-                  <>
-                    <LogOut className="w-3.5 h-3.5" />
-                    Ya, Keluar
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
+      <ConfirmModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={handleConfirmLogout}
+        title="Konfirmasi Keluar Sistem"
+        message="Apakah Anda yakin ingin mengakhiri sesi aktif ini? Anda harus masuk kembali untuk mengakses panel superadmin."
+        confirmText="Ya, Keluar"
+        cancelText="Batal"
+        variant="danger"
+        icon={LogOut}
+        isLoading={isLoggingOut}
+      />
+        </>
   );
 }

@@ -22,6 +22,7 @@ import EmptyState from '../../../components/ui/EmptyState';
 import StatusBadge from '../../../components/ui/StatusBadge';
 import BaseModal from '../../../components/ui/BaseModal';
 import { getAllRegions, createRegion, updateRegion } from '../../../services/regionService';
+import { useConfirm } from '../../../context/ConfirmContext';
 import { parseGeoJSON, cleanGeoJsonCoordinates } from '../../../utils/geoJsonUtil';
 import { INDONESIA_CITIES } from '../../../data/indonesiaCities';
 
@@ -42,6 +43,7 @@ function ChangeView({ center, zoom = 11 }) {
 }
 
 export default function RegionsManagement() {
+  const confirm = useConfirm();
   const [regions, setRegions] = useState([]);
   const [isLoadingRegions, setIsLoadingRegions] = useState(true);
   const [isFetchingPage, setIsFetchingPage] = useState(false);
@@ -50,7 +52,6 @@ export default function RegionsManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [regionToToggle, setRegionToToggle] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [currentId, setCurrentId] = useState(null);
   const [selectedRegion, setSelectedRegion] = useState(null);
@@ -272,16 +273,23 @@ export default function RegionsManagement() {
     }
   };
 
-  const handleConfirmToggleStatus = async () => {
-    if (!regionToToggle) return;
+  const handleToggleStatus = async (region) => {
+    const willDeactivate = region.isActive;
+    const isConfirmed = await confirm({
+      title: willDeactivate ? 'Nonaktifkan Wilayah' : 'Aktifkan Wilayah',
+      message: `Apakah Anda yakin ingin ${willDeactivate ? 'menonaktifkan' : 'mengaktifkan'} wilayah "${region.name}"?`,
+      confirmText: willDeactivate ? 'Ya, Nonaktifkan' : 'Ya, Aktifkan',
+      cancelText: 'Batal',
+      variant: willDeactivate ? 'warning' : 'info',
+    });
+    if (!isConfirmed) return;
 
     try {
-      await updateRegion(regionToToggle.id, {
-        isActive: !regionToToggle.isActive
+      await updateRegion(region.id, {
+        isActive: !region.isActive
       });
-      showNotification(`Status wilayah ${regionToToggle.name} berhasil diubah!`, 'success');
-      setRegionToToggle(null);
-      await fetchRegions(currentPage); // Update data langsung
+      showNotification(`Status wilayah ${region.name} berhasil diubah!`, 'success');
+      await fetchRegions(currentPage);
     } catch (err) {
       console.error('Gagal mengubah status wilayah:', err);
       showNotification('Gagal mengubah status wilayah.', 'error');
@@ -413,7 +421,7 @@ export default function RegionsManagement() {
                         <button onClick={() => handleOpenEditModal(region)} className="p-1.5 bg-blue-50 text-blue-600 rounded-lg cursor-pointer" title="Edit Wilayah">
                           <Edit3 size={13} />
                         </button>
-                        <button onClick={() => setRegionToToggle(region)} className={`p-1.5 rounded-lg cursor-pointer ${region.isActive ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'}`} title="Ubah Status">
+                        <button onClick={() => handleToggleStatus(region)} className={`p-1.5 rounded-lg cursor-pointer ${region.isActive ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'}`} title="Ubah Status">
                           {region.isActive ? <XCircle size={13} /> : <CheckCircle2 size={13} />}
                         </button>
                       </div>
@@ -669,31 +677,6 @@ export default function RegionsManagement() {
           </div>
 
         </form>
-      </BaseModal>
-
-      <BaseModal
-        isOpen={Boolean(regionToToggle)}
-        onClose={() => setRegionToToggle(null)}
-        title="Konfirmasi Status Wilayah"
-        subtitle="Sistem Manajemen Operasional"
-        maxWidth="max-w-sm"
-      >
-        <div className="space-y-3 text-[13px] text-center">
-          <div className="w-10 h-10 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto">
-            <AlertTriangle size={20} />
-          </div>
-          <p className="text-neutral-600">
-            Apakah Anda yakin ingin {regionToToggle?.isActive ? 'menonaktifkan' : 'mengaktifkan'} wilayah <strong>{regionToToggle?.name}</strong>?
-          </p>
-          <div className="flex gap-2 pt-2">
-            <button onClick={() => setRegionToToggle(null)} className="flex-1 py-2 bg-neutral-100 text-neutral-700 rounded-full font-bold cursor-pointer">
-              Batal
-            </button>
-            <button onClick={handleConfirmToggleStatus} className="flex-1 py-2 bg-[#10367D] hover:bg-[#0C2C66] text-white rounded-full font-bold cursor-pointer shadow-sm transition">
-              Ya, Konfirmasi
-            </button>
-          </div>
-        </div>
       </BaseModal>
 
     </div>

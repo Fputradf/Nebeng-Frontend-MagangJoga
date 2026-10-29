@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 import CustomerSidebar from './components/CustomerSidebar';
@@ -54,6 +54,7 @@ export default function CustomerLayout() {
 
   return (
     <AppShell
+      role="customer"
       sidebar={
         <CustomerSidebar
           activeMenu={activeMenu}

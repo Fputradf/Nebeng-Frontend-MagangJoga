@@ -6,7 +6,6 @@ import {
   Check,
   Search,
   Clock,
-  Sparkles,
   ArrowRight,
   Info,
   RotateCw,
@@ -132,8 +131,7 @@ export default function CustomerVouchers() {
 
   const handleUseVoucher = (voucher, e) => {
     e?.stopPropagation();
-    navigator.clipboard.writeText(voucher.code);
-    toast.success(`Kode ${voucher.code} disalin. Silakan tempelkan pada formulir pemesanan trip!`);
+    toast.success(`Voucher ${voucher.code} siap dipilih langsung pada formulir pemesanan!`);
     navigate('/customer/booking');
   };
 
@@ -164,7 +162,7 @@ export default function CustomerVouchers() {
 
   return (
     <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-sans">
-      {/* ── BANNER GRADIENT ── */}
+      {/* ── BANNER ── */}
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] p-6 text-white shadow-card sm:p-8">
         <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10" />
         <div className="absolute bottom-0 right-32 h-28 w-28 rounded-full bg-accent/20" />
@@ -186,9 +184,9 @@ export default function CustomerVouchers() {
 
           <div className="flex items-center gap-3 self-start md:self-auto">
             {/* Stat Pill: Siap Digunakan */}
-            <div className="px-4 py-2 rounded-2xl bg-white/15 backdrop-blur border border-white/25 flex items-center gap-3 shadow-xs">
+            <div className="px-4 py-2 rounded-2xl bg-white/15 border border-white/25 flex items-center gap-3 shadow-xs">
               <div className="w-9 h-9 rounded-xl bg-accent text-brand-900 flex items-center justify-center font-black shrink-0 shadow-xs">
-                <Sparkles className="w-4 h-4 text-brand-900" />
+                <Gift className="w-4 h-4 text-brand-900" />
               </div>
               <div>
                 <div className="text-[10px] font-bold text-blue-100 uppercase tracking-wider">
@@ -202,9 +200,10 @@ export default function CustomerVouchers() {
 
             {/* Refresh Button */}
             <button
+              type="button"
               onClick={handleRefresh}
               disabled={isLoading || isRefreshing}
-              className="p-3 bg-white/15 hover:bg-white/25 border border-white/25 rounded-2xl backdrop-blur text-white transition cursor-pointer shadow-xs disabled:opacity-50"
+              className="p-3 bg-white/15 hover:bg-white/25 border border-white/25 rounded-2xl text-white transition cursor-pointer shadow-xs disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
               title="Segarkan daftar voucher"
             >
               <RotateCw className={`w-4 h-4 text-white ${isRefreshing ? 'animate-spin' : ''}`} />
@@ -265,7 +264,7 @@ export default function CustomerVouchers() {
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-3.5 h-3.5 text-accent" />
+                  <Tag className="w-3.5 h-3.5 text-accent" />
                   <span>Klaim Voucher</span>
                 </>
               )}

@@ -13,7 +13,6 @@ import {
   PauseCircle, 
   PlayCircle, 
   AlertTriangle,
-  ArrowDownUp,
   Clock,
   CheckCircle2,
   Search,
@@ -134,24 +133,6 @@ export default function MitraTripManagement() {
     target.setDate(target.getDate() + daysOffset);
     const iso = target.toISOString().split('T')[0];
     setFormData(prev => ({ ...prev, date: iso }));
-  };
-
-  const handleSwapPoints = () => {
-    if (!formData.originPointId || !formData.destinationPointId) return;
-    setFormData(prev => {
-      const newOrigin = prev.destinationPointId;
-      const newDest = prev.originPointId;
-      const updated = {
-        ...prev,
-        originPointId: newOrigin,
-        destinationPointId: newDest,
-      };
-      if (!isPriceManual) {
-        const suggested = calculateSuggestedFare(newOrigin, newDest, prev.vehicleId, points, vehicles);
-        if (suggested) updated.price = suggested;
-      }
-      return updated;
-    });
   };
 
   const calculateSuggestedFare = (originId, destinationId, vehId, currentPoints, currentVehicles) => {
@@ -931,19 +912,6 @@ export default function MitraTripManagement() {
                   points.map((p) => <option key={p.id} value={p.id}>{formatPointLabel(p)}</option>)
                 )}
               </select>
-            </div>
-
-            {/* Interactive Swap Button */}
-            <div className="flex justify-end -my-1">
-              <button
-                type="button"
-                onClick={handleSwapPoints}
-                title="Tukar Pos Asal & Tujuan"
-                className="inline-flex items-center gap-1 text-[11px] font-bold text-[#10367D] bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-lg transition border border-blue-200 cursor-pointer"
-              >
-                <ArrowDownUp className="w-3 h-3" />
-                <span>Tukar Pos Asal & Tujuan</span>
-              </button>
             </div>
 
             <div>

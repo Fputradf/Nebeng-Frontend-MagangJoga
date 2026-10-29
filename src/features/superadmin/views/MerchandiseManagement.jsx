@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { BASE_URL } from '../../../config/env';
 import { useToast } from '../../../context/ToastContext';
+import { useConfirm } from '../../../context/ConfirmContext';
 import { Skeleton } from '../../../components/ui/Skeleton';
 import EmptyState from '../../../components/ui/EmptyState';
 import StatusBadge from '../../../components/ui/StatusBadge';
@@ -31,6 +32,7 @@ const STATUS_OPTIONS = [
 
 export default function MerchandiseManagement() {
   const toast = useToast();
+  const confirm = useConfirm();
 
   const [activeTab, setActiveTab] = useState('items');
 
@@ -59,10 +61,6 @@ export default function MerchandiseManagement() {
   const [trackingNumber, setTrackingNumber] = useState('');
   const [isSubmittingStatus, setIsSubmittingStatus] = useState(false);
 
-  // State Modal Konfirmasi Hapus
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   // Memuat Data Asinkron tanpa memanggil setState sinkron di body effect
   useEffect(() => {
@@ -180,27 +178,24 @@ export default function MerchandiseManagement() {
     }
   };
 
-  const handleDeleteItem = (item) => {
-    setItemToDelete(item);
-    setIsDeleteModalOpen(true);
-  };
+  const handleDeleteItem = async (item) => {
+    const isConfirmed = await confirm({
+      title: 'Hapus Merchandise',
+      message: `Yakin ingin menghapus "${item.name}"? Tindakan ini akan menghapus merchandise secara permanen dan tidak dapat dibatalkan.`,
+      confirmText: 'Ya, Hapus',
+      cancelText: 'Batal',
+      variant: 'danger',
+    });
+    if (!isConfirmed) return;
 
-  const confirmDeleteItem = async () => {
-    if (!itemToDelete) return;
-
-    setIsDeleting(true);
     try {
-      await merchandiseService.deleteItem(itemToDelete.id);
+      await merchandiseService.deleteItem(item.id);
       toast.success('Merchandise berhasil dihapus.');
       const updated = await merchandiseService.getCatalog(false);
       setItems(updated || []);
-      setIsDeleteModalOpen(false);
-      setItemToDelete(null);
     } catch (err) {
       console.error('Gagal menghapus merchandise:', err);
       toast.error('Gagal menghapus merchandise.');
-    } finally {
-      setIsDeleting(false);
     }
   };
 
@@ -699,48 +694,7 @@ export default function MerchandiseManagement() {
         </form>
       </BaseModal>
 
-      {/* Modal Konfirmasi Hapus Merchandise */}
-      <BaseModal
-        isOpen={isDeleteModalOpen}
-        onClose={() => { if (!isDeleting) setIsDeleteModalOpen(false); }}
-        title="Konfirmasi Hapus Merchandise"
-        maxWidth="max-w-sm"
-      >
-        <div className="space-y-4 text-[13px]">
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
-              <AlertTriangle className="w-5 h-5" />
-            </div>
-            <div>
-              <p className="font-bold text-neutral-800">
-                Yakin ingin menghapus "{itemToDelete?.name}"?
-              </p>
-              <p className="text-neutral-500 mt-1">
-                Tindakan ini akan menghapus merchandise secara permanen dan tidak dapat dibatalkan.
-              </p>
-            </div>
-          </div>
 
-          <div className="flex gap-2 pt-2">
-            <button
-              type="button"
-              disabled={isDeleting}
-              onClick={() => setIsDeleteModalOpen(false)}
-              className="flex-1 py-2.5 bg-neutral-100 text-neutral-700 rounded-xl font-bold"
-            >
-              Batal
-            </button>
-            <button
-              type="button"
-              onClick={confirmDeleteItem}
-              disabled={isDeleting}
-              className="flex-1 py-2.5 bg-rose-600 text-white rounded-xl font-bold hover:bg-rose-700 transition disabled:opacity-50"
-            >
-              {isDeleting ? 'Menghapus...' : 'Ya, Hapus'}
-            </button>
-          </div>
-        </div>
-      </BaseModal>
     </div>
   );
 }

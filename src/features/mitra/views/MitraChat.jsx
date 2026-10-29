@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+﻿import { useState, useRef, useEffect } from 'react';
 import { MessageSquare, Send, CheckCheck, Search, Phone, ArrowLeft, Lock } from 'lucide-react';
 import apiClient from '../../../services/apiClient';
 import { useToast } from '../../../context/ToastContext';

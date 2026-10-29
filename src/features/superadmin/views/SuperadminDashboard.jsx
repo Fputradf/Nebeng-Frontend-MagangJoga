@@ -88,6 +88,7 @@ export default function SuperadminDashboard() {
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [filterSortBy, setFilterSortBy] = useState('default');
   const [activeRange, setActiveRange] = useState('Bulan');
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [chartType, setChartType] = useState('area'); // 'area' | 'bar'
   const [regionTab, setRegionTab] = useState('Semua');
   const [regionPage, setRegionPage] = useState(1);
@@ -144,7 +145,7 @@ export default function SuperadminDashboard() {
       sub: `+8.2% vs bulan lalu`, trend: kpiTrends.revenue, change: +8.2
     },
     {
-      icon: Wallet, color: '#10367D', bg: 'bg-[#10367D]/10',
+      icon: Wallet, color: '#10b981', bg: 'bg-emerald-50',
       label: 'KOMISI PLATFORM', value: formatRp(platformCommission),
       sub: `${totalRevenue > 0 ? ((platformCommission/totalRevenue)*100).toFixed(1) : 0}% dari pendapatan`, trend: kpiTrends.commission, change: +5.1
     },
@@ -154,9 +155,9 @@ export default function SuperadminDashboard() {
       sub: 'Dana tertahan aktif', trend: kpiTrends.escrow, change: -2.3
     },
     {
-      icon: MapPin, color: '#f59e0b', bg: 'bg-amber-50',
+      icon: MapPin, color: '#10367D', bg: 'bg-[#10367D]/10',
       label: 'TOTAL WILAYAH', value: String(totalRegions || 0),
-      sub: 'Wilayah aktif terdaftar', trend: kpiTrends.regions, change: +1
+      sub: 'Wilayah aktif terdaftar', trend: kpiTrends.regions,
     },
   ];
 
@@ -213,11 +214,9 @@ export default function SuperadminDashboard() {
     };
 
     const genBulanan = () => {
-      const now = new Date();
-      const currentYear = now.getFullYear();
-      const currentMonth = now.getMonth();
-      const monthName = MONTHS_ID_FULL[currentMonth];
-      const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+      const currentYear = new Date().getFullYear();
+      const monthName = MONTHS_ID_FULL[selectedMonth];
+      const daysInMonth = new Date(currentYear, selectedMonth + 1, 0).getDate();
 
       const weeks = [
         { label: 'Minggu 1', range: `1–7 ${monthName} ${currentYear}`, baseWeight: 23 },
@@ -256,7 +255,7 @@ export default function SuperadminDashboard() {
       Tahunan: genTahunan,
     };
     return (gen[activeRange] || genBulanan)();
-  }, [activeRange, targetRevenueJt, selectedChartRegion]);
+  }, [activeRange, targetRevenueJt, selectedChartRegion, selectedMonth]);
 
   const totalPemasukanJt = revenueChartData.reduce((s,d) => s+d.pemasukanTotal, 0);
   const totalBersihJt = revenueChartData.reduce((s,d) => s+d.pemasukanBersih, 0);
@@ -336,10 +335,12 @@ export default function SuperadminDashboard() {
                     <div className={`p-2 ${k.bg} rounded-xl`}>
                       <Icon className="w-4 h-4" style={{ color: k.color }} />
                     </div>
-                    <span className={`flex items-center gap-0.5 text-[11px] font-bold px-2 py-0.5 rounded-full ${isUp ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
-                      {isUp ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                      {Math.abs(k.change)}%
-                    </span>
+                    {k.change != null && (
+                      <span className={`flex items-center gap-0.5 text-[11px] font-bold px-2 py-0.5 rounded-full ${isUp ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                        {isUp ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                        {Math.abs(k.change)}%
+                      </span>
+                    )}
                   </div>
                   <div>
                     <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">{k.label}</p>
@@ -369,7 +370,7 @@ export default function SuperadminDashboard() {
                 <p className="text-[12px] text-neutral-400">Total vs pemasukan bersih per periode</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <div className="flex items-center gap-0.5 bg-neutral-50 border border-neutral-200 rounded-full p-1">
                 {[
                   { id: 'Bulan', label: 'Bulanan' },
@@ -388,6 +389,19 @@ export default function SuperadminDashboard() {
                   </button>
                 ))}
               </div>
+
+              {activeRange === 'Bulan' && (
+                <select
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                  className="text-[12px] bg-neutral-50 border border-neutral-200 rounded-full px-3 py-1 font-semibold text-neutral-700 focus:outline-none cursor-pointer"
+                >
+                  {MONTHS_ID_FULL.map((m, idx) => (
+                    <option key={m} value={idx}>{m}</option>
+                  ))}
+                </select>
+              )}
+
               <div className="flex items-center gap-0.5 bg-neutral-50 border border-neutral-200 rounded-full p-1">
                 <button onClick={() => setChartType('area')} title="Area"
                   className={`w-7 h-7 rounded-full flex items-center justify-center transition cursor-pointer ${chartType === 'area' ? 'bg-[#10367D] text-white' : 'text-neutral-400'}`}>

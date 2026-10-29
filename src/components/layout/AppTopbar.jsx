@@ -1,5 +1,5 @@
-﻿import { useEffect, useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ChevronDown, Menu } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import { BASE_URL } from '../../config/env';
 import logoAsset from '../../assets/LOGO.png';
@@ -35,7 +35,7 @@ const FOCUS =
  * Kalau nama tidak ada di profile, diambil dari /auth/me.
  * Tepi bawah berupa garis rute putus-putus dengan satu titik tujuan: motif identitas Nebeng.
  */
-export default function AppTopbar({ profile, roleLabel, onProfileClick }) {
+export default function AppTopbar({ profile, roleLabel, onProfileClick, onToggleSidebar }) {
   const [me, setMe] = useState(null);
   const hasName = Boolean(profile?.name || profile?.fullName);
 
@@ -59,19 +59,30 @@ export default function AppTopbar({ profile, roleLabel, onProfileClick }) {
 
   return (
     <header className="sticky top-0 z-20 border-b border-dashed border-brand-500/25 bg-white/80 backdrop-blur-md">
-      <div className="flex h-[72px] items-center gap-4 px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-2.5 lg:hidden">
-          <img src={logoAsset} alt="" className="h-8 w-8 shrink-0 object-contain" />
-          <span className="font-display text-xl font-extrabold leading-none text-brand-500">Nebeng</span>
+      <div className="flex h-16 sm:h-[72px] items-center gap-3 px-3 sm:px-6 lg:px-8">
+        <div className="flex items-center gap-2 lg:hidden">
+          {onToggleSidebar && (
+            <button
+              type="button"
+              onClick={onToggleSidebar}
+              aria-label="Buka menu navigasi"
+              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-soft transition active:scale-95 hover:bg-slate-50 ${FOCUS}`}
+            >
+              <Menu className="h-5 w-5 text-brand-600" />
+            </button>
+          )}
+          <img src={logoAsset} alt="" className="h-7 w-7 shrink-0 object-contain" />
+          <span className="hidden font-display text-lg font-extrabold leading-none text-brand-500 min-[380px]:inline">
+            Nebeng
+          </span>
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-brand-500/70">
+          <p className="hidden text-[11px] font-semibold uppercase tracking-wider text-brand-500/70 sm:block">
             {formatTanggal.format(now)}
           </p>
-          <p className="truncate font-display text-xl font-bold leading-tight text-brand-700">
-            {sapaan(now.getHours())}
-            {firstName ? `, ${firstName}` : ''}
+          <p className="truncate font-display text-sm font-bold leading-tight text-brand-700 sm:text-lg">
+            {firstName ? `${sapaan(now.getHours())}, ${firstName}` : sapaan(now.getHours())}
           </p>
         </div>
 

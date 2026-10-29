@@ -106,7 +106,7 @@ export default function RegionalLayout() {
   };
 
   return (
-    <AppShell
+    <AppShell role="regional"
       sidebar={
         <RegionalSidebar
           activeMenu={activeMenu}

@@ -18,6 +18,7 @@ import SuperadminAccountSettings from './features/superadmin/views/SuperadminAcc
 import MerchandiseManagement from './features/superadmin/views/MerchandiseManagement';
 import BannerManagement from './features/superadmin/views/BannerManagement';
 import VoucherManagement from './features/superadmin/views/VoucherManagement';
+import SocialLinksManagement from './features/superadmin/views/SocialLinksManagement';
 
 // Regional
 import RegionalLayout from './features/regional/RegionalLayout';
@@ -168,13 +169,14 @@ export default function App() {
         <Route path="merchandise" element={<MerchandiseManagement />} />
         <Route path="banner" element={<BannerManagement />} />
         <Route path="voucher" element={<VoucherManagement />} />
+        <Route path="sosial-link" element={<SocialLinksManagement />} />
         <Route path="audit" element={<AuditLedger />} />
         <Route path="governance" element={<UserGovernance />} />
         <Route path="notifications" element={<NotificationHistory />} />
         <Route path="notifications/settings" element={<NotificationSettings />} />
         <Route path="profile/pengaturan" element={<SuperadminAccountSettings />} />
         <Route path="pengaturan" element={<SuperadminAccountSettings />} />
-        <Route path="*" element={<Navigate to="dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
       </Route>
 
       {/* Admin Regional */}
@@ -199,7 +201,7 @@ export default function App() {
         <Route path="notifications/settings" element={<NotificationSettings />} />
         <Route path="profile/pengaturan" element={<RegionalAccountSettings />} />
         <Route path="pengaturan" element={<RegionalAccountSettings />} />
-        <Route path="*" element={<Navigate to="dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/regional/dashboard" replace />} />
       </Route>
 
       {/* Operator Pos */}
@@ -224,7 +226,7 @@ export default function App() {
         <Route path="notifications/settings" element={<NotificationSettings />} />
         <Route path="profile" element={<Navigate to="pengaturan" replace />} />
         <Route path="profile/pengaturan" element={<OperatorAccountSettings />} />
-        <Route path="*" element={<Navigate to="dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/operator-pos/dashboard" replace />} />
       </Route>
 
       {/* Mitra */}
@@ -247,7 +249,7 @@ export default function App() {
         <Route path="notifications" element={<NotificationHistory />} />
         <Route path="notifications/settings" element={<NotificationSettings />} />
         <Route path="profile/pengaturan" element={<MitraAccountSettings />} />
-        <Route path="*" element={<Navigate to="dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/mitra/dashboard" replace />} />
       </Route>
 
       {/* Customer */}

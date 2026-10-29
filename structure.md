@@ -4,6 +4,12 @@
 ```
 ├── 📄 .env.example
 ├── 📄 .gitignore
+├── 📁 anti-slop/
+│   ├── 📄 audit-001-2026-10-28.md
+│   ├── 📄 audit-002-2026-10-29.md
+│   ├── 📄 audit-003-2026-10-29.md
+│   ├── 📄 report-001-2026-10-29.md
+│   └── 📄 report-002-2026-10-29.md
 ├── 📁 backup-layout/
 │   ├── 📄 CustomerLayout.jsx
 │   ├── 📄 MitraLayout.jsx
@@ -44,6 +50,7 @@
 │   │   └── 📄 LOGO.png
 │   ├── 📁 components/
 │   │   ├── 📁 layout/
+│   │   │   ├── 📄 AppBottomNav.jsx
 │   │   │   ├── 📄 AppShell.jsx
 │   │   │   ├── 📄 AppTopbar.jsx
 │   │   │   ├── 📄 AuthLayout.jsx
@@ -64,12 +71,14 @@
 │   │       ├── 📄 AuthInput.jsx
 │   │       ├── 📄 BannerSlider.jsx
 │   │       ├── 📄 BaseModal.jsx
+│   │       ├── 📄 ConfirmModal.jsx
 │   │       ├── 📄 EmptyState.jsx
 │   │       ├── 📄 EnterpriseTable.jsx
 │   │       ├── 📄 NotificationBell.jsx
 │   │       ├── 📄 PhoneCallModal.jsx
 │   │       ├── 📄 QrScannerModal.jsx
 │   │       ├── 📄 Skeleton.jsx
+│   │       ├── 📄 SocialIcon.jsx
 │   │       ├── 📄 StatCard.jsx
 │   │       ├── 📄 StatusBadge.jsx
 │   │       └── 📄 ToggleSwitch.jsx
@@ -78,6 +87,7 @@
 │   │   └── 📄 firebase.js
 │   ├── 📁 context/
 │   │   ├── 📄 AuthContext.jsx
+│   │   ├── 📄 ConfirmContext.jsx
 │   │   ├── 📄 GPSContext.jsx
 │   │   ├── 📄 MitraDataContext.jsx
 │   │   ├── 📄 NotificationContext.jsx
@@ -174,6 +184,7 @@
 │   │           ├── 📄 PricingManagement.jsx
 │   │           ├── 📄 RegionalAdminsManagement.jsx
 │   │           ├── 📄 RegionsManagement.jsx
+│   │           ├── 📄 SocialLinksManagement.jsx
 │   │           ├── 📄 SuperadminAccountSettings.jsx
 │   │           ├── 📄 SuperadminDashboard.jsx
 │   │           ├── 📄 UserGovernance.jsx
@@ -190,6 +201,7 @@
 │   │   ├── 📄 auditService.js
 │   │   ├── 📄 authService.js
 │   │   ├── 📄 bannerService.js
+│   │   ├── 📄 disruptedTripsService.js
 │   │   ├── 📄 merchandiseService.js
 │   │   ├── 📄 mitraPricing.js
 │   │   ├── 📄 mitraService.js
@@ -199,6 +211,7 @@
 │   │   ├── 📄 pricingService.js
 │   │   ├── 📄 regionalService.js
 │   │   ├── 📄 regionService.js
+│   │   ├── 📄 socialLinkService.js
 │   │   ├── 📄 supportChatService.js
 │   │   ├── 📄 userService.js
 │   │   ├── 📄 vehicleService.js

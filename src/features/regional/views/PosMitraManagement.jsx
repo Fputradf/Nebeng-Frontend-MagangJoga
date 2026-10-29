@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Marker, GeoJSON, Circle, useMap } from 'react-
 import L from 'leaflet';
 import { MapPin, Search, Plus, QrCode, Trash2, Pencil, AlertTriangle, UserCheck, Globe, Loader2, Save, Layers } from 'lucide-react';
 import { useToast } from '../../../context/ToastContext';
+import { useConfirm } from '../../../context/ConfirmContext';
 import { SkeletonTableRows } from '../../../components/ui/Skeleton';
 import EmptyState from '../../../components/ui/EmptyState';
 import BaseModal from '../../../components/ui/BaseModal';
@@ -29,6 +30,7 @@ function ChangeMapView({ center, zoom = 12 }) {
 
 export default function PosMitraManagement() {
   const toast = useToast();
+  const confirm = useConfirm();
   const { session, adminProfile } = useAuth();
   const [activeRegionId, setActiveRegionId] = useState(null);
   const [posList, setPosList] = useState([]);
@@ -39,7 +41,6 @@ export default function PosMitraManagement() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [currentPos, setCurrentPos] = useState(null);
-  const [posToDelete, setPosToDelete] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: '', address: '', latitude: -7.5666, longitude: 110.8316, operatorId: '', regionId: ''
@@ -224,12 +225,19 @@ export default function PosMitraManagement() {
     }
   };
 
-  const handleConfirmDelete = async () => {
-    if (!posToDelete) return;
+  const handleDeletePos = async (pos) => {
+    const isConfirmed = await confirm({
+      title: 'Konfirmasi Hapus Pos',
+      message: `Apakah Anda yakin ingin menonaktifkan pos "${pos.name}"?`,
+      confirmText: 'Ya, Nonaktifkan',
+      cancelText: 'Batal',
+      variant: 'danger',
+    });
+    if (!isConfirmed) return;
+
     try {
-      await regionalService.deletePickupPoint(posToDelete.id);
-      toast.success(`Pos berhasil dinonaktifkan.`, { title: 'Berhasil' });
-      setPosToDelete(null);
+      await regionalService.deletePickupPoint(pos.id);
+      toast.success('Pos berhasil dinonaktifkan.', { title: 'Berhasil' });
       
       const regId = activeRegionId || adminProfile?.regionId || session?.regionId;
       const posData = await regionalService.getPickupPoints(regId);
@@ -357,7 +365,7 @@ export default function PosMitraManagement() {
                         <button onClick={() => handleOpenEdit(pos)} className="p-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg transition cursor-pointer" title="Edit Pos">
                           <Pencil size={13} />
                         </button>
-                        <button onClick={() => setPosToDelete(pos)} className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg transition cursor-pointer" title="Hapus Pos">
+                        <button onClick={() => handleDeletePos(pos)} className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg transition cursor-pointer" title="Hapus Pos">
                           <Trash2 size={13} />
                         </button>
                       </div>
@@ -544,24 +552,7 @@ export default function PosMitraManagement() {
         )}
       </BaseModal>
 
-      {/* Modal Konfirmasi Hapus */}
-      <BaseModal
-        isOpen={Boolean(posToDelete)}
-        onClose={() => setPosToDelete(null)}
-        title="Konfirmasi Hapus Pos"
-        maxWidth="max-w-sm"
-      >
-        <div className="space-y-3 text-[13px] text-center">
-          <div className="w-10 h-10 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center mx-auto">
-            <AlertTriangle size={20} />
-          </div>
-          <p className="text-neutral-600">Apakah Anda yakin ingin menonaktifkan pos <strong>{posToDelete?.name}</strong>?</p>
-          <div className="flex gap-2 pt-2">
-            <button onClick={() => setPosToDelete(null)} className="flex-1 py-2 bg-neutral-100 text-neutral-700 rounded-full font-bold cursor-pointer">Batal</button>
-            <button onClick={handleConfirmDelete} className="flex-1 py-2 bg-rose-600 text-white rounded-full font-bold cursor-pointer shadow-sm">Ya, Nonaktifkan</button>
-          </div>
-        </div>
-      </BaseModal>
+
     </div>
   );
 }

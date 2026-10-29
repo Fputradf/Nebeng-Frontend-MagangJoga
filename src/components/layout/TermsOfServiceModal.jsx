@@ -1,73 +1,133 @@
-import { X, FileText, CheckCircle2 } from 'lucide-react';
+import { useEffect } from 'react';
+import { X, FileText, ShieldCheck, CheckCircle2 } from 'lucide-react';
 
-export default function TermsOfServiceModal({ isOpen, onClose }) {
+export default function TermsOfServiceModal({ isOpen, onClose, onAccept }) {
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200 font-sans">
-      <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] shadow-2xl border border-slate-200 flex flex-col overflow-hidden">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="tos-modal-title"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-200 font-sans"
+    >
+      <div
+        className="bg-white rounded-2xl max-w-2xl w-full max-h-[85vh] shadow-2xl border border-slate-200 flex flex-col overflow-hidden animate-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
-        <div className="p-5 sm:p-6 bg-gradient-to-r from-[#0c2353] via-[#10367D] to-[#18458f] text-white flex items-center justify-between gap-4 shrink-0">
+        <div className="px-5 py-4 bg-gradient-to-r from-[#0c2353] via-[#10367D] to-[#18458f] text-white flex items-center justify-between gap-4 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-cyan-300">
+            <div className="w-9 h-9 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-blue-200">
               <FileText className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg font-extrabold text-white">
+              <h2 id="tos-modal-title" className="text-base sm:text-lg font-bold text-white">
                 Syarat & Ketentuan Layanan
               </h2>
-              <p className="text-xs text-blue-200">
+              <p className="text-xs text-blue-100">
                 Aturan operasional dan etika penggunaan platform Nebeng
               </p>
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            aria-label="Tutup"
-            className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition cursor-pointer"
+            aria-label="Tutup modal syarat dan ketentuan"
+            className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-5 sm:p-6 overflow-y-auto space-y-5 text-xs sm:text-sm text-slate-600 leading-relaxed">
-          <div className="space-y-1.5">
-            <h3 className="font-extrabold text-slate-900">1. Ketentuan Penjemputan di Pos Mitra</h3>
-            <p>
+        <div className="p-5 sm:p-6 overflow-y-auto space-y-4 text-xs sm:text-sm text-slate-600 leading-relaxed">
+          <div className="p-3 bg-blue-50/60 rounded-xl border border-blue-100/80 text-blue-900 flex items-center gap-2.5 text-xs">
+            <ShieldCheck className="w-4 h-4 text-blue-600 shrink-0" />
+            <span>Harap baca dengan cermat ketentuan sebelum menggunakan platform Nebeng.</span>
+          </div>
+
+          <div className="space-y-1">
+            <h3 className="font-bold text-slate-900 flex items-center gap-1.5">
+              <span className="w-5 h-5 rounded-full bg-slate-100 text-[11px] text-slate-700 flex items-center justify-center font-bold">1</span>
+              Ketentuan Akun & Pendaftaran
+            </h3>
+            <p className="pl-6 text-slate-600">
+              Pengguna wajib mendaftarkan data identitas asli yang valid (nama lengkap, nomor telepon aktif, dan email resmi). Penyalahgunaan identitas orang lain dapat mengakibatkan pemblokiran akun permanen.
+            </p>
+          </div>
+
+          <div className="space-y-1">
+            <h3 className="font-bold text-slate-900 flex items-center gap-1.5">
+              <span className="w-5 h-5 rounded-full bg-slate-100 text-[11px] text-slate-700 flex items-center justify-center font-bold">2</span>
+              Sistem Escrow & Transaksi Aman
+            </h3>
+            <p className="pl-6 text-slate-600">
+              Semua transaksi ongkos perjalanan dan kargo wajib melalui dompet digital Nebeng yang dilindungi proteksi escrow. Dana pengemudi dicairkan hanya setelah perjalanan dikonfirmasi tiba dengan sukses.
+            </p>
+          </div>
+
+          <div className="space-y-1">
+            <h3 className="font-bold text-slate-900 flex items-center gap-1.5">
+              <span className="w-5 h-5 rounded-full bg-slate-100 text-[11px] text-slate-700 flex items-center justify-center font-bold">3</span>
+              Peraturan Penjemputan di Pos Mitra
+            </h3>
+            <p className="pl-6 text-slate-600">
               Seluruh perjalanan wajib diawali dan diakhiri pada Pos Mitra resmi yang telah terdaftar dalam sistem Nebeng. Penumpang wajib tiba minimal 15 menit sebelum waktu keberangkatan untuk proses validasi QR code oleh Operator Pos.
             </p>
           </div>
 
-          <div className="space-y-1.5">
-            <h3 className="font-extrabold text-slate-900">2. Larangan Bawaan & Keamanan Perjalanan</h3>
-            <p>
-              Pengguna dilarang keras membawa narkotika, senjata tajam/api, zat berbahaya mudah meledak, hewan tanpa izin khusus, dan barang yang melanggar hukum RI. Operator Pos berhak menolak penumpang yang melanggar ketentuan ini.
+          <div className="space-y-1">
+            <h3 className="font-bold text-slate-900 flex items-center gap-1.5">
+              <span className="w-5 h-5 rounded-full bg-slate-100 text-[11px] text-slate-700 flex items-center justify-center font-bold">4</span>
+              Larangan Bawaan & Keamanan
+            </h3>
+            <p className="pl-6 text-slate-600">
+              Dilarang keras membawa narkotika, barang terlarang, senjata tajam/api, atau benda berbahaya lainnya. Muatan kargo tidak boleh melebihi batas bobot/dimensi yang dipesan.
             </p>
           </div>
 
-          <div className="space-y-1.5">
-            <h3 className="font-extrabold text-slate-900">3. Kebijakan Pembatalan & Pengembalian Dana</h3>
-            <p>
+          <div className="space-y-1">
+            <h3 className="font-bold text-slate-900 flex items-center gap-1.5">
+              <span className="w-5 h-5 rounded-full bg-slate-100 text-[11px] text-slate-700 flex items-center justify-center font-bold">5</span>
+              Kebijakan Pembatalan & Pengembalian Dana
+            </h3>
+            <p className="pl-6 text-slate-600">
               Pembatalan yang diajukan lebih dari 6 jam sebelum keberangkatan berhak mendapatkan refund 100% ke saldo Dompet Nebeng. Pembatalan 2-6 jam dikenakan potongan 15% untuk kompensasi persiapan mitra.
-            </p>
-          </div>
-
-          <div className="space-y-1.5">
-            <h3 className="font-extrabold text-slate-900">4. Peran Admin Wilayah & Bantuan Darurat</h3>
-            <p>
-              Apabila terjadi sengketa atau kendala operasional dalam perjalanan, Admin Wilayah bertindak sebagai mediator resmi yang berhak menahan atau meneruskan dana escrow sesuai bukti digital pemeriksaan.
             </p>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="p-4 sm:p-5 border-t border-slate-200 bg-slate-50 flex items-center justify-end shrink-0">
+        <div className="px-5 py-3 border-t border-slate-200 bg-slate-50 flex items-center justify-end gap-2.5 shrink-0">
           <button
+            type="button"
             onClick={onClose}
-            className="px-5 py-2.5 rounded-xl bg-[#10367D] hover:bg-blue-900 text-white text-xs font-bold transition cursor-pointer shadow-xs"
+            className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-200/60 rounded-lg transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
           >
-            Saya Setuju & Mengerti
+            Tutup
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (onAccept) onAccept();
+              onClose();
+            }}
+            className="px-4 py-2 text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 rounded-lg transition flex items-center gap-1.5 cursor-pointer shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1"
+          >
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            <span>Saya Mengerti & Setujui</span>
           </button>
         </div>
       </div>

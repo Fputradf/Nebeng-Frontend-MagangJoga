@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Search,
   MessageSquare,
@@ -11,6 +11,8 @@ import {
   ShieldCheck,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
+  ChevronRight,
   ThumbsUp,
   ThumbsDown,
   Send,
@@ -162,6 +164,79 @@ export default function HelpCenterView({ userRole = 'customer' }) {
         'Saldo dompet saya belum masuk setelah top-up.',
         'Apakah bisa reschedule tanggal keberangkatan?',
       ];
+
+  // Scroll and Drag handlers for Tanya Cepat
+  const quickScrollRef = useRef(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const isQuickDraggingRef = useRef(false);
+  const quickStartXRef = useRef(0);
+  const quickScrollLeftRef = useRef(0);
+  const hasQuickMovedRef = useRef(false);
+
+  const checkQuickScroll = useCallback(() => {
+    const el = quickScrollRef.current;
+    if (!el) return;
+    const hasOverflow = el.scrollWidth > el.clientWidth + 2;
+    setCanScrollLeft(el.scrollLeft > 2);
+    setCanScrollRight(hasOverflow && el.scrollLeft < el.scrollWidth - el.clientWidth - 2);
+  }, []);
+
+  useEffect(() => {
+    checkQuickScroll();
+    window.addEventListener('resize', checkQuickScroll);
+    return () => window.removeEventListener('resize', checkQuickScroll);
+  }, [checkQuickScroll]);
+
+  useEffect(() => {
+    const timer = setTimeout(checkQuickScroll, 150);
+    return () => clearTimeout(timer);
+  }, [activeTab, checkQuickScroll]);
+
+  const scrollQuickBy = (amount) => {
+    if (quickScrollRef.current) {
+      quickScrollRef.current.scrollBy({ left: amount, behavior: 'smooth' });
+      setTimeout(checkQuickScroll, 300);
+    }
+  };
+
+  const handleQuickMouseDown = (e) => {
+    if (!quickScrollRef.current) return;
+    isQuickDraggingRef.current = true;
+    hasQuickMovedRef.current = false;
+    quickStartXRef.current = e.pageX - quickScrollRef.current.offsetLeft;
+    quickScrollLeftRef.current = quickScrollRef.current.scrollLeft;
+  };
+
+  const handleQuickMouseMove = (e) => {
+    if (!isQuickDraggingRef.current || !quickScrollRef.current) return;
+    const x = e.pageX - quickScrollRef.current.offsetLeft;
+    const walk = x - quickStartXRef.current;
+    if (Math.abs(walk) > 4) {
+      hasQuickMovedRef.current = true;
+      quickScrollRef.current.scrollLeft = quickScrollLeftRef.current - walk;
+      checkQuickScroll();
+    }
+  };
+
+  const handleQuickMouseUp = () => {
+    isQuickDraggingRef.current = false;
+  };
+
+  const handleQuickWheel = (e) => {
+    if (!quickScrollRef.current) return;
+    if (e.deltaY !== 0) {
+      e.preventDefault();
+      quickScrollRef.current.scrollLeft += e.deltaY;
+      checkQuickScroll();
+    }
+  };
+
+  const handleQuickClick = (q) => {
+    if (hasQuickMovedRef.current) return;
+    handleQuickQuestion(q);
+  };
 
   return (
     <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-sans">
@@ -503,18 +578,58 @@ export default function HelpCenterView({ userRole = 'customer' }) {
             </div>
           </div>
 
-          {/* Quick Suggestion Chips */}
-          <div className="px-4 py-2.5 bg-slate-100/70 border-b border-neutral-200/60 flex items-center gap-2 overflow-x-auto scrollbar-none text-xs">
-            <span className="text-neutral-400 font-bold text-[11px] shrink-0 uppercase tracking-wider">Tanya Cepat:</span>
-            {QUICK_QUESTIONS.map((q, idx) => (
+          {/* Quick Suggestion Chips with Scroll Arrows */}
+          <div className="relative px-3 py-2 bg-slate-100/70 border-b border-neutral-200/60 flex items-center gap-1.5">
+            <span className="text-neutral-400 font-bold text-[11px] shrink-0 uppercase tracking-wider pl-1 pr-1">
+              Tanya Cepat:
+            </span>
+
+            {/* Tombol Scroll Kiri */}
+            {canScrollLeft && (
               <button
-                key={idx}
-                onClick={() => handleQuickQuestion(q)}
-                className="px-3 py-1 rounded-full bg-white border border-neutral-200 text-neutral-700 hover:border-blue-400 hover:text-blue-700 text-xs whitespace-nowrap transition cursor-pointer shadow-2xs font-medium"
+                type="button"
+                onClick={() => scrollQuickBy(-200)}
+                aria-label="Geser ke kiri"
+                className="w-6 h-6 rounded-full bg-white shadow-xs border border-neutral-200 text-neutral-600 hover:text-blue-700 hover:bg-neutral-50 flex items-center justify-center transition cursor-pointer shrink-0 z-10"
               >
-                {q}
+                <ChevronLeft className="w-3.5 h-3.5" />
               </button>
-            ))}
+            )}
+
+            {/* Scrollable Container */}
+            <div
+              ref={quickScrollRef}
+              onMouseDown={handleQuickMouseDown}
+              onMouseMove={handleQuickMouseMove}
+              onMouseUp={handleQuickMouseUp}
+              onMouseLeave={handleQuickMouseUp}
+              onWheel={handleQuickWheel}
+              onScroll={checkQuickScroll}
+              className="flex-1 flex items-center gap-2 overflow-x-auto scrollbar-none text-xs select-none cursor-grab active:cursor-grabbing scroll-smooth py-0.5 px-0.5"
+            >
+              {QUICK_QUESTIONS.map((q, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => handleQuickClick(q)}
+                  className="px-3 py-1 rounded-full bg-white border border-neutral-200 text-neutral-700 hover:border-blue-400 hover:text-blue-700 text-xs whitespace-nowrap transition cursor-pointer shadow-2xs font-medium shrink-0"
+                >
+                  {q}
+                </button>
+              ))}
+            </div>
+
+            {/* Tombol Scroll Kanan */}
+            {canScrollRight && (
+              <button
+                type="button"
+                onClick={() => scrollQuickBy(200)}
+                aria-label="Geser ke kanan"
+                className="w-6 h-6 rounded-full bg-white shadow-xs border border-neutral-200 text-neutral-600 hover:text-blue-700 hover:bg-neutral-50 flex items-center justify-center transition cursor-pointer shrink-0 z-10"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
 
           {/* Messages Container */}

@@ -1,10 +1,11 @@
-import { useState } from 'react';
-import { ArrowRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import AuthInput from '../../components/ui/AuthInput';
 import AuthLayout from '../../components/layout/AuthLayout';
+import SocialIcon from '../../components/ui/SocialIcon';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
 import { loginRequest } from '../../services/authService';
+import { socialLinkService } from '../../services/socialLinkService';
 import logoImage from '../../assets/logo.png';
 
 export default function Login({ onSwitchToRegister, onSwitchToForgotPassword, onLogin }) {
@@ -14,9 +15,28 @@ export default function Login({ onSwitchToRegister, onSwitchToForgotPassword, on
   const [rememberMe, setRememberMe] = useState(false);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [socialLinks, setSocialLinks] = useState([]);
 
   const { login } = useAuth();
   const { registerToken } = useNotification();
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchSocialLinks = async () => {
+      try {
+        const data = await socialLinkService.getPublicSocialLinks();
+        if (isMounted && Array.isArray(data)) {
+          setSocialLinks(data.slice(0, 5));
+        }
+      } catch (err) {
+        console.warn('Gagal memuat link sosial media:', err);
+      }
+    };
+    fetchSocialLinks();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   /* =========================================
      EMAIL CHANGE
@@ -136,6 +156,7 @@ export default function Login({ onSwitchToRegister, onSwitchToForgotPassword, on
       subtitle="Masuk ke akun Anda untuk melanjutkan perjalanan atau kelola kiriman."
       authMode="login"
       onSwitchMode={onSwitchToRegister}
+      socialLinks={socialLinks}
     >
       {/* =====================================
           LOGIN FORM
@@ -227,11 +248,16 @@ export default function Login({ onSwitchToRegister, onSwitchToForgotPassword, on
             className="
               text-sm
               font-semibold
-              text-blue-600
-              hover:text-blue-700
+              text-brand-600
+              hover:text-brand-700
               hover:underline
               cursor-pointer
               transition-colors
+              focus-visible:outline-none
+              focus-visible:ring-2
+              focus-visible:ring-brand-500
+              focus-visible:ring-offset-1
+              rounded
             "
           >
             Lupa password?
@@ -239,7 +265,7 @@ export default function Login({ onSwitchToRegister, onSwitchToForgotPassword, on
         </div>
 
         {/* =================================
-            LOGIN BUTTON (CERAH & INTERAKTIF)
+            LOGIN BUTTON (CONFIDENT & PURPOSEFUL)
         ================================== */}
         <button
           type="submit"
@@ -247,19 +273,17 @@ export default function Login({ onSwitchToRegister, onSwitchToForgotPassword, on
           aria-busy={isSubmitting}
           className="
             w-full
-            py-3.5
+            min-h-[44px]
+            py-3
             px-5
             rounded-xl
-            bg-gradient-to-r
-            from-blue-600
-            via-[#1D4ED8]
-            to-blue-500
-            hover:from-blue-500
-            hover:to-blue-600
-            focus:outline-none
-            focus:ring-2
-            focus:ring-blue-500/50
-            focus:ring-offset-2
+            bg-brand-600
+            hover:bg-brand-700
+            active:bg-brand-800
+            focus-visible:outline-none
+            focus-visible:ring-2
+            focus-visible:ring-brand-500
+            focus-visible:ring-offset-2
             text-white
             text-sm
             font-bold
@@ -267,25 +291,19 @@ export default function Login({ onSwitchToRegister, onSwitchToForgotPassword, on
             flex
             items-center
             justify-center
-            gap-2
-            shadow-lg
-            shadow-blue-500/30
-            hover:shadow-xl
-            hover:shadow-blue-500/40
-            hover:-translate-y-0.5
-            active:translate-y-0
+            shadow-sm
+            hover:shadow
             active:scale-[0.99]
             transition-all
-            duration-200
+            duration-150
             disabled:opacity-50
             disabled:cursor-not-allowed
-            disabled:hover:translate-y-0
-            disabled:hover:shadow-none
+            disabled:active:scale-100
             cursor-pointer
           "
         >
           {isSubmitting ? (
-            <>
+            <span className="flex items-center gap-2">
               <span
                 className="
                   w-4
@@ -297,25 +315,10 @@ export default function Login({ onSwitchToRegister, onSwitchToForgotPassword, on
                   animate-spin
                 "
               />
-
-              <span>
-                Memproses...
-              </span>
-            </>
+              <span>Memproses...</span>
+            </span>
           ) : (
-            <>
-              <span>
-                Masuk
-              </span>
-
-              <ArrowRight
-                className="
-                  w-4
-                  h-4
-                  shrink-0
-                "
-              />
-            </>
+            <span>Masuk</span>
           )}
         </button>
       </form>
@@ -323,27 +326,12 @@ export default function Login({ onSwitchToRegister, onSwitchToForgotPassword, on
       {/* =====================================
           REGISTER LINK
       ====================================== */}
-      <p
-        className="
-          text-center
-          mt-6
-          text-sm
-          text-slate-500
-        "
-      >
+      <p className="text-center mt-6 text-sm text-slate-600">
         Belum punya akun?{' '}
-
         <button
           type="button"
           onClick={onSwitchToRegister}
-          className="
-            font-bold
-            text-blue-600
-            hover:text-blue-700
-            hover:underline
-            transition-colors
-            cursor-pointer
-          "
+          className="font-bold text-brand-600 hover:text-brand-700 hover:underline transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1 rounded"
         >
           Gabung sekarang
         </button>

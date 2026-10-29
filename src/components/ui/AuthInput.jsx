@@ -110,8 +110,14 @@ export default function AuthInput({
               justify-center
               text-slate-400
               hover:text-slate-600
+              focus-visible:outline-none
+              focus-visible:ring-2
+              focus-visible:ring-brand-500
+              focus-visible:ring-offset-1
+              rounded-r-lg
               transition-colors
               duration-150
+              cursor-pointer
             `}
           >
             {isShowPassword ? (

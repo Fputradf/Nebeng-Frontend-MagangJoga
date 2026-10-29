@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   MessageSquare,
   Search,
@@ -10,15 +10,22 @@ import {
   Headset,
   Send,
   AlertCircle,
+  AlertTriangle,
+  ShieldAlert,
   Building2,
   Phone,
   Mail,
   MapPin,
   RefreshCw,
   Sparkles,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { supportChatService } from '../../../services/supportChatService';
+import { disruptedTripsService } from '../../../services/disruptedTripsService';
 import { useAuth } from '../../../context/AuthContext';
+import { useToast } from '../../../context/ToastContext';
+import BaseModal from '../../../components/ui/BaseModal';
 
 const CANNED_RESPONSES = [
   'Halo! Berkas Anda telah kami terima dan saat ini sedang kami verifikasi secara manual. Mohon ditunggu ya.',
@@ -29,6 +36,7 @@ const CANNED_RESPONSES = [
 ];
 
 export default function RegionalSupportChat() {
+  const toast = useToast();
   const { session, adminProfile } = useAuth();
   const currentAdminName = adminProfile?.name || session?.name || 'Admin Wilayah';
   const currentRegion = adminProfile?.region || session?.region || 'Wilayah';
@@ -40,6 +48,19 @@ export default function RegionalSupportChat() {
   const [statusFilter, setStatusFilter] = useState('all'); // 'all' | 'open' | 'resolved'
   const [replyText, setReplyText] = useState('');
   const messagesEndRef = useRef(null);
+
+  // Modal Eskalasi ke Trip Disrupted
+  const [isEscalateModalOpen, setIsEscalateModalOpen] = useState(false);
+  const [escalateForm, setEscalateForm] = useState({
+    id: '',
+    mitra: '',
+    vehicle: '',
+    phone: '',
+    origin: '',
+    destination: '',
+    issue: '',
+    location: '',
+  });
 
   // Load tickets and subscribe to real-time changes
   useEffect(() => {
@@ -100,9 +121,134 @@ export default function RegionalSupportChat() {
     setReplyText('');
   };
 
+  // Scroll and Drag handlers for Balas Cepat
+  const quickScrollRef = useRef(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const isQuickDraggingRef = useRef(false);
+  const quickStartXRef = useRef(0);
+  const quickScrollLeftRef = useRef(0);
+  const hasQuickMovedRef = useRef(false);
+
+  const checkQuickScroll = useCallback(() => {
+    const el = quickScrollRef.current;
+    if (!el) return;
+    const hasOverflow = el.scrollWidth > el.clientWidth + 2;
+    setCanScrollLeft(el.scrollLeft > 2);
+    setCanScrollRight(hasOverflow && el.scrollLeft < el.scrollWidth - el.clientWidth - 2);
+  }, []);
+
+  useEffect(() => {
+    checkQuickScroll();
+    window.addEventListener('resize', checkQuickScroll);
+    return () => window.removeEventListener('resize', checkQuickScroll);
+  }, [checkQuickScroll]);
+
+  useEffect(() => {
+    const timer = setTimeout(checkQuickScroll, 150);
+    return () => clearTimeout(timer);
+  }, [selectedTicketId, checkQuickScroll]);
+
+  const scrollQuickBy = (amount) => {
+    if (quickScrollRef.current) {
+      quickScrollRef.current.scrollBy({ left: amount, behavior: 'smooth' });
+      setTimeout(checkQuickScroll, 300);
+    }
+  };
+
+  const handleQuickMouseDown = (e) => {
+    if (!quickScrollRef.current) return;
+    isQuickDraggingRef.current = true;
+    hasQuickMovedRef.current = false;
+    quickStartXRef.current = e.pageX - quickScrollRef.current.offsetLeft;
+    quickScrollLeftRef.current = quickScrollRef.current.scrollLeft;
+  };
+
+  const handleQuickMouseMove = (e) => {
+    if (!isQuickDraggingRef.current || !quickScrollRef.current) return;
+    const x = e.pageX - quickScrollRef.current.offsetLeft;
+    const walk = x - quickStartXRef.current;
+    if (Math.abs(walk) > 4) {
+      hasQuickMovedRef.current = true;
+      quickScrollRef.current.scrollLeft = quickScrollLeftRef.current - walk;
+      checkQuickScroll();
+    }
+  };
+
+  const handleQuickMouseUp = () => {
+    isQuickDraggingRef.current = false;
+  };
+
+  const handleQuickWheel = (e) => {
+    if (!quickScrollRef.current) return;
+    if (e.deltaY !== 0) {
+      e.preventDefault();
+      quickScrollRef.current.scrollLeft += e.deltaY;
+      checkQuickScroll();
+    }
+  };
+
+  const handleQuickClick = (res) => {
+    if (hasQuickMovedRef.current) return;
+    handleSendReply(res);
+  };
+
   const handleStatusChange = (newStatus) => {
     if (!selectedTicket) return;
     supportChatService.updateTicketStatus(selectedTicket.id, newStatus);
+  };
+
+  const handleOpenEscalate = (ticket) => {
+    if (!ticket) return;
+    const lastUserMsg = [...(ticket.messages || [])].reverse().find(m => m.sender === 'user');
+    setEscalateForm({
+      id: `TRP-${Math.floor(1000 + Math.random() * 9000)}`,
+      mitra: ticket.userName,
+      vehicle: ticket.userRole === 'mitra' ? 'Armada Mitra Terdaftar' : 'Armada Penumpang',
+      phone: ticket.userPhone || '-',
+      origin: 'Pos Asal Wilayah',
+      destination: 'Pos Tujuan Wilayah',
+      issue: lastUserMsg ? lastUserMsg.text.slice(0, 80) : ticket.subject,
+      location: ticket.region || 'Wilayah Terkait',
+    });
+    setIsEscalateModalOpen(true);
+  };
+
+  const handleConfirmEscalate = (e) => {
+    e.preventDefault();
+    if (!selectedTicket) return;
+
+    const created = disruptedTripsService.addDisruptedTrip({
+      id: escalateForm.id || `TRP-${Math.floor(1000 + Math.random() * 9000)}`,
+      mitra: escalateForm.mitra,
+      vehicle: escalateForm.vehicle || 'Armada Operasional',
+      phone: escalateForm.phone || '-',
+      origin: escalateForm.origin || 'Pos Asal Wilayah',
+      destination: escalateForm.destination || 'Pos Tujuan Wilayah',
+      issue: escalateForm.issue,
+      location: escalateForm.location,
+      ticketId: selectedTicket.id,
+      regionId: adminProfile?.regionId || session?.regionId || '1',
+      assistanceStatus: 'Pending',
+    });
+
+    // Otomatis kirim pesan konfirmasi eskalasi di chat
+    supportChatService.sendMessage(selectedTicket.id, {
+      sender: 'admin',
+      senderName: `${currentAdminName} (${currentRegion})`,
+      senderRole: 'regional_admin',
+      text: `🚨 Laporan kendala Anda telah kami eskalasikan ke Pemantauan Trip Disrupted (ID: ${created.id}). Tim Pos Operasional terdekat sedang dikoordinasikan untuk bantuan penanganan di lokasi.`,
+    });
+
+    // Tandai status tiket menjadi in_progress
+    supportChatService.updateTicketStatus(selectedTicket.id, 'in_progress');
+
+    toast.success(`Laporan berhasil dieskalasikan ke Pemantauan Trip Disrupted (${created.id})!`, {
+      title: 'Eskalasi Insiden Berhasil',
+    });
+
+    setIsEscalateModalOpen(false);
   };
 
   // Metrics
@@ -112,50 +258,56 @@ export default function RegionalSupportChat() {
   const mitraTickets = tickets.filter((t) => t.userRole === 'mitra').length;
 
   return (
-    <div className="space-y-6 font-sans">
-      {/* ================= PAGE HEADER ================= */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="p-2 rounded-xl bg-blue-100 text-[#10367D]">
-              <Headset className="w-5 h-5" />
-            </span>
-            <h1 className="text-2xl font-black tracking-tight text-slate-900">
+    <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-sans">
+      {/* ── BANNER GRADIENT ── */}
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] p-6 text-white shadow-card sm:p-8">
+        <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10" />
+        <div className="absolute bottom-0 right-32 h-28 w-28 rounded-full bg-accent/20" />
+        <div className="relative flex flex-col gap-4 pb-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-accent flex items-center gap-1.5">
+                <Headset className="w-3.5 h-3.5" /> BANTUAN OPERASIONAL WILAYAH
+              </span>
+            </div>
+            <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
               Pusat Bantuan Chat Wilayah
             </h1>
+            <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
+              Layanan respon cepat dan penanganan kendala Customer & Mitra di {currentRegion}.
+            </p>
           </div>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Layanan respon cepat dan penanganan kendala Customer & Mitra di {currentRegion}.
-          </p>
-        </div>
 
-        {/* Quick Refresh */}
-        <button
-          onClick={() => setTickets(supportChatService.getTickets())}
-          className="self-start sm:self-auto flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold transition shadow-2xs cursor-pointer"
-        >
-          <RefreshCw className="w-3.5 h-3.5 text-slate-500" />
-          <span>Muat Ulang Pesan</span>
-        </button>
-      </div>
+          <button
+            onClick={() => setTickets(supportChatService.getTickets())}
+            className="flex items-center gap-2 px-4 py-2.5 bg-white/15 hover:bg-white/25 border border-white/25 rounded-2xl backdrop-blur text-white text-xs sm:text-sm font-bold transition shadow-sm cursor-pointer shrink-0 self-start sm:self-auto"
+          >
+            <RefreshCw className="w-4 h-4 text-accent" />
+            <span>Muat Ulang Pesan</span>
+          </button>
+        </div>
+        <div className="absolute bottom-4 left-6 right-6 border-t border-dashed border-white/25 sm:left-8 sm:right-8" />
+        <span className="absolute bottom-[11px] right-6 h-2.5 w-2.5 rounded-full border-2 border-white bg-accent sm:right-8" />
+      </section>
 
       {/* ================= STATS SUMMARY ================= */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
-          <p className="text-xs font-bold text-slate-500">Total Tiket Masuk</p>
-          <p className="text-2xl font-black text-slate-900 mt-1">{totalTickets}</p>
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-1">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Tiket Masuk</p>
+          <p className="text-2xl font-black text-slate-900">{totalTickets}</p>
         </div>
-        <div className="bg-white p-4 rounded-2xl border border-amber-200 bg-amber-50/20 shadow-2xs">
-          <p className="text-xs font-bold text-amber-700">Menunggu Respon</p>
-          <p className="text-2xl font-black text-amber-600 mt-1">{pendingTickets}</p>
+        <div className="bg-white p-5 rounded-2xl border border-amber-200 bg-amber-50/20 shadow-sm space-y-1">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-amber-700">Menunggu Respon</p>
+          <p className="text-2xl font-black text-amber-600">{pendingTickets}</p>
         </div>
-        <div className="bg-white p-4 rounded-2xl border border-blue-200 bg-blue-50/20 shadow-2xs">
-          <p className="text-xs font-bold text-blue-700">Tiket Customer</p>
-          <p className="text-2xl font-black text-[#10367D] mt-1">{customerTickets}</p>
+        <div className="bg-white p-5 rounded-2xl border border-blue-200 bg-blue-50/20 shadow-sm space-y-1">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-blue-700">Tiket Customer</p>
+          <p className="text-2xl font-black text-[#10367D]">{customerTickets}</p>
         </div>
-        <div className="bg-white p-4 rounded-2xl border border-emerald-200 bg-emerald-50/20 shadow-2xs">
-          <p className="text-xs font-bold text-emerald-700">Tiket Mitra</p>
-          <p className="text-2xl font-black text-emerald-700 mt-1">{mitraTickets}</p>
+        <div className="bg-white p-5 rounded-2xl border border-emerald-200 bg-emerald-50/20 shadow-sm space-y-1">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">Tiket Mitra</p>
+          <p className="text-2xl font-black text-emerald-700">{mitraTickets}</p>
         </div>
       </div>
 
@@ -328,18 +480,31 @@ export default function RegionalSupportChat() {
                   </div>
                 </div>
 
-                {/* Ticket Status Changer */}
-                <div className="flex items-center gap-2">
-                  <label className="text-[11px] font-bold text-slate-500">Status:</label>
-                  <select
-                    value={selectedTicket.status}
-                    onChange={(e) => handleStatusChange(e.target.value)}
-                    className="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600 cursor-pointer"
+                {/* Actions & Status Changer */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => handleOpenEscalate(selectedTicket)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition cursor-pointer shadow-2xs"
+                    title="Eskalasikan laporan chat ini ke Pemantauan Trip Disrupted di Dashboard Wilayah"
                   >
-                    <option value="open">Aktif (Open)</option>
-                    <option value="in_progress">Diproses (In Progress)</option>
-                    <option value="resolved">Selesai (Resolved)</option>
-                  </select>
+                    <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
+                    <span className="hidden sm:inline">Eskalasi ke Trip Disrupted</span>
+                    <span className="sm:hidden">Eskalasi</span>
+                  </button>
+
+                  <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1">
+                    <label className="text-[11px] font-bold text-slate-500">Status:</label>
+                    <select
+                      value={selectedTicket.status}
+                      onChange={(e) => handleStatusChange(e.target.value)}
+                      className="bg-transparent text-xs font-bold text-slate-800 focus:outline-none cursor-pointer"
+                    >
+                      <option value="open">Aktif (Open)</option>
+                      <option value="in_progress">Diproses (In Progress)</option>
+                      <option value="resolved">Selesai (Resolved)</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
@@ -377,20 +542,58 @@ export default function RegionalSupportChat() {
               </div>
 
               {/* Quick Canned Responses */}
-              <div className="px-4 py-2 bg-slate-100/70 border-t border-slate-200 flex items-center gap-2 overflow-x-auto scrollbar-none">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0 flex items-center gap-1">
+              <div className="relative px-3 py-2 bg-slate-100/70 border-t border-slate-200 flex items-center gap-1.5">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0 flex items-center gap-1 pl-1 pr-1">
                   <Sparkles className="w-3 h-3 text-amber-500" />
                   Balas Cepat:
                 </span>
-                {CANNED_RESPONSES.map((res, idx) => (
+
+                {/* Tombol Scroll Kiri */}
+                {canScrollLeft && (
                   <button
-                    key={idx}
-                    onClick={() => handleSendReply(res)}
-                    className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:border-blue-400 hover:text-blue-700 text-[11px] text-slate-600 whitespace-nowrap transition cursor-pointer shadow-2xs font-medium"
+                    type="button"
+                    onClick={() => scrollQuickBy(-200)}
+                    aria-label="Geser ke kiri"
+                    className="w-6 h-6 rounded-full bg-white shadow-xs border border-slate-200 text-slate-600 hover:text-blue-700 hover:bg-slate-50 flex items-center justify-center transition cursor-pointer shrink-0 z-10"
                   >
-                    {res.substring(0, 38)}...
+                    <ChevronLeft className="w-3.5 h-3.5" />
                   </button>
-                ))}
+                )}
+
+                {/* Scrollable Container */}
+                <div
+                  ref={quickScrollRef}
+                  onMouseDown={handleQuickMouseDown}
+                  onMouseMove={handleQuickMouseMove}
+                  onMouseUp={handleQuickMouseUp}
+                  onMouseLeave={handleQuickMouseUp}
+                  onWheel={handleQuickWheel}
+                  onScroll={checkQuickScroll}
+                  className="flex-1 flex items-center gap-2 overflow-x-auto scrollbar-none text-xs select-none cursor-grab active:cursor-grabbing scroll-smooth py-0.5 px-0.5"
+                >
+                  {CANNED_RESPONSES.map((res, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => handleQuickClick(res)}
+                      className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:border-blue-400 hover:text-blue-700 text-[11px] text-slate-600 whitespace-nowrap transition cursor-pointer shadow-2xs font-medium shrink-0"
+                    >
+                      {res.substring(0, 38)}...
+                    </button>
+                  ))}
+                </div>
+
+                {/* Tombol Scroll Kanan */}
+                {canScrollRight && (
+                  <button
+                    type="button"
+                    onClick={() => scrollQuickBy(200)}
+                    aria-label="Geser ke kanan"
+                    className="w-6 h-6 rounded-full bg-white shadow-xs border border-slate-200 text-slate-600 hover:text-blue-700 hover:bg-slate-50 flex items-center justify-center transition cursor-pointer shrink-0 z-10"
+                  >
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
 
               {/* Reply Input Box */}
@@ -429,6 +632,130 @@ export default function RegionalSupportChat() {
           )}
         </div>
       </div>
+
+      {/* Modal Eskalasi ke Trip Disrupted */}
+      <BaseModal
+        isOpen={isEscalateModalOpen}
+        onClose={() => setIsEscalateModalOpen(false)}
+        title="Eskalasi Laporan ke Trip Disrupted"
+        subtitle={`Tiket ${selectedTicket?.id} · ${selectedTicket?.userName}`}
+        maxWidth="max-w-lg"
+      >
+        <form onSubmit={handleConfirmEscalate} className="space-y-4 text-xs font-medium text-slate-700">
+          <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-[11px] leading-relaxed flex items-start gap-2">
+            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              Laporan ini akan langsung dicatat ke panel <strong>Pemantauan Trip Disrupted</strong> pada Dashboard Wilayah agar tim pos dapat mengoordinasikan bantuan darurat.
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block mb-1 font-bold text-slate-700">ID Perjalanan (Trip ID)</label>
+              <input
+                type="text"
+                value={escalateForm.id}
+                onChange={(e) => setEscalateForm({ ...escalateForm, id: e.target.value })}
+                className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500 font-mono"
+                required
+              />
+            </div>
+            <div>
+              <label className="block mb-1 font-bold text-slate-700">Nama Pelapor / Mitra</label>
+              <input
+                type="text"
+                value={escalateForm.mitra}
+                onChange={(e) => setEscalateForm({ ...escalateForm, mitra: e.target.value })}
+                className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block mb-1 font-bold text-slate-700">Armada / Kendaraan</label>
+              <input
+                type="text"
+                value={escalateForm.vehicle}
+                onChange={(e) => setEscalateForm({ ...escalateForm, vehicle: e.target.value })}
+                className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500"
+                placeholder="Contoh: Avanza (D 1234 ABC)"
+              />
+            </div>
+            <div>
+              <label className="block mb-1 font-bold text-slate-700">Nomor Telepon Kontak</label>
+              <input
+                type="text"
+                value={escalateForm.phone}
+                onChange={(e) => setEscalateForm({ ...escalateForm, phone: e.target.value })}
+                className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500 font-mono"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block mb-1 font-bold text-slate-700">Pos Asal</label>
+              <input
+                type="text"
+                value={escalateForm.origin}
+                onChange={(e) => setEscalateForm({ ...escalateForm, origin: e.target.value })}
+                className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500"
+              />
+            </div>
+            <div>
+              <label className="block mb-1 font-bold text-slate-700">Pos Tujuan</label>
+              <input
+                type="text"
+                value={escalateForm.destination}
+                onChange={(e) => setEscalateForm({ ...escalateForm, destination: e.target.value })}
+                className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block mb-1 font-bold text-slate-700">Ringkasan Kendala / Hambatan</label>
+            <input
+              type="text"
+              value={escalateForm.issue}
+              onChange={(e) => setEscalateForm({ ...escalateForm, issue: e.target.value })}
+              className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500"
+              placeholder="Jelaskan masalah, misal: Mogok, ban bocor, kecelakaan"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 font-bold text-slate-700">Titik / Lokasi Kejadian</label>
+            <input
+              type="text"
+              value={escalateForm.location}
+              onChange={(e) => setEscalateForm({ ...escalateForm, location: e.target.value })}
+              className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500"
+              placeholder="Contoh: Tol KM 72 / Jl. Soekarno Hatta No. 12"
+              required
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={() => setIsEscalateModalOpen(false)}
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full font-bold cursor-pointer transition"
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-full font-bold cursor-pointer shadow-sm transition flex items-center gap-1.5"
+            >
+              <ShieldAlert className="w-4 h-4" /> Konfirmasi & Eskalasi
+            </button>
+          </div>
+        </form>
+      </BaseModal>
     </div>
   );
 }

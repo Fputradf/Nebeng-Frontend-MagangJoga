@@ -16,7 +16,6 @@ import {
   Ticket,
   ShieldCheck,
   Clock,
-  Sparkles,
   ChevronLeft,
   ChevronRight,
   TrendingUp,
@@ -414,11 +413,11 @@ export default function CustomerWallet() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
-              <Sparkles className="w-3 h-3 text-blue-600" />
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-brand-700 border border-blue-200">
+              <Wallet className="w-3 h-3 text-brand-600" />
               NEBENG PAY
             </span>
-            <span className="text-[12px] text-neutral-400 font-medium">Dompet Digital Terintegrasi</span>
+            <span className="text-[12px] text-neutral-600 font-medium">Dompet Digital Terintegrasi</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 tracking-tight">
             Dompet Saya
@@ -433,24 +432,20 @@ export default function CustomerWallet() {
           disabled={isSyncing || isLoading}
           className="self-start sm:self-center px-3.5 py-2 rounded-xl text-[12px] font-bold text-neutral-700 bg-white hover:bg-neutral-50 border border-neutral-200 shadow-sm flex items-center gap-2 cursor-pointer transition disabled:opacity-50"
         >
-          <RefreshCw className={`w-3.5 h-3.5 text-blue-600 ${isSyncing ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`w-3.5 h-3.5 text-brand-600 ${isSyncing ? 'animate-spin' : ''}`} />
           <span>{isSyncing ? 'Menyinkronkan...' : 'Sinkronkan Saldo'}</span>
         </button>
       </div>
 
       {/* ──────────────── HERO CARD SALDO UTAMA & ACTIONS ──────────────── */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0c2353] via-[#10367D] to-[#1c4e9e] p-6 sm:p-8 text-white shadow-xl border border-blue-400/20">
-        {/* Dekorasi Aksen Lingkaran Glow */}
-        <div className="absolute -right-12 -top-12 w-64 h-64 rounded-full bg-blue-400/10 blur-3xl pointer-events-none" />
-        <div className="absolute right-1/3 -bottom-16 w-56 h-56 rounded-full bg-emerald-400/10 blur-2xl pointer-events-none" />
-
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-6 rounded bg-gradient-to-r from-amber-300 via-amber-400 to-amber-200 shadow-inner flex items-center justify-center">
-                <div className="w-5 h-3 border border-amber-600/40 rounded-sm" />
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-white/15 border border-white/20 flex items-center justify-center text-blue-200">
+                <Wallet className="w-4 h-4" />
               </div>
-              <span className="text-[12px] font-mono tracking-widest text-blue-200 font-bold uppercase">
+              <span className="text-[12px] tracking-wider text-blue-100 font-bold uppercase">
                 DOMPET UTAMA
               </span>
             </div>
@@ -975,13 +970,13 @@ export default function CustomerWallet() {
                 <label className="block text-[11px] font-bold text-neutral-400 uppercase">
                   Jumlah Penarikan
                 </label>
-                <div className="flex items-center gap-1">
+                <div className="flex flex-wrap items-center gap-1.5">
                   {[20000, 50000, 100000].map((nominal) => (
                     <button
                       key={nominal}
                       type="button"
                       onClick={() => handleSetQuickWithdraw(nominal)}
-                      className="px-2 py-0.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-600 text-[10px] font-bold rounded cursor-pointer transition"
+                      className="min-h-[36px] px-3 py-1.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-xs font-bold rounded-lg cursor-pointer transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
                     >
                       {nominal / 1000}rb
                     </button>
@@ -989,7 +984,7 @@ export default function CustomerWallet() {
                   <button
                     type="button"
                     onClick={() => handleSetQuickWithdraw('max')}
-                    className="px-2 py-0.5 bg-blue-50 hover:bg-blue-100 text-blue-700 text-[10px] font-bold rounded cursor-pointer transition"
+                    className="min-h-[36px] px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-brand-700 text-xs font-bold rounded-lg cursor-pointer transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
                   >
                     Semua
                   </button>

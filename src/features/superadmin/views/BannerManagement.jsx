@@ -23,6 +23,7 @@ import BaseModal from '../../../components/ui/BaseModal';
 import EmptyState from '../../../components/ui/EmptyState';
 import { Skeleton } from '../../../components/ui/Skeleton';
 import { useToast } from '../../../context/ToastContext';
+import { useConfirm } from '../../../context/ConfirmContext';
 
 const PRIMARY_COLOR = '#10367D';
 
@@ -68,6 +69,7 @@ export default function BannerManagement() {
 
   const fileInputRef = useRef(null);
   const toast = useToast();
+  const confirm = useConfirm();
 
   const [formData, setFormData] = useState({
     title: '',
@@ -215,7 +217,14 @@ export default function BannerManagement() {
   };
 
   const handleDelete = async (banner) => {
-    if (!window.confirm(`Yakin ingin menghapus banner "${banner.title}"?`)) return;
+    const isConfirmed = await confirm({
+      title: 'Hapus Banner',
+      message: `Yakin ingin menghapus banner "${banner.title}"? Tindakan ini akan menghapus banner secara permanen.`,
+      confirmText: 'Hapus',
+      cancelText: 'Batal',
+      variant: 'danger',
+    });
+    if (!isConfirmed) return;
     try {
       await bannerService.deleteBanner(banner.id);
       toast.success('Banner berhasil dihapus');

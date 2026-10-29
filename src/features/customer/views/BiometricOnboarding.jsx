@@ -460,9 +460,7 @@ export default function BiometricOnboarding() {
                 placeholder="Contoh: Budi Santoso"
                 value={formData.fullName}
                 onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none"
-                onFocus={(e) => (e.currentTarget.style.borderColor = PRIMARY_COLOR)}
-                onBlur={(e) => (e.currentTarget.style.borderColor = '#e5e7eb')}
+                className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all"
               />
             </div>
 
@@ -478,9 +476,7 @@ export default function BiometricOnboarding() {
                 onChange={(e) =>
                   setFormData({ ...formData, nik: e.target.value.replace(/\D/g, '') })
                 }
-                className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-mono font-bold text-neutral-800 focus:outline-none"
-                onFocus={(e) => (e.currentTarget.style.borderColor = PRIMARY_COLOR)}
-                onBlur={(e) => (e.currentTarget.style.borderColor = '#e5e7eb')}
+                className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-mono font-bold text-neutral-800 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all"
               />
             </div>
 
@@ -493,9 +489,7 @@ export default function BiometricOnboarding() {
                 placeholder="Contoh: Jl. Merdeka No. 12"
                 value={formData.addressKtp}
                 onChange={(e) => setFormData({ ...formData, addressKtp: e.target.value })}
-                className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none"
-                onFocus={(e) => (e.currentTarget.style.borderColor = PRIMARY_COLOR)}
-                onBlur={(e) => (e.currentTarget.style.borderColor = '#e5e7eb')}
+                className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all"
               />
             </div>
 
@@ -509,20 +503,14 @@ export default function BiometricOnboarding() {
                 onChange={(e) =>
                   setFormData({ ...formData, phone: e.target.value.replace(/[^\d+]/g, '') })
                 }
-                className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none"
-                onFocus={(e) => (e.currentTarget.style.borderColor = PRIMARY_COLOR)}
-                onBlur={(e) => (e.currentTarget.style.borderColor = '#e5e7eb')}
+                className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all"
               />
             </div>
 
             <button
               onClick={() => setStep(2)}
               disabled={!formData.fullName.trim() || formData.nik.length !== 16 || !isPhoneValid}
-              className="w-full py-3 text-white rounded-xl text-[13px] font-bold cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5 transition"
-              style={{ backgroundColor: PRIMARY_COLOR }}
-              onMouseEnter={(e) => {
-                if (!e.currentTarget.disabled) e.currentTarget.style.backgroundColor = PRIMARY_HOVER;
-              }}
+              className="w-full py-3 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white rounded-xl text-[13px] font-bold cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5 transition shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = PRIMARY_COLOR;
               }}

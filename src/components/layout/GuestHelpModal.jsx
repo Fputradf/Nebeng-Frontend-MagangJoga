@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   X,
   Search,
@@ -8,6 +8,9 @@ import {
   ShieldCheck,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
+  ChevronRight,
+  LayoutGrid,
   LogIn,
   UserPlus,
   Phone,
@@ -22,6 +25,94 @@ export default function GuestHelpModal({ isOpen, onClose, onNavigateLogin, onNav
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [expandedFaqId, setExpandedFaqId] = useState(PROJECT_FAQS[0]?.id || null);
   const [showChatNotice, setShowChatNotice] = useState(false);
+  const [isWrapMode, setIsWrapMode] = useState(false);
+
+  // Slider & Drag-to-scroll state & refs
+  const scrollRef = useRef(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const isDraggingRef = useRef(false);
+  const startXRef = useRef(0);
+  const scrollLeftPosRef = useRef(0);
+  const hasMovedRef = useRef(false);
+
+  const checkScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el || isWrapMode) {
+      setCanScrollLeft(false);
+      setCanScrollRight(false);
+      return;
+    }
+    const hasOverflow = el.scrollWidth > el.clientWidth + 1;
+    setCanScrollLeft(el.scrollLeft > 2);
+    setCanScrollRight(hasOverflow && el.scrollLeft < el.scrollWidth - el.clientWidth - 2);
+  }, [isWrapMode]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(checkScroll, 100);
+    }
+  }, [isOpen, checkScroll, isWrapMode]);
+
+  useEffect(() => {
+    window.addEventListener('resize', checkScroll);
+    return () => window.removeEventListener('resize', checkScroll);
+  }, [checkScroll]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
+  const scrollByAmount = (amount) => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: amount, behavior: 'smooth' });
+      setTimeout(checkScroll, 300);
+    }
+  };
+
+  const handleMouseDown = (e) => {
+    if (isWrapMode || !scrollRef.current) return;
+    isDraggingRef.current = true;
+    hasMovedRef.current = false;
+    startXRef.current = e.pageX - scrollRef.current.offsetLeft;
+    scrollLeftPosRef.current = scrollRef.current.scrollLeft;
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDraggingRef.current || !scrollRef.current) return;
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    const walk = x - startXRef.current;
+    if (Math.abs(walk) > 4) {
+      hasMovedRef.current = true;
+      scrollRef.current.scrollLeft = scrollLeftPosRef.current - walk;
+      checkScroll();
+    }
+  };
+
+  const handleMouseUp = () => {
+    isDraggingRef.current = false;
+  };
+
+  const handleWheel = (e) => {
+    if (isWrapMode || !scrollRef.current) return;
+    if (e.deltaY !== 0) {
+      scrollRef.current.scrollLeft += e.deltaY;
+      checkScroll();
+    }
+  };
+
+  const handleCategorySelect = (catId) => {
+    if (hasMovedRef.current) return;
+    setSelectedCategory(catId);
+  };
 
   if (!isOpen) return null;
 
@@ -68,31 +159,91 @@ export default function GuestHelpModal({ isOpen, onClose, onNavigateLogin, onNav
 
         {/* Search & Category Pills */}
         <div className="p-4 sm:p-5 border-b border-slate-200 space-y-3 bg-slate-50/70 shrink-0">
-          <div className="relative">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari kendala, cara booking, pos mitra, refund..."
-              className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 transition"
-            />
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Cari kendala, cara booking, pos mitra, refund..."
+                className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 transition"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsWrapMode(!isWrapMode)}
+              className={`p-2.5 rounded-xl border transition cursor-pointer text-xs font-semibold flex items-center gap-1.5 shrink-0 ${
+                isWrapMode
+                  ? 'bg-blue-50 border-blue-300 text-[#10367D]'
+                  : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'
+              }`}
+              title={isWrapMode ? 'Beralih ke mode geser horizontal' : 'Tampilkan semua kategori sekaligus'}
+            >
+              <LayoutGrid className="w-4 h-4" />
+              <span className="hidden sm:inline">{isWrapMode ? 'Mode Geser' : 'Lihat Semua'}</span>
+            </button>
           </div>
 
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none text-xs">
-            {FAQ_CATEGORIES.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setSelectedCategory(cat.id)}
-                className={`px-3 py-1.5 rounded-lg font-bold whitespace-nowrap transition cursor-pointer ${
-                  selectedCategory === cat.id
-                    ? 'bg-[#10367D] text-white shadow-2xs'
-                    : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
-                }`}
-              >
-                {cat.label}
-              </button>
-            ))}
+          <div className="relative">
+            {/* Tombol Geser Kiri */}
+            {!isWrapMode && canScrollLeft && (
+              <div className="absolute left-0 top-0 bottom-0 z-10 flex items-center pr-2 bg-gradient-to-r from-slate-50 via-slate-50/90 to-transparent">
+                <button
+                  type="button"
+                  onClick={() => scrollByAmount(-200)}
+                  aria-label="Geser ke kiri"
+                  className="w-7 h-7 rounded-full bg-white shadow-md border border-slate-200 text-slate-700 hover:bg-slate-50 flex items-center justify-center transition cursor-pointer"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+
+            {/* Container Kategori */}
+            <div
+              ref={scrollRef}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+              onWheel={handleWheel}
+              onScroll={checkScroll}
+              className={`text-xs select-none ${
+                isWrapMode
+                  ? 'flex flex-wrap items-center gap-1.5'
+                  : 'flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent cursor-grab active:cursor-grabbing px-1 scroll-smooth'
+              }`}
+            >
+              {FAQ_CATEGORIES.map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => handleCategorySelect(cat.id)}
+                  className={`px-3.5 py-1.5 rounded-xl font-bold whitespace-nowrap transition cursor-pointer shrink-0 ${
+                    selectedCategory === cat.id
+                      ? 'bg-[#10367D] text-white shadow-sm'
+                      : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Tombol Geser Kanan */}
+            {!isWrapMode && canScrollRight && (
+              <div className="absolute right-0 top-0 bottom-0 z-10 flex items-center pl-2 bg-gradient-to-l from-slate-50 via-slate-50/90 to-transparent">
+                <button
+                  type="button"
+                  onClick={() => scrollByAmount(200)}
+                  aria-label="Geser ke kanan"
+                  className="w-7 h-7 rounded-full bg-white shadow-md border border-slate-200 text-slate-700 hover:bg-slate-50 flex items-center justify-center transition cursor-pointer"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
           </div>
         </div>
 

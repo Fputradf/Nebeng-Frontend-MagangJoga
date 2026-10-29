@@ -24,7 +24,7 @@ export default function TicketTimelineModal({ isOpen, onClose, ticket }) {
   const formatTime = (isoString) => {
     if (!isoString) return '-';
     const d = new Date(isoString);
-    return `${d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })} â€¢ ${d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`;
+    return `${d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })} • ${d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`;
   };
 
   const steps = [
@@ -58,12 +58,12 @@ export default function TicketTimelineModal({ isOpen, onClose, ticket }) {
       isDone: isCheckedInOrigin,
       isActive: status === 'checked_in_origin',
       icon: UserCheck,
-      color: 'bg-indigo-600',
+      color: 'bg-blue-600',
     },
     {
       id: 'in_transit',
       title: 'Dalam Perjalanan Menuju Pos Tujuan',
-      subtitle: `Armada: ${ticket.vehicle || 'Mitra'} â€¢ Sopir: ${ticket.mitra || 'Mitra'}`,
+      subtitle: `Armada: ${ticket.vehicle || 'Mitra'} • Sopir: ${ticket.mitra || 'Mitra'}`,
       time: isCheckedInOrigin && !isCompleted ? 'Sedang Bergerak' : isCompleted ? 'Selesai' : '--:--',
       isDone: isCheckedInOrigin,
       isActive: status === 'in_transit',
@@ -96,7 +96,7 @@ export default function TicketTimelineModal({ isOpen, onClose, ticket }) {
               Riwayat & Audit Checkpoint Tiket
             </h3>
             <p className="text-xs text-gray-500 mt-0.5">
-              ID Pesanan: #{ticket.id} â€¢ {ticket.title}
+              ID Pesanan: #{ticket.id} • {ticket.title}
             </p>
           </div>
           <button

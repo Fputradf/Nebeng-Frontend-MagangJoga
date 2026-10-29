@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Truck, Search, ShieldAlert, CheckCircle2, AlertTriangle, ExternalLink } from 'lucide-react';
+import { Truck, Search, CheckCircle2, AlertTriangle, ExternalLink, ShieldAlert, Check, X, ShieldCheck, FileText } from 'lucide-react';
 import apiClient from '../../../services/apiClient';
 import BaseModal from '../../../components/ui/BaseModal';
 import { useToast } from '../../../context/ToastContext';
@@ -190,14 +190,6 @@ export default function FleetCourierPage() {
         <span className="absolute bottom-[11px] right-6 h-2.5 w-2.5 rounded-full border-2 border-white bg-accent sm:right-8" />
       </section>
 
-      {/* INFORMATION */}
-      <div className="bg-[#74B4D9]/10 border border-[#74B4D9]/30 p-4 rounded-xl flex items-start gap-3">
-        <ShieldAlert size={18} className="text-[#10367D] shrink-0 mt-0.5" />
-        <div className="text-[13px] text-neutral-800 space-y-1">
-          <p>Halaman ini menampilkan daftar Mitra di wilayah Anda yang berhak mendaftarkan kendaraan.</p>
-        </div>
-      </div>
-
       {/* SEARCH & LIMIT CONTROL */}
       <div className="bg-white p-4 rounded-2xl shadow-sm border border-neutral-200 flex flex-col sm:flex-row items-center justify-between gap-3">
         <div className="relative flex-1 w-full max-w-md">
@@ -282,6 +274,16 @@ export default function FleetCourierPage() {
                         {item.status.toUpperCase()}
                       </span>
                     </td>
+                    <td className="py-3.5 px-5 text-center">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenSanctionsModal(item)}
+                        className="px-3 py-1.5 bg-[#10367D] hover:bg-[#0C2C66] text-white text-[11px] font-bold rounded-xl shadow-xs transition cursor-pointer inline-flex items-center gap-1.5"
+                      >
+                        <ShieldAlert className="w-3.5 h-3.5" />
+                        <span>Sanksi & Banding</span>
+                      </button>
+                    </td>
                   </tr>
                 ))
               ) : (
@@ -297,6 +299,56 @@ export default function FleetCourierPage() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* MOBILE CARD VIEW */}
+        <div className="sm:hidden divide-y divide-gray-100">
+          {isLoading ? (
+            <div className="p-4 text-center text-neutral-400 text-xs">Memuat data armada...</div>
+          ) : filteredData.length > 0 ? (
+            filteredData.map((item) => (
+              <div key={item.id} className="p-4 space-y-2.5">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <h4 className="font-bold text-neutral-800 text-[14px]">{item.name}</h4>
+                    <p className="text-[11px] text-[#10367D] font-mono font-bold">ID: {item.id}</p>
+                    <p className="text-[12px] text-neutral-500 mt-0.5">{item.email}</p>
+                  </div>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                    item.status === 'Aktif' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'
+                  }`}>
+                    {item.status.toUpperCase()}
+                  </span>
+                </div>
+
+                <div className="p-2.5 bg-neutral-50 rounded-xl border border-neutral-100 text-[12px] space-y-1">
+                  <div className="flex justify-between">
+                    <span className="text-neutral-400">Kendaraan:</span>
+                    <span className="font-bold text-neutral-700">{item.hasVehicle ? `${item.vehicleType} - ${item.vehicleModel}` : '-'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-neutral-400">Plat Nomor:</span>
+                    <span className="font-mono font-bold text-neutral-700">{item.hasVehicle ? item.plateNumber : '-'}</span>
+                  </div>
+                </div>
+
+                <div className="pt-1 flex items-center justify-end">
+                  <button
+                    type="button"
+                    onClick={() => handleOpenSanctionsModal(item)}
+                    className="w-full py-2 bg-[#10367D] hover:bg-[#0C2C66] text-white text-[12px] font-bold rounded-xl shadow-xs transition cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <ShieldAlert className="w-3.5 h-3.5" />
+                    <span>Review Sanksi & Banding</span>
+                  </button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="p-6 text-center text-neutral-400 text-xs">
+              Tidak ada mitra di wilayah ini.
+            </div>
+          )}
         </div>
 
         {/* PAGINATION FOOTER */}
@@ -342,42 +394,72 @@ export default function FleetCourierPage() {
             </div>
           ) : mitraSanctionsData ? (
             <div className="space-y-4">
-              {/* Ringkasan Skor & Status */}
-              <div className="p-4 bg-neutral-50 rounded-xl border border-neutral-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              {/* Header Banner Biru Bergaya Sidebar */}
+              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#0c2353] via-[#10367D] to-[#18458f] p-4 sm:p-5 text-white shadow-md">
+                <div className="absolute -right-8 -top-12 h-32 w-32 rounded-full bg-white/10 pointer-events-none" />
+                <div className="absolute bottom-0 right-20 h-16 w-16 rounded-full bg-cyan-400/20 pointer-events-none" />
+                <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-300">
+                        PANEL REVIEW BANDING WILAYAH
+                      </span>
+                    </div>
+                    <h4 className="text-[17px] font-bold text-white">
+                      {selectedMitraForSanctions?.name || 'Mitra'}
+                    </h4>
+                    <p className="text-[11px] text-blue-100 font-mono mt-0.5">
+                      ID Mitra: #{selectedMitraForSanctions?.id} &bull; {selectedMitraForSanctions?.email}
+                    </p>
+                  </div>
+
+                  <div className="px-3.5 py-2 rounded-2xl bg-white/15 backdrop-blur border border-white/25 flex items-center gap-2.5 self-start sm:self-auto shadow-xs">
+                    <div>
+                      <span className="text-[9px] font-bold uppercase tracking-wider text-blue-200 block">
+                        Skor Integritas
+                      </span>
+                      <span className={`text-[16px] font-extrabold ${
+                        (mitraSanctionsData.currentScore ?? 100) >= 80 ? 'text-emerald-300' :
+                        (mitraSanctionsData.currentScore ?? 100) >= 50 ? 'text-amber-300' : 'text-rose-300'
+                      }`}>
+                        {mitraSanctionsData.currentScore} <span className="text-xs text-blue-200 font-normal">/ {mitraSanctionsData.baseScore || 100}</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Ringkasan Status Akun */}
+              <div className="p-3.5 bg-neutral-50 rounded-xl border border-neutral-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                 <div>
-                  <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">Status Akun</p>
-                  <p className="text-[14px] font-bold text-neutral-800">
+                  <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">Status Kepatuhan Akun</p>
+                  <p className="text-[13px] font-bold text-neutral-800">
                     {mitraSanctionsData.isSuspended ? (
                       <span className="text-rose-600 flex items-center gap-1 mt-0.5">
-                        <AlertTriangle className="w-4 h-4" /> TERSUSPENSI AKTIF
+                        <AlertTriangle className="w-4 h-4 shrink-0" /> TERSUSPENSI AKTIF
                       </span>
                     ) : (
                       <span className="text-emerald-600 flex items-center gap-1 mt-0.5">
-                        <CheckCircle2 className="w-4 h-4" /> AKTIF & BEREPUTASI
+                        <CheckCircle2 className="w-4 h-4 shrink-0" /> AKTIF & BEREPUTASI BAIK
                       </span>
                     )}
                   </p>
-                  {mitraSanctionsData.suspendedUntil && (
-                    <p className="text-[11px] text-rose-500 mt-0.5">
-                      Suspensi hingga: {new Date(mitraSanctionsData.suspendedUntil).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })} WIB
-                    </p>
-                  )}
                 </div>
 
-                <div className="text-right">
-                  <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">Skor Integritas</p>
-                  <p className={`text-[22px] font-extrabold ${
-                    mitraSanctionsData.currentScore >= 80 ? 'text-emerald-600' :
-                    mitraSanctionsData.currentScore >= 50 ? 'text-amber-600' : 'text-rose-600'
-                  }`}>
-                    {mitraSanctionsData.currentScore} <span className="text-[13px] text-neutral-400 font-normal">/ {mitraSanctionsData.baseScore}</span>
-                  </p>
-                </div>
+                {mitraSanctionsData.suspendedUntil && (
+                  <div className="text-left sm:text-right">
+                    <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">Masa Suspensi</p>
+                    <p className="text-[12px] font-bold text-rose-600">
+                      Hingga {new Date(mitraSanctionsData.suspendedUntil).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })} WIB
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Daftar Sanksi */}
               <div className="space-y-3">
-                <h4 className="text-[14px] font-bold text-neutral-800">Daftar Sanksi Pelanggaran</h4>
+                <h4 className="text-[14px] font-bold text-neutral-800">Daftar Sanksi & Pengajuan Banding</h4>
                 {(!mitraSanctionsData.sanctions || mitraSanctionsData.sanctions.length === 0) ? (
                   <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 flex items-center gap-2">
                     <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
@@ -390,9 +472,9 @@ export default function FleetCourierPage() {
                       const isWaived = s.status === 'WAIVED';
 
                       return (
-                        <div key={s.id} className="p-3.5 bg-white border border-neutral-200 rounded-xl space-y-2.5 shadow-2xs">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
+                        <div key={s.id} className="p-3.5 bg-white border border-neutral-200 rounded-2xl space-y-2.5 shadow-2xs">
+                          <div className="flex items-center justify-between flex-wrap gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <span className={`px-2 py-0.5 rounded text-[11px] font-extrabold uppercase ${
                                 isWaived ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
                               }`}>
@@ -420,79 +502,102 @@ export default function FleetCourierPage() {
                           </div>
 
                           {s.tripDetails && (
-                            <div className="text-[12px] text-neutral-600 bg-neutral-50 p-2 rounded-lg border border-neutral-100 flex items-center justify-between">
-                              <span>Trip #{s.tripDetails.id}: {s.tripDetails.from} &rarr; {s.tripDetails.to}</span>
+                            <div className="text-[12px] text-neutral-600 bg-neutral-50 p-2.5 rounded-xl border border-neutral-100 flex items-center justify-between flex-wrap gap-2">
+                              <span>Trip #{s.tripDetails.id}: <strong>{s.tripDetails.from} &rarr; {s.tripDetails.to}</strong></span>
                               <span className="text-[11px] text-neutral-400">{s.tripDetails.date ? s.tripDetails.date.split('T')[0] : ''}</span>
                             </div>
                           )}
 
                           {/* Bagian Banding */}
                           {latestAppeal ? (
-                            <div className="p-3 bg-blue-50/50 border border-blue-100 rounded-xl space-y-2 text-[12px]">
-                              <div className="flex items-center justify-between">
-                                <span className="font-bold text-neutral-800">Pengajuan Banding Mitra:</span>
-                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                                  latestAppeal.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-800' :
-                                  latestAppeal.status === 'REJECTED' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'
+                            <div className="rounded-2xl border-2 border-blue-200/90 bg-gradient-to-br from-white via-blue-50/40 to-slate-50 p-4 space-y-3 shadow-xs">
+                              <div className="flex items-center justify-between flex-wrap gap-2 pb-2.5 border-b border-blue-100">
+                                <div className="flex items-center gap-2">
+                                  <div className="p-1.5 bg-[#10367D] text-white rounded-lg shadow-2xs">
+                                    <ShieldCheck className="w-3.5 h-3.5" />
+                                  </div>
+                                  <div>
+                                    <span className="font-bold text-neutral-800 text-[12px] block">
+                                      Permohonan Banding Mitra
+                                    </span>
+                                    <span className="text-[10px] text-neutral-400">
+                                      Diajukan {new Date(latestAppeal.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })} WIB
+                                    </span>
+                                  </div>
+                                </div>
+                                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold tracking-wide uppercase ${
+                                  latestAppeal.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' :
+                                  latestAppeal.status === 'REJECTED' ? 'bg-rose-100 text-rose-800 border border-rose-300' : 'bg-amber-100 text-amber-900 border border-amber-300 animate-pulse'
                                 }`}>
-                                  {latestAppeal.status === 'APPROVED' ? 'DISETUJUI' :
-                                   latestAppeal.status === 'REJECTED' ? 'DITOLAK' : 'MENUNGGU TINJAUAN ADMIN'}
+                                  {latestAppeal.status === 'APPROVED' ? 'Disetujui' :
+                                   latestAppeal.status === 'REJECTED' ? 'Ditolak' : 'Menunggu Review Admin'}
                                 </span>
                               </div>
 
-                              <p className="text-neutral-700 bg-white p-2 rounded border border-neutral-200/60 text-[11px]">
-                                "{latestAppeal.reason}"
-                              </p>
+                              {/* Alasan Mitra */}
+                              <div className="p-3 bg-white rounded-xl border border-neutral-200/80 text-[12px] space-y-1 shadow-2xs">
+                                <span className="text-[10px] font-bold uppercase text-neutral-400 tracking-wider block">
+                                  Alasan / Kronologi dari Mitra:
+                                </span>
+                                <p className="text-neutral-800 leading-relaxed font-medium">
+                                  &ldquo;{latestAppeal.reason}&rdquo;
+                                </p>
+                              </div>
 
                               {latestAppeal.evidenceUrl && (
-                                <a
-                                  href={latestAppeal.evidenceUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-blue-600 hover:underline inline-flex items-center gap-1 text-[11px] font-bold"
-                                >
-                                  <ExternalLink className="w-3 h-3" /> Lihat Bukti Dokumen / Foto
-                                </a>
+                                <div>
+                                  <a
+                                    href={latestAppeal.evidenceUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-100/70 hover:bg-blue-200 text-[#10367D] font-bold rounded-xl text-[11px] transition shadow-2xs"
+                                  >
+                                    <ExternalLink className="w-3.5 h-3.5" />
+                                    <span>Lihat Lampiran Bukti Dokumen / Foto &rarr;</span>
+                                  </a>
+                                </div>
                               )}
 
                               {/* Form Review Jika Masih Pending */}
                               {latestAppeal.status === 'PENDING' && (
-                                <div className="pt-2 border-t border-blue-200/50 space-y-2">
+                                <div className="pt-2.5 border-t border-blue-200/80 space-y-2.5">
                                   <label className="block text-[11px] font-bold text-neutral-700">
-                                    Catatan Tinjauan Admin:
+                                    Catatan Tinjauan & Verifikasi Admin:
                                   </label>
                                   <input
                                     type="text"
                                     value={reviewNotesMap[latestAppeal.id] || ''}
                                     onChange={(e) => setReviewNotesMap({ ...reviewNotesMap, [latestAppeal.id]: e.target.value })}
-                                    placeholder="Contoh: Bukti bengkel terverifikasi sah / Alasan ditolak..."
-                                    className="w-full px-3 py-1.5 text-xs border border-neutral-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-600 bg-white"
+                                    placeholder="Contoh: Bukti kuitansi bengkel terverifikasi sah / Alasan penolakan..."
+                                    className="w-full px-3.5 py-2 text-[12px] border border-blue-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#10367D] bg-white text-neutral-800 shadow-2xs transition"
                                   />
                                   <div className="flex items-center gap-2 pt-1">
                                     <button
                                       type="button"
                                       disabled={isSubmittingReview}
                                       onClick={() => handleReviewAppeal(latestAppeal.id, true)}
-                                      className="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs transition shadow-xs cursor-pointer flex items-center justify-center gap-1"
+                                      className="flex-1 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-700 hover:brightness-105 text-white rounded-xl font-bold text-[12px] transition shadow-sm cursor-pointer flex items-center justify-center gap-1.5"
                                     >
-                                      Setujui Banding (Cabut Sanksi)
+                                      <Check className="w-3.5 h-3.5" />
+                                      <span>Setujui Banding (Cabut Sanksi)</span>
                                     </button>
                                     <button
                                       type="button"
                                       disabled={isSubmittingReview}
                                       onClick={() => handleReviewAppeal(latestAppeal.id, false)}
-                                      className="flex-1 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-bold text-xs transition shadow-xs cursor-pointer flex items-center justify-center gap-1"
+                                      className="flex-1 py-2.5 bg-gradient-to-r from-rose-600 to-red-700 hover:brightness-105 text-white rounded-xl font-bold text-[12px] transition shadow-sm cursor-pointer flex items-center justify-center gap-1.5"
                                     >
-                                      Tolak Banding
+                                      <X className="w-3.5 h-3.5" />
+                                      <span>Tolak Banding</span>
                                     </button>
                                   </div>
                                 </div>
                               )}
 
                               {latestAppeal.reviewNotes && latestAppeal.status !== 'PENDING' && (
-                                <p className="text-[11px] text-neutral-500 italic">
-                                  Catatan Tinjauan: "{latestAppeal.reviewNotes}"
-                                </p>
+                                <div className="p-2.5 bg-neutral-100/70 rounded-xl border border-neutral-200 text-[11px] text-neutral-600">
+                                  <strong>Catatan Review:</strong> &ldquo;{latestAppeal.reviewNotes}&rdquo;
+                                </div>
                               )}
                             </div>
                           ) : (
