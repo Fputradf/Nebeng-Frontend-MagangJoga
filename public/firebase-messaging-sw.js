@@ -28,11 +28,21 @@ messaging.onBackgroundMessage((payload) => {
   console.log('Background notification received:', payload);
 
   const notificationTitle = payload.notification?.title || 'Nebeng';
+  const tag = payload.data?.conversationId
+    ? `chat-${payload.data.conversationId}`
+    : payload.data?.orderId
+    ? `order-${payload.data.orderId}`
+    : payload.data?.id
+    ? `notif-${payload.data.id}`
+    : (payload.notification?.title ? `title-${payload.notification.title}` : 'nebeng-notif');
+
   const notificationOptions = {
     body: payload.notification?.body || '',
-    icon: '/firebase-logo.png',
+    icon: '/favicon.svg',
+    badge: '/favicon.svg',
+    tag,
     data: payload.data,
-    requireInteraction: true,
+    requireInteraction: payload.data?.priority === 'high',
   };
 
   self.registration.showNotification(notificationTitle, notificationOptions);

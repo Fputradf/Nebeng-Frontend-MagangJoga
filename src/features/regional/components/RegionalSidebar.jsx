@@ -114,7 +114,7 @@ export default function RegionalSidebar({
           w-64
           h-screen
           bg-gradient-to-b from-[#0c2353] via-[#10367D] to-[#18458f] border-r border-blue-400/20 shadow-2xl text-white flex flex-col justify-between p-5 fixed left-0 top-0
-          overflow-y-auto
+          overflow-y-auto print:hidden
           z-40
           transition-transform
           duration-300

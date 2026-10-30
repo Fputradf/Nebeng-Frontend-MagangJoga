@@ -393,23 +393,56 @@ export const NotificationProvider = ({ children }) => {
   }, [fetchUnreadCount]);
 
   const handleNotificationNavigation = useCallback((data) => {
-    let isMitra = false;
+    let userRole = 'customer';
     try {
       const rawAuth = localStorage.getItem('nebeng_auth') || sessionStorage.getItem('nebeng_auth');
       if (rawAuth) {
         const parsed = JSON.parse(rawAuth);
-        isMitra = parsed?.user?.role === 'mitra';
+        userRole = parsed?.user?.role || 'customer';
       }
     } catch {}
 
+    const isMitra = userRole === 'mitra';
+    const isOperator = userRole === 'operator';
+    const isAdmin = userRole === 'admin' || userRole === 'regional';
+
     const { type, orderId, tripId, actionUrl } = data;
+
+    const navigateTo = (target) => {
+      if (!target) return;
+      if (window.location.pathname === target) {
+        return; // Sudah berada di halaman yang sama, hindari hard reload
+      }
+      window.location.href = target;
+    };
 
     if (actionUrl) {
       let target = actionUrl;
       if (target === '/wallet') {
         target = isMitra ? '/mitra/saldo' : '/customer/wallet';
       }
-      window.location.href = target;
+      navigateTo(target);
+      return;
+    }
+
+    if (isOperator) {
+      switch (type) {
+        case 'checkpoint_scanned':
+          navigateTo('/operator/scanner');
+          break;
+        case 'trip_started':
+        case 'trip_arrived':
+        case 'trip_completed':
+          navigateTo('/operator/manifest');
+          break;
+        default:
+          navigateTo('/operator/dashboard');
+      }
+      return;
+    }
+
+    if (isAdmin) {
+      navigateTo('/regional/dashboard');
       return;
     }
 
@@ -417,7 +450,7 @@ export const NotificationProvider = ({ children }) => {
       case 'order_created':
       case 'order_paid':
       case 'order_cancelled':
-        window.location.href = isMitra ? '/mitra/trip' : '/customer/tickets';
+        navigateTo(isMitra ? '/mitra/trip' : '/customer/tickets');
         break;
       case 'trip_started':
       case 'trip_arrived':
@@ -427,28 +460,28 @@ export const NotificationProvider = ({ children }) => {
       case 'trip_arrived_destination':
       case 'trip_departure_reminder_h30':
       case 'trip_departure_urgency_h0':
-        window.location.href = isMitra ? '/mitra/trip' : '/customer/tickets';
+        navigateTo(isMitra ? '/mitra/trip' : '/customer/tickets');
         break;
       case 'chat_message':
-        window.location.href = isMitra ? '/mitra/chat' : '/customer/chat';
+        navigateTo(isMitra ? '/mitra/chat' : '/customer/chat');
         break;
       case 'payment_success':
       case 'payment_failed':
       case 'escrow_released':
       case 'wallet_topup':
       case 'wallet_withdrawal':
-        window.location.href = isMitra ? '/mitra/saldo' : '/customer/wallet';
+        navigateTo(isMitra ? '/mitra/saldo' : '/customer/wallet');
         break;
       case 'reward_earned':
       case 'reward_redeemed':
-        window.location.href = '/customer/rewards';
+        navigateTo('/customer/rewards');
         break;
       case 'verification_approved':
       case 'verification_rejected':
-        window.location.href = isMitra ? '/mitra/onboarding' : '/customer/profile/pengaturan';
+        navigateTo(isMitra ? '/mitra/onboarding' : '/customer/profile/pengaturan');
         break;
       default:
-        window.location.href = isMitra ? '/mitra/notifications' : '/customer/notifications';
+        navigateTo(isMitra ? '/mitra/notifications' : '/customer/notifications');
     }
   }, []);
 
@@ -458,30 +491,50 @@ export const NotificationProvider = ({ children }) => {
 
     const unsubscribe = onMessage(messaging, async (payload) => {
       console.log('FCM foreground message received:', payload);
+
+      // Jika socket.io sedang terhubung, socket.on('notification:new') yang memegang kendali
+      // penuh atas update state, counter unread, dan pop-up desktop untuk mencegah duplikasi banner.
+      if (socketConnectedRef.current && socketRef.current?.connected) {
+        console.log('[NotificationContext] Socket is connected, skipping duplicate FCM foreground popup');
+        return;
+      }
+
       setUnreadCount(prev => prev + 1);
 
-      // Show notification in foreground
+      // Fallback: tampilkan notifikasi jika socket.io tidak terhubung
       if (payload.notification) {
+        const notifTag = payload.data?.conversationId
+          ? `chat-${payload.data.conversationId}`
+          : payload.data?.orderId
+          ? `order-${payload.data.orderId}`
+          : payload.data?.id
+          ? `notif-${payload.data.id}`
+          : (payload.notification?.title ? `title-${payload.notification.title}` : 'nebeng-notif');
+
+        const dedupKey = payload.data?.id || notifTag;
+        if (processedNotificationIds.current.has(dedupKey)) {
+          return;
+        }
+        processedNotificationIds.current.add(dedupKey);
+
         const registration = await navigator.serviceWorker.getRegistration();
         if (registration) {
           await registration.showNotification(payload.notification.title || 'Pesan Baru', {
             body: payload.notification.body,
             data: payload.data,
+            tag: notifTag,
             icon: '/favicon.svg',
-            requireInteraction: true,
+            badge: '/favicon.svg',
+            requireInteraction: payload.data?.priority === 'high',
           });
         }
-      }
-
-      if (payload.data) {
-        handleNotificationNavigation(payload.data);
       }
     });
 
     return () => {
       if (unsubscribe) unsubscribe();
     };
-  }, [handleNotificationNavigation]);
+  }, []);
 
   // Service worker — dikelola Firebase getToken()
   useEffect(() => {
@@ -558,12 +611,19 @@ export const NotificationProvider = ({ children }) => {
     });
 
     socket.on('notification:new', async ({ notification, unreadCount }) => {
-      // Deduplicate based on notification ID
-      if (processedNotificationIds.current.has(notification.id)) {
+      const notifTag = notification.conversationId
+        ? `chat-${notification.conversationId}`
+        : notification.data?.orderId
+        ? `order-${notification.data.orderId}`
+        : `notif-${notification.id}`;
+
+      // Deduplicate based on notification ID or tag
+      if (processedNotificationIds.current.has(notification.id) || processedNotificationIds.current.has(notifTag)) {
         return;
       }
 
       processedNotificationIds.current.add(notification.id);
+      processedNotificationIds.current.add(notifTag);
 
       // Show Desktop/System Web Notification if permission is granted
       if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
@@ -574,7 +634,7 @@ export const NotificationProvider = ({ children }) => {
             body: notification.body || '',
             icon: '/favicon.svg',
             badge: '/favicon.svg',
-            tag: notification.conversationId ? `chat-${notification.conversationId}` : `notif-${notification.id}`,
+            tag: notifTag,
             data: notification.data || {},
             requireInteraction: isUrgent,
           };
@@ -587,6 +647,24 @@ export const NotificationProvider = ({ children }) => {
         } catch (notifErr) {
           console.warn('[Notification Socket] Could not trigger desktop popup:', notifErr);
         }
+      }
+
+      // Broadcast to other tabs so they update UI state without creating duplicate desktop popups
+      try {
+        const channel = new BroadcastChannel('notifications');
+        channel.postMessage({
+          type: 'newNotification',
+          data: {
+            notification,
+            unreadCount: {
+              total: unreadCount?.total || 1,
+              chat_message: unreadCount?.chat_message || 0,
+            },
+          },
+        });
+        channel.close();
+      } catch (bcErr) {
+        // Ignore BroadcastChannel errors if unsupported
       }
 
       // Add to notifications list

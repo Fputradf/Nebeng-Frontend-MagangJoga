@@ -14,7 +14,8 @@ import {
   X,
   Image as ImageIcon,
   Ticket,
-  Settings
+  Settings,
+  Share2
 } from 'lucide-react';
 import logoImage from '../../../assets/LOGO.png';
 
@@ -34,6 +35,7 @@ const MENU_GROUPS = [
       { name: 'Manajemen Merchandise', icon: Gift },
       { name: 'Manajemen Banner', icon: ImageIcon },
       { name: 'Voucher', icon: Ticket },
+      { name: 'Sosial Link', icon: Share2 },
       { name: 'Audit & Keuangan', icon: Receipt },
       { name: 'User Governance', icon: Users },
       { name: 'Pengaturan Akun', icon: Settings },
@@ -75,7 +77,7 @@ export default function SuperadminSidebar({ activeMenu = 'Dashboard', onMenuSele
         />
       )}
 
-      <aside className={`w-64 h-screen bg-gradient-to-b from-[#0c2353] via-[#10367D] to-[#18458f] border-r border-blue-400/20 shadow-2xl text-white flex flex-col justify-between p-5 fixed left-0 top-0 font-sans overflow-y-auto z-40 transition-transform duration-300 ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
+      <aside className={`w-64 h-screen bg-gradient-to-b from-[#0c2353] via-[#10367D] to-[#18458f] border-r border-blue-400/20 shadow-2xl text-white flex flex-col justify-between p-5 fixed left-0 top-0 font-sans overflow-y-auto z-40 transition-transform duration-300 print:hidden ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
         <div>
           <div className="mb-8 px-2 flex items-center justify-between">
             <div className="flex items-center gap-2.5">

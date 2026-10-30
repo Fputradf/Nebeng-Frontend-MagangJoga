@@ -365,7 +365,7 @@ export default function MitraTripManagement() {
     if (filterStatus === 'scheduled') {
       if (t.status !== 'scheduled') return false;
     } else if (filterStatus === 'in_transit') {
-      if (t.status !== 'in_transit' && t.status !== 'in_origin_pos') return false;
+      if (t.status !== 'in_transit' && t.status !== 'in_origin_pos' && t.status !== 'arrived_dest_pos') return false;
     } else if (filterStatus === 'completed') {
       if (t.status !== 'completed') return false;
     }
@@ -819,7 +819,7 @@ export default function MitraTripManagement() {
             <Radio className="w-4 h-4 text-amber-500 animate-pulse" />
           </div>
           <div className="text-2xl font-black text-amber-600">
-            {trips.filter(t => t.status === 'in_transit' || t.status === 'in_origin_pos').length}
+            {trips.filter(t => t.status === 'in_transit' || t.status === 'in_origin_pos' || t.status === 'arrived_dest_pos').length}
           </div>
           <span className="text-[11px] text-amber-600 font-medium">Live GPS tracking</span>
         </div>
@@ -1140,7 +1140,7 @@ export default function MitraTripManagement() {
               {[
                 { id: 'all', label: 'Semua', count: trips.filter(t => t.status !== 'cancelled').length },
                 { id: 'scheduled', label: 'Terjadwal', count: trips.filter(t => t.status === 'scheduled').length },
-                { id: 'in_transit', label: 'Berjalan', count: trips.filter(t => t.status === 'in_transit' || t.status === 'in_origin_pos').length },
+                { id: 'in_transit', label: 'Berjalan', count: trips.filter(t => t.status === 'in_transit' || t.status === 'in_origin_pos' || t.status === 'arrived_dest_pos').length },
                 { id: 'completed', label: 'Selesai', count: trips.filter(t => t.status === 'completed').length },
               ].map(tab => (
                 <button
@@ -1225,14 +1225,28 @@ export default function MitraTripManagement() {
                         
                         {trip.status === 'completed' ? (
                           <StatusBadge variant="emerald">Selesai</StatusBadge>
-                        ) : trip.status === 'in_transit' || trip.status === 'in_origin_pos' ? (
+                        ) : trip.status === 'in_transit' ? (
                           <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200 flex items-center gap-1">
                             <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
                             Dalam Perjalanan
                           </span>
-                        ) : (
-                          <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                        ) : trip.status === 'in_origin_pos' ? (
+                          <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                            Stand-by di Pos Asal
+                          </span>
+                        ) : trip.status === 'arrived_dest_pos' ? (
+                          <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                            Tiba di Pos Tujuan
+                          </span>
+                        ) : trip.status === 'scheduled' ? (
+                          <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-brand-700 border border-brand-200">
                             Dijadwalkan
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                            Dibatalkan
                           </span>
                         )}
 
@@ -1330,7 +1344,7 @@ export default function MitraTripManagement() {
                           </button>
                         )}
 
-                        {(trip.status === 'in_transit' || trip.status === 'in_origin_pos') && (
+                        {(trip.status === 'in_transit' || trip.status === 'in_origin_pos' || trip.status === 'arrived_dest_pos') && (
                           <div className="flex items-center gap-1.5">
                             {isTracking && activeTripId === trip.id ? (
                               <button

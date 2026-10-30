@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Wallet,
@@ -15,9 +15,13 @@ import {
   ShieldCheck,
   FileText,
   Send,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Bike,
+  Car,
+  Layers,
+  Plus,
+  ChevronRight
 } from 'lucide-react';
-import StatCard from '../../../components/ui/StatCard';
 import StatusBadge from '../../../components/ui/StatusBadge';
 import EmptyState from '../../../components/ui/EmptyState';
 import BaseModal from '../../../components/ui/BaseModal';
@@ -35,31 +39,77 @@ const MONTHS_FULL = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Ju
 const formatRupiah = (value) =>
   `Rp ${Math.max(0, Math.round(value || 0)).toLocaleString('id-ID')}`;
 
+const formatIndoDate = (dateStr) => {
+  if (!dateStr) return '-';
+  try {
+    const rawDate = typeof dateStr === 'string' && dateStr.includes('T') ? dateStr.split('T')[0] : String(dateStr);
+    const parts = rawDate.split('-');
+    if (parts.length === 3) {
+      const year = parts[0];
+      const monthIdx = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+      return `${day} ${months[monthIdx] || parts[1]} ${year}`;
+    }
+    return String(dateStr);
+  } catch {
+    return String(dateStr);
+  }
+};
+
 function formatTripSchedule(dateStr, timeStr) {
   if (!dateStr) return '-';
+  try {
+    const rawDate = typeof dateStr === 'string' && dateStr.includes('T') ? dateStr.split('T')[0] : String(dateStr);
+    const parts = rawDate.split('-');
+    let dayLabel = rawDate;
 
-  const tripDate = new Date(`${dateStr.split('T')[0]}T00:00:00`);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+    if (parts.length === 3) {
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      const tripDate = new Date(year, month, day);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
 
-  const diffDays = Math.round((tripDate - today) / 86400000);
-  let dayLabel;
+      const diffDays = Math.round((tripDate - today) / 86400000);
+      if (diffDays === 0) {
+        dayLabel = 'Hari ini';
+      } else if (diffDays === 1) {
+        dayLabel = 'Besok';
+      } else if (diffDays === -1) {
+        dayLabel = 'Kemarin';
+      } else {
+        dayLabel = !isNaN(tripDate.getTime())
+          ? tripDate.toLocaleDateString('id-ID', {
+              day: 'numeric',
+              month: 'short',
+              year: 'numeric'
+            })
+          : rawDate;
+      }
+    }
 
-  if (diffDays === 0) {
-    dayLabel = 'Hari ini';
-  } else if (diffDays === 1) {
-    dayLabel = 'Besok';
-  } else {
-    dayLabel = tripDate.toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    });
+    let timeLabel = '08:00';
+    if (timeStr) {
+      if (typeof timeStr === 'string') {
+        if (timeStr.includes('T')) {
+          timeLabel = timeStr.split('T')[1].substring(0, 5);
+        } else if (timeStr.includes(':')) {
+          timeLabel = timeStr.substring(0, 5);
+        }
+      } else {
+        const d = new Date(timeStr);
+        if (!isNaN(d.getTime())) {
+          timeLabel = d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        }
+      }
+    }
+
+    return `${dayLabel}, ${timeLabel} WIB`;
+  } catch {
+    return String(dateStr);
   }
-
-  return `${dayLabel}, ${
-    timeStr ? timeStr.split('T')[1]?.substring(0, 5) : '08:00'
-  } WIB`;
 }
 
 export default function MitraDashboard() {
@@ -129,7 +179,7 @@ export default function MitraDashboard() {
       setIsLoading(true);
       try {
         const [resMyTrips, resWallet, resRating, resSanctions] = await Promise.all([
-          apiClient.get('/trips/me').catch(() => ({ data: [] })),
+          apiClient.get('/trips/me', { params: { limit: 50 } }).catch(() => ({ data: [] })),
           apiClient.get('/wallets/me').catch(() => ({
             data: { balance: 0, heldEscrowBalance: 0 }
           })),
@@ -141,9 +191,13 @@ export default function MitraDashboard() {
           })),
         ]);
 
-        const rawTrips = resMyTrips.data?.data || resMyTrips.data || [];
+        const rawTrips = Array.isArray(resMyTrips.data?.data)
+          ? resMyTrips.data.data
+          : Array.isArray(resMyTrips.data)
+          ? resMyTrips.data
+          : [];
         const ratingData = resRating.data || { averageRating: 0, totalReviews: 0, reviews: [] };
-        const reviewsList = ratingData.reviews || [];
+        const reviewsList = Array.isArray(ratingData.reviews) ? ratingData.reviews : [];
 
         const mappedTrips = rawTrips.map((trip) => {
           const tripReview = reviewsList.find(
@@ -192,26 +246,47 @@ export default function MitraDashboard() {
     const vehicleType = (t.vehicleType || t.vehicle?.type || '').toLowerCase();
     
     if (activeService === 'barang') {
-       return Number(t.maxWeightCapacityKg) > 15 || rawType === 'barang';
+       return rawType === 'barang' || (!rawType && Number(t.maxWeightCapacityKg) > 15);
     }
     if (activeService === 'motor') {
-       return rawType === 'motor' || vehicleType === 'motor';
+       return rawType === 'motor' || (!rawType && vehicleType === 'motor');
     }
     if (activeService === 'mobil') {
-       return rawType === 'mobil' || vehicleType === 'mobil';
+       return rawType === 'mobil' || (!rawType && vehicleType === 'mobil');
     }
     return true;
   });
 
   const upcomingTrips = filteredTrips
     .filter(
-      (t) => t.status === 'scheduled' || t.status === 'in_transit' || t.status === 'in_origin_pos'
+      (t) =>
+        t.status === 'scheduled' ||
+        t.status === 'in_origin_pos' ||
+        t.status === 'in_transit' ||
+        t.status === 'arrived_dest_pos'
     )
-    .slice(0, 2);
+    .sort((a, b) => {
+      const activeWeight = {
+        in_transit: 1,
+        in_origin_pos: 2,
+        arrived_dest_pos: 3,
+        scheduled: 4,
+      };
+      const weightA = activeWeight[a.status] || 99;
+      const weightB = activeWeight[b.status] || 99;
+      if (weightA !== weightB) return weightA - weightB;
+      return new Date(a.departureDate || 0) - new Date(b.departureDate || 0);
+    })
+    .slice(0, 3);
 
   const recentHistory = filteredTrips
     .filter((t) => t.status === 'completed')
-    .sort((a, b) => Number(b.id) - Number(a.id))
+    .sort((a, b) => {
+      const dateA = new Date(a.departureDate || a.updatedAt || 0).getTime();
+      const dateB = new Date(b.departureDate || b.updatedAt || 0).getTime();
+      if (dateB !== dateA) return dateB - dateA;
+      return Number(b.id) - Number(a.id);
+    })
     .slice(0, 3);
 
   const availableBalance = Number(wallet.balance || 0);
@@ -224,6 +299,33 @@ export default function MitraDashboard() {
   const ratingSubtitle = ratingStats.totalReviews > 0
     ? `Berdasarkan ${ratingStats.totalReviews} ulasan`
     : 'Belum ada ulasan perjalanan';
+
+  const serviceCategories = [
+    { id: 'all', label: 'Semua Layanan', icon: Layers, desc: 'Semua moda transportasi' },
+    { id: 'motor', label: 'Nebeng Motor', icon: Bike, desc: 'Trip roda dua & penumpang' },
+    { id: 'mobil', label: 'Nebeng Mobil', icon: Car, desc: 'Trip mobil berpenumpang' },
+    { id: 'barang', label: 'Nebeng Barang', icon: Package, desc: 'Titip barang & ekspedisi' },
+  ];
+
+  const serviceCounts = useMemo(() => {
+    return {
+      all: trips.length,
+      motor: trips.filter(t => {
+        const rawType = (t.serviceType || '').toLowerCase();
+        const vehicleType = (t.vehicleType || t.vehicle?.type || '').toLowerCase();
+        return rawType === 'motor' || (!rawType && vehicleType === 'motor');
+      }).length,
+      mobil: trips.filter(t => {
+        const rawType = (t.serviceType || '').toLowerCase();
+        const vehicleType = (t.vehicleType || t.vehicle?.type || '').toLowerCase();
+        return rawType === 'mobil' || (!rawType && vehicleType === 'mobil');
+      }).length,
+      barang: trips.filter(t => {
+        const rawType = (t.serviceType || '').toLowerCase();
+        return rawType === 'barang' || (!rawType && Number(t.maxWeightCapacityKg) > 15);
+      }).length,
+    };
+  }, [trips]);
 
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
@@ -297,233 +399,368 @@ export default function MitraDashboard() {
         </div>
       ) : null}
 
-      <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-neutral-200">
-        <h2 className="text-[17px] font-extrabold text-neutral-800 mb-4 uppercase tracking-tight">Layanan Kami</h2>
-        <div className="flex justify-around items-center">
-          <button className="flex flex-col items-center gap-2 hover:opacity-80 transition cursor-pointer" onClick={() => setActiveService(activeService === 'motor' ? 'all' : 'motor')}>
-            <div className={`w-14 h-14 rounded-full flex items-center justify-center text-white shadow-md transition ${activeService === 'motor' ? 'bg-[#262160]' : 'bg-neutral-300'}`}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5V14l-3-3 4-3 2 3h2"/></svg>
-            </div>
-            <span className={`text-[13px] font-bold ${activeService === 'motor' ? 'text-[#262160]' : 'text-neutral-500'}`}>Nebeng Motor</span>
-          </button>
-          <button className="flex flex-col items-center gap-2 hover:opacity-80 transition cursor-pointer" onClick={() => setActiveService(activeService === 'mobil' ? 'all' : 'mobil')}>
-            <div className={`w-14 h-14 rounded-full flex items-center justify-center text-white shadow-md transition ${activeService === 'mobil' ? 'bg-[#262160]' : 'bg-neutral-300'}`}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>
-            </div>
-            <span className={`text-[13px] font-bold ${activeService === 'mobil' ? 'text-[#262160]' : 'text-neutral-500'}`}>Nebeng Mobil</span>
-          </button>
-          <button className="flex flex-col items-center gap-2 hover:opacity-80 transition cursor-pointer" onClick={() => setActiveService(activeService === 'barang' ? 'all' : 'barang')}>
-            <div className={`w-14 h-14 rounded-full flex items-center justify-center text-white shadow-md transition ${activeService === 'barang' ? 'bg-[#262160]' : 'bg-neutral-300'}`}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-            </div>
-            <span className={`text-[13px] font-bold ${activeService === 'barang' ? 'text-[#262160]' : 'text-neutral-500'}`}>Nebeng Barang</span>
-          </button>
+      {/* ── KATEGORI & FILTER LAYANAN MITRA ── */}
+      <section className="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-neutral-200 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h2 className="text-[17px] font-bold text-neutral-800">Kategori Layanan Mitra</h2>
+            <p className="text-[12px] text-neutral-500">Filter cepat ringkasan trip & riwayat berdasarkan moda transportasi</p>
+          </div>
+          {activeService !== 'all' && (
+            <button
+              type="button"
+              onClick={() => setActiveService('all')}
+              className="text-[12px] font-bold text-brand-600 hover:text-brand-700 hover:underline self-start sm:self-auto cursor-pointer focus-visible:outline-none"
+            >
+              Tampilkan Semua ({serviceCounts.all})
+            </button>
+          )}
         </div>
-      </div>
 
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4" role="tablist" aria-label="Filter Layanan Mitra">
+          {serviceCategories.map((cat) => {
+            const Icon = cat.icon;
+            const isSelected = activeService === cat.id;
+            const count = serviceCounts[cat.id] || 0;
+
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                role="tab"
+                aria-selected={isSelected}
+                onClick={() => setActiveService(isSelected && cat.id !== 'all' ? 'all' : cat.id)}
+                className={`p-4 rounded-2xl text-left transition-all duration-200 cursor-pointer flex flex-col justify-between group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 min-h-[102px] ${
+                  isSelected
+                    ? 'bg-blue-50/70 border-2 border-brand-600 shadow-xs'
+                    : 'bg-white hover:bg-neutral-50/90 border border-neutral-200 hover:border-neutral-300'
+                }`}
+              >
+                <div className="flex items-center justify-between w-full mb-3">
+                  <div
+                    className={`w-11 h-11 rounded-xl flex items-center justify-center transition-colors ${
+                      isSelected
+                        ? 'bg-brand-600 text-white shadow-sm'
+                        : 'bg-neutral-100 text-neutral-600 group-hover:bg-brand-50 group-hover:text-brand-600'
+                    }`}
+                  >
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <span
+                    className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                      isSelected
+                        ? 'bg-brand-600 text-white'
+                        : 'bg-neutral-100 text-neutral-600 group-hover:bg-neutral-200'
+                    }`}
+                  >
+                    {count} Trip
+                  </span>
+                </div>
+                <div>
+                  <h3
+                    className={`text-[14px] font-bold ${
+                      isSelected ? 'text-brand-900' : 'text-neutral-800'
+                    }`}
+                  >
+                    {cat.label}
+                  </h3>
+                  <p className="text-[11px] text-neutral-400 mt-0.5 truncate">
+                    {cat.desc}
+                  </p>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ── METRIK RINGKASAN MITRA ── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-        <StatCard
-          title="TOTAL SALDO WALLET"
-          value={formatRupiah(totalWallet)}
-          subtitle={`${formatRupiah(availableBalance)} siap ditarik, ${formatRupiah(escrowHold)} tertahan (escrow)`}
-          icon={Wallet}
-        />
-        <StatCard
-          title="STATISTIK RATING MITRA"
-          value={ratingDisplay}
-          subtitle={ratingSubtitle}
-          icon={Star}
-        />
+        {/* TOTAL SALDO WALLET */}
+        <div className="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between">
+            <div className="p-2.5 rounded-xl bg-blue-50 text-brand-600">
+              <Wallet className="w-5 h-5" />
+            </div>
+            <Link
+              to="/mitra/balance"
+              className="text-[12px] font-bold text-brand-600 hover:text-brand-700 hover:underline flex items-center gap-0.5"
+            >
+              Kelola Saldo <ChevronRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+          <div className="mt-3">
+            <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">Total Saldo Wallet</p>
+            <p className="text-[26px] font-bold text-neutral-800 leading-tight mt-0.5">
+              {formatRupiah(totalWallet)}
+            </p>
+          </div>
+          <div className="mt-3 pt-3 border-t border-neutral-100 flex items-center justify-between text-[11px] text-neutral-500">
+            <span>Siap ditarik: <strong className="text-emerald-600 font-semibold">{formatRupiah(availableBalance)}</strong></span>
+            <span className="text-neutral-300">·</span>
+            <span>Tertahan: <strong className="text-amber-600 font-semibold">{formatRupiah(escrowHold)}</strong></span>
+          </div>
+        </div>
+
+        {/* STATISTIK RATING MITRA */}
+        <div className="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between">
+            <div className="p-2.5 rounded-xl bg-amber-50 text-amber-500">
+              <Star className="w-5 h-5 fill-amber-400" />
+            </div>
+            {ratingStats.totalReviews > 0 && (
+              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200/60">
+                {ratingStats.totalReviews} Ulasan
+              </span>
+            )}
+          </div>
+          <div className="mt-3">
+            <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">Statistik Rating Mitra</p>
+            <p className="text-[26px] font-bold text-neutral-800 leading-tight mt-0.5">
+              {ratingDisplay}
+            </p>
+          </div>
+          <div className="mt-3 pt-3 border-t border-neutral-100 text-[11px] text-neutral-500 flex items-center gap-1.5">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+            <span>{ratingSubtitle}</span>
+          </div>
+        </div>
+
+        {/* REPUTASI & SANKSI POIN */}
         <div
           role="button"
           tabIndex={0}
           onClick={() => setShowSanctionModal(true)}
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setShowSanctionModal(true); } }}
-          className="cursor-pointer transition hover:opacity-95 text-left"
+          className="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 text-left"
           title="Klik untuk melihat riwayat sanksi & skor integritas"
         >
-          <StatCard
-            title="REPUTASI & SANKSI POIN"
-            value={`${sanctionData?.currentScore ?? 100} / ${sanctionData?.baseScore || 100}`}
-            subtitle={
-              sanctionData?.isSuspended
+          <div className="flex items-center justify-between">
+            <div className={`p-2.5 rounded-xl ${
+              sanctionData?.isSuspended ? 'bg-rose-50 text-rose-600' :
+              (sanctionData?.currentScore ?? 100) >= 80 ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
+            }`}>
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+              sanctionData?.isSuspended ? 'bg-rose-100 text-rose-700' :
+              (sanctionData?.currentScore ?? 100) >= 80 ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+            }`}>
+              {sanctionData?.isSuspended ? 'Suspensi' : 'Status Prima'}
+            </span>
+          </div>
+          <div className="mt-3">
+            <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">Reputasi & Sanksi Poin</p>
+            <p className="text-[26px] font-bold text-neutral-800 leading-tight mt-0.5">
+              {sanctionData?.currentScore ?? 100}
+              <span className="text-[14px] font-medium text-neutral-400 ml-1.5">/ {sanctionData?.baseScore || 100}</span>
+            </p>
+          </div>
+          <div className="mt-3 pt-3 border-t border-neutral-100 flex items-center justify-between text-[11px]">
+            <span className={
+              sanctionData?.isSuspended ? 'text-rose-600 font-semibold' :
+              (sanctionData?.currentScore ?? 100) >= 80 ? 'text-emerald-600 font-semibold' : 'text-amber-600 font-semibold'
+            }>
+              {sanctionData?.isSuspended
                 ? 'Akun Sedang Tersuspensi'
                 : (sanctionData?.currentScore ?? 100) >= 80
                 ? 'Integritas Sangat Baik'
-                : 'Peringatan Pemotongan Poin'
-            }
-            icon={ShieldAlert}
-          />
+                : 'Peringatan Pemotongan Poin'}
+            </span>
+            <span className="text-brand-600 font-semibold group-hover:underline flex items-center">
+              Detail <ChevronRight className="w-3 h-3 ml-0.5" />
+            </span>
+          </div>
         </div>
       </div>
 
+      {/* ── AKTIVITAS TRIP ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-neutral-200 space-y-4">
-          <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
-            <div className="flex items-center gap-2.5">
-              <div
-                className="p-2 rounded-xl"
-                style={{
-                  backgroundColor: `${PRIMARY_ACCENT}18`,
-                  color: PRIMARY_COLOR
-                }}
-              >
-                <Calendar className="w-4 h-4" />
-              </div>
-              <h2 className="text-[17px] font-bold text-neutral-800">
-                Ringkasan Trip Mendatang
-              </h2>
-            </div>
-            <Link
-              to="/mitra/trip"
-              className="text-[12px] font-bold hover:underline flex items-center gap-0.5"
-              style={{ color: PRIMARY_COLOR }}
-            >
-              Lihat Semua
-              <ArrowRight className="w-3 h-3" />
-            </Link>
-          </div>
-
-          <div className="space-y-3">
-            {isLoading ? (
-              <div className="text-[13px] text-neutral-400 p-3">
-                Memuat data trip...
-              </div>
-            ) : upcomingTrips.length === 0 ? (
-              <EmptyState
-                icon={Calendar}
-                title="Belum Ada Trip Mendatang"
-                description="Jadwalkan trip baru lewat menu Kelola Trip & Jadwal."
-              />
-            ) : (
-              upcomingTrips.map((trip) => (
-                <div
-                  key={trip.id}
-                  className="p-3.5 rounded-xl border border-neutral-100 bg-neutral-50/60 hover:bg-neutral-100/60 transition space-y-2"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-[13px] text-neutral-800 font-mono">
-                      TRIP-{trip.id}
-                    </span>
-
-                    {trip.status === 'in_transit' ? (
-                      <StatusBadge variant="amber">
-                        Dalam Perjalanan
-                      </StatusBadge>
-                    ) : (
-                      <span
-                        className="inline-flex items-center px-2 py-1 rounded-full text-[12px] font-bold"
-                        style={{
-                          color: PRIMARY_COLOR,
-                          backgroundColor: `${PRIMARY_ACCENT}18`,
-                          border: `1px solid ${PRIMARY_ACCENT}35`
-                        }}
-                      >
-                        Dijadwalkan
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-1.5 text-[13px] font-bold text-neutral-800">
-                    <MapPin
-                      className="w-3 h-3 shrink-0"
-                      style={{ color: PRIMARY_COLOR }}
-                    />
-                    <span>
-                      {trip.originPoint?.name || 'Asal'} &rarr;{' '}
-                      {trip.destinationPoint?.name || 'Tujuan'}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-2 border-t border-neutral-200/60 text-[12px] text-neutral-400 font-medium">
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-2.5 h-2.5" />
-                      {formatTripSchedule(
-                        trip.departureDate,
-                        trip.departureTime
-                      )}
-                    </span>
-                    <span className="flex items-center gap-1 font-bold text-neutral-700">
-                      <Package
-                        className="w-2.5 h-2.5"
-                        style={{ color: PRIMARY_COLOR }}
-                      />
-                      {trip.remainingWeightCapacityKg} Kg Sisa
-                    </span>
-                  </div>
+        {/* Ringkasan Trip Mendatang */}
+        <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-neutral-200 space-y-4 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-blue-50 text-brand-600">
+                  <Calendar className="w-4 h-4" />
                 </div>
-              ))
-            )}
+                <h2 className="text-[17px] font-bold text-neutral-800">
+                  Ringkasan Trip Mendatang
+                </h2>
+              </div>
+              <Link
+                to="/mitra/trip"
+                className="text-[12px] font-bold text-brand-600 hover:underline flex items-center gap-0.5"
+              >
+                Lihat Semua
+                <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
+
+            <div className="space-y-3 mt-4">
+              {isLoading ? (
+                <div className="text-[13px] text-neutral-400 p-3">
+                  Memuat data trip...
+                </div>
+              ) : upcomingTrips.length === 0 ? (
+                <div className="text-center py-6 px-4 space-y-3">
+                  <div className="w-12 h-12 mx-auto rounded-2xl bg-blue-50 text-brand-600 flex items-center justify-center">
+                    <Calendar className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-neutral-800">Belum Ada Trip Mendatang</h3>
+                    <p className="text-xs text-neutral-500 mt-1 max-w-xs mx-auto">
+                      Jadwalkan trip baru untuk mulai menerima penumpang atau titipan barang.
+                    </p>
+                  </div>
+                  <Link
+                    to="/mitra/trip"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl shadow-sm transition"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Buat Jadwal Trip Baru
+                  </Link>
+                </div>
+              ) : (
+                upcomingTrips.map((trip) => (
+                  <div
+                    key={trip.id}
+                    className="p-3.5 rounded-xl border border-neutral-200/80 bg-neutral-50/60 hover:bg-neutral-100/60 transition space-y-2.5"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-[13px] text-neutral-800 font-mono">
+                        TRIP-{trip.id}
+                      </span>
+
+                      {trip.status === 'in_transit' ? (
+                        <StatusBadge variant="amber">
+                          Dalam Perjalanan
+                        </StatusBadge>
+                      ) : trip.status === 'in_origin_pos' ? (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                          Stand-by di Pos
+                        </span>
+                      ) : trip.status === 'arrived_dest_pos' ? (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          Tiba di Tujuan
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-brand-700 border border-brand-200">
+                          Dijadwalkan
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-1.5 text-[13px] font-bold text-neutral-800">
+                      <MapPin className="w-3.5 h-3.5 text-brand-600 shrink-0" />
+                      <span>
+                        {trip.originPoint?.name || 'Asal'} &rarr;{' '}
+                        {trip.destinationPoint?.name || 'Tujuan'}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-neutral-200/60 text-[12px] text-neutral-500 font-medium">
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3 text-neutral-400" />
+                        {formatTripSchedule(
+                          trip.departureDate,
+                          trip.departureTime
+                        )}
+                      </span>
+                      <span className="flex items-center gap-1 font-bold text-neutral-700">
+                        {trip.serviceType === 'barang' ? (
+                          <>
+                            <Package className="w-3 h-3 text-brand-600" />
+                            {trip.remainingWeightCapacityKg ?? trip.maxWeightCapacityKg ?? 0} Kg Sisa
+                          </>
+                        ) : (
+                          <>
+                            <span className="text-brand-600 font-bold text-[12px]">Kursi:</span>
+                            {trip.seatAvailable ?? 0} Sisa
+                          </>
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
 
-        <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-neutral-200 space-y-4">
-          <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl">
-                <CheckCircle2 className="w-4 h-4" />
-              </div>
-              <h2 className="text-[17px] font-bold text-neutral-800">
-                Riwayat Perjalanan
-              </h2>
-            </div>
-            <span className="text-[11px] font-bold text-neutral-400">
-              Terakhir Selesai
-            </span>
-          </div>
-
-          <div className="space-y-3">
-            {isLoading ? (
-              <div className="text-[13px] text-neutral-400 p-3">
-                Memuat riwayat...
-              </div>
-            ) : recentHistory.length === 0 ? (
-              <EmptyState
-                icon={CheckCircle2}
-                title="Belum Ada Trip Selesai"
-                description="Riwayat akan muncul di sini setelah trip pertama Anda selesai."
-              />
-            ) : (
-              recentHistory.map((history) => (
-                <div
-                  key={history.id}
-                  className="p-3.5 rounded-xl border border-neutral-100 bg-neutral-50/60 hover:bg-neutral-100/60 transition space-y-2"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-[13px] text-neutral-800 font-mono">
-                      TRIP-{history.id}
-                    </span>
-                    <span className="text-[13px] font-bold text-emerald-600">
-                      {formatRupiah(history.price)}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-1.5 text-[13px] font-bold text-neutral-800">
-                    <MapPin className="w-3 h-3 text-neutral-400 shrink-0" />
-                    <span>
-                      {history.originPoint?.name || 'Asal'} &rarr;{' '}
-                      {history.destinationPoint?.name || 'Tujuan'}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-2 border-t border-neutral-100 text-[12px] text-neutral-400 font-medium">
-                    <span>
-                      {history.departureDate?.split('T')[0]}
-                    </span>
-                    {history.rating ? (
-                      <div className="flex items-center gap-1 text-amber-500 font-bold">
-                        <Star className="w-2.5 h-2.5 fill-current" />
-                        <span>{Number(history.rating).toFixed(1)}</span>
-                      </div>
-                    ) : (
-                      <span className="text-[11px] text-neutral-400 italic">
-                        Belum ada ulasan
-                      </span>
-                    )}
-                  </div>
+        {/* Riwayat Perjalanan */}
+        <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-neutral-200 space-y-4 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl">
+                  <CheckCircle2 className="w-4 h-4" />
                 </div>
-              ))
-            )}
+                <h2 className="text-[17px] font-bold text-neutral-800">
+                  Ringkasan Trip Selesai
+                </h2>
+              </div>
+              <Link
+                to="/mitra/trip"
+                className="text-[12px] font-bold text-brand-600 hover:underline flex items-center gap-0.5"
+              >
+                Lihat Semua
+                <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
+
+            <div className="space-y-3 mt-4">
+              {isLoading ? (
+                <div className="text-[13px] text-neutral-400 p-3">
+                  Memuat riwayat...
+                </div>
+              ) : recentHistory.length === 0 ? (
+                <EmptyState
+                  icon={CheckCircle2}
+                  title="Belum Ada Trip Selesai"
+                  description="Riwayat akan muncul di sini setelah trip pertama Anda selesai."
+                />
+              ) : (
+                recentHistory.map((history) => (
+                  <div
+                    key={history.id}
+                    className="p-3.5 rounded-xl border border-neutral-200/80 bg-neutral-50/60 hover:bg-neutral-100/60 transition space-y-2.5"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-[13px] text-neutral-800 font-mono">
+                        TRIP-{history.id}
+                      </span>
+                      <span className="text-[13px] font-bold text-emerald-600 font-mono">
+                        {formatRupiah(history.price)}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 text-[13px] font-bold text-neutral-800">
+                      <MapPin className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+                      <span>
+                        {history.originPoint?.name || 'Asal'} &rarr;{' '}
+                        {history.destinationPoint?.name || 'Tujuan'}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-neutral-200/60 text-[12px] text-neutral-500 font-medium">
+                      <span>
+                        {formatIndoDate(history.departureDate)}
+                      </span>
+                      {history.rating ? (
+                        <div className="flex items-center gap-1 text-amber-500 font-bold">
+                          <Star className="w-3 h-3 fill-current" />
+                          <span>{Number(history.rating).toFixed(1)}</span>
+                        </div>
+                      ) : (
+                        <span className="text-[11px] text-neutral-400 italic">
+                          Belum ada ulasan
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
       </div>

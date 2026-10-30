@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import QRCode from 'qrcode';
 import {
   Smartphone,
@@ -22,7 +22,7 @@ export default function MitraQrDisplay() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedTripId, setSelectedTripId] = useState(null);
   const [dynamicToken, setDynamicToken] = useState('TOKEN-1234');
-  const [countdown, setCountdown] = useState(30);
+  const [countdown, setCountdown] = useState(60);
   const [qrError, setQrError] = useState(false);
 
   const canvasRef = useRef(null);
@@ -61,7 +61,7 @@ export default function MitraQrDisplay() {
       setCountdown((prev) => {
         if (prev <= 1) {
           setDynamicToken(`TOKEN-${Math.floor(1000 + Math.random() * 9000)}`);
-          return 30;
+          return 60;
         }
         return prev - 1;
       });
@@ -90,7 +90,7 @@ export default function MitraQrDisplay() {
 
   const handleManualRefresh = () => {
     setDynamicToken(`TOKEN-${Math.floor(1000 + Math.random() * 9000)}`);
-    setCountdown(30);
+    setCountdown(60);
   };
 
   return (

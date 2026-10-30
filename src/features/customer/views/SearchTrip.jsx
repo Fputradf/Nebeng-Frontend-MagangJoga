@@ -253,7 +253,8 @@ export default function SearchTrip() {
 
   const safeSeatCount = Math.min(Math.max(1, seatCount || 1), maxAllowedSeats);
   const safeItemCount = Math.max(1, itemCount || 1);
-  const safeItemWeight = Math.max(1, itemWeight || 1);
+  const parsedItemWeight = parseFloat(itemWeight);
+  const safeItemWeight = !isNaN(parsedItemWeight) && parsedItemWeight > 0 ? parsedItemWeight : 0;
   const totalAccumulatedWeight = safeItemCount * safeItemWeight;
 
   const isOverWeightCapacity =
@@ -301,11 +302,14 @@ export default function SearchTrip() {
   const isReceiverPhoneValid =
     !isPassengerService ? PHONE_REGEX.test(receiverPhone.trim()) : true;
 
+  const isWeightValid =
+    !isPassengerService ? (!isNaN(parsedItemWeight) && parsedItemWeight > 0) : true;
+
   const isPassengerValid =
     isPassengerService ? passengerName.trim() !== '' && isPassengerPhoneValid : true;
 
   const isBarangValid =
-    !isPassengerService ? receiverName.trim() !== '' && isReceiverPhoneValid : true;
+    !isPassengerService ? receiverName.trim() !== '' && isReceiverPhoneValid && isWeightValid : true;
 
   const isPaymentValid =
     paymentMethod === 'xendit'
@@ -316,13 +320,14 @@ export default function SearchTrip() {
 
   const getFormValidationMessage = () => {
     if (isOverCapacity) {
-      return isPassengerService ? 'Jumlah kursi melebihi kuota tersedia.' : 'Berat barang melebihi kapasitas kuota.';
+      return isPassengerService ? 'Jumlah kursi melebihi kuota tersedia.' : 'Berat barang melebihi kapasitas kuota bagasi.';
     }
     if (isPassengerService) {
       if (!passengerName.trim()) return 'Nama penumpang wajib diisi.';
       if (!passengerPhone.trim()) return 'Nomor WhatsApp penumpang wajib diisi.';
       if (!isPassengerPhoneValid) return 'Format nomor WhatsApp tidak valid (contoh: 08123456789).';
     } else {
+      if (!isWeightValid) return 'Berat paket wajib diisi dengan benar (minimal 0.1 Kg).';
       if (!receiverName.trim()) return 'Nama penerima barang wajib diisi.';
       if (!receiverPhone.trim()) return 'Nomor HP penerima barang wajib diisi.';
       if (!isReceiverPhoneValid) return 'Format nomor HP tidak valid (contoh: 08123456789).';
@@ -350,6 +355,20 @@ export default function SearchTrip() {
     const cleaned = val.replace(/[^0-9+]/g, '');
     if (cleaned.length <= 14) {
       setter(cleaned);
+    }
+  };
+
+  const handleWeightChange = (e) => {
+    const val = e.target.value;
+    setItemWeight(val);
+    const num = parseFloat(val);
+    if (!isNaN(num) && num > 0) {
+      if (num <= 1) setItemSize('XXS');
+      else if (num <= 3) setItemSize('XS');
+      else if (num <= 5) setItemSize('S');
+      else if (num <= 10) setItemSize('M');
+      else if (num <= 20) setItemSize('L');
+      else setItemSize('XL');
     }
   };
 
@@ -472,6 +491,7 @@ export default function SearchTrip() {
     if (!isFormValid || isCheckingOut || !selectedTrip) return;
 
     setIsCheckingOut(true);
+    let createdOrderId = null;
     try {
       const orderPayload = {
         tripId: String(selectedTrip.id),
@@ -485,7 +505,7 @@ export default function SearchTrip() {
                   itemName: itemCategory,
                   itemCategory: itemCategory,
                   quantity: safeItemCount,
-                  weightPerItemKg: itemWeight,
+                  weightPerItemKg: safeItemWeight > 0 ? safeItemWeight : (parseFloat(itemWeight) || 1),
                   sizeEnum: itemSize.toLowerCase(),
                   recipientName: receiverName,
                   recipientPhone: receiverPhone,
@@ -498,6 +518,7 @@ export default function SearchTrip() {
       const resOrder = await apiClient.post('/orders', orderPayload);
       const createdOrder = resOrder.data;
       const orderIdStr = String(createdOrder.id);
+      createdOrderId = orderIdStr;
 
       if (paymentMethod === 'xendit') {
         // 2. Request Xendit Invoice URL
@@ -523,10 +544,19 @@ export default function SearchTrip() {
       }
 
     } catch (error) {
-      const errorMsg =
-        error.response?.data?.message || error.message || 'Gagal memproses transaksi.';
-      const formattedMsg = Array.isArray(errorMsg) ? errorMsg.join(', ') : errorMsg;
-      toast.error(formattedMsg, { title: 'Gagal' });
+      if (createdOrderId) {
+        toast.warning(
+          'Pesanan telah dibuat. Silakan klik Bayar Sekarang di halaman Tiket Saya untuk menyelesaikan transaksi.',
+          { title: 'Menunggu Pembayaran' }
+        );
+        setSelectedTrip(null);
+        navigate('/customer/tickets');
+      } else {
+        const errorMsg =
+          error.response?.data?.message || error.message || 'Gagal memproses transaksi.';
+        const formattedMsg = Array.isArray(errorMsg) ? errorMsg.join(', ') : errorMsg;
+        toast.error(formattedMsg, { title: 'Gagal' });
+      }
     } finally {
       setIsCheckingOut(false);
     }
@@ -891,21 +921,71 @@ export default function SearchTrip() {
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="block text-[11px] font-bold text-neutral-400 uppercase mb-1">Kategori Barang</label>
-                  <select value={itemCategory} onChange={(e) => setItemCategory(e.target.value)} className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded-xl font-bold focus:outline-none">
+                  <select 
+                    value={itemCategory} 
+                    onChange={(e) => setItemCategory(e.target.value)} 
+                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded-xl font-bold focus:outline-none text-[13px]"
+                  >
                     <option value="Elektronik">Elektronik</option>
                     <option value="Pakaian">Pakaian</option>
                     <option value="Dokumen">Dokumen</option>
                     <option value="Makanan">Makanan</option>
+                    <option value="Lainnya">Lainnya</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-neutral-400 uppercase mb-1">Ukuran Paket</label>
-                  <select value={itemSize} onChange={(e) => handleSizeChange(e.target.value)} className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded-xl font-bold focus:outline-none">
-                    {sizeOptions.map((opt) => (
-                      <option key={opt.code} value={opt.code}>{opt.label}</option>
-                    ))}
-                  </select>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-[11px] font-bold text-neutral-400 uppercase">
+                      Berat Paket (Kg)
+                    </label>
+                    <span className="text-[10px] text-neutral-400 font-semibold">
+                      Sisa: {selectedTrip?.remainingWeightCapacityKg ?? selectedTrip?.maxWeightCapacityKg ?? 30} Kg
+                    </span>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0.1"
+                      max={selectedTrip?.remainingWeightCapacityKg ?? selectedTrip?.maxWeightCapacityKg ?? 30}
+                      value={itemWeight}
+                      onChange={handleWeightChange}
+                      placeholder="Contoh: 5"
+                      required
+                      className={`w-full p-2 pr-9 bg-neutral-50 border rounded-xl font-bold focus:outline-none text-[13px] ${
+                        isOverWeightCapacity ? 'border-rose-400 bg-rose-50/50' : 'border-neutral-200'
+                      }`}
+                    />
+                    <span className="absolute right-3 top-2 text-[11px] font-bold text-neutral-400 pointer-events-none">
+                      Kg
+                    </span>
+                  </div>
                 </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-[11px] font-bold text-neutral-400 uppercase">
+                    Ukuran Paket (Kategori Tarif)
+                  </label>
+                  <span className="text-[10px] text-[#10367D] font-bold bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
+                    Otomatis Sesuai Berat
+                  </span>
+                </div>
+                <select 
+                  value={itemSize} 
+                  onChange={(e) => handleSizeChange(e.target.value)} 
+                  className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded-xl font-bold focus:outline-none text-[13px]"
+                >
+                  {sizeOptions.map((opt) => (
+                    <option key={opt.code} value={opt.code}>{opt.label}</option>
+                  ))}
+                </select>
+                {isOverWeightCapacity && (
+                  <p className="text-[11px] text-rose-500 font-semibold mt-1">
+                    Berat paket ({totalAccumulatedWeight} Kg) melebihi sisa kapasitas bagasi ({selectedTrip?.remainingWeightCapacityKg || selectedTrip?.maxWeightCapacityKg || 0} Kg).
+                  </p>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-2">

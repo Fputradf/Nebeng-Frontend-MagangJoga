@@ -76,6 +76,8 @@
 │   │       ├── 📄 EnterpriseTable.jsx
 │   │       ├── 📄 NotificationBell.jsx
 │   │       ├── 📄 PhoneCallModal.jsx
+│   │       ├── 📄 PrintReportFooter.jsx
+│   │       ├── 📄 PrintReportHeader.jsx
 │   │       ├── 📄 QrScannerModal.jsx
 │   │       ├── 📄 Skeleton.jsx
 │   │       ├── 📄 SocialIcon.jsx

@@ -11,7 +11,6 @@ import {
   ShieldAlert, CheckCircle2, PhoneCall, History,
   Eye, EyeOff, TrendingUp, TrendingDown,
   Users, Clock, BarChart3, LineChart as LineChartIcon,
-  ArrowUpRight, ArrowDownRight,
   Activity, Truck, ClipboardCheck, Zap, PieChart as PieChartIcon
 } from 'lucide-react';
 import { io } from 'socket.io-client';
@@ -45,27 +44,6 @@ function CustomTooltip({ active, payload, label }) {
         </div>
       ))}
     </div>
-  );
-}
-
-// ─── Mini SparkLine SVG (tanpa library, untuk KPI card) ───────────────────────
-function SparkLine({ data = [], color = '#10367D' }) {
-  if (data.length < 2) return null;
-  const W = 72, H = 28;
-  const maxV = Math.max(...data, 1);
-  const minV = Math.min(...data, 0);
-  const range = maxV - minV || 1;
-  const pts = data.map((v, i) => [
-    (i / (data.length - 1)) * W,
-    H - ((v - minV) / range) * (H - 4) - 2,
-  ]);
-  const d = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
-  const area = `${d} L${W},${H} L0,${H} Z`;
-  return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`}>
-      <path d={area} fill={color} fillOpacity="0.12" />
-      <path d={d} fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
   );
 }
 
@@ -288,19 +266,11 @@ export default function AdminRegionalDashboard() {
     { name: 'Pending KYC', value: pendingVerif, color: '#f59e0b' },
   ].filter(d => d.value > 0), [arrivedCount, departedCount, disruptedTrips.length, pendingVerif, chartSummary]);
 
-  // ── KPI Card Trends (sparkline data) ──────────────────────────────────────
-  const trends = {
-    pos: [8, 8, 9, 9, 10, 10, 10, 11, 11, 12, 12, 13],
-    trips: [12, 15, 11, 18, 22, 19, 25, 28, 21, 30, 26, 35],
-    verif: [3, 4, 2, 5, 3, 6, 4, 7, 5, 4, 6, 9],
-    disrupted: [2, 1, 3, 0, 1, 2, 0, 1, 3, 2, 0, disruptedTrips.length],
-  };
-
   const kpis = [
-    { label: 'POS AKTIF', value: activePosCount, unit: 'Pos', sub: 'Pos terdaftar & beroperasi', icon: MapPin, trend: trends.pos, color: '#10367D', change: +2 },
-    { label: 'TOTAL TRIP', value: totalTrips, unit: 'Trip', sub: `Berangkat: ${departedCount} · Tiba: ${arrivedCount}`, icon: Compass, trend: trends.trips, color: '#10b981', change: +8 },
-    { label: 'TRIP DISRUPTED', value: disruptedTrips.length, unit: 'Aktif', sub: 'Membutuhkan respons segera', icon: AlertTriangle, trend: trends.disrupted, color: '#ef4444', change: disruptedTrips.length > 0 ? +1 : -1 },
-    { label: 'ANTREAN KYC', value: pendingVerif, unit: 'Berkas', sub: 'KTP & Face ID pending review', icon: ShieldCheck, trend: trends.verif, color: '#f59e0b', change: -3 },
+    { label: 'POS AKTIF', value: activePosCount, unit: 'Pos', sub: 'Pos terdaftar & beroperasi', icon: MapPin, color: '#10367D' },
+    { label: 'TOTAL TRIP', value: totalTrips, unit: 'Trip', sub: `Berangkat: ${departedCount} · Tiba: ${arrivedCount}`, icon: Compass, color: '#10b981' },
+    { label: 'TRIP DISRUPTED', value: disruptedTrips.length, unit: 'Aktif', sub: 'Membutuhkan respons segera', icon: AlertTriangle, color: '#ef4444' },
+    { label: 'ANTREAN KYC', value: pendingVerif, unit: 'Berkas', sub: 'KTP & Face ID pending review', icon: ShieldCheck, color: '#f59e0b' },
   ];
 
   // ── Event handlers ─────────────────────────────────────────────────────────
@@ -387,18 +357,13 @@ export default function AdminRegionalDashboard() {
               </div>
             ))
           : kpis.map((k) => {
-              const isUp = k.change >= 0;
               const Icon = k.icon;
               return (
                 <div key={k.label} className="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm flex flex-col gap-3 hover:shadow-md transition-shadow">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center">
                     <div className="p-2 rounded-xl" style={{ backgroundColor: `${k.color}18` }}>
                       <Icon className="w-4 h-4" style={{ color: k.color }} />
                     </div>
-                    <span className={`flex items-center gap-0.5 text-[11px] font-bold px-2 py-0.5 rounded-full ${isUp ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
-                      {isUp ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                      {Math.abs(k.change)}%
-                    </span>
                   </div>
                   <div>
                     <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">{k.label}</p>
@@ -407,10 +372,7 @@ export default function AdminRegionalDashboard() {
                       <span className="text-[14px] font-medium text-neutral-400 ml-1">{k.unit}</span>
                     </p>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <p className="text-[11px] text-neutral-400 leading-snug">{k.sub}</p>
-                    <SparkLine data={k.trend} color={k.color} />
-                  </div>
+                  <p className="text-[11px] text-neutral-400 leading-snug">{k.sub}</p>
                 </div>
               );
             })}

@@ -5,6 +5,8 @@ import EmptyState from '../../../components/ui/EmptyState';
 import StatCard from '../../../components/ui/StatCard';
 import StatusBadge from '../../../components/ui/StatusBadge';
 import BaseModal from '../../../components/ui/BaseModal';
+import PrintReportHeader from '../../../components/ui/PrintReportHeader';
+import PrintReportFooter from '../../../components/ui/PrintReportFooter';
 import { useAuth } from '../../../context/AuthContext';
 import apiClient from '../../../services/apiClient';
 
@@ -142,17 +144,71 @@ export default function FinancialReportPage() {
     item.serviceType.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const pageTotalAmount = filteredReports.reduce((acc, curr) => {
+    const raw = Number(String(curr.amount || '0').replace(/[^0-9]/g, '')) || 0;
+    return acc + raw;
+  }, 0);
+
+  const pageTotalCommission = filteredReports.reduce((acc, curr) => {
+    const raw = Number(String(curr.commission || '0').replace(/[^0-9]/g, '')) || 0;
+    return acc + raw;
+  }, 0);
+
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter'] print:p-0 print:bg-white">
 
-      <style>{`
-        @media print {
-          @page { size: A4 portrait; margin: 12mm; }
-          body, html, #root { margin: 0 !important; padding: 0 !important; width: 100% !important; background: white !important; }
-          aside, nav, header, button, .print-hidden { display: none !important; }
-          .bg-white { border: 1px solid #d1d5db !important; box-shadow: none !important; padding: 12px !important; }
-        }
-      `}</style>
+      {/* ── KOP SURAT CETAK RESMI REGIONAL ── */}
+      <PrintReportHeader
+        title="LAPORAN KEUANGAN & PENDAPATAN REGIONAL"
+        subtitle={`DIVISI OPERASIONAL WILAYAH • ${user?.regionName || 'WILAYAH OPERASIONAL'}`}
+        documentNumber={`DOC/REG-FIN/${new Date().toISOString().slice(0, 10).replace(/-/g, '')}/${String(currentPage).padStart(3, '0')}`}
+        printedBy={user?.name || user?.fullName || 'Administrator Wilayah'}
+        extraMeta={[
+          { label: 'Wilayah Operasi', value: user?.regionName || 'Regional Terpadu' },
+          { label: 'Halaman Laporan', value: `Hal ${currentPage} dari ${paginationMeta?.totalPages || 1}` },
+          { label: 'Total Transaksi', value: `${grandTotalSummary.totalTransactions} Transaksi Terdata` },
+          { label: 'Basis Settlement', value: 'Sistem Terverifikasi Real-Time' },
+        ]}
+      />
+
+      {/* ── RINGKASAN EKSEKUTIF KHUSUS CETAK PDF ── */}
+      <div className="hidden print:grid grid-cols-3 gap-3 mb-6">
+        <div className="border border-slate-300 rounded p-3 bg-slate-50/70">
+          <span className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+            Total Omzet Wilayah
+          </span>
+          <p className="text-[15px] font-black font-mono text-slate-900 mt-0.5">
+            Rp {grandTotalSummary.totalRevenue.toLocaleString('id-ID')}
+          </p>
+          <span className="text-[9.5px] text-slate-500 block mt-0.5">
+            Akumulasi nilai transaksi {user?.regionName || 'regional'}
+          </span>
+        </div>
+
+        <div className="border border-slate-300 rounded p-3 bg-slate-50/70">
+          <span className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+            Hak Komisi Wilayah
+          </span>
+          <p className="text-[15px] font-black font-mono text-[#10367D] mt-0.5">
+            Rp {grandTotalSummary.totalCommission.toLocaleString('id-ID')}
+          </p>
+          <span className="text-[9.5px] text-slate-500 block mt-0.5">
+            Porsi bagi hasil kas regional
+          </span>
+        </div>
+
+        <div className="border border-slate-300 rounded p-3 bg-slate-50/70">
+          <span className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+            Status Data Halaman
+          </span>
+          <p className="text-[15px] font-black font-mono text-slate-900 mt-0.5">
+            {reportList.length} / {grandTotalSummary.totalTransactions} Data
+          </p>
+          <span className="text-[9.5px] text-slate-500 block mt-0.5">
+            Halaman {currentPage} dari {paginationMeta?.totalPages || 1}
+          </span>
+        </div>
+      </div>
 
       {/* ── BANNER GRADIENT ── */}
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] p-6 text-white shadow-card sm:p-8 print-hidden">
@@ -177,10 +233,10 @@ export default function FinancialReportPage() {
           <div className="flex items-center gap-2.5 self-start sm:self-auto">
             <button
               onClick={() => window.print()}
-              className="flex items-center gap-2 px-4 py-2.5 bg-white/15 hover:bg-white/25 border border-white/25 text-white rounded-2xl backdrop-blur text-xs font-bold transition cursor-pointer shadow-sm"
+              className="flex items-center gap-2 px-4 py-2.5 bg-accent hover:bg-accent/90 text-slate-900 rounded-2xl text-xs sm:text-sm font-bold transition cursor-pointer shadow-sm"
             >
-              <Printer size={14} className="text-accent" />
-              <span>Cetak PDF</span>
+              <Printer size={16} />
+              <span>Cetak Laporan PDF</span>
             </button>
           </div>
         </div>
@@ -189,7 +245,7 @@ export default function FinancialReportPage() {
       </section>
 
       {/* STAT CARDS */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 print:grid-cols-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 print:hidden">
         <StatCard
           title="TOTAL PENDAPATAN WILAYAH"
           value={`Rp ${grandTotalSummary.totalRevenue.toLocaleString('id-ID')}`}
@@ -242,21 +298,21 @@ export default function FinancialReportPage() {
       </div>
 
       {/* TABLE */}
-      <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 overflow-hidden">
-        <div className="hidden sm:block overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gray-50/70 text-neutral-400 text-[12px] uppercase tracking-wider font-bold">
-                <th className="py-3 px-5">ID TRX & Waktu</th>
-                <th className="py-3 px-5">Pos Asal</th>
-                <th className="py-3 px-5">Layanan</th>
-                <th className="py-3 px-5">Total Tarif</th>
-                <th className="py-3 px-5">Komisi (% Dari BE)</th>
-                <th className="py-3 px-5 text-right">Status</th>
+      <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 overflow-hidden print:border print:shadow-none print:rounded-none">
+        <div className="hidden sm:block print:block overflow-x-auto">
+          <table className="w-full text-left border-collapse print:text-black">
+            <thead className="print:table-header-group">
+              <tr className="bg-gray-50/70 text-neutral-400 text-[12px] uppercase tracking-wider font-bold print:bg-slate-100 print:text-slate-800 print:border-b-2 print:border-slate-300">
+                <th className="py-3 px-5 print:py-2 print:px-3">ID TRX & Waktu</th>
+                <th className="py-3 px-5 print:py-2 print:px-3">Pos Asal</th>
+                <th className="py-3 px-5 print:py-2 print:px-3">Layanan</th>
+                <th className="py-3 px-5 print:py-2 print:px-3">Total Tarif</th>
+                <th className="py-3 px-5 print:py-2 print:px-3">Komisi Wilayah</th>
+                <th className="py-3 px-5 print:py-2 print:px-3 text-right">Status</th>
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-gray-100 text-[12px]">
+            <tbody className="divide-y divide-gray-100 text-[12px] print:divide-slate-200">
               {isLoadingReports ? (
                 <SkeletonTableRows rows={4} columns={6} />
               ) : filteredReports.length > 0 ? (
@@ -266,22 +322,22 @@ export default function FinancialReportPage() {
                     onClick={() => setSelectedStatusDetail(item)}
                     className="hover:bg-[#74B4D9]/10 transition cursor-pointer"
                   >
-                    <td className="py-3.5 px-5">
-                      <div className="font-bold text-neutral-800 font-mono text-[13px]">{item.id}</div>
-                      <div className="text-[11px] text-neutral-400">{item.date}</div>
+                    <td className="py-3.5 px-5 print:py-2 print:px-3">
+                      <div className="font-bold text-neutral-800 font-mono text-[13px] print:text-slate-900">{item.id}</div>
+                      <div className="text-[11px] text-neutral-400 print:text-slate-500 font-mono">{item.date}</div>
                     </td>
 
-                    <td className="py-3.5 px-5 font-bold text-neutral-800">{item.posName}</td>
+                    <td className="py-3.5 px-5 print:py-2 print:px-3 font-bold text-neutral-800 print:text-slate-900">{item.posName}</td>
 
-                    <td className="py-3.5 px-5 font-semibold text-neutral-700">{item.serviceType}</td>
+                    <td className="py-3.5 px-5 print:py-2 print:px-3 font-semibold text-neutral-700 print:text-slate-800">{item.serviceType}</td>
 
-                    <td className="py-3.5 px-5 font-bold text-neutral-800">{item.amount}</td>
+                    <td className="py-3.5 px-5 print:py-2 print:px-3 font-bold font-mono text-neutral-800 print:text-slate-900">{item.amount}</td>
 
-                    <td className="py-3.5 px-5 font-bold text-[#10367D]">
-                      {item.commission} <span className="text-[13px] text-neutral-400 font-normal">({item.commissionPercentage}%)</span>
+                    <td className="py-3.5 px-5 print:py-2 print:px-3 font-bold font-mono text-[#10367D] print:text-slate-900">
+                      {item.commission} <span className="text-[11px] text-neutral-400 print:text-slate-500 font-normal">({item.commissionPercentage}%)</span>
                     </td>
 
-                    <td className="py-3.5 px-5 text-right">
+                    <td className="py-3.5 px-5 print:py-2 print:px-3 text-right">
                       <StatusBadge variant="emerald">{item.status}</StatusBadge>
                     </td>
                   </tr>
@@ -298,6 +354,22 @@ export default function FinancialReportPage() {
                 </tr>
               )}
             </tbody>
+            <tfoot className="hidden print:table-footer-group border-t-2 border-slate-800 font-bold bg-slate-50 text-[11px]">
+              <tr>
+                <td colSpan={3} className="py-2.5 px-3 text-slate-700 uppercase">
+                  Total Nilai Halaman Ini ({filteredReports.length} Transaksi):
+                </td>
+                <td className="py-2.5 px-3 font-mono text-[12px] text-slate-900 font-black">
+                  Rp {pageTotalAmount.toLocaleString('id-ID')}
+                </td>
+                <td className="py-2.5 px-3 font-mono text-[12px] text-[#10367D] font-bold">
+                  Rp {pageTotalCommission.toLocaleString('id-ID')}
+                </td>
+                <td className="py-2.5 px-3 text-right text-emerald-700 text-[10px] uppercase font-bold">
+                  Terverifikasi
+                </td>
+              </tr>
+            </tfoot>
           </table>
         </div>
 
@@ -327,6 +399,30 @@ export default function FinancialReportPage() {
           </div>
         )}
       </div>
+
+      {/* ── LEMBAR PENGESAHAN CETAK REGIONAL ── */}
+      <PrintReportFooter
+        leftSigner={{
+          role: 'Disiapkan Oleh,',
+          title: 'Administrator Keuangan Regional',
+          name: user?.name || user?.fullName || 'Administrator Regional',
+          idLabel: 'ID Petugas',
+          idValue: user?.id ? `ADM-${user.id}` : 'ADM-REGIONAL',
+        }}
+        rightSigner={{
+          role: 'Mengetahui & Menyetujui,',
+          title: 'Manajer Operasional Wilayah',
+          name: 'Manajer Regional PT Nebeng Transport Indonesia',
+          idLabel: 'Otoritas Wilayah',
+          idValue: user?.regionName || 'Regional Jawa Tengah',
+          locationDate: `Surakarta, ${new Date().toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+          })}`,
+        }}
+        notes="Laporan keuangan ini mencerminkan mutasi dan komisi transaksi aktual di pos-pos wilayah yang bersangkutan. Dicetak otomatis melalui sistem Nebeng."
+      />
 
       {/* MODAL DETAIL TRANSAKSI */}
       <BaseModal

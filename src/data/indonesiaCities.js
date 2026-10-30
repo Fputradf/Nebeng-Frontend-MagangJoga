@@ -516,6 +516,14 @@ export const INDONESIA_CITIES = [
     "latitude": -6.1339,
     "longitude": 106.8823
   },
+    {
+    "name": "D.I. Yogyakarta",
+    "province": "DI Yogyakarta",
+    "defaultCode": "JOG",
+    "query": "Daerah Istimewa Yogyakarta, Indonesia",
+    "latitude": -7.7953473,
+    "longitude": 110.3672845
+  },
   {
     "name": "Kabupaten Bantul",
     "province": "Di Yogyakarta",

@@ -5,6 +5,7 @@ import {
   Ticket,
   QrCode,
   Clock,
+  CreditCard,
   ArrowRight,
   Award,
   Star,
@@ -72,8 +73,9 @@ export default function MyTickets() {
   const [selectedTimelineTicket, setSelectedTimelineTicket] = useState(null);
 
   const [qrDynamicToken, setQrDynamicToken] = useState('SEC-9081');
-  const [qrCountdown, setQrCountdown] = useState(30);
+  const [qrCountdown, setQrCountdown] = useState(60);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [payingTicketId, setPayingTicketId] = useState(null);
 
   const [chatConversationId, setChatConversationId] = useState(null);
   const [chatMessages, setChatMessages] = useState([]);
@@ -121,7 +123,9 @@ export default function MyTickets() {
           : 'Kendaraan Resmi';
 
         let statusText = 'Aktif';
-        if (order.status === 'cancelled' || order.status === 'cancelled_by_mitra') {
+        if (order.status === 'pending_payment') {
+          statusText = 'Menunggu Pembayaran';
+        } else if (order.status === 'cancelled' || order.status === 'cancelled_by_mitra') {
           statusText = 'Batal';
         } else if (order.status === 'completed') {
           statusText = 'Selesai';
@@ -133,6 +137,7 @@ export default function MyTickets() {
           id: order.id,
           rawId: order.id,
           tripId: trip.id,
+          tripStatus: trip.status,
           customerId: order.customerId,
           revieweeId: trip.mitraId || trip.mitra?.id || trip.mitra?.userId,
           type: order.type,
@@ -713,7 +718,7 @@ export default function MyTickets() {
   useEffect(() => {
     let interval;
     const pendingTickets = tickets.filter(
-      (t) => t.status === 'Aktif' && t.currentStatusText === 'pending_payment'
+      (t) => t.currentStatusText === 'pending_payment'
     );
 
     if (pendingTickets.length > 0) {
@@ -773,7 +778,7 @@ export default function MyTickets() {
         setQrCountdown((prev) => {
           if (prev <= 1) {
             setQrDynamicToken(`SEC-${Math.floor(1000 + Math.random() * 9000)}`);
-            return 30;
+            return 60;
           }
           return prev - 1;
         });
@@ -798,7 +803,7 @@ export default function MyTickets() {
   const filteredTickets = tickets.filter((ticket) => {
     const matchesTab =
       activeTab === 'aktif'
-        ? ticket.status === 'Aktif'
+        ? ticket.status === 'Aktif' || ticket.status === 'Menunggu Pembayaran'
         : activeTab === 'riwayat'
         ? ticket.status === 'Selesai' || ticket.status === 'Batal'
         : true;
@@ -832,13 +837,39 @@ export default function MyTickets() {
     }
   };
 
+  const handlePayPendingTicket = async (ticket) => {
+    if (payingTicketId) return;
+    setPayingTicketId(ticket.rawId);
+    try {
+      toast.info('Menghubungkan ke gateway pembayaran Xendit...', { title: 'Tunggu Sebentar' });
+      const resPayment = await apiClient.post('/payments/xendit/create-invoice', {
+        orderId: String(ticket.rawId),
+      });
+
+      const invoiceUrl = resPayment.data?.invoiceUrl;
+      if (!invoiceUrl || invoiceUrl === '/customer/tickets') {
+        throw new Error('Gagal mendapatkan tautan pembayaran Xendit yang valid.');
+      }
+
+      toast.success('Mengalihkan ke halaman pembayaran...', { title: 'Menuju Pembayaran' });
+      window.location.href = invoiceUrl;
+    } catch (err) {
+      const errorMsg =
+        err.response?.data?.message || err.message || 'Gagal memproses pembayaran tiket.';
+      const formatted = Array.isArray(errorMsg) ? errorMsg.join(', ') : errorMsg;
+      toast.error(formatted, { title: 'Gagal Membuka Pembayaran' });
+    } finally {
+      setPayingTicketId(null);
+    }
+  };
+
   const openModal = async (ticket, type) => {
     setSelectedTicket(ticket);
     setActiveModalType(type);
 
     if (type === 'qr') {
       setQrDynamicToken(`SEC-${Math.floor(1000 + Math.random() * 9000)}`);
-      setQrCountdown(30);
+      setQrCountdown(60);
     }
 
     if (type === 'chat') {
@@ -1003,7 +1034,7 @@ export default function MyTickets() {
           }`}
           style={activeTab === 'aktif' ? { backgroundColor: PRIMARY_COLOR } : undefined}
         >
-          Tiket Aktif ({tickets.filter((t) => t.status === 'Aktif').length})
+          Tiket Aktif ({tickets.filter((t) => t.status === 'Aktif' || t.status === 'Menunggu Pembayaran').length})
         </button>
 
         <button
@@ -1178,9 +1209,26 @@ export default function MyTickets() {
                   <div className="space-y-3 pt-1">
                     <div className="flex items-center justify-between pt-2 border-t border-neutral-100 flex-wrap gap-2">
                       {ticket.status === 'Aktif' ? (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                          Aktif
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                            Aktif
+                          </span>
+                          {(ticket.tripStatus === 'in_origin_pos' || ticket.checkpointsLogs?.some(l => l.scanType === 'checkin_origin')) && ticket.currentStatusText === 'paid' && (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200 animate-pulse">
+                              🚗 Sopir Telah Tiba di Pos
+                            </span>
+                          )}
+                          {(ticket.tripStatus === 'in_transit' || ticket.currentStatusText === 'in_transit') && (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                              🚀 Dalam Perjalanan
+                            </span>
+                          )}
+                        </div>
+                      ) : ticket.status === 'Menunggu Pembayaran' ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                          <Clock className="w-3 h-3 text-amber-600" />
+                          Menunggu Pembayaran
                         </span>
                       ) : (
                         <StatusBadge variant={ticket.status === 'Selesai' ? 'default' : 'rose'}>
@@ -1202,6 +1250,35 @@ export default function MyTickets() {
                           Audit Checkpoint
                         </button>
 
+                        {/* Aksi Khusus Tiket Menunggu Pembayaran */}
+                        {ticket.status === 'Menunggu Pembayaran' && (
+                          <button
+                            type="button"
+                            onClick={() => handlePayPendingTicket(ticket)}
+                            disabled={payingTicketId === ticket.rawId}
+                            className="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-[12px] font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {payingTicketId === ticket.rawId ? (
+                              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <CreditCard className="w-3.5 h-3.5" />
+                            )}
+                            <span>Bayar Sekarang</span>
+                          </button>
+                        )}
+
+                        {ticket.status === 'Menunggu Pembayaran' && (
+                          <button
+                            type="button"
+                            onClick={() => openModal(ticket, 'cancel')}
+                            className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg text-[12px] font-bold transition flex items-center gap-1 cursor-pointer"
+                          >
+                            <XCircle className="w-3.5 h-3.5" />
+                            <span>Batalkan</span>
+                          </button>
+                        )}
+
+                        {/* Aksi Tiket Aktif (Lunas) */}
                         {ticket.status === 'Aktif' && (
                           <button
                             type="button"
@@ -1224,17 +1301,6 @@ export default function MyTickets() {
                           </button>
                         )}
 
-                        {ticket.status === 'Aktif' && ticket.currentStatusText === CANCELLABLE_STATUS_TEXT && (
-                          <button
-                            type="button"
-                            onClick={() => openModal(ticket, 'cancel')}
-                            className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg text-[12px] font-bold transition flex items-center gap-1 cursor-pointer"
-                          >
-                            <XCircle className="w-3.5 h-3.5" />
-                            <span>Batalkan</span>
-                          </button>
-                        )}
-
                         {ticket.status === 'Aktif' && (
                           <button
                             type="button"
@@ -1245,12 +1311,6 @@ export default function MyTickets() {
                             <QrCode className="w-3.5 h-3.5" />
                             <span>QR Pos</span>
                           </button>
-                        )}
-
-                        {ticket.status === 'Aktif' && ticket.currentStatusText === 'pending_payment' && (
-                          <span className="text-[12px] text-neutral-400 italic flex items-center gap-1 animate-pulse">
-                            <RefreshCw className="w-3 h-3 animate-spin" /> Sedang memverifikasi pembayaran...
-                          </span>
                         )}
 
                         {ticket.status === 'Selesai' && (

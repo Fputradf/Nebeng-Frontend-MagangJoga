@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ShieldCheck, UserCheck, AlertTriangle, Unlock, ScanLine, CheckCircle, X } from 'lucide-react';
+import { ShieldCheck, UserCheck, AlertTriangle, Unlock, ScanLine, X, Upload, AlertCircle, Trash2 } from 'lucide-react';
 import { useToast } from '../../../context/ToastContext';
 import EmptyState from '../../../components/ui/EmptyState';
 import StatusBadge from '../../../components/ui/StatusBadge';
@@ -10,6 +10,7 @@ import { Html5Qrcode } from 'html5-qrcode';
 const PRIMARY_COLOR = '#10367D';
 const PRIMARY_HOVER = '#0C2C66';
 const PRIMARY_ACCENT = '#74B4D9';
+const STORAGE_KEY = 'nebeng_operator_handover_history';
 
 export default function OperatorHandover() {
   const toast = useToast();
@@ -19,7 +20,25 @@ export default function OperatorHandover() {
   const [otpCode, setOtpCode] = useState('');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [handoverHistory, setHandoverHistory] = useState([]);
+  const [handoverHistory, setHandoverHistory] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const saveHandoverHistory = (newHistory) => {
+    setHandoverHistory(newHistory);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(newHistory.slice(0, 50)));
+    } catch (e) {
+      console.warn('Gagal menyimpan riwayat serah terima ke localStorage', e);
+    }
+  };
+
+  const fileInputRef = useRef(null);
 
   // Camera QR Scanner state
   const [isCameraActive, setIsCameraActive] = useState(false);
@@ -94,7 +113,7 @@ export default function OperatorHandover() {
         .catch((err) => {
           console.warn('Gagal akses kamera langsung:', err);
           toast.info(
-            'Kamera fisik tidak terdeteksi/izin diblokir. Gunakan tombol simulasi cepat di bawah.',
+            'Kamera tidak aktif atau izin diblokir. Anda bisa menggunakan opsi unggah file gambar QR di bawah.',
             { title: 'Mode Alternatif Aktif' }
           );
         });
@@ -103,28 +122,63 @@ export default function OperatorHandover() {
 
   const stopCamera = () => {
     if (html5QrCode.current) {
-      html5QrCode.current
-        .stop()
-        .then(() => {
-          html5QrCode.current.clear();
-          html5QrCode.current = null;
-        })
-        .catch((err) => console.error('Failed to stop camera', err));
+      const scanner = html5QrCode.current;
+      html5QrCode.current = null;
+      try {
+        if (scanner.isScanning) {
+          scanner
+            .stop()
+            .then(() => {
+              try { scanner.clear(); } catch {}
+            })
+            .catch(() => {});
+        } else {
+          try { scanner.clear(); } catch {}
+        }
+      } catch (e) {
+        console.warn('Error saat menutup scanner kamera:', e);
+      }
     }
     setIsCameraActive(false);
     setActiveTargetField(null);
   };
 
-  const handleCaptureMockQr = () => {
-    const sampleCode = `TKT-${Math.floor(100000 + Math.random() * 900000)}`;
-    if (activeTargetField === 'forceTicket') {
-      setForceTicket(sampleCode);
-    } else {
-      setTicketQr(sampleCode);
-    }
+  const handleScanFromImage = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    toast.success(`Berhasil memindai ${sampleCode} secara instan!`, { title: 'Scan Sukses' });
-    stopCamera();
+    try {
+      // 1. Matikan kamera jika sedang aktif sebelum scan file
+      if (html5QrCode.current) {
+        try {
+          if (html5QrCode.current.isScanning) {
+            await html5QrCode.current.stop();
+          }
+          html5QrCode.current.clear();
+        } catch (stopErr) {
+          console.warn('Gagal menghentikan scanner kamera sebelum scan file:', stopErr);
+        }
+      }
+
+      const scanner = new Html5Qrcode('qr-reader-handover');
+      html5QrCode.current = scanner;
+
+      const rawDecoded = await scanner.scanFile(file, false);
+      const decodedText = (rawDecoded || '').trim();
+
+      if (activeTargetField === 'forceTicket') {
+        setForceTicket(decodedText);
+      } else {
+        setTicketQr(decodedText);
+      }
+      toast.success(`Berhasil memindai QR Tiket: ${decodedText}`, { title: 'Scan Berhasil' });
+      stopCamera();
+    } catch (err) {
+      console.warn('Gagal membaca QR dari file:', err);
+      toast.error('Tidak ditemukan kode QR yang terbaca pada gambar. Pastikan gambar jelas dan tidak terpotong.', { title: 'QR Tidak Terbaca' });
+    } finally {
+      if (e.target) e.target.value = '';
+    }
   };
 
   const handleHandoverSubmit = async (e) => {
@@ -178,7 +232,7 @@ export default function OperatorHandover() {
         time: 'Baru saja',
       };
 
-      setHandoverHistory([newLog, ...handoverHistory]);
+      saveHandoverHistory([newLog, ...handoverHistory]);
       setRecipientName('');
       setTicketQr('');
       setOtpCode('');
@@ -600,21 +654,22 @@ export default function OperatorHandover() {
               </div>
             </div>
 
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleScanFromImage}
+              accept="image/*"
+              className="hidden"
+            />
+
             <div className="space-y-2">
               <button
                 type="button"
-                onClick={handleCaptureMockQr}
-                className="w-full py-2.5 text-white text-[13px] font-bold rounded-xl shadow cursor-pointer flex items-center justify-center gap-1.5 transition"
-                style={{ backgroundColor: PRIMARY_COLOR }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = PRIMARY_HOVER;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = PRIMARY_COLOR;
-                }}
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full py-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 text-[12px] font-bold rounded-xl cursor-pointer flex items-center justify-center gap-2 transition border border-neutral-300"
               >
-                <CheckCircle className="w-3.5 h-3.5" />
-                <span>Simulasikan Tangkap QR (Cepat / Alternatif)</span>
+                <Upload className="w-4 h-4 text-neutral-600" />
+                <span>Unggah Foto / Gambar QR (Scan File)</span>
               </button>
 
               <button

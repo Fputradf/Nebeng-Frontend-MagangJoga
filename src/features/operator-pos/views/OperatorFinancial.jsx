@@ -4,6 +4,8 @@ import { SkeletonTableRows } from '../../../components/ui/Skeleton';
 import EmptyState from '../../../components/ui/EmptyState';
 import StatCard from '../../../components/ui/StatCard';
 import StatusBadge from '../../../components/ui/StatusBadge';
+import PrintReportHeader from '../../../components/ui/PrintReportHeader';
+import PrintReportFooter from '../../../components/ui/PrintReportFooter';
 import { useAuth } from '../../../context/AuthContext';
 import { operatorService } from '../../../services/operatorService';
 
@@ -136,36 +138,8 @@ export default function OperatorFinancial() {
   });
 
   return (
-    <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
-      <style>{`
-        @media print {
-          body * {
-            visibility: hidden;
-          }
-          #print-area, #print-area * {
-            visibility: visible;
-          }
-          #print-area {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            padding: 0;
-            margin: 0;
-            background: white !important;
-            color: black !important;
-          }
-          @page {
-            size: A4 portrait;
-            margin: 15mm;
-          }
-          .no-print {
-            display: none !important;
-          }
-        }
-      `}</style>
-
-      <div className="space-y-6 no-print">
+    <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter'] print:p-0 print:max-w-none print:bg-white">
+      <div className="space-y-6 print:hidden">
         {/* ── BANNER GRADIENT ── */}
         <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] p-6 text-white shadow-card sm:p-8">
           <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10" />
@@ -347,89 +321,122 @@ export default function OperatorFinancial() {
         </div>
       </div>
 
-      <div id="print-area" className="hidden print:block text-black">
-        <div className="border-b-2 border-black pb-4 mb-5 flex justify-between items-end">
-          <div>
-            <h1 className="text-xl font-black tracking-wide uppercase">NEBENG SYSTEM</h1>
-            <p className="text-xs font-semibold uppercase">Laporan Rekapitulasi Kasir & Kas Pos Operasional</p>
-            <p className="text-[13px] text-gray-600">
-              Pos: {posInfo?.posName || user?.assignedPickupPointName || user?.posName || 'Pos Terminal Utama'}
+      <div id="print-area" className="hidden print:block text-slate-900">
+        {/* ── KOP SURAT BERITA ACARA RESMI POS TERMINAL ── */}
+        <PrintReportHeader
+          title="BERITA ACARA REKAPITULASI KASIR & KAS OPERASIONAL POS"
+          subtitle={`UNIT PELAYANAN TERMINAL & CHECKPOINT • ${posInfo?.posName || user?.assignedPickupPointName || user?.posName || 'POS TERMINAL UTAMA'}`}
+          documentNumber={`DOC/POS-KAS/${new Date().toISOString().slice(0, 10).replace(/-/g, '')}/${user?.id || 'OPR'}`}
+          printedAt={printDate}
+          printedBy={user?.name || 'Operator Kasir Shift'}
+          extraMeta={[
+            { label: 'Pos / Terminal', value: posInfo?.posName || user?.assignedPickupPointName || user?.posName || 'Pos Terminal Utama' },
+            { label: 'ID Petugas Kasir', value: user?.id ? `OPR-${user.id}` : 'OPR-KASIR' },
+            { label: 'Total Transaksi Shift', value: `${paginationMeta.totalData || dailyTransactions.length} Transaksi` },
+            { label: 'Status Rekonsiliasi', value: 'Kasir Shift Selesai & Sah' },
+          ]}
+        />
+
+        {/* ── RINGKASAN EKSEKUTIF KEUANGAN SHIFT ── */}
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          <div className="border border-slate-300 rounded p-3 bg-slate-50/70">
+            <span className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+              Total Kas Masuk Pos
+            </span>
+            <p className="text-[15px] font-black font-mono text-slate-900 mt-0.5">
+              Rp {totalRevenue.toLocaleString('id-ID')}
             </p>
+            <span className="text-[9.5px] text-slate-500 block mt-0.5">
+              {paginationMeta.totalData || dailyTransactions.length} Transaksi Shift Tercatat
+            </span>
           </div>
-          <div className="text-right text-[13px]">
-            <p><span className="font-bold">Tanggal Cetak:</span> {printDate}</p>
-            <p><span className="font-bold">Operator:</span> {user?.name || 'Operator Pos'}</p>
+
+          <div className="border border-slate-300 rounded p-3 bg-slate-50/70">
+            <span className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+              Pendapatan QRIS / Digital
+            </span>
+            <p className="text-[15px] font-black font-mono text-emerald-800 mt-0.5">
+              Rp {qrisRevenue.toLocaleString('id-ID')}
+            </p>
+            <span className="text-[9.5px] text-slate-500 block mt-0.5">
+              Tunai/Lainnya: Rp {otherRevenue.toLocaleString('id-ID')}
+            </span>
+          </div>
+
+          <div className="border border-slate-300 rounded p-3 bg-slate-50/70">
+            <span className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+              Bagi Hasil Regional (15%)
+            </span>
+            <p className="text-[15px] font-black font-mono text-[#10367D] mt-0.5">
+              Rp {regionalCommission.toLocaleString('id-ID')}
+            </p>
+            <span className="text-[9.5px] text-slate-500 block mt-0.5">
+              Alokasi setoran kas wilayah
+            </span>
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 mb-6 text-center">
-          <div className="border border-black p-2.5 rounded">
-            <p className="text-[12px] font-bold uppercase text-gray-700">Total Transaksi Pos</p>
-            <p className="text-sm font-black mt-1">Rp {totalRevenue.toLocaleString('id-ID')}</p>
-            <p className="text-[11px] text-gray-500">{paginationMeta.totalData || dailyTransactions.length} Transaksi Tercatat</p>
-          </div>
-          <div className="border border-black p-2.5 rounded">
-            <p className="text-[12px] font-bold uppercase text-gray-700">Pendapatan QRIS</p>
-            <p className="text-sm font-black mt-1">Rp {qrisRevenue.toLocaleString('id-ID')}</p>
-            <p className="text-[11px] text-gray-500">Tunai/Lainnya: Rp {otherRevenue.toLocaleString('id-ID')}</p>
-          </div>
-          <div className="border border-black p-2.5 rounded">
-            <p className="text-[12px] font-bold uppercase text-gray-700">Bagi Hasil Regional (15%)</p>
-            <p className="text-sm font-black mt-1">Rp {regionalCommission.toLocaleString('id-ID')}</p>
-            <p className="text-[11px] text-gray-500">Potongan Sistem</p>
-          </div>
-        </div>
-
-        <div className="mb-8">
-          <h2 className="text-xs font-bold uppercase mb-2 border-b border-gray-400 pb-1">
-            Rincian Transaksi Shift
-          </h2>
-          <table className="w-full text-left text-[13px] border-collapse">
-            <thead>
-              <tr className="border-b border-black text-black uppercase font-bold">
-                <th className="py-2 px-2">No / ID TRX</th>
-                <th className="py-2 px-2">Waktu</th>
-                <th className="py-2 px-2">Gateway</th>
-                <th className="py-2 px-2">Metode Pembayaran</th>
-                <th className="py-2 px-2 text-right">Nominal</th>
+        {/* ── TABEL RINCIAN TRANSAKSI SHIFT ── */}
+        <div className="mb-6 border border-slate-300 rounded overflow-hidden">
+          <table className="w-full text-left text-[11.5px] border-collapse print:text-black">
+            <thead className="print:table-header-group">
+              <tr className="bg-slate-100 text-slate-800 uppercase font-bold border-b-2 border-slate-300">
+                <th className="py-2.5 px-3">No / ID TRX</th>
+                <th className="py-2.5 px-3">Waktu</th>
+                <th className="py-2.5 px-3">Gateway</th>
+                <th className="py-2.5 px-3">Metode Pembayaran</th>
+                <th className="py-2.5 px-3 text-right">Nominal</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-300">
-              {dailyTransactions.map((trx) => (
-                <tr key={trx.id}>
-                  <td className="py-2 px-2 font-mono font-bold">{trx.id}</td>
-                  <td className="py-2 px-2">{trx.time}</td>
-                  <td className="py-2 px-2 font-semibold">{trx.type}</td>
-                  <td className="py-2 px-2">{trx.method}</td>
-                  <td className="py-2 px-2 text-right font-bold">
+            <tbody className="divide-y divide-slate-200">
+              {dailyTransactions.map((trx, idx) => (
+                <tr key={trx.id || idx}>
+                  <td className="py-2 px-3 font-mono font-bold text-slate-900">{trx.id}</td>
+                  <td className="py-2 px-3 font-mono text-slate-600">{trx.time}</td>
+                  <td className="py-2 px-3 font-semibold text-slate-800">{trx.type}</td>
+                  <td className="py-2 px-3 text-slate-700">{trx.method}</td>
+                  <td className="py-2 px-3 text-right font-mono font-bold text-slate-900">
                     Rp {trx.amount.toLocaleString('id-ID')}
                   </td>
                 </tr>
               ))}
             </tbody>
-            <tfoot>
-              <tr className="border-t-2 border-black font-bold">
-                <td colSpan={4} className="py-2 px-2 text-right uppercase">Total Kas Masuk:</td>
-                <td className="py-2 px-2 text-right text-xs">Rp {totalRevenue.toLocaleString('id-ID')}</td>
+            <tfoot className="border-t-2 border-slate-800 font-bold bg-slate-50 text-[11px]">
+              <tr>
+                <td colSpan={4} className="py-2.5 px-3 text-right uppercase text-slate-700">
+                  Total Akumulasi Kas Masuk Shift Ini:
+                </td>
+                <td className="py-2.5 px-3 text-right font-mono text-[12px] text-slate-900 font-black">
+                  Rp {totalRevenue.toLocaleString('id-ID')}
+                </td>
               </tr>
             </tfoot>
           </table>
         </div>
 
-        <div className="grid grid-cols-2 gap-8 text-center text-[13px] pt-4 mt-8 break-inside-avoid">
-          <div>
-            <p className="font-bold">Diserahkan Oleh (Operator Shift),</p>
-            <div className="h-16"></div>
-            <p className="font-bold underline uppercase">{user?.name || 'Operator Pos'}</p>
-            <p className="text-[12px] text-gray-600">NIP / ID Operator</p>
-          </div>
-          <div>
-            <p className="font-bold">Diterima & Diverifikasi Oleh,</p>
-            <div className="h-16"></div>
-            <p className="font-bold underline uppercase">( Supervisor / Finance Pos )</p>
-            <p className="text-[12px] text-gray-600">Manajer Keuangan Regional</p>
-          </div>
-        </div>
+        {/* ── LEMBAR PENGESAHAN SERAH TERIMA KASIR POS ── */}
+        <PrintReportFooter
+          leftSigner={{
+            role: 'Diserahkan Oleh (Operator Shift),',
+            title: 'Petugas Kasir Shift Pos Terminal',
+            name: user?.name || 'Operator Kasir',
+            idLabel: 'NIP / ID Kasir',
+            idValue: user?.id ? `OPR-${user.id}` : 'OPR-POS',
+          }}
+          rightSigner={{
+            role: 'Diterima & Diverifikasi Oleh,',
+            title: 'Supervisor Kasir & Keuangan Pos',
+            name: '( ........................................ )',
+            idLabel: 'Otoritas Pos',
+            idValue: posInfo?.posName || 'Terminal Utama',
+            locationDate: `Surakarta, ${new Date().toLocaleDateString('id-ID', {
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric',
+            })}`,
+          }}
+          notes="Berita acara serah terima kas ini merupakan dokumen resmi operasional shift kasir Nebeng Pos Terminal. Data terekonsiliasi otomatis dengan backend."
+        />
       </div>
     </div>
   );
