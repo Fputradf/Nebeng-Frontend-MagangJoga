@@ -26,6 +26,7 @@ import {
   Car,
   Package,
   Users,
+  Share2,
   X,
 } from 'lucide-react';
 import { io } from 'socket.io-client';
@@ -163,6 +164,7 @@ export default function MyTickets() {
           otp: order.otpClaim || null,
           qrCodeTicket: order.qrCodeTicket,
           createdAt: order.createdAt,
+          passengers: order.passengers || [],
           checkpointsLogs: order.checkpointsLogs || [], // Data audit log nyata dari backend
           originCoord: (trip.originPoint?.lat && trip.originPoint?.lng)
             ? { lat: trip.originPoint.lat, lng: trip.originPoint.lng }
@@ -714,6 +716,36 @@ export default function MyTickets() {
     setIsTrackingModalOpen(true);
   };
 
+  const handleShareTicketWhatsApp = (ticket, targetPhone) => {
+    const passengerDetails = ticket.passengers && ticket.passengers.length > 0
+      ? ticket.passengers.map((p, idx) => `  ${idx + 1}. ${p.name} (${p.phone || '-'})`).join('\n')
+      : '  1. ' + (ticket.mitra || 'Penumpang');
+
+    const message = 
+`*E-TIKET RESMI NEBENG* 🚗✨
+Halo! Tiket nebeng sudah siap. Berikut rincian perjalanan:
+
+📌 *Kode Tiket / QR:* ${ticket.qrCodeTicket || ticket.id}
+📍 *Rute:* ${ticket.from} ➔ ${ticket.to}
+📅 *Jadwal:* ${ticket.schedule}
+🚗 *Armada:* ${ticket.vehicle}
+👤 *Mitra Sopir:* ${ticket.mitra}
+👥 *Daftar Penumpang (${ticket.detail}):*
+${passengerDetails}
+
+Tunjukkan Kode Tiket / QR ini kepada Mitra Sopir atau Petugas Pos saat keberangkatan. Selamat menikmati perjalanan!`;
+
+    const encoded = encodeURIComponent(message);
+    const cleanPhone = targetPhone ? targetPhone.replace(/[^0-9]/g, '') : '';
+    let waUrl = `https://wa.me/?text=${encoded}`;
+    if (cleanPhone) {
+      const normalized = cleanPhone.startsWith('0') ? '62' + cleanPhone.slice(1) : cleanPhone;
+      waUrl = `https://wa.me/${normalized}?text=${encoded}`;
+    }
+
+    window.open(waUrl, '_blank');
+  };
+
   // 3. Auto Polling untuk Transaksi Pending Payment Xendit
   useEffect(() => {
     let interval;
@@ -1156,6 +1188,27 @@ export default function MyTickets() {
                         </span>
                       </div>
 
+                      {!isParcel && ticket.passengers && ticket.passengers.length > 0 && (
+                        <div className="pt-2 border-t border-neutral-200/60 space-y-1">
+                          <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block">
+                            Penumpang ({ticket.passengers.length} Orang):
+                          </span>
+                          <div className="flex flex-wrap gap-1">
+                            {ticket.passengers.map((p, pIdx) => (
+                              <span
+                                key={pIdx}
+                                className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50/80 text-[#10367D] rounded-md text-[11px] font-semibold border border-blue-200/60"
+                              >
+                                <span className="w-3.5 h-3.5 rounded-full bg-blue-200/80 text-[9px] font-extrabold flex items-center justify-center">
+                                  {p.seatNumber || (pIdx + 1)}
+                                </span>
+                                {p.name}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
                       {ticket.totalPrice && (
                         ticket.discountAmount > 0 ? (
                           <div className="pt-2 border-t border-neutral-200/70 space-y-1">
@@ -1310,6 +1363,18 @@ export default function MyTickets() {
                           >
                             <QrCode className="w-3.5 h-3.5" />
                             <span>QR Pos</span>
+                          </button>
+                        )}
+
+                        {ticket.status === 'Aktif' && (
+                          <button
+                            type="button"
+                            onClick={() => handleShareTicketWhatsApp(ticket, ticket.passengers?.[0]?.phone)}
+                            className="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-lg text-[12px] font-bold transition flex items-center gap-1 cursor-pointer shadow-2xs"
+                            title="Bagikan e-tiket ke WhatsApp teman / keluarga"
+                          >
+                            <Share2 className="w-3 h-3 text-emerald-600" />
+                            <span>Bagikan (WA)</span>
                           </button>
                         )}
 
@@ -1475,7 +1540,33 @@ export default function MyTickets() {
           <div className="flex items-center justify-center gap-1.5 text-[11px] text-emerald-600 font-bold bg-emerald-50 py-1.5 px-3 rounded-lg border border-emerald-200">
             <RefreshCw size={11} className="animate-spin" /> Auto-refresh QR: {qrCountdown} detik
           </div>
-          <button onClick={() => setSelectedTicket(null)} className="w-full py-2.5 text-white rounded-xl text-[13px] font-bold transition cursor-pointer shadow-sm" style={{ backgroundColor: PRIMARY_COLOR }}>
+
+          {selectedTicket?.passengers && selectedTicket.passengers.length > 0 && (
+            <div className="text-left bg-neutral-50 p-3 rounded-xl border border-neutral-200 text-xs space-y-1.5">
+              <span className="font-bold text-neutral-500 uppercase text-[10px] block">
+                Manifest Penumpang ({selectedTicket.passengers.length} Orang):
+              </span>
+              <div className="space-y-1 max-h-32 overflow-y-auto">
+                {selectedTicket.passengers.map((p, idx) => (
+                  <div key={idx} className="flex justify-between items-center text-[11px] font-medium text-neutral-700 bg-white p-1.5 rounded-lg border border-neutral-100">
+                    <span>Kursi #{p.seatNumber || (idx + 1)}: <strong>{p.name}</strong></span>
+                    <span className="text-neutral-500 font-mono text-[10px]">{p.phone}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={() => handleShareTicketWhatsApp(selectedTicket, selectedTicket?.passengers?.[0]?.phone)}
+            className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[12px] font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+          >
+            <Share2 className="w-3.5 h-3.5" />
+            <span>Kirim Tiket ke WhatsApp</span>
+          </button>
+
+          <button onClick={() => setSelectedTicket(null)} className="w-full py-2.5 text-neutral-600 hover:bg-neutral-100 border border-neutral-200 rounded-xl text-[13px] font-bold transition cursor-pointer shadow-xs">
             Tutup
           </button>
         </div>

@@ -175,6 +175,78 @@ export default function HelpCenterView({ userRole = 'customer' }) {
   const quickScrollLeftRef = useRef(0);
   const hasQuickMovedRef = useRef(false);
 
+  // Scroll and Drag handlers for FAQ Categories (Pencarian & Filter Pertanyaan)
+  const categoryScrollRef = useRef(null);
+  const [canScrollCatLeft, setCanScrollCatLeft] = useState(false);
+  const [canScrollCatRight, setCanScrollCatRight] = useState(false);
+
+  const isCatDraggingRef = useRef(false);
+  const catStartXRef = useRef(0);
+  const catScrollLeftRef = useRef(0);
+  const hasCatMovedRef = useRef(false);
+
+  const checkCategoryScroll = useCallback(() => {
+    const el = categoryScrollRef.current;
+    if (!el) return;
+    const hasOverflow = el.scrollWidth > el.clientWidth + 2;
+    setCanScrollCatLeft(el.scrollLeft > 2);
+    setCanScrollCatRight(hasOverflow && el.scrollLeft < el.scrollWidth - el.clientWidth - 2);
+  }, []);
+
+  useEffect(() => {
+    checkCategoryScroll();
+    window.addEventListener('resize', checkCategoryScroll);
+    return () => window.removeEventListener('resize', checkCategoryScroll);
+  }, [checkCategoryScroll]);
+
+  useEffect(() => {
+    const timer = setTimeout(checkCategoryScroll, 150);
+    return () => clearTimeout(timer);
+  }, [activeTab, checkCategoryScroll]);
+
+  const scrollCategoryBy = (amount) => {
+    if (categoryScrollRef.current) {
+      categoryScrollRef.current.scrollBy({ left: amount, behavior: 'smooth' });
+      setTimeout(checkCategoryScroll, 300);
+    }
+  };
+
+  const handleCatMouseDown = (e) => {
+    if (!categoryScrollRef.current) return;
+    isCatDraggingRef.current = true;
+    hasCatMovedRef.current = false;
+    catStartXRef.current = e.pageX - categoryScrollRef.current.offsetLeft;
+    catScrollLeftRef.current = categoryScrollRef.current.scrollLeft;
+  };
+
+  const handleCatMouseMove = (e) => {
+    if (!isCatDraggingRef.current || !categoryScrollRef.current) return;
+    const x = e.pageX - categoryScrollRef.current.offsetLeft;
+    const walk = x - catStartXRef.current;
+    if (Math.abs(walk) > 4) {
+      hasCatMovedRef.current = true;
+      categoryScrollRef.current.scrollLeft = catScrollLeftRef.current - walk;
+      checkCategoryScroll();
+    }
+  };
+
+  const handleCatMouseUp = () => {
+    isCatDraggingRef.current = false;
+  };
+
+  const handleCatWheel = (e) => {
+    if (!categoryScrollRef.current) return;
+    if (e.deltaY !== 0) {
+      categoryScrollRef.current.scrollLeft += e.deltaY;
+      checkCategoryScroll();
+    }
+  };
+
+  const handleCatClick = (catId) => {
+    if (hasCatMovedRef.current) return;
+    setSelectedCategory(catId);
+  };
+
   const checkQuickScroll = useCallback(() => {
     const el = quickScrollRef.current;
     if (!el) return;
@@ -382,26 +454,69 @@ export default function HelpCenterView({ userRole = 'customer' }) {
               )}
             </div>
 
-            {/* Category Pills Form */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none pt-1">
-              {FAQ_CATEGORIES.map((cat) => {
-                const IconComponent = CATEGORY_ICONS[cat.id] || HelpCircle;
-                const isSelected = selectedCategory === cat.id;
-                return (
-                  <button
-                    key={cat.id}
-                    onClick={() => setSelectedCategory(cat.id)}
-                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${
-                      isSelected
-                        ? 'bg-[#10367D] text-white shadow-xs'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200/60'
-                    }`}
-                  >
-                    <IconComponent className="w-3.5 h-3.5" />
-                    <span>{cat.label}</span>
-                  </button>
-                );
-              })}
+            {/* Category Pills Form dengan Arrow Kesamping */}
+            <div className="relative flex items-center gap-1.5 pt-1">
+              {/* Tombol Arrow Kiri */}
+              <button
+                type="button"
+                onClick={() => scrollCategoryBy(-220)}
+                disabled={!canScrollCatLeft}
+                aria-label="Geser kategori ke kiri"
+                className={`w-8 h-8 rounded-xl border flex items-center justify-center transition-all cursor-pointer shrink-0 ${
+                  canScrollCatLeft
+                    ? 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 shadow-xs hover:border-slate-300 active:scale-95'
+                    : 'opacity-30 cursor-not-allowed bg-slate-50 border-slate-200 text-slate-400'
+                }`}
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+
+              {/* Scrollable Category Container */}
+              <div
+                ref={categoryScrollRef}
+                onMouseDown={handleCatMouseDown}
+                onMouseMove={handleCatMouseMove}
+                onMouseUp={handleCatMouseUp}
+                onMouseLeave={handleCatMouseUp}
+                onWheel={handleCatWheel}
+                onScroll={checkCategoryScroll}
+                className="flex-1 flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none pt-0.5 scroll-smooth select-none cursor-grab active:cursor-grabbing"
+              >
+                {FAQ_CATEGORIES.map((cat) => {
+                  const IconComponent = CATEGORY_ICONS[cat.id] || HelpCircle;
+                  const isSelected = selectedCategory === cat.id;
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => handleCatClick(cat.id)}
+                      className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer shrink-0 ${
+                        isSelected
+                          ? 'bg-[#10367D] text-white shadow-xs ring-1 ring-[#10367D]'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200/60'
+                      }`}
+                    >
+                      <IconComponent className="w-3.5 h-3.5" />
+                      <span>{cat.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Tombol Arrow Kanan */}
+              <button
+                type="button"
+                onClick={() => scrollCategoryBy(220)}
+                disabled={!canScrollCatRight}
+                aria-label="Geser kategori ke kanan"
+                className={`w-8 h-8 rounded-xl border flex items-center justify-center transition-all cursor-pointer shrink-0 ${
+                  canScrollCatRight
+                    ? 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 shadow-xs hover:border-slate-300 active:scale-95'
+                    : 'opacity-30 cursor-not-allowed bg-slate-50 border-slate-200 text-slate-400'
+                }`}
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
             </div>
           </div>
 

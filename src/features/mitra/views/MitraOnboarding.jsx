@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   User,
   FileText,
@@ -21,6 +21,7 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png'];
 const SKCK_TYPES = [...IMAGE_TYPES, 'application/pdf'];
 const PHONE_REGEX = /^(\+62|62|0)8[1-9][0-9]{7,11}$/;
+const PLATE_REGEX = /^[A-Z]{1,2}\s?[0-9]{1,4}\s?[A-Z]{1,3}$/;
 
 const PRIMARY_COLOR = '#10367D';
 const PRIMARY_ACCENT = '#74B4D9';
@@ -199,9 +200,17 @@ export default function MitraOnboarding() {
     if (name === 'nik') {
       nextValue = value.replace(/\D/g, '').slice(0, 16);
     } else if (name === 'bankAccountNumber') {
-      nextValue = value.replace(/\D/g, '');
+      // Batasi hanya angka, maksimal 18 digit
+      nextValue = value.replace(/\D/g, '').slice(0, 18);
     } else if (name === 'phone') {
-      nextValue = value.replace(/[^\d+]/g, '');
+      // Batasi hanya angka (dan tanda + jika di awal), maksimal 15 karakter
+      const cleaned = value.startsWith('+')
+        ? '+' + value.slice(1).replace(/\D/g, '')
+        : value.replace(/\D/g, '');
+      nextValue = cleaned.slice(0, 15);
+    } else if (name === 'plateNumber') {
+      // Batasi hanya huruf, angka, dan spasi, otomatis huruf kapital, maksimal 11 karakter
+      nextValue = value.replace(/[^a-zA-Z0-9 ]/g, '').toUpperCase().slice(0, 11);
     }
 
     setFormData((prev) => ({
@@ -253,9 +262,18 @@ export default function MitraOnboarding() {
     setIsScanning(true);
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user' }
-      });
+      let stream;
+      try {
+        // Coba kamera depan (jika tersedia)
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }
+        });
+      } catch {
+        // Fallback ke kamera perangkat apapun (webcam laptop/PC/USB)
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: true
+        });
+      }
 
       streamRef.current = stream;
       setCameraActive(true);
@@ -314,6 +332,32 @@ export default function MitraOnboarding() {
     startCamera();
   };
 
+  const handleFaceFileUpload = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    if (!IMAGE_TYPES.includes(file.type)) {
+      setErrorMessage('Format foto wajah harus JPG, JPEG, atau PNG.');
+      return;
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      setErrorMessage('Ukuran foto wajah melebihi 5MB.');
+      return;
+    }
+
+    if (streamRef.current) {
+      streamRef.current.getVideoTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+
+    setRawFiles((prev) => ({ ...prev, face: file }));
+    setFacePreviewUrl(URL.createObjectURL(file));
+    setFaceScanned(true);
+    setCameraActive(false);
+    setErrorMessage('');
+  };
+
   const uploadFileToServer = async (fileObj) => {
     if (!fileObj) return '';
 
@@ -336,6 +380,8 @@ export default function MitraOnboarding() {
   const missingDocuments = targetDocs.filter((field) => !rawFiles[field]);
   const isNikValid = formData.nik.length === 16;
   const isPhoneValid = PHONE_REGEX.test(formData.phone.trim());
+  const isPlateValid = !formData.plateNumber.trim() || PLATE_REGEX.test(formData.plateNumber.trim());
+  const isBankAccountValid = formData.bankAccountNumber.trim().length >= 8 && formData.bankAccountNumber.trim().length <= 18;
 
   const isTextInputsValid =
     formData.fullName.trim() !== '' &&
@@ -343,9 +389,11 @@ export default function MitraOnboarding() {
     isPhoneValid &&
     formData.address.trim() !== '' &&
     formData.plateNumber.trim() !== '' &&
+    PLATE_REGEX.test(formData.plateNumber.trim()) &&
     formData.vehicleModel.trim() !== '' &&
     formData.bankName.trim() !== '' &&
     formData.bankAccountNumber.trim() !== '' &&
+    isBankAccountValid &&
     formData.bankAccountHolder.trim() !== '';
 
   const isFormComplete = isResubmissionMode
@@ -548,20 +596,35 @@ export default function MitraOnboarding() {
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
-                      Nomor Telepon / WhatsApp
-                    </label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider">
+                        Nomor Telepon / WhatsApp
+                      </label>
+                      <span className="text-[10px] text-neutral-400 font-medium">
+                        {formData.phone.length}/15
+                      </span>
+                    </div>
                     <input
-                      type="text"
+                      type="tel"
                       name="phone"
                       required
+                      maxLength={15}
                       placeholder="0812xxxxxxxx"
                       value={formData.phone}
                       onChange={handleInputChange}
                       className={`w-full px-3.5 py-2.5 bg-neutral-50 border rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#10367D] ${
-                        !isPhoneValid ? 'border-rose-300' : 'border-neutral-200'
+                        formData.phone && !isPhoneValid ? 'border-rose-300' : 'border-neutral-200'
                       }`}
                     />
+                    {formData.phone && !isPhoneValid ? (
+                      <p className="text-[11px] text-rose-500 mt-1">
+                        Format nomor tidak valid (contoh: 08123456789, 10–15 digit).
+                      </p>
+                    ) : (
+                      <p className="text-[11px] text-neutral-400 mt-1">
+                        Maks. 15 digit (contoh: 081234567890)
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -597,20 +660,35 @@ export default function MitraOnboarding() {
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
-                      Nomor Plat Kendaraan
-                    </label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider">
+                        Nomor Plat Kendaraan
+                      </label>
+                      <span className="text-[10px] text-neutral-400 font-medium">
+                        {formData.plateNumber.length}/11
+                      </span>
+                    </div>
                     <input
                       type="text"
                       name="plateNumber"
                       required
-                      placeholder="cth: AD1234XX"
+                      maxLength={11}
+                      placeholder="cth: AD 1234 XX"
                       value={formData.plateNumber}
                       onChange={handleInputChange}
-                      className={`w-full px-3.5 py-2.5 bg-neutral-50 border rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#10367D] ${
-                        !formData.plateNumber.trim() ? 'border-rose-300' : 'border-neutral-200'
+                      className={`w-full px-3.5 py-2.5 bg-neutral-50 border rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#10367D] uppercase font-mono ${
+                        formData.plateNumber && !isPlateValid ? 'border-rose-300' : 'border-neutral-200'
                       }`}
                     />
+                    {formData.plateNumber && !isPlateValid ? (
+                      <p className="text-[11px] text-rose-500 mt-1">
+                        Format plat tidak valid (contoh: B 1234 ABC atau AD 1234 XX).
+                      </p>
+                    ) : (
+                      <p className="text-[11px] text-neutral-400 mt-1">
+                        Maks. 11 karakter (contoh: AD 1234 XX)
+                      </p>
+                    )}
                   </div>
 
                   <div className="md:col-span-2">
@@ -657,21 +735,36 @@ export default function MitraOnboarding() {
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
-                      Nomor Rekening
-                    </label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider">
+                        Nomor Rekening
+                      </label>
+                      <span className="text-[10px] text-neutral-400 font-medium">
+                        {formData.bankAccountNumber.length}/18
+                      </span>
+                    </div>
                     <input
                       type="text"
                       name="bankAccountNumber"
                       required
+                      maxLength={18}
                       placeholder="cth: 1234567890"
                       inputMode="numeric"
                       value={formData.bankAccountNumber}
                       onChange={handleInputChange}
-                      className={`w-full px-3.5 py-2.5 bg-neutral-50 border rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#10367D] ${
-                        !formData.bankAccountNumber.trim() ? 'border-rose-300' : 'border-neutral-200'
+                      className={`w-full px-3.5 py-2.5 bg-neutral-50 border rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#10367D] font-mono ${
+                        formData.bankAccountNumber && formData.bankAccountNumber.length < 8 ? 'border-rose-300' : 'border-neutral-200'
                       }`}
                     />
+                    {formData.bankAccountNumber && formData.bankAccountNumber.length < 8 ? (
+                      <p className="text-[11px] text-rose-500 mt-1">
+                        Nomor rekening minimal 8 digit (maks. 18 digit).
+                      </p>
+                    ) : (
+                      <p className="text-[11px] text-neutral-400 mt-1">
+                        Hanya angka, 8–18 digit
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -829,15 +922,29 @@ export default function MitraOnboarding() {
                 )}
 
                 {!cameraActive && !isScanning && !faceScanned && (
-                  <div className="flex flex-col items-center py-6">
+                  <div className="flex flex-col items-center py-5 space-y-2.5">
                     <button
                       type="button"
                       onClick={startCamera}
-                      className="px-3.5 py-1.5 text-white rounded-xl text-[12px] font-bold transition cursor-pointer"
+                      className="px-4 py-2 text-white rounded-xl text-[12px] font-bold transition cursor-pointer flex items-center gap-1.5 shadow-sm"
                       style={{ backgroundColor: PRIMARY_COLOR }}
                     >
-                      Mulai Kamera & Scan Wajah
+                      <Camera className="w-4 h-4" />
+                      Aktifkan Kamera Perangkat (Webcam)
                     </button>
+
+                    <span className="text-[11px] text-neutral-400">atau</span>
+
+                    <label className="text-[12px] font-bold text-[#74B4D9] hover:underline cursor-pointer flex items-center gap-1.5">
+                      <Upload className="w-3.5 h-3.5" />
+                      Pilih Foto Wajah dari File Perangkat
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/jpg"
+                        onChange={handleFaceFileUpload}
+                        className="hidden"
+                      />
+                    </label>
                   </div>
                 )}
               </div>

@@ -299,6 +299,11 @@ export default function CustomerWallet() {
       return;
     }
 
+    if (bankAccountNumber.trim().length < 8) {
+      toast.warning('Nomor rekening bank minimal 8 digit (maks. 18 digit).');
+      return;
+    }
+
     setIsSavingBank(true);
     try {
       await apiClient.put('/users/me/profile', {
@@ -876,17 +881,33 @@ export default function CustomerWallet() {
             </div>
 
             <div>
-              <label className="block text-[11px] font-bold text-neutral-500 uppercase mb-1">
-                Nomor Rekening
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-[11px] font-bold text-neutral-500 uppercase">
+                  Nomor Rekening
+                </label>
+                <span className="text-[10px] text-neutral-400 font-medium">
+                  {bankAccountNumber.length}/18
+                </span>
+              </div>
               <input
                 type="text"
+                inputMode="numeric"
                 required
+                maxLength={18}
                 value={bankAccountNumber}
-                onChange={(e) => setBankAccountNumber(e.target.value.replace(/\D/g, ''))}
+                onChange={(e) => setBankAccountNumber(e.target.value.replace(/\D/g, '').slice(0, 18))}
                 placeholder="Contoh: 1234567890"
                 className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xl text-[13px] font-medium text-neutral-800 focus:outline-none focus:border-blue-500 font-mono"
               />
+              {bankAccountNumber && bankAccountNumber.length < 8 ? (
+                <p className="text-[11px] text-rose-500 mt-1">
+                  Nomor rekening minimal 8 digit (maks. 18 digit).
+                </p>
+              ) : (
+                <p className="text-[11px] text-neutral-400 mt-1">
+                  Hanya angka, 8–18 digit
+                </p>
+              )}
             </div>
 
             <div>

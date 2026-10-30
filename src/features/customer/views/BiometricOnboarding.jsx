@@ -188,9 +188,17 @@ export default function BiometricOnboarding() {
   const startCamera = async () => {
     setIsCameraActive(true);
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user' },
-      });
+      let stream;
+      try {
+        // Coba kamera depan (jika perangkat mobile/tablet)
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+        });
+      } catch {
+        // Fallback ke kamera perangkat apapun (webcam laptop/PC/USB)
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      }
+
       setTimeout(() => {
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
@@ -201,6 +209,30 @@ export default function BiometricOnboarding() {
       toast.error('Gagal mengakses kamera perangkat untuk Face ID.', { title: 'Kamera Error' });
       setIsCameraActive(false);
     }
+  };
+
+  const handleFaceFileChange = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    if (!ALLOWED_KTP_TYPES.includes(file.type)) {
+      toast.error('Format foto wajah harus JPG, JPEG, atau PNG.');
+      return;
+    }
+
+    if (file.size > MAX_KTP_SIZE_BYTES) {
+      toast.error('Ukuran foto wajah melebihi 5MB.');
+      return;
+    }
+
+    setFaceFile(file);
+    setFacePreview((prevUrl) => {
+      if (prevUrl) URL.revokeObjectURL(prevUrl);
+      return URL.createObjectURL(file);
+    });
+    stopCameraTracks();
+    setIsCameraActive(false);
+    toast.success('Foto wajah berhasil dipilih dari perangkat.');
   };
 
   const captureFaceImage = () => {
@@ -498,10 +530,11 @@ export default function BiometricOnboarding() {
                 Nomor WhatsApp/HP
               </label>
               <input
-                type="text"
+                type="tel"
+                maxLength={15}
                 value={formData.phone}
                 onChange={(e) =>
-                  setFormData({ ...formData, phone: e.target.value.replace(/[^\d+]/g, '') })
+                  setFormData({ ...formData, phone: e.target.value.replace(/[^\d+]/g, '').slice(0, 15) })
                 }
                 className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all"
               />
@@ -612,23 +645,38 @@ export default function BiometricOnboarding() {
                 <canvas ref={canvasRef} className="hidden" />
 
                 {!isCameraActive ? (
-                  <button
-                    onClick={startCamera}
-                    className="py-2 px-4 font-bold rounded-xl cursor-pointer flex items-center gap-1 mx-auto transition"
-                    style={{
-                      backgroundColor: `${PRIMARY_ACCENT}22`,
-                      color: PRIMARY_COLOR,
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = `${PRIMARY_ACCENT}44`;
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = `${PRIMARY_ACCENT}22`;
-                    }}
-                  >
-                    <Camera className="w-3.5 h-3.5" />
-                    Aktifkan Kamera Wajah
-                  </button>
+                  <div className="flex flex-col items-center gap-2">
+                    <button
+                      onClick={startCamera}
+                      className="py-2.5 px-4 font-bold rounded-xl cursor-pointer flex items-center gap-1.5 mx-auto transition shadow-xs"
+                      style={{
+                        backgroundColor: `${PRIMARY_ACCENT}22`,
+                        color: PRIMARY_COLOR,
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = `${PRIMARY_ACCENT}44`;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = `${PRIMARY_ACCENT}22`;
+                      }}
+                    >
+                      <Camera className="w-4 h-4" />
+                      Aktifkan Kamera Perangkat (Webcam)
+                    </button>
+
+                    <span className="text-[11px] text-neutral-400">atau</span>
+
+                    <label className="text-[12px] font-bold text-brand-600 hover:underline cursor-pointer flex items-center gap-1.5">
+                      <Upload className="w-3.5 h-3.5" />
+                      Pilih Foto Wajah dari File Perangkat
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/jpg"
+                        onChange={handleFaceFileChange}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
                 ) : (
                   <button
                     onClick={captureFaceImage}

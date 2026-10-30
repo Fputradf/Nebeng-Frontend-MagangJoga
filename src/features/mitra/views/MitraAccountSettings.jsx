@@ -796,13 +796,14 @@ export default function MitraAccountSettings() {
                 </label>
 
                 <input
-                  type="text"
+                  type="tel"
+                  maxLength={15}
                   placeholder="0812xxxxxxxx"
                   value={profileDraft.phone}
                   onChange={(e) =>
                     handleProfileFieldChange(
                       'phone',
-                      e.target.value.replace(/[^\d+]/g, '')
+                      e.target.value.replace(/[^\d+]/g, '').slice(0, 15)
                     )
                   }
                   className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none"
@@ -1411,9 +1412,10 @@ export default function MitraAccountSettings() {
                 <input
                   type="text"
                   required
+                  maxLength={11}
                   placeholder="mis. AD 1234 XY"
                   value={newVehicleForm.plateNumber}
-                  onChange={(e) => setNewVehicleForm({ ...newVehicleForm, plateNumber: e.target.value })}
+                  onChange={(e) => setNewVehicleForm({ ...newVehicleForm, plateNumber: e.target.value.replace(/[^a-zA-Z0-9 ]/g, '').toUpperCase().slice(0, 11) })}
                   className="w-full px-3 py-2 border border-neutral-300 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-blue-600 font-mono uppercase"
                 />
               </div>

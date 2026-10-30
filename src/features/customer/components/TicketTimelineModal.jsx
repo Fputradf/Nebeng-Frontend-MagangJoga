@@ -1,4 +1,4 @@
-import { X, CheckCircle2, Clock, MapPin, ShieldCheck, UserCheck, AlertCircle } from 'lucide-react';
+import { X, CheckCircle2, Clock, MapPin, ShieldCheck, UserCheck, AlertCircle, Users } from 'lucide-react';
 import BaseModal from '../../../components/ui/BaseModal';
 
 // const PRIMARY_COLOR = '#10367D';
@@ -141,6 +141,41 @@ export default function TicketTimelineModal({ isOpen, onClose, ticket }) {
               <p className="mt-0.5 text-emerald-700 leading-relaxed">
                 Armada & Sopir (<strong>{ticket.mitra || 'Mitra'}</strong>) sudah stand-by di <strong>{ticket.from || 'Pos Asal'}</strong>. Silakan menuju petugas pos dan tunjukkan QR Tiket Anda untuk verifikasi boarding.
               </p>
+            </div>
+          </div>
+        )}
+
+        {/* Manifest Rombongan Penumpang */}
+        {ticket.passengers && ticket.passengers.length > 0 && (
+          <div className="my-4 p-3.5 bg-blue-50/70 border border-blue-200 rounded-2xl text-xs space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-[#10367D] flex items-center gap-1.5 text-xs">
+                <Users className="w-4 h-4 text-blue-600" />
+                Manifest Penumpang ({ticket.passengers.length} Orang)
+              </span>
+              <span className="text-[10px] text-blue-600 font-semibold bg-white px-2 py-0.5 rounded-full border border-blue-200">
+                {ticket.detail}
+              </span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+              {ticket.passengers.map((p, idx) => (
+                <div key={idx} className="bg-white p-2 rounded-xl border border-blue-100 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-blue-100 text-[#10367D] text-[10px] font-bold flex items-center justify-center">
+                      {p.seatNumber || (idx + 1)}
+                    </span>
+                    <div>
+                      <p className="font-bold text-neutral-800 text-[11px]">{p.name}</p>
+                      <p className="text-[10px] text-neutral-400 font-mono">{p.phone}</p>
+                    </div>
+                  </div>
+                  {p.isContact && (
+                    <span className="text-[9px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded">
+                      PIC
+                    </span>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         )}

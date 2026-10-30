@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import {
   Wallet,
@@ -342,6 +342,11 @@ export default function MitraBalance() {
       !bankDraft.accountHolder.trim()
     ) {
       toast.warning('Semua kolom rekening bank wajib diisi.', { title: 'Data Tidak Lengkap' });
+      return;
+    }
+
+    if (bankDraft.accountNumber.trim().length < 8) {
+      toast.warning('Nomor rekening bank minimal 8 digit (maks. 18 digit).', { title: 'Rekening Tidak Valid' });
       return;
     }
 
@@ -1064,23 +1069,38 @@ export default function MitraBalance() {
           </div>
 
           <div>
-            <label className="block text-[11px] font-bold text-neutral-500 uppercase mb-1">
-              Nomor Rekening <span className="text-rose-500">*</span>
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-[11px] font-bold text-neutral-500 uppercase">
+                Nomor Rekening <span className="text-rose-500">*</span>
+              </label>
+              <span className="text-[10px] text-neutral-400 font-medium">
+                {bankDraft.accountNumber.length}/18
+              </span>
+            </div>
             <input
               type="text"
               inputMode="numeric"
               required
+              maxLength={18}
               value={bankDraft.accountNumber}
               onChange={(e) =>
                 setBankDraft((prev) => ({
                   ...prev,
-                  accountNumber: e.target.value.replace(/\D/g, ''),
+                  accountNumber: e.target.value.replace(/\D/g, '').slice(0, 18),
                 }))
               }
               placeholder="Contoh: 1234567890"
               className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl text-[13px] font-mono font-bold text-neutral-800 focus:outline-none focus:border-blue-500"
             />
+            {bankDraft.accountNumber && bankDraft.accountNumber.length < 8 ? (
+              <p className="text-[11px] text-rose-500 mt-1">
+                Nomor rekening minimal 8 digit (maks. 18 digit).
+              </p>
+            ) : (
+              <p className="text-[11px] text-neutral-400 mt-1">
+                Hanya angka, 8–18 digit
+              </p>
+            )}
           </div>
 
           <div>

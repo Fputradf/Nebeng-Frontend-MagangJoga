@@ -535,9 +535,10 @@ export default function CustomerAccountSettings() {
               {isEditing ? (
                 <>
                   <input
-                    type="text"
+                    type="tel"
+                    maxLength={15}
                     value={draft.phone}
-                    onChange={(e) => setDraft({ ...draft, phone: e.target.value.replace(/[^\d+]/g, '') })}
+                    onChange={(e) => setDraft({ ...draft, phone: e.target.value.replace(/[^\d+]/g, '').slice(0, 15) })}
                     className={`w-full px-3.5 py-2.5 bg-neutral-50 border rounded-xl font-bold text-neutral-800 focus:outline-none transition-all ${
                       draft.phone.trim() && !isPhoneValid
                         ? 'border-rose-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'

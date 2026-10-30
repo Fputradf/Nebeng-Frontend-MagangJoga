@@ -17,7 +17,9 @@ import {
   CheckCircle2,
   Search,
   ArrowRight,
-  Sparkles
+  Sparkles,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { useToast } from '../../../context/ToastContext';
 import { useGPS } from '../../../context/GPSContext';
@@ -126,7 +128,14 @@ export default function MitraTripManagement() {
   const [isPriceManual, setIsPriceManual] = useState(false);
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 5;
   const todayISO = new Date().toISOString().slice(0, 10);
+
+  // Reset ke halaman 1 saat filter status atau kata kunci pencarian berubah
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterStatus, searchQuery]);
 
   const setDatePreset = (daysOffset) => {
     const target = new Date();
@@ -379,6 +388,25 @@ export default function MitraTripManagement() {
     }
     return true;
   });
+
+  // Pagination Logic (Batas 5 data per halaman jika lebih dari 5 ada next page)
+  const totalPages = Math.max(1, Math.ceil(filteredTrips.length / ITEMS_PER_PAGE));
+  const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+  const startIndex = (safeCurrentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedTrips = filteredTrips.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  const getPageNumbers = (current, total) => {
+    if (total <= 5) {
+      return Array.from({ length: total }, (_, i) => i + 1);
+    }
+    if (current <= 3) {
+      return [1, 2, 3, 4, '...', total];
+    }
+    if (current >= total - 2) {
+      return [1, '...', total - 3, total - 2, total - 1, total];
+    }
+    return [1, '...', current - 1, current, current + 1, '...', total];
+  };
 
   // Start GPS Tracking (using GPSContext)
   const handleStartGPSTracking = async (trip) => {
@@ -740,21 +768,21 @@ export default function MitraTripManagement() {
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
       {/* ── BANNER GRADIENT ── */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] p-6 text-white shadow-card sm:p-8">
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#10367D] via-[#164396] to-[#1E56B0] p-6 text-white shadow-md sm:p-8">
         <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10" />
-        <div className="absolute bottom-0 right-32 h-28 w-28 rounded-full bg-accent/20" />
+        <div className="absolute bottom-0 right-32 h-28 w-28 rounded-full bg-blue-300/20" />
         <div className="relative flex flex-col gap-4 pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-              <span className="text-[11px] font-bold uppercase tracking-widest text-accent flex items-center gap-1">
-                <Calendar className="w-3.5 h-3.5" /> MANAJEMEN JADWAL TRIP MITRA
+              <span className="w-2 h-2 rounded-full bg-blue-300 animate-pulse" />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-blue-200 flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5" /> Manajemen Jadwal Trip Mitra
               </span>
             </div>
-            <h1 className="font-display text-2xl sm:text-3xl font-bold text-white">
+            <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
               Kelola Jadwal & Trip
             </h1>
-            <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl">
+            <p className="mt-1 text-xs sm:text-sm text-blue-100/90 max-w-xl leading-relaxed">
               Buat jadwal perjalanan baru, tentukan tipe layanan (Penumpang / Barang), dan kelola trip Anda secara interaktif.
             </p>
           </div>
@@ -762,83 +790,95 @@ export default function MitraTripManagement() {
           <button
             onClick={() => loadMitraData()}
             disabled={isLoading}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-white/15 hover:bg-white/25 border border-white/25 rounded-2xl backdrop-blur text-white text-xs font-bold transition cursor-pointer self-start sm:self-auto shadow-sm"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-white/15 hover:bg-white/25 border border-white/25 rounded-2xl backdrop-blur text-white text-xs font-bold transition-all cursor-pointer self-start sm:self-auto shadow-sm active:scale-95 disabled:opacity-50"
           >
-            <Sparkles className="w-4 h-4 text-accent" />
-            <span>Segarkan Data</span>
+            <Sparkles className={`w-4 h-4 text-blue-200 ${isLoading ? 'animate-spin' : ''}`} />
+            <span>{isLoading ? 'Menyegarkan...' : 'Segarkan Data'}</span>
           </button>
         </div>
-        <div className="absolute bottom-4 left-6 right-6 border-t border-dashed border-white/25 sm:left-8 sm:right-8" />
-        <span className="absolute bottom-[11px] right-6 h-2.5 w-2.5 rounded-full border-2 border-white bg-accent sm:right-8" />
+        <div className="absolute bottom-4 left-6 right-6 border-t border-dashed border-white/20 sm:left-8 sm:right-8" />
+        <span className="absolute bottom-[11px] right-6 h-2.5 w-2.5 rounded-full border-2 border-white bg-blue-300 sm:right-8" />
       </section>
 
       {/* Interactive Quick Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div
+        <button
+          type="button"
           onClick={() => setFilterStatus('all')}
-          className={`p-4 rounded-2xl border transition cursor-pointer ${
+          className={`p-4 rounded-2xl border transition-all duration-200 text-left cursor-pointer ${
             filterStatus === 'all'
-              ? 'bg-blue-50/70 border-[#10367D] shadow-xs'
-              : 'bg-white border-slate-200/90 hover:border-slate-300'
+              ? 'bg-blue-50/80 border-[#10367D] ring-2 ring-[#10367D]/15 shadow-sm'
+              : 'bg-white border-slate-200/90 hover:border-slate-300 hover:shadow-xs'
           }`}
         >
-          <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Total Trip</span>
-            <Calendar className="w-4 h-4 text-[#10367D]" />
+          <div className="flex items-center justify-between text-slate-400 mb-2">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Total Trip</span>
+            <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center text-[#10367D]">
+              <Calendar className="w-4 h-4" />
+            </div>
           </div>
-          <div className="text-2xl font-black text-slate-900">{trips.filter(t => t.status !== 'cancelled').length}</div>
-          <span className="text-[11px] text-slate-400 font-medium">Klik untuk lihat semua</span>
-        </div>
+          <div className="text-2xl font-black text-slate-900 tracking-tight">{trips.filter(t => t.status !== 'cancelled').length}</div>
+          <span className="text-[11px] text-slate-400 font-medium mt-1 block">Klik untuk lihat semua</span>
+        </button>
 
-        <div
+        <button
+          type="button"
           onClick={() => setFilterStatus('scheduled')}
-          className={`p-4 rounded-2xl border transition cursor-pointer ${
+          className={`p-4 rounded-2xl border transition-all duration-200 text-left cursor-pointer ${
             filterStatus === 'scheduled'
-              ? 'bg-blue-50/70 border-[#10367D] shadow-xs'
-              : 'bg-white border-slate-200/90 hover:border-slate-300'
+              ? 'bg-blue-50/80 border-blue-600 ring-2 ring-blue-600/15 shadow-sm'
+              : 'bg-white border-slate-200/90 hover:border-slate-300 hover:shadow-xs'
           }`}
         >
-          <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Terjadwal</span>
-            <Clock className="w-4 h-4 text-blue-600" />
+          <div className="flex items-center justify-between text-slate-400 mb-2">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-blue-700">Terjadwal</span>
+            <div className="w-7 h-7 rounded-lg bg-blue-100/60 flex items-center justify-center text-blue-600">
+              <Clock className="w-4 h-4" />
+            </div>
           </div>
-          <div className="text-2xl font-black text-blue-600">{trips.filter(t => t.status === 'scheduled').length}</div>
-          <span className="text-[11px] text-blue-500 font-medium">Siap berangkat</span>
-        </div>
+          <div className="text-2xl font-black text-blue-600 tracking-tight">{trips.filter(t => t.status === 'scheduled').length}</div>
+          <span className="text-[11px] text-blue-500 font-medium mt-1 block">Siap berangkat</span>
+        </button>
 
-        <div
+        <button
+          type="button"
           onClick={() => setFilterStatus('in_transit')}
-          className={`p-4 rounded-2xl border transition cursor-pointer ${
+          className={`p-4 rounded-2xl border transition-all duration-200 text-left cursor-pointer ${
             filterStatus === 'in_transit'
-              ? 'bg-amber-50/70 border-amber-500 shadow-xs'
-              : 'bg-white border-slate-200/90 hover:border-slate-300'
+              ? 'bg-amber-50/80 border-amber-500 ring-2 ring-amber-500/15 shadow-sm'
+              : 'bg-white border-slate-200/90 hover:border-slate-300 hover:shadow-xs'
           }`}
         >
-          <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Berjalan</span>
-            <Radio className="w-4 h-4 text-amber-500 animate-pulse" />
+          <div className="flex items-center justify-between text-slate-400 mb-2">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-amber-700">Berjalan</span>
+            <div className="w-7 h-7 rounded-lg bg-amber-100/60 flex items-center justify-center text-amber-600">
+              <Radio className="w-4 h-4 animate-pulse" />
+            </div>
           </div>
-          <div className="text-2xl font-black text-amber-600">
+          <div className="text-2xl font-black text-amber-600 tracking-tight">
             {trips.filter(t => t.status === 'in_transit' || t.status === 'in_origin_pos' || t.status === 'arrived_dest_pos').length}
           </div>
-          <span className="text-[11px] text-amber-600 font-medium">Live GPS tracking</span>
-        </div>
+          <span className="text-[11px] text-amber-600 font-medium mt-1 block">Live GPS tracking</span>
+        </button>
 
-        <div
+        <button
+          type="button"
           onClick={() => setFilterStatus('completed')}
-          className={`p-4 rounded-2xl border transition cursor-pointer ${
+          className={`p-4 rounded-2xl border transition-all duration-200 text-left cursor-pointer ${
             filterStatus === 'completed'
-              ? 'bg-emerald-50/70 border-emerald-500 shadow-xs'
-              : 'bg-white border-slate-200/90 hover:border-slate-300'
+              ? 'bg-emerald-50/80 border-emerald-500 ring-2 ring-emerald-500/15 shadow-sm'
+              : 'bg-white border-slate-200/90 hover:border-slate-300 hover:shadow-xs'
           }`}
         >
-          <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Selesai</span>
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+          <div className="flex items-center justify-between text-slate-400 mb-2">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">Selesai</span>
+            <div className="w-7 h-7 rounded-lg bg-emerald-100/60 flex items-center justify-center text-emerald-600">
+              <CheckCircle2 className="w-4 h-4" />
+            </div>
           </div>
-          <div className="text-2xl font-black text-emerald-600">{trips.filter(t => t.status === 'completed').length}</div>
-          <span className="text-[11px] text-emerald-600 font-medium">Riwayat trip sukses</span>
-        </div>
+          <div className="text-2xl font-black text-emerald-600 tracking-tight">{trips.filter(t => t.status === 'completed').length}</div>
+          <span className="text-[11px] text-emerald-600 font-medium mt-1 block">Riwayat trip sukses</span>
+        </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
@@ -899,12 +939,15 @@ export default function MitraTripManagement() {
             </div>
 
             <div>
-              <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">Pos Asal</label>
+              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-100 shrink-0" />
+                Pos Asal
+              </label>
               <select 
                 name="originPointId" 
                 value={formData.originPointId} 
                 onChange={handleChange}
-                className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#10367D] truncate"
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 focus:outline-none focus:border-[#10367D] focus:ring-2 focus:ring-[#10367D]/15 focus:bg-white transition truncate cursor-pointer"
               >
                 {points.length === 0 ? (
                   <option value="">Belum ada pos terdaftar di sistem</option>
@@ -915,12 +958,15 @@ export default function MitraTripManagement() {
             </div>
 
             <div>
-              <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">Pos Tujuan</label>
+              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#10367D] ring-2 ring-blue-100 shrink-0" />
+                Pos Tujuan
+              </label>
               <select 
                 name="destinationPointId" 
                 value={formData.destinationPointId} 
                 onChange={handleChange}
-                className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#10367D] truncate"
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 focus:outline-none focus:border-[#10367D] focus:ring-2 focus:ring-[#10367D]/15 focus:bg-white transition truncate cursor-pointer"
               >
                 {points.length === 0 ? (
                   <option value="">Belum ada pos terdaftar di sistem</option>
@@ -1073,7 +1119,7 @@ export default function MitraTripManagement() {
 
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider">
+                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                   {layananCategory === 'penumpang' ? 'Tarif Dasar Per Kursi (Rp)' : 'Tarif Dasar Per Paket (Rp)'}
                 </label>
                 {(() => {
@@ -1087,7 +1133,7 @@ export default function MitraTripManagement() {
                           setFormData(prev => ({ ...prev, price: suggested }));
                           toast.info(`Tarif disesuaikan dengan rekomendasi: Rp ${suggested.toLocaleString('id-ID')}`);
                         }}
-                        className="text-[10px] font-bold text-[#10367D] hover:underline cursor-pointer"
+                        className="text-[11px] font-bold text-[#10367D] bg-blue-50 hover:bg-blue-100 px-2 py-0.5 rounded-lg border border-blue-200/80 transition cursor-pointer"
                       >
                         Pakai Rekomendasi (Rp {suggested.toLocaleString('id-ID')})
                       </button>
@@ -1103,9 +1149,9 @@ export default function MitraTripManagement() {
                 required
                 value={formData.price} 
                 onChange={handleChange}
-                className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#10367D] truncate"
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 focus:outline-none focus:border-[#10367D] focus:ring-2 focus:ring-[#10367D]/15 focus:bg-white transition truncate"
               />
-              <span className="text-[11px] text-neutral-400 mt-1 block">
+              <span className="text-[11px] text-slate-400 mt-1 block">
                 Tarif otomatis diestimasi berdasarkan rute & jenis kendaraan.
               </span>
             </div>
@@ -1113,12 +1159,11 @@ export default function MitraTripManagement() {
             <button 
               type="submit"
               disabled={isSameOriginDestination || isPastDate || isSubmitting || vehicles.length === 0}
-              className={`w-full py-3 rounded-xl text-[13px] font-bold transition shadow-sm ${
+              className={`w-full py-3 rounded-xl text-[13px] font-bold transition-all shadow-sm active:scale-[0.99] ${
                 isSameOriginDestination || isPastDate || isSubmitting || vehicles.length === 0
-                  ? 'bg-neutral-200 text-neutral-400 cursor-not-allowed'
-                  : 'text-white cursor-pointer'
+                  ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                  : 'bg-[#10367D] hover:bg-[#0c2c66] text-white cursor-pointer shadow-md'
               }`}
-              style={!(isSameOriginDestination || isPastDate || isSubmitting || vehicles.length === 0) ? { backgroundColor: PRIMARY_COLOR } : undefined}
             >
               {isSubmitting ? 'Memproses...' : 'Publikasikan Trip Jadwal'}
             </button>
@@ -1199,7 +1244,7 @@ export default function MitraTripManagement() {
                     : "Belum ada trip pada filter ini. Buat trip baru lewat form di sebelah kiri."
                 }
               />
-            ) : filteredTrips.map((trip) => {
+            ) : paginatedTrips.map((trip) => {
               const isBarang = trip.serviceType === 'barang';
               const maxCapacity = isBarang
                 ? Number(trip.maxWeightCapacityKg || 1)
@@ -1250,12 +1295,12 @@ export default function MitraTripManagement() {
                           </span>
                         )}
 
-                        {/* Service & Capacity: Bug fixed (clean dot separator, no broken bullet) */}
+                        {/* Service & Capacity: Biru modern (Nebeng Barang & Nebeng Penumpang) */}
                         {isBarang ? (
-                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-50 text-[#4B2172] border border-purple-200 flex items-center gap-1.5">
-                            <Package className="w-3 h-3 text-[#4B2172]" />
+                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-sky-50 text-sky-700 border border-sky-200 flex items-center gap-1.5">
+                            <Package className="w-3 h-3 text-sky-600" />
                             <span>Nebeng Barang</span>
-                            <span className="w-1 h-1 rounded-full bg-purple-300" />
+                            <span className="w-1 h-1 rounded-full bg-sky-400" />
                             <span>Bagasi: {trip.remainingWeightCapacityKg ?? trip.maxWeightCapacityKg} Kg</span>
                           </span>
                         ) : (
@@ -1376,6 +1421,70 @@ export default function MitraTripManagement() {
               );
             })}
           </div>
+
+          {/* Pagination Controls - Tampil jika data trip lebih dari 5 */}
+          {filteredTrips.length > ITEMS_PER_PAGE && (
+            <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+              <div className="text-slate-500 font-medium">
+                Menampilkan <span className="font-bold text-slate-800">{startIndex + 1}</span>–
+                <span className="font-bold text-slate-800">{Math.min(startIndex + ITEMS_PER_PAGE, filteredTrips.length)}</span> dari{' '}
+                <span className="font-bold text-slate-800">{filteredTrips.length}</span> trip
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  disabled={safeCurrentPage <= 1}
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border text-xs font-semibold transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed bg-white border-slate-200 text-slate-700 hover:bg-slate-50 active:scale-95"
+                  aria-label="Halaman sebelumnya"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Sebelumnya</span>
+                </button>
+
+                <div className="flex items-center gap-1">
+                  {getPageNumbers(safeCurrentPage, totalPages).map((pageNum, idx) => {
+                    if (pageNum === '...') {
+                      return (
+                        <span key={`dots-${idx}`} className="px-1 text-slate-400">
+                          ...
+                        </span>
+                      );
+                    }
+                    const isActive = safeCurrentPage === pageNum;
+                    return (
+                      <button
+                        key={pageNum}
+                        type="button"
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`min-w-[32px] h-8 px-2 rounded-xl text-xs font-bold transition flex items-center justify-center cursor-pointer ${
+                          isActive
+                            ? 'bg-[#10367D] text-white shadow-xs'
+                            : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200'
+                        }`}
+                        aria-label={`Halaman ${pageNum}`}
+                        aria-current={isActive ? 'page' : undefined}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <button
+                  type="button"
+                  disabled={safeCurrentPage >= totalPages}
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border text-xs font-semibold transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed bg-white border-slate-200 text-slate-700 hover:bg-slate-50 active:scale-95"
+                  aria-label="Halaman berikutnya"
+                >
+                  <span className="hidden sm:inline">Berikutnya</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -1447,7 +1556,7 @@ export default function MitraTripManagement() {
                     </div>
                     <div className="bg-neutral-800/50 rounded-lg p-2.5 border border-neutral-700">
                       <div className="flex items-center gap-1.5 text-[10px] text-neutral-400 uppercase tracking-wider mb-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-sky-500"></span>
                         Longitude
                       </div>
                       <div className="font-mono text-[13px] font-bold text-white">{currentPosition.lng.toFixed(6)}</div>
