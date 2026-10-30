@@ -19,8 +19,10 @@ import StatusBadge from '../../../components/ui/StatusBadge';
 import BaseModal from '../../../components/ui/BaseModal';
 import { getAllUsers, createUser, updateUser, updateUserStatus } from '../../../services/userService';
 import { getAllRegions } from '../../../services/regionService';
+import { useConfirm } from '../../../context/ConfirmContext';
 
 export default function AdminWilayahManagement() {
+  const confirm = useConfirm();
   const [admins, setAdmins] = useState([]);
   const [availableRegions, setAvailableRegions] = useState([]);
   const [isLoadingAdmins, setIsLoadingAdmins] = useState(true);
@@ -30,7 +32,7 @@ export default function AdminWilayahManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [adminToToggle, setAdminToToggle] = useState(null);
+
   const [isEditing, setIsEditing] = useState(false);
   const [currentId, setCurrentId] = useState(null);
   const [selectedAdmin, setSelectedAdmin] = useState(null);
@@ -200,13 +202,21 @@ export default function AdminWilayahManagement() {
     }
   };
 
-  const handleConfirmToggleStatus = async () => {
-    if (!adminToToggle) return;
+  const handleToggleStatus = async (admin) => {
+    const isSuspending = admin.status === 'active';
+    const isConfirmed = await confirm({
+      title: isSuspending ? 'Nonaktifkan Akun Admin' : 'Aktifkan Akun Admin',
+      message: `Apakah Anda yakin ingin ${isSuspending ? 'menonaktifkan (suspend)' : 'mengaktifkan'} akun admin "${admin.name}"?`,
+      confirmText: isSuspending ? 'Ya, Nonaktifkan' : 'Ya, Aktifkan',
+      cancelText: 'Batal',
+      variant: isSuspending ? 'warning' : 'info',
+    });
+    if (!isConfirmed) return;
+
     try {
-      const newStatus = adminToToggle.status === 'active' ? 'suspended' : 'active';
-      await updateUserStatus(adminToToggle.id, newStatus);
-      showNotification(`Status akun ${adminToToggle.name} berhasil diubah!`, 'success');
-      setAdminToToggle(null);
+      const newStatus = isSuspending ? 'suspended' : 'active';
+      await updateUserStatus(admin.id, newStatus);
+      showNotification(`Status akun ${admin.name} berhasil diubah!`, 'success');
       loadAdminData(currentPage, searchTerm);
     } catch (err) {
       console.error('Gagal mengubah status admin:', err);
@@ -222,30 +232,37 @@ export default function AdminWilayahManagement() {
 
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
-      <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-neutral-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="w-2 h-2 rounded-full bg-[#10367D] animate-pulse"></span>
-            <span className="text-[12px] font-bold uppercase tracking-widest text-[#10367D]">
-              MANAJEMEN AKUN ADMIN WILAYAH
-            </span>
+      {/* ── BANNER GRADIENT ── */}
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] p-6 text-white shadow-card sm:p-8">
+        <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10" />
+        <div className="absolute bottom-0 right-32 h-28 w-28 rounded-full bg-accent/20" />
+        <div className="relative flex flex-col gap-4 pb-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-accent">
+                MANAJEMEN AKUN ADMIN WILAYAH
+              </span>
+            </div>
+            <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
+              Kelola Admin Wilayah
+            </h1>
+            <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
+              Buat akun admin operasional baru dan tentukan penugasan kerjanya.
+            </p>
           </div>
-          <h1 className="text-[21px] sm:text-[23px] font-bold text-neutral-800">
-            Kelola Admin Wilayah
-          </h1>
-          <p className="text-[13px] sm:text-[14px] text-neutral-400 mt-0.5">
-            Buat akun admin operasional baru dan tentukan penugasan kerjanya.
-          </p>
-        </div>
 
-        <button
-          onClick={handleOpenAddModal}
-          className="flex items-center gap-2 px-4 py-2 bg-[#10367D] hover:bg-[#0C2C66] text-white rounded-full text-[13px] sm:text-[14px] font-bold transition cursor-pointer shadow-sm shrink-0"
-        >
-          <Plus size={14} />
-          <span>Buat Admin Baru</span>
-        </button>
-      </div>
+          <button
+            onClick={handleOpenAddModal}
+            className="flex items-center gap-2 px-4 py-2.5 bg-accent hover:bg-accent/90 text-slate-900 rounded-2xl text-xs sm:text-sm font-bold transition cursor-pointer shadow-sm shrink-0 self-start sm:self-auto"
+          >
+            <Plus size={16} />
+            <span>Buat Admin Baru</span>
+          </button>
+        </div>
+        <div className="absolute bottom-4 left-6 right-6 border-t border-dashed border-white/25 sm:left-8 sm:right-8" />
+        <span className="absolute bottom-[11px] right-6 h-2.5 w-2.5 rounded-full border-2 border-white bg-accent sm:right-8" />
+      </section>
 
       <div className="bg-white p-4 rounded-2xl shadow-sm border border-neutral-200 flex items-center justify-between gap-3">
         <div className="relative flex-1 max-w-md">
@@ -320,7 +337,7 @@ export default function AdminWilayahManagement() {
                           <button onClick={() => handleOpenEditModal(admin)} className="p-1.5 bg-blue-50 text-blue-600 rounded-lg cursor-pointer">
                             <Edit3 size={13} />
                           </button>
-                          <button onClick={() => setAdminToToggle(admin)} className={`p-1.5 rounded-lg cursor-pointer ${isActive ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                          <button onClick={() => handleToggleStatus(admin)} className={`p-1.5 rounded-lg cursor-pointer ${isActive ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'}`}>
                             {isActive ? <XCircle size={13} /> : <CheckCircle2 size={13} />}
                           </button>
                         </div>
@@ -524,31 +541,6 @@ export default function AdminWilayahManagement() {
             </button>
           </div>
         </form>
-      </BaseModal>
-
-      <BaseModal
-        isOpen={Boolean(adminToToggle)}
-        onClose={() => setAdminToToggle(null)}
-        title="Konfirmasi Perubahan Status"
-        subtitle="Manajemen Status Akses Admin"
-        maxWidth="max-w-sm"
-      >
-        <div className="space-y-3 text-[13px] text-center">
-          <div className="w-10 h-10 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto">
-            <AlertTriangle size={20} />
-          </div>
-          <p className="text-neutral-600">
-            Apakah Anda yakin ingin {adminToToggle?.status === 'active' ? 'menonaktifkan (suspend)' : 'mengaktifkan'} akun admin <strong>{adminToToggle?.name}</strong>?
-          </p>
-          <div className="flex gap-2 pt-2">
-            <button onClick={() => setAdminToToggle(null)} className="flex-1 py-2 bg-neutral-100 text-neutral-700 rounded-full font-bold cursor-pointer">
-              Batal
-            </button>
-            <button onClick={handleConfirmToggleStatus} className="flex-1 py-2 bg-[#10367D] hover:bg-[#0C2C66] text-white rounded-full font-bold cursor-pointer shadow-sm transition">
-              Ya, Konfirmasi
-            </button>
-          </div>
-        </div>
       </BaseModal>
 
     </div>

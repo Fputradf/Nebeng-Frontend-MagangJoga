@@ -9,8 +9,8 @@ export default function EnterpriseTable({
 }) {
   return (
     <div className="w-full bg-white rounded-2xl border border-slate-border shadow-enterprise overflow-hidden font-sans">
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
+      <div className="overflow-x-auto touch-pan-x scrollbar-thin">
+        <table className="w-full min-w-[540px] text-left border-collapse">
           <thead>
             <tr className="bg-slate-canvas border-b border-slate-border text-[12px] font-bold text-gray-400 uppercase tracking-wider">
               {columns.map((col, idx) => (
@@ -60,9 +60,9 @@ export default function EnterpriseTable({
                   <td className="py-3 px-4 text-right whitespace-nowrap">
                     <button 
                       aria-label="Opsi Baris Data"
-                      className="p-1 rounded-lg hover:bg-slate-subtle text-gray-500 hover:text-brand-600 transition cursor-pointer"
+                      className="p-1.5 rounded-lg hover:bg-slate-subtle text-gray-500 hover:text-brand-600 transition cursor-pointer active:scale-95"
                     >
-                      <MoreVertical className="w-3.5 h-3.5" />
+                      <MoreVertical className="w-4 h-4" />
                     </button>
                   </td>
                 </tr>

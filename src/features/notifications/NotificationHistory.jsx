@@ -1,8 +1,22 @@
 import { useState, useEffect } from 'react';
 import { useNotification } from '../../context/NotificationContext';
-import { Bell, Calendar, RefreshCw, Loader2, ChevronRight } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import {
+  Bell,
+  Calendar,
+  RefreshCw,
+  Loader2,
+  ChevronRight,
+  Wallet,
+  Clock,
+  AlertTriangle,
+  MapPin,
+  ShoppingCart,
+  MessageCircle,
+} from 'lucide-react';
 
 export default function NotificationHistory() {
+  const { user } = useAuth();
   const { history, fetchHistory, loading, setUnreadCount } = useNotification();
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -48,49 +62,65 @@ export default function NotificationHistory() {
 
   const handleNotificationClick = (notification) => {
     try {
-      const data = JSON.parse(notification.data || '{}');
+      const data = typeof notification.data === 'string'
+        ? JSON.parse(notification.data || '{}')
+        : (notification.data || {});
       
-      const { type, orderId, tripId, conversationId } = data;
+      const isMitra = user?.role === 'mitra';
+      const { type, orderId, tripId, conversationId, actionUrl } = data;
+
+      if (actionUrl) {
+        let target = actionUrl;
+        if (target === '/wallet') {
+          target = isMitra ? '/mitra/saldo' : '/customer/wallet';
+        }
+        window.location.href = target;
+        return;
+      }
       
-      switch (type) {
+      switch (type || notification.type) {
         case 'order_created':
         case 'order_paid':
         case 'order_cancelled':
-          if (orderId) {
-            window.location.href = `/orders/${orderId}`;
-          }
+          window.location.href = isMitra ? '/mitra/trip' : '/customer/tickets';
           break;
         case 'trip_started':
         case 'trip_arrived':
         case 'trip_completed':
         case 'checkpoint_scanned':
-          if (tripId) {
-            window.location.href = `/tracking/${tripId}`;
-          }
+        case 'mitra_arrived_origin':
+        case 'trip_arrived_destination':
+        case 'trip_departure_reminder_h30':
+        case 'trip_departure_urgency_h0':
+          window.location.href = isMitra ? '/mitra/trip' : '/customer/tickets';
           break;
         case 'chat_message':
-          if (conversationId) {
-            window.location.href = `/chat/${conversationId}`;
-          }
+          window.location.href = conversationId
+            ? `${isMitra ? '/mitra' : '/customer'}/chat?conversation=${conversationId}`
+            : `${isMitra ? '/mitra' : '/customer'}/chat`;
           break;
         case 'payment_success':
         case 'payment_failed':
         case 'escrow_released':
-          window.location.href = '/wallet';
+        case 'wallet_topup':
+        case 'wallet_withdrawal':
+          window.location.href = isMitra ? '/mitra/saldo' : '/customer/wallet';
           break;
         case 'reward_earned':
         case 'reward_redeemed':
-          window.location.href = '/rewards';
+          window.location.href = '/customer/rewards';
           break;
         case 'verification_approved':
         case 'verification_rejected':
-          window.location.href = '/profile';
+          window.location.href = isMitra
+            ? '/mitra/onboarding'
+            : '/customer/profile/pengaturan';
           break;
         case 'trip_booking_request':
-          window.location.href = '/orders';
+          window.location.href = '/mitra/trip';
           break;
         default:
-          window.location.href = '/notifications';
+          window.location.href = `${isMitra ? '/mitra' : '/customer'}/notifications`;
       }
     } catch (error) {
       console.error('Failed to parse notification data:', error);
@@ -117,7 +147,45 @@ export default function NotificationHistory() {
     });
   };
 
-  const getNotificationIcon = (type) => {
+  const getNotificationIcon = (type, dataString) => {
+    let data = {};
+    try {
+      data = typeof dataString === 'string' ? JSON.parse(dataString || '{}') : (dataString || {});
+    } catch {}
+
+    const dataType = data?.type;
+    if (type === 'chat_message') {
+      return <MessageCircle className="w-5 h-5 text-blue-600" />;
+    }
+    if (
+      type === 'payment_success' ||
+      type === 'payment_failed' ||
+      type === 'escrow_released' ||
+      dataType === 'wallet_topup' ||
+      dataType === 'wallet_withdrawal'
+    ) {
+      return <Wallet className="w-5 h-5 text-emerald-600" />;
+    }
+    if (
+      dataType === 'trip_departure_urgency_h0' ||
+      dataType === 'mitra_late_sanction' ||
+      data?.priority === 'high'
+    ) {
+      return <AlertTriangle className="w-5 h-5 text-red-600" />;
+    }
+    if (dataType === 'trip_departure_reminder_h30') {
+      return <Clock className="w-5 h-5 text-amber-600" />;
+    }
+    if (
+      type === 'trip_arrived' ||
+      dataType === 'mitra_arrived_origin' ||
+      dataType === 'trip_arrived_destination'
+    ) {
+      return <MapPin className="w-5 h-5 text-indigo-600" />;
+    }
+    if (type === 'order_created' || type === 'order_paid') {
+      return <ShoppingCart className="w-5 h-5 text-green-600" />;
+    }
     return <Bell className="w-5 h-5 text-blue-600" />;
   };
 
@@ -165,13 +233,27 @@ export default function NotificationHistory() {
               >
                 <div className="flex items-start gap-4">
                   <div className="flex-shrink-0 mt-1">
-                    {getNotificationIcon(notification.type)}
+                    {getNotificationIcon(notification.type, notification.data)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
-                      <h3 className="font-semibold text-gray-900">
-                        {notification.title}
-                      </h3>
+                      <div className="flex items-center gap-2">
+                        {(() => {
+                          try {
+                            const parsed = typeof notification.data === 'string' ? JSON.parse(notification.data) : notification.data;
+                            return parsed?.priority === 'high' ? (
+                              <span className="shrink-0 px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-600">
+                                URGENT
+                              </span>
+                            ) : null;
+                          } catch {
+                            return null;
+                          }
+                        })()}
+                        <h3 className="font-semibold text-gray-900">
+                          {notification.title}
+                        </h3>
+                      </div>
                       <span className="text-xs text-gray-500 flex-shrink-0">
                         {formatDate(notification.createdAt)}
                       </span>

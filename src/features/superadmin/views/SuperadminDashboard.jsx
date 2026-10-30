@@ -88,6 +88,7 @@ export default function SuperadminDashboard() {
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [filterSortBy, setFilterSortBy] = useState('default');
   const [activeRange, setActiveRange] = useState('Bulan');
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [chartType, setChartType] = useState('area'); // 'area' | 'bar'
   const [regionTab, setRegionTab] = useState('Semua');
   const [regionPage, setRegionPage] = useState(1);
@@ -144,7 +145,7 @@ export default function SuperadminDashboard() {
       sub: `+8.2% vs bulan lalu`, trend: kpiTrends.revenue, change: +8.2
     },
     {
-      icon: Wallet, color: '#10367D', bg: 'bg-[#10367D]/10',
+      icon: Wallet, color: '#10b981', bg: 'bg-emerald-50',
       label: 'KOMISI PLATFORM', value: formatRp(platformCommission),
       sub: `${totalRevenue > 0 ? ((platformCommission/totalRevenue)*100).toFixed(1) : 0}% dari pendapatan`, trend: kpiTrends.commission, change: +5.1
     },
@@ -154,9 +155,9 @@ export default function SuperadminDashboard() {
       sub: 'Dana tertahan aktif', trend: kpiTrends.escrow, change: -2.3
     },
     {
-      icon: MapPin, color: '#f59e0b', bg: 'bg-amber-50',
+      icon: MapPin, color: '#10367D', bg: 'bg-[#10367D]/10',
       label: 'TOTAL WILAYAH', value: String(totalRegions || 0),
-      sub: 'Wilayah aktif terdaftar', trend: kpiTrends.regions, change: +1
+      sub: 'Wilayah aktif terdaftar', trend: kpiTrends.regions,
     },
   ];
 
@@ -212,40 +213,49 @@ export default function SuperadminDashboard() {
       return { label, fullLabel, pemasukanTotal: jt, pemasukanBersih: jt * 0.9 };
     };
 
-    const genHarian = () => {
-      const bw = [1.2,0.9,0.7,0.6,0.8,1.4,2.6,4.5,6.8,8.2,9.0,9.6,9.2,8.6,8.0,8.4,9.4,10.2,10.8,9.6,7.4,5.2,3.4,2.0];
-      const w = bw.map((b,i) => getWeight(b, i, selectedChartRegion));
-      const tw = w.reduce((a,b) => a+b, 0);
-      return w.map((wv, i) => make(`${String(i).padStart(2,'0')}:00`, `27 Agu 2026, ${String(i).padStart(2,'0')}:00`, wv, tw));
-    };
-    const genMingguan = () => {
-      const bw = [95,108,101,122,138,119,131,150];
-      const w = bw.map((b,i) => getWeight(b,i,selectedChartRegion));
-      const tw = w.reduce((a,b)=>a+b,0);
-      return w.map((wv,i) => {
-        const s = new Date(2026,5,8+i*7), e = new Date(2026,5,14+i*7);
-        return make(`M${i+1}`, `${s.getDate()}–${e.getDate()} ${MONTHS_ID[e.getMonth()]} ${e.getFullYear()}`, wv, tw);
-      });
-    };
     const genBulanan = () => {
-      const bw = [12,13,15,14,16,18,20,15,14,13,17,19,22,24,16,15,14,18,21,23,25,17,16,15,19,22,24,26,18,17];
-      const w = bw.map((b,i) => getWeight(b,i,selectedChartRegion));
-      const tw = w.reduce((a,b)=>a+b,0);
-      return w.map((wv,i) => {
-        const d = new Date(2026,5,i+1);
-        return make(formatTgl(d), formatTglPenuh(d), wv, tw);
-      });
-    };
-    const genTahunan = () => {
-      const bw = [320,295,350,380,410,452,470,431,462,508,480,538];
-      const w = bw.map((b,i) => getWeight(b,i,selectedChartRegion));
-      const tw = w.reduce((a,b)=>a+b,0);
-      return w.map((wv,i) => make(MONTHS_ID[i], `${MONTHS_ID_FULL[i]} 2026`, wv, tw));
+      const currentYear = new Date().getFullYear();
+      const monthName = MONTHS_ID_FULL[selectedMonth];
+      const daysInMonth = new Date(currentYear, selectedMonth + 1, 0).getDate();
+
+      const weeks = [
+        { label: 'Minggu 1', range: `1–7 ${monthName} ${currentYear}`, baseWeight: 23 },
+        { label: 'Minggu 2', range: `8–14 ${monthName} ${currentYear}`, baseWeight: 28 },
+        { label: 'Minggu 3', range: `15–21 ${monthName} ${currentYear}`, baseWeight: 25 },
+        { label: 'Minggu 4', range: `22–28 ${monthName} ${currentYear}`, baseWeight: 30 },
+      ];
+
+      if (daysInMonth > 28) {
+        const remainingDays = daysInMonth - 28;
+        weeks.push({
+          label: 'Minggu 5',
+          range: `29–${daysInMonth} ${monthName} ${currentYear}`,
+          baseWeight: Math.round(26 * (remainingDays / 7)),
+        });
+      }
+
+      const w = weeks.map((week, i) => getWeight(week.baseWeight, i, selectedChartRegion));
+      const tw = w.reduce((a, b) => a + b, 0);
+
+      return weeks.map((week, i) => make(week.label, week.range, w[i], tw));
     };
 
-    const gen = { Hari: genHarian, Minggu: genMingguan, Bulan: genBulanan, Tahun: genTahunan };
+    const genTahunan = () => {
+      const currentYear = new Date().getFullYear();
+      const bw = [320,295,350,380,410,452,470,431,462,508,480,538];
+      const w = bw.map((b, i) => getWeight(b, i, selectedChartRegion));
+      const tw = w.reduce((a, b) => a + b, 0);
+      return w.map((wv, i) => make(MONTHS_ID[i], `${MONTHS_ID_FULL[i]} ${currentYear}`, wv, tw));
+    };
+
+    const gen = {
+      Bulan: genBulanan,
+      Bulanan: genBulanan,
+      Tahun: genTahunan,
+      Tahunan: genTahunan,
+    };
     return (gen[activeRange] || genBulanan)();
-  }, [activeRange, targetRevenueJt, selectedChartRegion]);
+  }, [activeRange, targetRevenueJt, selectedChartRegion, selectedMonth]);
 
   const totalPemasukanJt = revenueChartData.reduce((s,d) => s+d.pemasukanTotal, 0);
   const totalBersihJt = revenueChartData.reduce((s,d) => s+d.pemasukanBersih, 0);
@@ -325,10 +335,12 @@ export default function SuperadminDashboard() {
                     <div className={`p-2 ${k.bg} rounded-xl`}>
                       <Icon className="w-4 h-4" style={{ color: k.color }} />
                     </div>
-                    <span className={`flex items-center gap-0.5 text-[11px] font-bold px-2 py-0.5 rounded-full ${isUp ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
-                      {isUp ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                      {Math.abs(k.change)}%
-                    </span>
+                    {k.change != null && (
+                      <span className={`flex items-center gap-0.5 text-[11px] font-bold px-2 py-0.5 rounded-full ${isUp ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                        {isUp ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                        {Math.abs(k.change)}%
+                      </span>
+                    )}
                   </div>
                   <div>
                     <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">{k.label}</p>
@@ -358,15 +370,38 @@ export default function SuperadminDashboard() {
                 <p className="text-[12px] text-neutral-400">Total vs pemasukan bersih per periode</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <div className="flex items-center gap-0.5 bg-neutral-50 border border-neutral-200 rounded-full p-1">
-                {['Hari','Minggu','Bulan','Tahun'].map(r => (
-                  <button key={r} onClick={() => setActiveRange(r)}
-                    className={`text-[12px] font-semibold px-3 py-1 rounded-full transition cursor-pointer ${activeRange === r ? 'bg-[#10367D] text-white shadow-sm' : 'text-neutral-400 hover:text-neutral-600'}`}>
-                    {r}
+                {[
+                  { id: 'Bulan', label: 'Bulanan' },
+                  { id: 'Tahun', label: 'Tahunan' },
+                ].map((r) => (
+                  <button
+                    key={r.id}
+                    onClick={() => setActiveRange(r.id)}
+                    className={`text-[12px] font-semibold px-3.5 py-1 rounded-full transition cursor-pointer ${
+                      activeRange === r.id
+                        ? 'bg-[#10367D] text-white shadow-sm'
+                        : 'text-neutral-400 hover:text-neutral-600'
+                    }`}
+                  >
+                    {r.label}
                   </button>
                 ))}
               </div>
+
+              {activeRange === 'Bulan' && (
+                <select
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                  className="text-[12px] bg-neutral-50 border border-neutral-200 rounded-full px-3 py-1 font-semibold text-neutral-700 focus:outline-none cursor-pointer"
+                >
+                  {MONTHS_ID_FULL.map((m, idx) => (
+                    <option key={m} value={idx}>{m}</option>
+                  ))}
+                </select>
+              )}
+
               <div className="flex items-center gap-0.5 bg-neutral-50 border border-neutral-200 rounded-full p-1">
                 <button onClick={() => setChartType('area')} title="Area"
                   className={`w-7 h-7 rounded-full flex items-center justify-center transition cursor-pointer ${chartType === 'area' ? 'bg-[#10367D] text-white' : 'text-neutral-400'}`}>

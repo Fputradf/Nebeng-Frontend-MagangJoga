@@ -1,3 +1,4 @@
+import ConfirmModal from '../../../components/ui/ConfirmModal';
 import { useState } from 'react';
 import {
   LayoutDashboard,
@@ -12,13 +13,11 @@ import {
   ShieldCheck,
   Menu,
   X,
-  Bell,
-  BellOff,
+  Settings,
+  HelpCircle,
 } from 'lucide-react';
 import logoAsset from '../../../assets/logo.png';
 import apiClient from '../../../services/apiClient';
-import { useNotification } from '../../../context/NotificationContext';
-import { useToast } from '../../../context/ToastContext';
 
 export default function MitraSidebar({
   activeMenu = 'Dashboard Mitra',
@@ -29,61 +28,6 @@ export default function MitraSidebar({
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const toast = useToast();
-
-  const {
-    fcmToken,
-    permission,
-    notificationSupported,
-    errorMessage,
-    requestPermission,
-    registerToken,
-  } = useNotification();
-
-  const handleTogglePush = async () => {
-    console.log('CLICK toggle notif');
-    console.log('[MitraSidebar] TOGGLE CLICKED - fcmToken:', fcmToken, 'notificationSupported:', notificationSupported, 'permission:', permission, 'errorMessage:', errorMessage);
-
-    try {
-      if (fcmToken) {
-        console.log('[MitraSidebar] Token already exists');
-        toast.info('Notifikasi sudah aktif. Logout untuk menonaktifkan.');
-        return;
-      }
-
-      if (!notificationSupported) {
-        console.log('[MitraSidebar] Notifications not supported');
-        toast.error('Browser tidak mendukung notifikasi');
-        return;
-      }
-
-      if (permission === 'denied') {
-        console.log('[MitraSidebar] Permission denied');
-        toast.error('Notifikasi ditolak. Aktifkan di pengaturan browser.');
-        return;
-      }
-
-      console.log('[MitraSidebar] Calling requestPermission...');
-      const hasPermission = await requestPermission();
-      console.log('[MitraSidebar] Permission result:', hasPermission);
-
-      if (hasPermission) {
-        console.log('[MitraSidebar] Calling registerToken...');
-        const success = await registerToken();
-        console.log('[MitraSidebar] Register token result:', success);
-        if (success) {
-          toast.success('Notifikasi berhasil diaktifkan!');
-        } else {
-          toast.error(errorMessage || 'Gagal mendaftarkan token notifikasi.');
-        }
-      } else {
-        toast.error('Izin notifikasi ditolak. Aktifkan di pengaturan browser.');
-      }
-    } catch (err) {
-      console.error('[MitraSidebar] Gagal mengubah notifikasi:', err);
-      toast.error(err.message || 'Gagal mengubah status notifikasi.');
-    }
-  };
 
   const MENU_GROUPS = [
     {
@@ -105,6 +49,14 @@ export default function MitraSidebar({
       items: [
         { name: 'Saldo & Komisi', icon: Wallet, locked: !isVerified, lockMessage: 'Fitur terkunci. Memerlukan verifikasi Admin Regional.' },
         { name: 'Chat Pelanggan', icon: MessageSquare, locked: !isVerified, lockMessage: 'Fitur terkunci. Memerlukan verifikasi Admin Regional.' },
+        { name: 'Pusat Bantuan & FAQ', icon: HelpCircle, locked: false },
+      ],
+    },
+    {
+      label: 'Pengaturan',
+      items: [
+        { name: 'Pengaturan Akun', icon: Settings,
+locked: !isVerified, lockMessage: 'Fitur terkunci. Memerlukan verifikasi Admin Regional.' },
       ],
     },
   ];
@@ -145,7 +97,7 @@ export default function MitraSidebar({
         />
       )}
 
-      <aside className={`w-64 h-screen bg-[#0a1e3c] text-white flex flex-col justify-between p-5 fixed left-0 top-0 shadow-soft-lg overflow-y-auto z-40 transition-transform duration-300 font-sans print:hidden select-none ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
+      <aside className={`w-64 h-screen bg-gradient-to-b from-[#0c2353] via-[#10367D] to-[#18458f] text-white flex flex-col justify-between p-5 fixed left-0 top-0 shadow-2xl border-r border-blue-400/20 overflow-y-auto z-40 transition-transform duration-300 font-sans print:hidden select-none ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
         <div>
           <div className="mb-8 px-2 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -174,7 +126,7 @@ export default function MitraSidebar({
           <div className="space-y-6">
             {MENU_GROUPS.map((group) => (
               <div key={group.label}>
-                <p className="text-xs font-bold uppercase tracking-wider text-white/50 mb-2.5 px-3">
+                <p className="text-xs font-bold uppercase tracking-wider text-blue-200/60 mb-2.5 px-3">
                   {group.label}
                 </p>
                 <nav className="space-y-1">
@@ -187,26 +139,26 @@ export default function MitraSidebar({
                         disabled={item.locked}
                         onClick={() => handleMenuSelect(item)}
                         title={item.locked ? item.lockMessage : undefined}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition text-left ${
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition text-left ${
                           isActive
-                            ? 'bg-white text-[#0a1e3c] font-bold shadow-soft cursor-default'
+                            ? 'bg-white text-[#10367D] font-bold shadow-md cursor-default'
                             : item.locked
                             ? 'text-white/40 font-medium cursor-not-allowed opacity-60'
-                            : 'text-white/80 font-medium hover:bg-white/10 hover:text-white cursor-pointer'
+                            : 'text-white/85 font-medium hover:bg-white/10 hover:text-white cursor-pointer'
                         }`}
                       >
                         <IconComponent
                           className={`w-4 h-4 ${
                             isActive
-                              ? 'text-[#0a1e3c]'
+                              ? 'text-[#10367D]'
                               : item.locked
                               ? 'text-white/30'
-                              : 'text-white/70'
+                              : 'text-white/80'
                           }`}
                         />
                         <span className="flex-1">{item.label || item.name}</span>
                         {item.name === 'Onboarding & Verifikasi' && isVerified ? (
-                          <ShieldCheck className="w-3 h-3 text-[#74B4D9] shrink-0" />
+                          <ShieldCheck className="w-3 h-3 text-emerald-400 shrink-0" />
                         ) : item.locked ? (
                           <Lock className="w-3 h-3 text-white/40 shrink-0" />
                         ) : null}
@@ -219,32 +171,11 @@ export default function MitraSidebar({
           </div>
         </div>
 
-        <div className="pt-5 border-t border-white/10 space-y-3">
-          <button
-            onClick={() => {
-              console.log('CLICK toggle notif (MitraSidebar JSX)');
-              handleTogglePush();
-            }}
-            disabled={permission === 'denied' || !!errorMessage}
-            aria-label={fcmToken ? 'Notifikasi aktif' : 'Aktifkan notifikasi'}
-            className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-bold transition cursor-pointer border ${
-              fcmToken
-                ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/30'
-                : 'bg-white/10 text-white/80 border-white/10 hover:bg-white/20'
-            } ${errorMessage ? 'opacity-50 cursor-not-allowed' : ''}`}
-          >
-            {fcmToken ? (
-              <Bell className="w-4 h-4 shrink-0" />
-            ) : (
-              <BellOff className="w-4 h-4 shrink-0" />
-            )}
-            <span>{fcmToken ? 'Notifikasi Aktif' : 'Aktifkan Notifikasi'}</span>
-          </button>
-
+        <div className="pt-5 border-t border-white/10">
           <button
             onClick={() => setShowLogoutModal(true)}
             aria-label="Keluar Sistem"
-            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-bold text-white bg-white/10 hover:bg-white/20 transition cursor-pointer border border-white/10"
+            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold text-white bg-white/10 hover:bg-white/20 transition cursor-pointer border border-white/10 shadow-2xs"
           >
             <LogOut className="w-4 h-4 text-white shrink-0" />
             <span>Log Out</span>
@@ -252,51 +183,18 @@ export default function MitraSidebar({
         </div>
       </aside>
 
-      {showLogoutModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-6 text-gray-900 font-['Inter']">
-            <div className="text-center space-y-2">
-              <div className="w-12 h-12 bg-rose-50 text-rose-600 rounded-2xl mx-auto flex items-center justify-center shadow-sm">
-                <AlertTriangle size={24} />
-              </div>
-
-              <h3 className="text-[17px] font-bold text-gray-900">
-                Konfirmasi Keluar Sistem
-              </h3>
-
-              <p className="text-[13px] font-normal text-gray-500">
-                Apakah Anda yakin ingin mengakhiri sesi aktif ini? Anda harus
-                masuk kembali untuk mengakses panel mitra.
-              </p>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setShowLogoutModal(false)}
-                disabled={isLoggingOut}
-                className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 text-[13px] font-semibold rounded-full transition cursor-pointer"
-              >
-                Batal
-              </button>
-
-              <button
-                onClick={handleConfirmLogout}
-                disabled={isLoggingOut}
-                className="flex-1 py-3 bg-rose-600 hover:bg-rose-700 text-white text-[13px] font-semibold rounded-full transition shadow-sm cursor-pointer flex items-center justify-center gap-2"
-              >
-                {isLoggingOut ? (
-                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                ) : (
-                  <>
-                    <LogOut className="w-3.5 h-3.5" />
-                    Ya, Keluar
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={handleConfirmLogout}
+        title="Konfirmasi Keluar Sistem"
+        message="Apakah Anda yakin ingin mengakhiri sesi aktif ini? Anda harus masuk kembali untuk mengakses panel mitra."
+        confirmText="Ya, Keluar"
+        cancelText="Batal"
+        variant="danger"
+        icon={LogOut}
+        isLoading={isLoggingOut}
+      />
     </>
   );
 }

@@ -321,30 +321,38 @@ export default function VerificationCenterPage() {
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
 
-      {/* HEADER */}
-      <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-neutral-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="w-2 h-2 rounded-full bg-[#10367D] animate-pulse"></span>
-            <span className="text-[12px] font-bold uppercase tracking-widest text-[#10367D]">
-              PUSAT VERIFIKASI & KEAMANAN REGIONAL
-            </span>
+      {/* ── BANNER GRADIENT ── */}
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] p-6 text-white shadow-card sm:p-8">
+        <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10" />
+        <div className="absolute bottom-0 right-32 h-28 w-28 rounded-full bg-accent/20" />
+        <div className="relative flex flex-col gap-4 pb-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-accent flex items-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5" /> PUSAT VERIFIKASI & KEAMANAN REGIONAL
+              </span>
+            </div>
+            <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
+              Verification Center & Face ID
+            </h1>
+            <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
+              Tinjau antrean berkas identitas, rekening, dan kendaraan wilayah Anda secara akurat.
+            </p>
           </div>
-          <h1 className="text-[21px] sm:text-[23px] font-bold text-neutral-800">
-            Verification Center & Face ID
-          </h1>
-          <p className="text-[13px] sm:text-[14px] text-neutral-400 mt-0.5">
-            Tinjau antrean berkas identitas, rekening, dan kendaraan wilayah Anda.
-          </p>
-        </div>
 
-        <div className="flex items-center gap-2 px-3 py-1.5 bg-[#74B4D9]/15 rounded-full shrink-0">
-          <Clock className="w-3.5 h-3.5 text-[#10367D]" />
-          <span className="text-[13px] font-bold text-[#10367D]">
-            {verificationList.filter((v) => v.status === 'Menunggu Review').length} Antrean Pending
-          </span>
+          <div className="flex items-center gap-2.5 self-start sm:self-auto">
+            <div className="px-4 py-2 rounded-2xl bg-white/15 backdrop-blur border border-white/25 flex items-center gap-2 shadow-xs">
+              <Clock className="w-4 h-4 text-accent shrink-0" />
+              <span className="text-xs font-bold text-white">
+                {verificationList.filter((v) => v.status === 'Menunggu Review').length} Antrean Pending
+              </span>
+            </div>
+          </div>
         </div>
-      </div>
+        <div className="absolute bottom-4 left-6 right-6 border-t border-dashed border-white/25 sm:left-8 sm:right-8" />
+        <span className="absolute bottom-[11px] right-6 h-2.5 w-2.5 rounded-full border-2 border-white bg-accent sm:right-8" />
+      </section>
 
       {/* SEARCH */}
       <div className="bg-white p-4 rounded-2xl shadow-sm border border-neutral-200 flex items-center justify-between gap-3">

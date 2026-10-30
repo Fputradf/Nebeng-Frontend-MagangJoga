@@ -4,6 +4,12 @@
 ```
 ├── 📄 .env.example
 ├── 📄 .gitignore
+├── 📁 anti-slop/
+│   ├── 📄 audit-001-2026-10-28.md
+│   ├── 📄 audit-002-2026-10-29.md
+│   ├── 📄 audit-003-2026-10-29.md
+│   ├── 📄 report-001-2026-10-29.md
+│   └── 📄 report-002-2026-10-29.md
 ├── 📁 backup-layout/
 │   ├── 📄 CustomerLayout.jsx
 │   ├── 📄 MitraLayout.jsx
@@ -11,6 +17,9 @@
 │   ├── 📄 RegionalLayout.jsx
 │   └── 📄 SuperadminLayout.jsx
 ├── 📄 CUSTOMER_CHAT_IMPLEMENTATION.md
+├── 📁 dev-dist/
+│   ├── 📄 sw.js
+│   └── 📄 workbox-5d155c7a.js
 ├── 📄 eslint.config.js
 ├── 📄 fix_banner.py
 ├── 📄 fix_eslint.py
@@ -23,9 +32,13 @@
 ├── 📄 package-lock.json
 ├── 📄 package.json
 ├── 📁 public/
+│   ├── 📄 apple-touch-icon.png
 │   ├── 📄 favicon.svg
 │   ├── 📄 firebase-messaging-sw.js
-│   └── 📄 icons.svg
+│   ├── 📄 icons.svg
+│   ├── 📄 pwa-192x192.png
+│   ├── 📄 pwa-512x512.png
+│   └── 📄 pwa-maskable-512x512.png
 ├── 📄 README.md
 ├── 📁 src/
 │   ├── 📄 App.css
@@ -37,25 +50,37 @@
 │   │   └── 📄 LOGO.png
 │   ├── 📁 components/
 │   │   ├── 📁 layout/
+│   │   │   ├── 📄 AppBottomNav.jsx
 │   │   │   ├── 📄 AppShell.jsx
 │   │   │   ├── 📄 AppTopbar.jsx
 │   │   │   ├── 📄 AuthLayout.jsx
 │   │   │   ├── 📄 BusinessHeader.jsx
 │   │   │   ├── 📄 FullPageLoader.jsx
+│   │   │   ├── 📄 GuestHelpModal.jsx
+│   │   │   ├── 📄 PrivacyPolicyModal.jsx
+│   │   │   ├── 📄 TermsOfServiceModal.jsx
 │   │   │   └── 📄 VerificationBanner.jsx
 │   │   ├── 📄 NotificationAuthHandler.jsx
+│   │   ├── 📁 pwa/
+│   │   │   ├── 📄 OfflineIndicator.jsx
+│   │   │   ├── 📄 PWAInstallPrompt.jsx
+│   │   │   └── 📄 PWAUpdateToast.jsx
 │   │   ├── 📁 routing/
 │   │   │   └── 📄 ProtectedRoute.jsx
 │   │   └── 📁 ui/
 │   │       ├── 📄 AuthInput.jsx
 │   │       ├── 📄 BannerSlider.jsx
 │   │       ├── 📄 BaseModal.jsx
+│   │       ├── 📄 ConfirmModal.jsx
 │   │       ├── 📄 EmptyState.jsx
 │   │       ├── 📄 EnterpriseTable.jsx
 │   │       ├── 📄 NotificationBell.jsx
 │   │       ├── 📄 PhoneCallModal.jsx
+│   │       ├── 📄 PrintReportFooter.jsx
+│   │       ├── 📄 PrintReportHeader.jsx
 │   │       ├── 📄 QrScannerModal.jsx
 │   │       ├── 📄 Skeleton.jsx
+│   │       ├── 📄 SocialIcon.jsx
 │   │       ├── 📄 StatCard.jsx
 │   │       ├── 📄 StatusBadge.jsx
 │   │       └── 📄 ToggleSwitch.jsx
@@ -64,11 +89,15 @@
 │   │   └── 📄 firebase.js
 │   ├── 📁 context/
 │   │   ├── 📄 AuthContext.jsx
+│   │   ├── 📄 ConfirmContext.jsx
 │   │   ├── 📄 GPSContext.jsx
 │   │   ├── 📄 MitraDataContext.jsx
 │   │   ├── 📄 NotificationContext.jsx
 │   │   ├── 📄 TicketsContext.jsx
 │   │   └── 📄 ToastContext.jsx
+│   ├── 📁 data/
+│   │   ├── 📄 indonesiaCities.js
+│   │   └── 📄 projectFaqData.js
 │   ├── 📁 features/
 │   │   ├── 📁 auth/
 │   │   │   ├── 📄 ForgotPassword.jsx
@@ -86,8 +115,12 @@
 │   │   │       ├── 📄 CustomerAccountSettings.jsx
 │   │   │       ├── 📄 CustomerChat.jsx
 │   │   │       ├── 📄 CustomerRewards.jsx
+│   │   │       ├── 📄 CustomerVouchers.jsx
+│   │   │       ├── 📄 CustomerWallet.jsx
 │   │   │       ├── 📄 MyTickets.jsx
 │   │   │       └── 📄 SearchTrip.jsx
+│   │   ├── 📁 help/
+│   │   │   └── 📄 HelpCenterView.jsx
 │   │   ├── 📁 mitra/
 │   │   │   ├── 📁 components/
 │   │   │   │   ├── 📄 MitraProfileModal.jsx
@@ -118,6 +151,7 @@
 │   │   │       ├── 📄 OperatorDashboard.jsx
 │   │   │       ├── 📄 OperatorDualScanner.jsx
 │   │   │       ├── 📄 OperatorFinancial.jsx
+│   │   │       ├── 📄 OperatorGuide.jsx
 │   │   │       ├── 📄 OperatorHandover.jsx
 │   │   │       ├── 📄 OperatorInspection.jsx
 │   │   │       └── 📄 OperatorManifest.jsx
@@ -136,6 +170,7 @@
 │   │   │       ├── 📄 OperatorPosManagement.jsx
 │   │   │       ├── 📄 PosMitraManagement.jsx
 │   │   │       ├── 📄 RegionalAccountSettings.jsx
+│   │   │       ├── 📄 RegionalSupportChat.jsx
 │   │   │       ├── 📄 TripOrderMonitoring.jsx
 │   │   │       └── 📄 VerificationCenter.jsx
 │   │   └── 📁 superadmin/
@@ -151,9 +186,11 @@
 │   │           ├── 📄 PricingManagement.jsx
 │   │           ├── 📄 RegionalAdminsManagement.jsx
 │   │           ├── 📄 RegionsManagement.jsx
+│   │           ├── 📄 SocialLinksManagement.jsx
 │   │           ├── 📄 SuperadminAccountSettings.jsx
 │   │           ├── 📄 SuperadminDashboard.jsx
-│   │           └── 📄 UserGovernance.jsx
+│   │           ├── 📄 UserGovernance.jsx
+│   │           └── 📄 VoucherManagement.jsx
 │   ├── 📁 hooks/
 │   │   ├── 📄 useActiveMenu.js
 │   │   ├── 📄 usePushNotifications.js
@@ -166,6 +203,7 @@
 │   │   ├── 📄 auditService.js
 │   │   ├── 📄 authService.js
 │   │   ├── 📄 bannerService.js
+│   │   ├── 📄 disruptedTripsService.js
 │   │   ├── 📄 merchandiseService.js
 │   │   ├── 📄 mitraPricing.js
 │   │   ├── 📄 mitraService.js
@@ -175,10 +213,15 @@
 │   │   ├── 📄 pricingService.js
 │   │   ├── 📄 regionalService.js
 │   │   ├── 📄 regionService.js
+│   │   ├── 📄 socialLinkService.js
+│   │   ├── 📄 supportChatService.js
 │   │   ├── 📄 userService.js
 │   │   ├── 📄 vehicleService.js
-│   │   └── 📄 verificationService.js
+│   │   ├── 📄 verificationService.js
+│   │   ├── 📄 voucherService.js
+│   │   └── 📄 walletService.js
 │   └── 📁 utils/
+│       ├── 📄 geoJsonUtil.js
 │       └── 📄 mitraUtils.js
 ├── 📄 structure.md
 ├── 📄 tailwind.config.js

@@ -1,29 +1,56 @@
-import { useState, useEffect } from 'react';
-import { ShieldCheck, UserCheck, AlertTriangle, Unlock } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { ShieldCheck, UserCheck, AlertTriangle, Unlock, ScanLine, X, Upload, AlertCircle, Trash2 } from 'lucide-react';
 import { useToast } from '../../../context/ToastContext';
 import EmptyState from '../../../components/ui/EmptyState';
 import StatusBadge from '../../../components/ui/StatusBadge';
 import BaseModal from '../../../components/ui/BaseModal';
 import apiClient from '../../../services/apiClient';
+import { Html5Qrcode } from 'html5-qrcode';
 
 const PRIMARY_COLOR = '#10367D';
+const PRIMARY_HOVER = '#0C2C66';
 const PRIMARY_ACCENT = '#74B4D9';
+const STORAGE_KEY = 'nebeng_operator_handover_history';
 
 export default function OperatorHandover() {
   const toast = useToast();
   const [recipientName, setRecipientName] = useState('');
-  const [tripQr, setTripQr] = useState('');
   const [ticketQr, setTicketQr] = useState('');
   const [posId, setPosId] = useState('');
   const [otpCode, setOtpCode] = useState('');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [handoverHistory, setHandoverHistory] = useState([]);
+  const [handoverHistory, setHandoverHistory] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
+  const saveHandoverHistory = (newHistory) => {
+    setHandoverHistory(newHistory);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(newHistory.slice(0, 50)));
+    } catch (e) {
+      console.warn('Gagal menyimpan riwayat serah terima ke localStorage', e);
+    }
+  };
+
+  const fileInputRef = useRef(null);
+
+  // Camera QR Scanner state
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  const [activeTargetField, setActiveTargetField] = useState(null);
+  const html5QrCode = useRef(null);
+
+  // Manual Settlement / Bypass Modal
   const [showForceModal, setShowForceModal] = useState(false);
   const [forceTicket, setForceTicket] = useState('');
   const [forcePosId, setForcePosId] = useState('');
   const [forceOtp, setForceOtp] = useState('');
+  const [forceReason, setForceReason] = useState('');
   const [isForcing, setIsForcing] = useState(false);
 
   useEffect(() => {
@@ -58,18 +85,110 @@ export default function OperatorHandover() {
     };
   }, []);
 
+  const startCamera = async (target) => {
+    setActiveTargetField(target);
+    setIsCameraActive(true);
+
+    setTimeout(() => {
+      html5QrCode.current = new Html5Qrcode('qr-reader-handover');
+      html5QrCode.current
+        .start(
+          { facingMode: 'environment' },
+          {
+            fps: 10,
+            qrbox: { width: 250, height: 250 },
+          },
+          (decodedText) => {
+            const cleanText = decodedText.trim().toUpperCase();
+            if (target === 'forceTicket') {
+              setForceTicket(cleanText);
+            } else {
+              setTicketQr(cleanText);
+            }
+            toast.success('Berhasil memindai QR Tiket secara langsung!', { title: 'Scan Sukses' });
+            stopCamera();
+          },
+          () => {}
+        )
+        .catch((err) => {
+          console.warn('Gagal akses kamera langsung:', err);
+          toast.info(
+            'Kamera tidak aktif atau izin diblokir. Anda bisa menggunakan opsi unggah file gambar QR di bawah.',
+            { title: 'Mode Alternatif Aktif' }
+          );
+        });
+    }, 100);
+  };
+
+  const stopCamera = () => {
+    if (html5QrCode.current) {
+      const scanner = html5QrCode.current;
+      html5QrCode.current = null;
+      try {
+        if (scanner.isScanning) {
+          scanner
+            .stop()
+            .then(() => {
+              try { scanner.clear(); } catch {}
+            })
+            .catch(() => {});
+        } else {
+          try { scanner.clear(); } catch {}
+        }
+      } catch (e) {
+        console.warn('Error saat menutup scanner kamera:', e);
+      }
+    }
+    setIsCameraActive(false);
+    setActiveTargetField(null);
+  };
+
+  const handleScanFromImage = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      // 1. Matikan kamera jika sedang aktif sebelum scan file
+      if (html5QrCode.current) {
+        try {
+          if (html5QrCode.current.isScanning) {
+            await html5QrCode.current.stop();
+          }
+          html5QrCode.current.clear();
+        } catch (stopErr) {
+          console.warn('Gagal menghentikan scanner kamera sebelum scan file:', stopErr);
+        }
+      }
+
+      const scanner = new Html5Qrcode('qr-reader-handover');
+      html5QrCode.current = scanner;
+
+      const rawDecoded = await scanner.scanFile(file, false);
+      const decodedText = (rawDecoded || '').trim();
+
+      if (activeTargetField === 'forceTicket') {
+        setForceTicket(decodedText);
+      } else {
+        setTicketQr(decodedText);
+      }
+      toast.success(`Berhasil memindai QR Tiket: ${decodedText}`, { title: 'Scan Berhasil' });
+      stopCamera();
+    } catch (err) {
+      console.warn('Gagal membaca QR dari file:', err);
+      toast.error('Tidak ditemukan kode QR yang terbaca pada gambar. Pastikan gambar jelas dan tidak terpotong.', { title: 'QR Tidak Terbaca' });
+    } finally {
+      if (e.target) e.target.value = '';
+    }
+  };
+
   const handleHandoverSubmit = async (e) => {
     e.preventDefault();
     const cleanOtp = otpCode.trim();
+    const cleanTicket = ticketQr.trim().toUpperCase();
 
-    if (
-      !recipientName.trim() ||
-      !tripQr.trim() ||
-      !ticketQr.trim() ||
-      !cleanOtp
-    ) {
+    if (!recipientName.trim() || !cleanTicket || !cleanOtp) {
       toast.warning(
-        'Mohon lengkapi Nama, QR Trip, QR Resi Paket, dan Kode OTP!',
+        'Mohon lengkapi Nama Penerima, QR Tiket/Resi Paket, dan Kode OTP!',
         { title: 'Data Belum Lengkap' }
       );
       return;
@@ -92,8 +211,7 @@ export default function OperatorHandover() {
       setIsSubmitting(true);
 
       const payload = {
-        qrCodeTrip: tripQr.trim().toUpperCase(),
-        qrCodeTicket: ticketQr.trim().toUpperCase(),
+        qrCodeTicket: cleanTicket,
         posId: String(posId),
         scanType: 'checkin_destination',
         otpClaim: cleanOtp,
@@ -108,26 +226,24 @@ export default function OperatorHandover() {
             `HO-${Math.floor(900 + Math.random() * 90)}`
         ),
         recipient: recipientName.trim(),
-        ticket: ticketQr.trim().toUpperCase(),
+        ticket: cleanTicket,
         otp: cleanOtp,
         status: 'Escrow Released & Selesai',
         time: 'Baru saja',
       };
 
-      setHandoverHistory([newLog, ...handoverHistory]);
+      saveHandoverHistory([newLog, ...handoverHistory]);
       setRecipientName('');
-      setTripQr('');
       setTicketQr('');
       setOtpCode('');
 
       toast.success(
         res.data?.message ||
-          'Verifikasi Handover sukses! Dana escrow dicairkan ke Mitra.',
+          'Verifikasi Handover sukses! Paket diserahkan dan dana escrow dicairkan ke Mitra.',
         { title: 'Handover Selesai' }
       );
     } catch (error) {
       console.error('Gagal mengirim data handover:', error);
-
       toast.error(
         error.response?.data?.message ||
           'Gagal memproses verifikasi ke server.',
@@ -143,7 +259,7 @@ export default function OperatorHandover() {
 
     if (!forceTicket.trim() || !forcePosId.trim()) {
       toast.warning(
-        'Nomor Tiket dan ID Pos wajib diisi untuk force release!',
+        'Nomor Tiket dan ID Pos wajib diisi untuk penyelesaian manual!',
         { title: 'Data Kurang' }
       );
       return;
@@ -156,6 +272,7 @@ export default function OperatorHandover() {
         qrCodeTicket: forceTicket.trim().toUpperCase(),
         posId: String(forcePosId),
         ...(forceOtp ? { otpClaim: forceOtp.trim() } : {}),
+        ...(forceReason ? { reason: forceReason.trim() } : {}),
       };
 
       const res = await apiClient.post(
@@ -165,19 +282,20 @@ export default function OperatorHandover() {
 
       toast.success(
         res.data?.message ||
-          'Intervensi darurat berhasil! Escrow dicairkan secara manual.',
-        { title: 'Force Release Berhasil' }
+          'Penyelesaian tiket manual berhasil! Escrow dicairkan secara manual.',
+        { title: 'Bypass Berhasil' }
       );
 
       setShowForceModal(false);
       setForceTicket('');
       setForceOtp('');
+      setForceReason('');
     } catch (error) {
-      console.error('Gagal force release:', error);
+      console.error('Gagal bypass tiket manual:', error);
 
       toast.error(
         error.response?.data?.message ||
-          'Gagal melakukan intervensi darurat.',
+          'Gagal melakukan penyelesaian manual.',
         { title: 'Gagal' }
       );
     } finally {
@@ -186,42 +304,39 @@ export default function OperatorHandover() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
-      <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-neutral-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <span
-              className="w-2 h-2 rounded-full animate-pulse"
-              style={{ backgroundColor: PRIMARY_ACCENT }}
-            />
-
-            <span
-              className="text-[12px] font-bold uppercase tracking-widest flex items-center gap-1 flex-wrap min-w-0"
-              style={{ color: PRIMARY_COLOR }}
-            >
-              <UserCheck className="w-3 h-3" />
-              Validasi Handover
-            </span>
+    <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter'] relative">
+      {/* ── BANNER GRADIENT ── */}
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] p-6 text-white shadow-card sm:p-8">
+        <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10" />
+        <div className="absolute bottom-0 right-32 h-28 w-28 rounded-full bg-accent/20" />
+        <div className="relative flex flex-col gap-4 pb-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
+              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-accent flex items-center gap-1.5">
+                <UserCheck className="w-3.5 h-3.5" /> Validasi Handover
+              </span>
+            </div>
+            <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight break-words">
+              Handover & OTP Serah Paket
+            </h1>
+            <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
+              Pindai tiket paket penerima dan masukkan 6-digit OTP klaim untuk serah terima & pelepasan escrow.
+            </p>
           </div>
 
-          <h1 className="text-[21px] sm:text-[23px] font-bold text-neutral-800 break-words">
-            Handover & OTP
-          </h1>
-
-          <p className="text-[13px] sm:text-[14px] text-neutral-400 mt-0.5">
-            Validasi OTP untuk pencairan escrow paket.
-          </p>
+          <button
+            type="button"
+            onClick={() => setShowForceModal(true)}
+            className="px-4 py-2.5 bg-amber-400/20 hover:bg-amber-400/30 border border-amber-300/40 text-amber-200 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2 transition cursor-pointer self-start sm:self-auto shrink-0 shadow-sm backdrop-blur"
+          >
+            <AlertTriangle className="w-4 h-4 text-amber-300" />
+            <span>Penyelesaian Manual (Bypass)</span>
+          </button>
         </div>
-
-        <button
-          type="button"
-          onClick={() => setShowForceModal(true)}
-          className="px-4 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-xl text-[13px] font-bold flex items-center gap-1.5 transition cursor-pointer shrink-0"
-        >
-          <AlertTriangle className="w-3.5 h-3.5" />
-          <span>Bantuan Darurat (Force Release HP Rusak)</span>
-        </button>
-      </div>
+        <div className="absolute bottom-4 left-6 right-6 border-t border-dashed border-white/25 sm:left-8 sm:right-8" />
+        <span className="absolute bottom-[11px] right-6 h-2.5 w-2.5 rounded-full border-2 border-white bg-accent sm:right-8" />
+      </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <div className="lg:col-span-1 bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 space-y-4">
@@ -235,9 +350,10 @@ export default function OperatorHandover() {
           >
             <input type="hidden" value={posId} />
 
+            {/* NAMA PENERIMA */}
             <div>
               <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
-                PENERIMA
+                NAMA PENERIMA PAKET *
               </label>
 
               <input
@@ -250,25 +366,23 @@ export default function OperatorHandover() {
               />
             </div>
 
+            {/* QR TIKET / RESI PAKET */}
             <div>
-              <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
-                QR CODE TRIP MITRA
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider">
+                  QR TIKET / RESI PAKET *
+                </label>
 
-              <input
-                type="text"
-                required
-                placeholder="cth: TRIP-A2D4CS13"
-                value={tripQr}
-                onChange={(e) => setTripQr(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 focus:outline-none font-mono font-medium text-[13px] uppercase"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
-                QR TIKET / RESI PAKET
-              </label>
+                <button
+                  type="button"
+                  onClick={() => startCamera('ticket')}
+                  className="flex items-center gap-1 text-[11px] font-bold hover:underline cursor-pointer"
+                  style={{ color: PRIMARY_COLOR }}
+                >
+                  <ScanLine className="w-3 h-3" />
+                  Buka Kamera
+                </button>
+              </div>
 
               <input
                 type="text"
@@ -280,9 +394,10 @@ export default function OperatorHandover() {
               />
             </div>
 
+            {/* OTP CLAIM 6-DIGIT */}
             <div>
               <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
-                KODE OTP 6-DIGIT PENERIMA
+                KODE OTP 6-DIGIT PENERIMA *
               </label>
 
               <input
@@ -305,6 +420,12 @@ export default function OperatorHandover() {
               className="w-full py-3 disabled:opacity-50 text-white text-[13px] font-bold rounded-xl transition shadow-sm cursor-pointer flex items-center justify-center gap-1.5 mt-1"
               style={{
                 backgroundColor: PRIMARY_COLOR,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = PRIMARY_HOVER;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = PRIMARY_COLOR;
               }}
             >
               <ShieldCheck className="w-3.5 h-3.5" />
@@ -391,23 +512,18 @@ export default function OperatorHandover() {
         </div>
       </div>
 
+      {/* MODAL PENYELESAIAN MANUAL (BYPASS FINANSIAL) */}
       <BaseModal
         isOpen={showForceModal}
         onClose={() => setShowForceModal(false)}
-        title="Intervensi Darurat (Force Release)"
-        subtitle="Gunakan fitur ini hanya jika perangkat penerima bermasalah (HP mati/rusak)."
-        maxWidth="max-w-sm"
+        title="Penyelesaian Tiket Manual (Bypass Finansial)"
+        subtitle="Verifikasi identitas fisik KTP jika perangkat pengguna padam / tidak bisa menerima kode OTP."
+        maxWidth="max-w-md"
       >
         <form
           onSubmit={handleForceReleaseSubmit}
           className="space-y-3 text-[13px]"
         >
-          <div className="bg-amber-50 p-2.5 rounded-xl border border-amber-200 text-amber-800 text-[12px]">
-            <strong>Perhatian:</strong> Tindakan ini akan memaksa pencairan
-            dana escrow dan menyelesaikan pesanan berdasarkan verifikasi manual
-            KTP di pos.
-          </div>
-
           <div>
             <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
               ID POS BERTUGAS
@@ -423,9 +539,20 @@ export default function OperatorHandover() {
           </div>
 
           <div>
-            <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
-              NOMOR TIKET / RESI PAKET
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider">
+                NOMOR TIKET / RESI PAKET *
+              </label>
+              <button
+                type="button"
+                onClick={() => startCamera('forceTicket')}
+                className="flex items-center gap-1 text-[11px] font-bold hover:underline cursor-pointer"
+                style={{ color: PRIMARY_COLOR }}
+              >
+                <ScanLine className="w-3 h-3" />
+                Scan Tiket
+              </button>
+            </div>
 
             <input
               type="text"
@@ -439,12 +566,12 @@ export default function OperatorHandover() {
 
           <div>
             <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
-              KODE OTP MANUAL (JIKA ADA)
+              KODE OTP (OPSIONAL JIKA VERIFIKASI KTP)
             </label>
 
             <input
               type="text"
-              placeholder="Opsional jika verifikasi manual KTP"
+              placeholder="Opsional jika verifikasi manual identitas KTP"
               value={forceOtp}
               onChange={(e) =>
                 setForceOtp(e.target.value.replace(/\D/g, ''))
@@ -453,11 +580,25 @@ export default function OperatorHandover() {
             />
           </div>
 
+          <div>
+            <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+              ALASAN / CATATAN AUDIT BYPASS
+            </label>
+
+            <input
+              type="text"
+              placeholder="cth: HP penerima mati/rusak, KTP cocok sesuai resi"
+              value={forceReason}
+              onChange={(e) => setForceReason(e.target.value)}
+              className="w-full px-3.5 py-2 rounded-xl border border-neutral-200 text-[13px]"
+            />
+          </div>
+
           <div className="flex gap-2 pt-2">
             <button
               type="button"
               onClick={() => setShowForceModal(false)}
-              className="flex-1 py-2 bg-neutral-100 text-neutral-700 rounded-xl font-bold cursor-pointer"
+              className="flex-1 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-xl font-bold cursor-pointer transition"
             >
               Batal
             </button>
@@ -465,21 +606,83 @@ export default function OperatorHandover() {
             <button
               type="submit"
               disabled={isForcing}
-              className="flex-1 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold shadow-sm cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1"
+              className="flex-1 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold shadow-sm cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1 transition"
             >
               <Unlock className="w-3.5 h-3.5" />
 
               <span>
                 {isForcing
                   ? 'Memproses...'
-                  : 'Eksekusi Force Release'}
+                  : 'Lepas Dana Escrow'}
               </span>
             </button>
           </div>
         </form>
       </BaseModal>
+
+      {/* CAMERA SCANNER MODAL OVERLAY */}
+      {isCameraActive && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-4 space-y-4 text-center shadow-2xl">
+            <div className="flex items-center justify-between">
+              <h3 className="text-[15px] font-bold text-neutral-800">
+                Pindai QR Tiket / Resi Paket
+              </h3>
+
+              <button
+                type="button"
+                onClick={stopCamera}
+                className="p-1 rounded-full bg-neutral-100 hover:bg-neutral-200 cursor-pointer"
+              >
+                <X className="w-4 h-4 text-neutral-600" />
+              </button>
+            </div>
+
+            <div className="relative w-full h-56 bg-neutral-900 rounded-xl overflow-hidden flex items-center justify-center border border-neutral-200">
+              <div
+                id="qr-reader-handover"
+                className="w-full h-full object-cover"
+              ></div>
+
+              <div
+                className="absolute inset-0 border-2 border-dashed m-6 rounded-lg pointer-events-none flex items-center justify-center"
+                style={{ borderColor: `${PRIMARY_COLOR}99` }}
+              >
+                <p className="text-[12px] text-white bg-black/60 px-2 py-1 rounded">
+                  Arahkan QR ke Kotak Ini
+                </p>
+              </div>
+            </div>
+
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleScanFromImage}
+              accept="image/*"
+              className="hidden"
+            />
+
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full py-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 text-[12px] font-bold rounded-xl cursor-pointer flex items-center justify-center gap-2 transition border border-neutral-300"
+              >
+                <Upload className="w-4 h-4 text-neutral-600" />
+                <span>Unggah Foto / Gambar QR (Scan File)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={stopCamera}
+                className="w-full py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-[12px] font-bold rounded-xl transition cursor-pointer"
+              >
+                Tutup Kamera
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-
-

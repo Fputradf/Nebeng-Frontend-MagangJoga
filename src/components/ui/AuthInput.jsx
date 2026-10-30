@@ -8,6 +8,7 @@ export default function AuthInput({
   togglePassword: externalTogglePassword,
   error,
   id,
+  compact = false,
   ...props
 }) {
   const generatedId = useId();
@@ -36,25 +37,19 @@ export default function AuthInput({
 
   return (
     <div className="w-full">
-
       {/* LABEL */}
       {label && (
         <label
           htmlFor={inputId}
-          className="
-            block
-            mb-2
-            text-sm
-            font-medium
-            text-slate-600
-          "
+          className={`block font-medium text-slate-600 ${
+            compact ? 'mb-1 text-xs font-semibold' : 'mb-2 text-sm'
+          }`}
         >
           {label}
         </label>
       )}
 
       <div className="relative">
-
         {/* INPUT */}
         <input
           id={inputId}
@@ -71,42 +66,24 @@ export default function AuthInput({
           }
           className={`
             w-full
-            h-10
-
-            pl-4
-            ${isPassword ? 'pr-10' : 'pr-4'}
-
+            ${compact ? 'h-9 pl-3.5 text-xs sm:text-sm' : 'h-10 pl-4 text-sm'}
+            ${isPassword ? (compact ? 'pr-9' : 'pr-10') : (compact ? 'pr-3.5' : 'pr-4')}
             bg-white
             border
-
             ${
               error
-                ? `
-                  border-rose-500
-                  focus:border-rose-500
-                  focus:ring-rose-500/20
-                `
-                : `
-                  border-slate-300
-                  focus:border-brand-500
-                  focus:ring-brand-500/20
-                `
+                ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/20'
+                : 'border-slate-300 focus:border-brand-500 focus:ring-brand-500/20'
             }
-
             rounded-lg
-
-            text-sm
-
             font-normal
             text-slate-900
-
             placeholder:text-slate-400
             placeholder:font-normal
-
+            placeholder:text-xs
             outline-none
             focus:ring-2
             focus:ring-offset-0
-
             transition-all
             duration-200
           `}
@@ -123,31 +100,33 @@ export default function AuthInput({
                 ? 'Sembunyikan password'
                 : 'Tampilkan password'
             }
-            className="
+            className={`
               absolute
               inset-y-0
               right-0
-              w-10
-
+              ${compact ? 'w-9' : 'w-10'}
               flex
               items-center
               justify-center
-
               text-slate-400
               hover:text-slate-600
-
+              focus-visible:outline-none
+              focus-visible:ring-2
+              focus-visible:ring-brand-500
+              focus-visible:ring-offset-1
+              rounded-r-lg
               transition-colors
               duration-150
-            "
+              cursor-pointer
+            `}
           >
             {isShowPassword ? (
-              <EyeOff className="w-4 h-4" />
+              <EyeOff className={compact ? 'w-3.5 h-3.5' : 'w-4 h-4'} />
             ) : (
-              <Eye className="w-4 h-4" />
+              <Eye className={compact ? 'w-3.5 h-3.5' : 'w-4 h-4'} />
             )}
           </button>
         )}
-
       </div>
 
       {/* ERROR */}
@@ -155,18 +134,13 @@ export default function AuthInput({
         <p
           id={errorId}
           role="alert"
-          className="
-            mt-1.5
-            ml-1
-            text-xs
-            font-medium
-            text-rose-600
-          "
+          className={`font-medium text-rose-600 ${
+            compact ? 'mt-0.5 ml-1 text-[11px]' : 'mt-1.5 ml-1 text-xs'
+          }`}
         >
           {error}
         </p>
       )}
-
     </div>
   );
 }

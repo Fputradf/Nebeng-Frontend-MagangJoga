@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, Circle, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, GeoJSON, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { 
   MapPin, 
@@ -13,13 +13,18 @@ import {
   AlertTriangle,
   Globe,
   Loader2,
-  X
+  X,
+  Layers,
+  FileCode
 } from 'lucide-react';
 import { SkeletonTableRows } from '../../../components/ui/Skeleton';
 import EmptyState from '../../../components/ui/EmptyState';
 import StatusBadge from '../../../components/ui/StatusBadge';
 import BaseModal from '../../../components/ui/BaseModal';
 import { getAllRegions, createRegion, updateRegion } from '../../../services/regionService';
+import { useConfirm } from '../../../context/ConfirmContext';
+import { parseGeoJSON, cleanGeoJsonCoordinates } from '../../../utils/geoJsonUtil';
+import { INDONESIA_CITIES } from '../../../data/indonesiaCities';
 
 // Fix untuk default icon Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -38,6 +43,7 @@ function ChangeView({ center, zoom = 11 }) {
 }
 
 export default function RegionsManagement() {
+  const confirm = useConfirm();
   const [regions, setRegions] = useState([]);
   const [isLoadingRegions, setIsLoadingRegions] = useState(true);
   const [isFetchingPage, setIsFetchingPage] = useState(false);
@@ -46,7 +52,6 @@ export default function RegionsManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [regionToToggle, setRegionToToggle] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [currentId, setCurrentId] = useState(null);
   const [selectedRegion, setSelectedRegion] = useState(null);
@@ -55,19 +60,73 @@ export default function RegionsManagement() {
   const [formData, setFormData] = useState({
     name: '',
     code: '',
-    radiusKm: 20,
-    latitude: -7.5666,
-    longitude: 110.8316
+    latitude: -6.2088,
+    longitude: 106.8456,
+    boundaryPolygon: '',
   });
 
+  const [selectedCityIndex, setSelectedCityIndex] = useState('');
+  const [citySearchQuery, setCitySearchQuery] = useState('');
   const [isSearchingLocation, setIsSearchingLocation] = useState(false);
-  const [locationSearchQuery, setLocationSearchQuery] = useState('');
+
+  const filteredCitiesList = useMemo(() => {
+    if (!citySearchQuery.trim()) return INDONESIA_CITIES.map((c, i) => ({ ...c, originalIdx: i }));
+    const q = citySearchQuery.toLowerCase();
+    return INDONESIA_CITIES.map((c, i) => ({ ...c, originalIdx: i })).filter(
+      (c) => c.name.toLowerCase().includes(q) || c.province.toLowerCase().includes(q)
+    );
+  }, [citySearchQuery]);
 
   const showNotification = (message, type = 'success') => {
     setNotification({ show: true, message, type });
     setTimeout(() => {
       setNotification({ show: false, message: '', type: 'success' });
     }, 3500);
+  };
+
+  const handleSelectCity = async (e) => {
+    const idxStr = e.target.value;
+    setSelectedCityIndex(idxStr);
+    if (!idxStr && idxStr !== '0') return;
+
+    const cityItem = INDONESIA_CITIES[Number(idxStr)];
+    if (!cityItem) return;
+
+    setFormData(prev => ({
+      ...prev,
+      name: cityItem.name,
+      code: prev.code && isEditing ? prev.code : cityItem.defaultCode,
+    }));
+
+    setIsSearchingLocation(true);
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&polygon_geojson=1&countrycodes=id&limit=1&q=${encodeURIComponent(cityItem.query)}`
+      );
+      const data = await response.json();
+      if (data && data.length > 0) {
+        const { lat, lon, geojson } = data[0];
+        const newLat = parseFloat(lat);
+        const newLng = parseFloat(lon);
+        const cleanedGeoJson = geojson ? cleanGeoJsonCoordinates(geojson) : null;
+        const polyJsonString = cleanedGeoJson ? JSON.stringify(cleanedGeoJson, null, 2) : '';
+
+        setFormData(prev => ({
+          ...prev,
+          latitude: newLat,
+          longitude: newLng,
+          boundaryPolygon: polyJsonString,
+        }));
+        showNotification(`Batas poligon resmi untuk ${cityItem.name} berhasil dimuat!`, 'success');
+      } else {
+        showNotification(`Data batas peta untuk ${cityItem.name} tidak ditemukan.`, 'error');
+      }
+    } catch (err) {
+      console.error('Gagal mengambil batas GeoJSON:', err);
+      showNotification('Gagal menghubungkan ke server peta.', 'error');
+    } finally {
+      setIsSearchingLocation(false);
+    }
   };
 
   // Fungsi fetchRegions tanpa pemicu setState sinkron yang mengganggu Effect
@@ -118,29 +177,42 @@ export default function RegionsManagement() {
   const handleOpenAddModal = () => {
     setIsEditing(false);
     setCurrentId(null);
+    setSelectedCityIndex('');
+    setCitySearchQuery('');
+
     setFormData({
       name: '',
       code: '',
-      radiusKm: 20,
-      latitude: -7.5666,
-      longitude: 110.8316
+      latitude: -6.2088,
+      longitude: 106.8456,
+      boundaryPolygon: '',
     });
-    setLocationSearchQuery('');
     setIsModalOpen(true);
   };
 
   const handleOpenEditModal = (region) => {
     setIsEditing(true);
     setCurrentId(region.id);
+    setCitySearchQuery('');
+    const polyString = region.boundaryPolygon
+      ? (typeof region.boundaryPolygon === 'string'
+          ? region.boundaryPolygon
+          : JSON.stringify(region.boundaryPolygon, null, 2))
+      : '';
+
+    const foundIdx = INDONESIA_CITIES.findIndex(
+      (c) => c.name === region.name || region.name.includes(c.name)
+    );
+    setSelectedCityIndex(foundIdx >= 0 ? String(foundIdx) : '');
+
     setFormData({
       name: region.name,
       code: region.code,
       isActive: region.isActive,
-      radiusKm: region.radiusKm || 20,
-      latitude: region.latitude || -7.5666,
-      longitude: region.longitude || 110.8316
+      latitude: region.latitude || -6.2088,
+      longitude: region.longitude || 106.8456,
+      boundaryPolygon: polyString,
     });
-    setLocationSearchQuery(region.name);
     setIsModalOpen(true);
   };
 
@@ -149,43 +221,32 @@ export default function RegionsManagement() {
     setIsDetailModalOpen(true);
   };
 
-  const handleAutoDetectCoordinate = async () => {
-    if (!locationSearchQuery) return;
-    setIsSearchingLocation(true);
-    try {
-      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationSearchQuery)}`);
-      const data = await response.json();
-      if (data && data.length > 0) {
-        const { lat, lon, display_name } = data[0];
-        setFormData(prev => ({
-          ...prev,
-          latitude: parseFloat(lat),
-          longitude: parseFloat(lon),
-          name: prev.name || display_name.split(',')[0]
-        }));
-        showNotification('Koordinat wilayah berhasil ditemukan!', 'success');
-      } else {
-        showNotification('Lokasi tidak ditemukan di peta. Coba kata kunci lain.', 'error');
-      }
-    } catch (err) {
-      console.error('Gagal mendeteksi koordinat:', err);
-      showNotification('Gagal menghubungkan ke layanan peta.', 'error');
-    } finally {
-      setIsSearchingLocation(false);
-    }
-  };
-
   const handleSubmitForm = async (e) => {
     e.preventDefault();
-    if (!formData.name || !formData.code) return;
+    if (!formData.name || !formData.code) {
+      showNotification('Silakan pilih kota dari dropdown terlebih dahulu.', 'error');
+      return;
+    }
 
     try {
+      let parsedBoundary = null;
+      if (formData.boundaryPolygon) {
+        try {
+          const rawParsed = typeof formData.boundaryPolygon === 'string'
+            ? JSON.parse(formData.boundaryPolygon)
+            : formData.boundaryPolygon;
+          parsedBoundary = cleanGeoJsonCoordinates(rawParsed);
+        } catch {
+          parsedBoundary = null;
+        }
+      }
+
       const payload = {
         name: formData.name,
         code: formData.code.toUpperCase(),
-        radiusKm: Number(formData.radiusKm),
         latitude: Number(formData.latitude),
-        longitude: Number(formData.longitude)
+        longitude: Number(formData.longitude),
+        boundaryPolygon: parsedBoundary,
       };
 
       if (isEditing) {
@@ -205,20 +266,30 @@ export default function RegionsManagement() {
       setIsModalOpen(false);
     } catch (err) {
       console.error('Gagal menyimpan wilayah:', err);
-      showNotification(err.response?.data?.message || 'Terjadi kesalahan saat menyimpan wilayah.', 'error');
+      const errorMsg = Array.isArray(err.response?.data?.message)
+        ? err.response.data.message.join(', ')
+        : (err.response?.data?.message || 'Terjadi kesalahan saat menyimpan wilayah.');
+      showNotification(errorMsg, 'error');
     }
   };
 
-  const handleConfirmToggleStatus = async () => {
-    if (!regionToToggle) return;
+  const handleToggleStatus = async (region) => {
+    const willDeactivate = region.isActive;
+    const isConfirmed = await confirm({
+      title: willDeactivate ? 'Nonaktifkan Wilayah' : 'Aktifkan Wilayah',
+      message: `Apakah Anda yakin ingin ${willDeactivate ? 'menonaktifkan' : 'mengaktifkan'} wilayah "${region.name}"?`,
+      confirmText: willDeactivate ? 'Ya, Nonaktifkan' : 'Ya, Aktifkan',
+      cancelText: 'Batal',
+      variant: willDeactivate ? 'warning' : 'info',
+    });
+    if (!isConfirmed) return;
 
     try {
-      await updateRegion(regionToToggle.id, {
-        isActive: !regionToToggle.isActive
+      await updateRegion(region.id, {
+        isActive: !region.isActive
       });
-      showNotification(`Status wilayah ${regionToToggle.name} berhasil diubah!`, 'success');
-      setRegionToToggle(null);
-      await fetchRegions(currentPage); // Update data langsung
+      showNotification(`Status wilayah ${region.name} berhasil diubah!`, 'success');
+      await fetchRegions(currentPage);
     } catch (err) {
       console.error('Gagal mengubah status wilayah:', err);
       showNotification('Gagal mengubah status wilayah.', 'error');
@@ -227,32 +298,37 @@ export default function RegionsManagement() {
 
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
-      <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-neutral-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="w-2 h-2 rounded-full bg-[#10367D] animate-pulse"></span>
-            <span className="text-[12px] font-bold uppercase tracking-widest text-[#10367D]">
-              MANAJEMEN WILAYAH & SPASIAL PETA
-            </span>
+      {/* ── BANNER GRADIENT ── */}
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] p-6 text-white shadow-card sm:p-8">
+        <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10" />
+        <div className="absolute bottom-0 right-32 h-28 w-28 rounded-full bg-accent/20" />
+        <div className="relative flex flex-col gap-4 pb-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-accent">
+                MANAJEMEN WILAYAH & SPASIAL PETA
+              </span>
+            </div>
+            <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
+              Kelola Wilayah & Cakupan Operasional
+            </h1>
+            <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
+              Kelola wilayah operasional lengkap dengan titik koordinat dan batas poligon GeoJSON resmi.
+            </p>
           </div>
 
-          <h1 className="text-[21px] sm:text-[23px] font-bold text-neutral-800">
-            Kelola Wilayah & Cakupan Operasional
-          </h1>
-
-          <p className="text-[13px] sm:text-[14px] text-neutral-400 mt-0.5">
-            Tambah wilayah operasional lengkap dengan titik pusat koordinat dan radius peta otomatis.
-          </p>
+          <button 
+            onClick={handleOpenAddModal}
+            className="flex items-center gap-2 px-4 py-2.5 bg-accent hover:bg-accent/90 text-slate-900 rounded-2xl text-xs sm:text-sm font-bold transition cursor-pointer shadow-sm shrink-0 self-start sm:self-auto"
+          >
+            <Plus size={16} />
+            <span>Tambah Wilayah Baru</span>
+          </button>
         </div>
-
-        <button 
-          onClick={handleOpenAddModal}
-          className="flex items-center gap-2 px-4 py-2 bg-[#10367D] hover:bg-[#0C2C66] text-white rounded-full text-[13px] sm:text-[14px] font-bold transition cursor-pointer shadow-sm shrink-0"
-        >
-          <Plus size={14} />
-          <span>Tambah Wilayah Baru</span>
-        </button>
-      </div>
+        <div className="absolute bottom-4 left-6 right-6 border-t border-dashed border-white/25 sm:left-8 sm:right-8" />
+        <span className="absolute bottom-[11px] right-6 h-2.5 w-2.5 rounded-full border-2 border-white bg-accent sm:right-8" />
+      </section>
 
       {notification.show && (
         <div className={`p-4 rounded-2xl flex items-center justify-between text-[14px] font-bold shadow-sm transition-all ${
@@ -293,7 +369,7 @@ export default function RegionsManagement() {
             <thead>
               <tr className="bg-gray-50/70 text-neutral-400 text-[12px] uppercase tracking-wider font-bold">
                 <th className="py-3 px-5">Kode & Wilayah</th>
-                <th className="py-3 px-5">Radius Cakupan</th>
+                <th className="py-3 px-5">Cakupan Batas Spasial</th>
                 <th className="py-3 px-5">Titik Pusat Koordinat</th>
                 <th className="py-3 px-5">Status</th>
                 <th className="py-3 px-5 text-center">Aksi</th>
@@ -316,7 +392,17 @@ export default function RegionsManagement() {
                         </div>
                       </div>
                     </td>
-                    <td className="py-3.5 px-5 font-bold text-neutral-700">{region.radiusKm || 20} KM</td>
+                    <td className="py-3.5 px-5">
+                      {region.boundaryPolygon ? (
+                        <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200/60 px-2.5 py-1 rounded-full">
+                          <Layers size={11} /> Poligon GeoJSON Resmi
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-medium text-neutral-400 bg-neutral-50 px-2.5 py-1 rounded-full">
+                          Belum Diset
+                        </span>
+                      )}
+                    </td>
                     <td className="py-3.5 px-5 font-mono text-neutral-500">
                       {region.latitude && region.longitude 
                         ? `${Number(region.latitude).toFixed(4)}, ${Number(region.longitude).toFixed(4)}`
@@ -329,13 +415,13 @@ export default function RegionsManagement() {
                     </td>
                     <td className="py-3.5 px-5">
                       <div className="flex items-center justify-center gap-1.5">
-                        <button onClick={() => handleOpenDetailModal(region)} className="p-1.5 bg-[#10367D]/10 text-[#10367D] rounded-lg cursor-pointer">
+                        <button onClick={() => handleOpenDetailModal(region)} className="p-1.5 bg-[#10367D]/10 text-[#10367D] rounded-lg cursor-pointer" title="Lihat Peta Detail">
                           <Eye size={13} />
                         </button>
-                        <button onClick={() => handleOpenEditModal(region)} className="p-1.5 bg-blue-50 text-blue-600 rounded-lg cursor-pointer">
+                        <button onClick={() => handleOpenEditModal(region)} className="p-1.5 bg-blue-50 text-blue-600 rounded-lg cursor-pointer" title="Edit Wilayah">
                           <Edit3 size={13} />
                         </button>
-                        <button onClick={() => setRegionToToggle(region)} className={`p-1.5 rounded-lg cursor-pointer ${region.isActive ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                        <button onClick={() => handleToggleStatus(region)} className={`p-1.5 rounded-lg cursor-pointer ${region.isActive ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'}`} title="Ubah Status">
                           {region.isActive ? <XCircle size={13} /> : <CheckCircle2 size={13} />}
                         </button>
                       </div>
@@ -384,21 +470,39 @@ export default function RegionsManagement() {
         isOpen={isDetailModalOpen}
         onClose={() => setIsDetailModalOpen(false)}
         title={selectedRegion?.name}
-        subtitle={`Kode: ${selectedRegion?.code} • Radius: ${selectedRegion?.radiusKm || 20} KM`}
-        maxWidth="max-w-lg"
+        subtitle={`Kode: ${selectedRegion?.code} • Batas Spasial Poligon Resmi`}
+        maxWidth="max-w-xl"
       >
         <div className="space-y-3 text-[13px]">
-          <div className="rounded-xl overflow-hidden border border-neutral-200 h-60 relative">
+          <div className="flex items-center justify-between bg-neutral-50 p-2.5 rounded-xl border border-neutral-200 text-[12px]">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>
+              <span className="font-bold text-neutral-700">Tipe Batas:</span>
+              <span className="text-neutral-600 font-medium">
+                {selectedRegion?.boundaryPolygon ? 'Poligon Batas GeoJSON Resmi' : 'Belum Diset'}
+              </span>
+            </div>
+            {selectedRegion?.boundaryPolygon && (
+              <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 font-bold text-[10px]">
+                Valid Geofence
+              </span>
+            )}
+          </div>
+
+          <div className="rounded-xl overflow-hidden border border-neutral-200 h-64 relative">
             {selectedRegion?.latitude && selectedRegion?.longitude ? (
               <div className="absolute inset-0 z-0">
                 <MapContainer center={[selectedRegion.latitude, selectedRegion.longitude]} zoom={11} style={{ height: '100%', width: '100%', zIndex: 0 }}>
                   <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                   <Marker position={[selectedRegion.latitude, selectedRegion.longitude]} />
-                  <Circle 
-                    center={[selectedRegion.latitude, selectedRegion.longitude]} 
-                    radius={(selectedRegion.radiusKm || 20) * 1000} 
-                    pathOptions={{ color: '#10367D', fillColor: '#10367D', fillOpacity: 0.15 }}
-                  />
+                  
+                  {selectedRegion.boundaryPolygon && parseGeoJSON(selectedRegion.boundaryPolygon) && (
+                    <GeoJSON 
+                      key={JSON.stringify(selectedRegion.boundaryPolygon)}
+                      data={parseGeoJSON(selectedRegion.boundaryPolygon)}
+                      pathOptions={{ color: '#10367D', fillColor: '#10367D', fillOpacity: 0.2, weight: 2 }}
+                    />
+                  )}
                   <ChangeView center={[selectedRegion.latitude, selectedRegion.longitude]} />
                 </MapContainer>
               </div>
@@ -416,45 +520,72 @@ export default function RegionsManagement() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title={isEditing ? 'Ubah Wilayah Operasional' : 'Tambah Wilayah Baru'}
-        subtitle="Cari nama lokasi untuk mendeteksi koordinat dan atur radius cakupan."
-        maxWidth="max-w-lg"
+        subtitle="Pilih kota di Indonesia untuk otomatis memuat titik koordinat dan batas GeoJSON resmi."
+        maxWidth="max-w-xl"
       >
-        <form onSubmit={handleSubmitForm} className="space-y-3 text-[13px]">
+        <form onSubmit={handleSubmitForm} className="space-y-3.5 text-[13px]">
 
-          <div className="space-y-1">
-            <label className="text-[12px] font-bold text-[#10367D] uppercase flex items-center gap-1">
-              <Globe size={12} /> Cari Nama Kota / Wilayah (Otomatis Deteksi Koordinat)
+          <div className="space-y-1.5">
+            <label className="text-[12px] font-bold text-[#10367D] uppercase flex items-center justify-between">
+              <span className="flex items-center gap-1">
+                <Globe size={12} /> Pilih Kota / Wilayah di Indonesia ({INDONESIA_CITIES.length} Daerah)
+              </span>
+              {isSearchingLocation && (
+                <span className="flex items-center gap-1 text-[11px] text-[#10367D] font-normal lowercase">
+                  <Loader2 size={11} className="animate-spin" /> Mengambil batas GeoJSON resmi...
+                </span>
+              )}
             </label>
-            <div className="flex gap-2">
+
+            <div className="relative">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
               <input
                 type="text"
-                placeholder="Misal: Surakarta, Yogyakarta, Semarang..."
-                value={locationSearchQuery}
-                onChange={(e) => setLocationSearchQuery(e.target.value)}
-                className="flex-1 bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-medium"
+                placeholder="Ketik untuk mencari cepat nama kota / kabupaten... (misal: Bandung, Sleman, Merauke)"
+                value={citySearchQuery}
+                onChange={(e) => setCitySearchQuery(e.target.value)}
+                className="w-full bg-white border border-neutral-200 rounded-xl pl-8 pr-3 py-1.5 text-[12px] font-medium text-neutral-800 placeholder-neutral-400 focus:outline-none focus:ring-1 focus:ring-[#10367D]"
               />
-              <button
-                type="button"
-                onClick={handleAutoDetectCoordinate}
-                disabled={isSearchingLocation}
-                className="px-3 py-2 bg-[#10367D] hover:bg-[#0C2C66] text-white font-bold rounded-xl flex items-center gap-1 cursor-pointer disabled:opacity-50"
-              >
-                {isSearchingLocation ? <Loader2 size={13} className="animate-spin" /> : <Search size={13} />}
-                <span>Cari</span>
-              </button>
             </div>
+
+            <select
+              value={selectedCityIndex}
+              onChange={handleSelectCity}
+              disabled={isSearchingLocation}
+              className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-bold text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#10367D] transition cursor-pointer"
+            >
+              <option value="">-- Pilih Kota / Kabupaten untuk Memuat Batas Wilayah ({filteredCitiesList.length} Opsi) --</option>
+              {Object.entries(
+                filteredCitiesList.reduce((acc, c) => {
+                  acc[c.province] = acc[c.province] || [];
+                  acc[c.province].push(c);
+                  return acc;
+                }, {})
+              ).map(([prov, cityItems]) => (
+                <optgroup key={prov} label={prov}>
+                  {cityItems.map((c) => (
+                    <option key={`${c.name}-${c.originalIdx}`} value={c.originalIdx}>
+                      {c.name} ({c.province})
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1">
-              <label className="text-[12px] font-bold text-neutral-500 uppercase">Nama Wilayah</label>
+              <label className="text-[12px] font-bold text-neutral-500 uppercase flex items-center justify-between">
+                <span>Nama Wilayah</span>
+                <span className="text-[10px] text-neutral-400 font-normal">(Otomatis Terisi)</span>
+              </label>
               <input
                 type="text"
                 required
-                placeholder="Contoh: Region Surakarta"
+                disabled
+                placeholder="Pilih kota di atas..."
                 value={formData.name}
-                onChange={(e) => setFormData({...formData, name: e.target.value})}
-                className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-medium"
+                className="w-full bg-neutral-100 border border-neutral-300 rounded-xl px-3 py-2 text-[13px] font-bold text-neutral-700 cursor-not-allowed select-none"
               />
             </div>
             <div className="space-y-1">
@@ -462,7 +593,7 @@ export default function RegionsManagement() {
               <input
                 type="text"
                 required
-                placeholder="Contoh: REG-SKT"
+                placeholder="Contoh: REG-JKT"
                 value={formData.code}
                 onChange={(e) => setFormData({...formData, code: e.target.value})}
                 className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-medium font-mono uppercase"
@@ -470,38 +601,57 @@ export default function RegionsManagement() {
             </div>
           </div>
 
-          <div className="space-y-1 bg-neutral-50 p-3 rounded-xl border border-neutral-200">
-            <div className="flex justify-between items-center mb-1">
-              <label className="text-[12px] font-bold text-neutral-600 uppercase">
-                Radius Cakupan Operasional
+          <div className="space-y-2 bg-neutral-50 p-3.5 rounded-xl border border-neutral-200">
+            <div className="flex items-center justify-between">
+              <label className="text-[12px] font-bold text-neutral-700 uppercase flex items-center gap-1.5">
+                <Layers size={13} className="text-[#10367D]" />
+                Batas Wilayah Spasial GeoJSON
               </label>
-              <span className="font-bold text-[#10367D] text-[14px] font-mono">
-                {formData.radiusKm} KM
-              </span>
+              <div className="text-[11px] font-bold text-[#10367D]">
+                {formData.boundaryPolygon ? '✓ Batas Poligon Dimuat' : 'Belum Ada Poligon'}
+              </div>
             </div>
-            <input
-              type="range"
-              min="5"
-              max="100"
-              step="5"
-              value={formData.radiusKm}
-              onChange={(e) => setFormData({...formData, radiusKm: Number(e.target.value)})}
-              className="w-full accent-[#10367D] cursor-pointer"
-            />
+
+            <div className="space-y-1 pt-1">
+              <div className="flex justify-between items-center text-[11px]">
+                <span className="font-bold text-neutral-600 flex items-center gap-1">
+                  <FileCode size={11} /> Definisi Batas Poligon GeoJSON (Feature / Geometry):
+                </span>
+                {formData.boundaryPolygon && (
+                  <button 
+                    type="button" 
+                    onClick={() => setFormData({...formData, boundaryPolygon: ''})}
+                    className="text-rose-500 hover:underline cursor-pointer font-bold"
+                  >
+                    Hapus Poligon
+                  </button>
+                )}
+              </div>
+              <textarea
+                rows={3}
+                placeholder='Pilih kota di dropdown atas untuk mengisi batas GeoJSON resmi otomatis, atau tempel GeoJSON poligon kustom di sini.'
+                value={formData.boundaryPolygon}
+                onChange={(e) => setFormData({...formData, boundaryPolygon: e.target.value})}
+                className="w-full bg-white border border-neutral-200 rounded-lg p-2 font-mono text-[11px] text-neutral-700 leading-tight focus:outline-none focus:ring-1 focus:ring-[#10367D]"
+              />
+            </div>
           </div>
 
           <div className="space-y-1">
-            <label className="text-[12px] font-bold text-neutral-500 uppercase">Preview Titik Pusat di Peta</label>
-            <div className="rounded-xl overflow-hidden border border-neutral-200 h-40 relative z-0">
+            <label className="text-[12px] font-bold text-neutral-500 uppercase">Preview Batas di Peta Leaflet</label>
+            <div className="rounded-xl overflow-hidden border border-neutral-200 h-44 relative z-0">
               <div className="absolute inset-0 z-0">
                 <MapContainer center={[formData.latitude, formData.longitude]} zoom={11} style={{ height: '100%', width: '100%', zIndex: 0 }}>
                   <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                   <Marker position={[formData.latitude, formData.longitude]} />
-                  <Circle 
-                    center={[formData.latitude, formData.longitude]} 
-                    radius={(formData.radiusKm || 20) * 1000} 
-                    pathOptions={{ color: '#10367D', fillColor: '#10367D', fillOpacity: 0.15 }}
-                  />
+                  
+                  {formData.boundaryPolygon && parseGeoJSON(formData.boundaryPolygon) && (
+                    <GeoJSON 
+                      key={formData.boundaryPolygon}
+                      data={parseGeoJSON(formData.boundaryPolygon)}
+                      pathOptions={{ color: '#10367D', fillColor: '#10367D', fillOpacity: 0.18, weight: 2 }}
+                    />
+                  )}
                   <ChangeView center={[formData.latitude, formData.longitude]} />
                 </MapContainer>
               </div>
@@ -518,7 +668,8 @@ export default function RegionsManagement() {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 text-[13px] font-bold text-white bg-[#10367D] hover:bg-[#0C2C66] rounded-full flex items-center gap-1 cursor-pointer shadow-sm transition"
+              disabled={isSearchingLocation}
+              className="px-4 py-2 text-[13px] font-bold text-white bg-[#10367D] hover:bg-[#0C2C66] rounded-full flex items-center gap-1 cursor-pointer shadow-sm transition disabled:opacity-50"
             >
               <Save size={13}/>
               Simpan Wilayah
@@ -526,31 +677,6 @@ export default function RegionsManagement() {
           </div>
 
         </form>
-      </BaseModal>
-
-      <BaseModal
-        isOpen={Boolean(regionToToggle)}
-        onClose={() => setRegionToToggle(null)}
-        title="Konfirmasi Status Wilayah"
-        subtitle="Sistem Manajemen Operasional"
-        maxWidth="max-w-sm"
-      >
-        <div className="space-y-3 text-[13px] text-center">
-          <div className="w-10 h-10 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto">
-            <AlertTriangle size={20} />
-          </div>
-          <p className="text-neutral-600">
-            Apakah Anda yakin ingin {regionToToggle?.isActive ? 'menonaktifkan' : 'mengaktifkan'} wilayah <strong>{regionToToggle?.name}</strong>?
-          </p>
-          <div className="flex gap-2 pt-2">
-            <button onClick={() => setRegionToToggle(null)} className="flex-1 py-2 bg-neutral-100 text-neutral-700 rounded-full font-bold cursor-pointer">
-              Batal
-            </button>
-            <button onClick={handleConfirmToggleStatus} className="flex-1 py-2 bg-[#10367D] hover:bg-[#0C2C66] text-white rounded-full font-bold cursor-pointer shadow-sm transition">
-              Ya, Konfirmasi
-            </button>
-          </div>
-        </div>
       </BaseModal>
 
     </div>

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+﻿import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 import CustomerSidebar from './components/CustomerSidebar';
 import CustomerProfileModal from './components/CustomerProfileModal';
@@ -12,7 +12,10 @@ const CUSTOMER_MENU_PATH = {
   'Onboarding Biometrik': 'onboarding',
   'Cari & Booking Trip': 'booking',
   'Tickets & Digital QR': 'tickets',
+  'Voucher Saya': 'vouchers',
   'Rewards & Penukaran': 'rewards',
+  'Dompet Saya': 'wallet',
+  'Pusat Bantuan & FAQ': 'bantuan',
   'Profil Saya': 'profile',
 };
 
@@ -51,6 +54,7 @@ export default function CustomerLayout() {
 
   return (
     <AppShell
+      role="customer"
       sidebar={
         <CustomerSidebar
           activeMenu={activeMenu}

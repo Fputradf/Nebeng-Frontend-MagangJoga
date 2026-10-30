@@ -16,6 +16,7 @@ import {
   Ticket as TicketIcon,
   Camera,
   KeyRound,
+  RotateCw,
 } from 'lucide-react';
 
 import { useAuth } from '../../../context/AuthContext';
@@ -74,8 +75,52 @@ export default function CustomerAccountSettings() {
   const [selectedAvatarFile, setSelectedAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [avatarError, setAvatarError] = useState('');
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const fileInputRef = useRef(null);
+
+  const refreshAccountData = async () => {
+    setIsRefreshing(true);
+    try {
+      const [resUser, resOrders] = await Promise.all([
+        apiClient.get('/auth/me'),
+        apiClient.get('/orders/me'),
+      ]);
+
+      if (resUser.data) {
+        setLiveUser(resUser.data);
+        const userNik =
+          resUser.data.nik ||
+          resUser.data.profile?.ktpNumber ||
+          resUser.data.ktpNumber ||
+          '';
+
+        setDraft({
+          fullName: resUser.data.name || '',
+          phone: resUser.data.phone || '',
+          nik: userNik,
+        });
+
+        if (resUser.data.avatar) {
+          setAvatarPreview(getFullFileUrl(resUser.data.avatar));
+        } else if (customerProfile?.photoDataUrl) {
+          setAvatarPreview(customerProfile.photoDataUrl);
+        }
+      }
+
+      if (resOrders.data) {
+        const ordersData = Array.isArray(resOrders.data)
+          ? resOrders.data
+          : resOrders.data.data || [];
+        setCustomerOrders(ordersData);
+      }
+      toast.success('Data akun dan status verifikasi berhasil diperbarui.', { title: 'Data Terkini' });
+    } catch (err) {
+      console.error('Gagal menyegarkan data:', err);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -259,24 +304,57 @@ export default function CustomerAccountSettings() {
 
   return (
     <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
-      <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-neutral-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: PRIMARY_COLOR }} />
-            <span className="text-[12px] font-bold uppercase tracking-widest flex items-center gap-1" style={{ color: PRIMARY_COLOR }}>
-              <Settings className="w-3 h-3" /> AKUN & IDENTITAS
-            </span>
+      {/* ── BANNER ── */}
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] p-6 text-white shadow-card sm:p-8">
+        <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10" />
+        <div className="absolute bottom-0 right-32 h-28 w-28 rounded-full bg-accent/20" />
+        <div className="relative flex flex-col gap-4 pb-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-accent flex items-center gap-1.5">
+                <Settings className="w-3.5 h-3.5" /> AKUN & IDENTITAS
+              </span>
+            </div>
+            <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
+              Pengaturan Akun
+            </h1>
+            <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
+              Kelola data diri, PIN keamanan transaksi, dan lihat status verifikasi akun Anda.
+            </p>
           </div>
 
-          <h1 className="text-[21px] sm:text-[23px] font-bold text-neutral-800">
-            Pengaturan Akun
-          </h1>
+          <div className="flex items-center gap-3 self-start sm:self-auto">
+            {/* Status Verifikasi Pill */}
+            <div className="px-4 py-2 rounded-2xl bg-white/15 border border-white/25 flex items-center gap-2.5 shadow-xs">
+              <div className="w-8 h-8 rounded-xl bg-accent text-brand-900 flex items-center justify-center font-black shrink-0 shadow-xs">
+                <ShieldCheck className="w-4 h-4 text-brand-900" />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-blue-100 uppercase tracking-wider block">
+                  Status Akun
+                </span>
+                <span className="text-xs font-bold text-white">
+                  {isVerified ? 'Terverifikasi' : 'Terdaftar'}
+                </span>
+              </div>
+            </div>
 
-          <p className="text-[13px] sm:text-[14px] text-neutral-400 mt-0.5">
-            Kelola data diri, PIN keamanan transaksi, dan lihat status verifikasi akun Anda.
-          </p>
+            {/* Refresh Button */}
+            <button
+              type="button"
+              onClick={refreshAccountData}
+              disabled={isRefreshing}
+              className="p-3 bg-white/15 hover:bg-white/25 border border-white/25 rounded-2xl text-white transition cursor-pointer shadow-xs disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              title="Segarkan data akun"
+            >
+              <RotateCw className={`w-4 h-4 text-white ${isRefreshing ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
         </div>
-      </div>
+        <div className="absolute bottom-4 left-6 right-6 border-t border-dashed border-white/25 sm:left-8 sm:right-8" />
+        <span className="absolute bottom-[11px] right-6 h-2.5 w-2.5 rounded-full border-2 border-white bg-accent sm:right-8" />
+      </section>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard
@@ -418,9 +496,7 @@ export default function CustomerAccountSettings() {
                   type="text"
                   value={draft.fullName}
                   onChange={(e) => setDraft({ ...draft, fullName: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none"
-                  onFocus={(e) => (e.currentTarget.style.borderColor = PRIMARY_COLOR)}
-                  onBlur={(e) => (e.currentTarget.style.borderColor = '#e5e7eb')}
+                  className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all"
                 />
               ) : (
                 <p className="px-3.5 py-2.5 bg-neutral-50 rounded-xl font-bold text-neutral-800 border border-transparent">
@@ -438,8 +514,7 @@ export default function CustomerAccountSettings() {
                 <button
                   type="button"
                   onClick={() => setShowNik(!showNik)}
-                  className="text-[11px] font-bold flex items-center gap-1 cursor-pointer"
-                  style={{ color: PRIMARY_COLOR }}
+                  className="text-[11px] font-bold flex items-center gap-1 cursor-pointer text-brand-600 hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded"
                 >
                   {showNik ? <EyeOff size={11} /> : <Eye size={11} />}
                   <span>{showNik ? 'Sembunyikan' : 'Tampilkan'}</span>
@@ -463,15 +538,11 @@ export default function CustomerAccountSettings() {
                     type="text"
                     value={draft.phone}
                     onChange={(e) => setDraft({ ...draft, phone: e.target.value.replace(/[^\d+]/g, '') })}
-                    className={`w-full px-3.5 py-2.5 bg-neutral-50 border rounded-xl font-bold text-neutral-800 focus:outline-none ${
-                      draft.phone.trim() && !isPhoneValid ? 'border-rose-300 focus:border-rose-400' : 'border-neutral-200'
+                    className={`w-full px-3.5 py-2.5 bg-neutral-50 border rounded-xl font-bold text-neutral-800 focus:outline-none transition-all ${
+                      draft.phone.trim() && !isPhoneValid
+                        ? 'border-rose-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
+                        : 'border-neutral-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'
                     }`}
-                    onFocus={(e) => {
-                      if (!(draft.phone.trim() && !isPhoneValid)) e.currentTarget.style.borderColor = PRIMARY_COLOR;
-                    }}
-                    onBlur={(e) => {
-                      if (!(draft.phone.trim() && !isPhoneValid)) e.currentTarget.style.borderColor = '#e5e7eb';
-                    }}
                   />
                   {draft.phone.trim() && !isPhoneValid && (
                     <p className="text-[11px] text-rose-600 font-bold mt-1">Format nomor tidak valid. Contoh: 081234567890</p>
@@ -531,9 +602,7 @@ export default function CustomerAccountSettings() {
                   onChange={(e) =>
                     setPinForm({ ...pinForm, pin: e.target.value.replace(/\D/g, '').slice(0, 6) })
                   }
-                  className="w-full px-3.5 py-2.5 pr-9 bg-neutral-50 border border-neutral-200 rounded-xl font-mono font-bold text-neutral-800 focus:outline-none"
-                  onFocus={(e) => (e.currentTarget.style.borderColor = PRIMARY_COLOR)}
-                  onBlur={(e) => (e.currentTarget.style.borderColor = '#e5e7eb')}
+                  className="w-full px-3.5 py-2.5 pr-9 bg-neutral-50 border border-neutral-200 rounded-xl font-mono font-bold text-neutral-800 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all"
                 />
 
                 <button
@@ -560,9 +629,7 @@ export default function CustomerAccountSettings() {
                 onChange={(e) =>
                   setPinForm({ ...pinForm, confirmPin: e.target.value.replace(/\D/g, '').slice(0, 6) })
                 }
-                className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-mono font-bold text-neutral-800 focus:outline-none"
-                onFocus={(e) => (e.currentTarget.style.borderColor = PRIMARY_COLOR)}
-                onBlur={(e) => (e.currentTarget.style.borderColor = '#e5e7eb')}
+                className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-mono font-bold text-neutral-800 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all"
               />
             </div>
 

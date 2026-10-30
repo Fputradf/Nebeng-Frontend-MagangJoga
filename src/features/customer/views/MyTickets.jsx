@@ -1,14 +1,14 @@
-﻿import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { BASE_URL } from '../../../config/env';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Ticket,
   QrCode,
   Clock,
+  CreditCard,
   ArrowRight,
   Award,
   Star,
-  Sparkles,
   KeyRound,
   RefreshCw,
   Eye,
@@ -23,6 +23,10 @@ import {
   Navigation,
   Radio,
   Phone,
+  Car,
+  Package,
+  Users,
+  X,
 } from 'lucide-react';
 import { io } from 'socket.io-client';
 
@@ -69,8 +73,9 @@ export default function MyTickets() {
   const [selectedTimelineTicket, setSelectedTimelineTicket] = useState(null);
 
   const [qrDynamicToken, setQrDynamicToken] = useState('SEC-9081');
-  const [qrCountdown, setQrCountdown] = useState(30);
+  const [qrCountdown, setQrCountdown] = useState(60);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [payingTicketId, setPayingTicketId] = useState(null);
 
   const [chatConversationId, setChatConversationId] = useState(null);
   const [chatMessages, setChatMessages] = useState([]);
@@ -118,7 +123,9 @@ export default function MyTickets() {
           : 'Kendaraan Resmi';
 
         let statusText = 'Aktif';
-        if (order.status === 'cancelled' || order.status === 'cancelled_by_mitra') {
+        if (order.status === 'pending_payment') {
+          statusText = 'Menunggu Pembayaran';
+        } else if (order.status === 'cancelled' || order.status === 'cancelled_by_mitra') {
           statusText = 'Batal';
         } else if (order.status === 'completed') {
           statusText = 'Selesai';
@@ -130,6 +137,7 @@ export default function MyTickets() {
           id: order.id,
           rawId: order.id,
           tripId: trip.id,
+          tripStatus: trip.status,
           customerId: order.customerId,
           revieweeId: trip.mitraId || trip.mitra?.id || trip.mitra?.userId,
           type: order.type,
@@ -141,8 +149,12 @@ export default function MyTickets() {
           mitra: mitraName,
           mitraPhone: trip.mitra?.phone || null,
           vehicle: vehicleModel,
-          schedule: `${trip.departureDate?.split('T')[0] || 'Segera'} â€¢ Sesuai Jadwal`,
+          schedule: `${trip.departureDate?.split('T')[0] || 'Segera'} • Sesuai Jadwal`,
           totalPrice: formatRupiah(order.totalPrice),
+          subtotal: order.subtotal != null ? formatRupiah(order.subtotal) : formatRupiah(order.totalPrice),
+          discountAmount: Number(order.discountAmount || 0),
+          discountFormatted: formatRupiah(order.discountAmount || 0),
+          voucherCode: order.voucherCode || null,
           detail: isParcel
             ? `${order.totalItemsCount || 1} Item (${order.totalWeightKg || 1} Kg)`
             : `${order.seatsBooked || 1} Kursi Penumpang`,
@@ -465,7 +477,7 @@ export default function MyTickets() {
                 white-space:nowrap;
                 margin-bottom:4px;
               ">
-                ðŸš— ${trackingTicket.mitra}
+                Mitra: ${trackingTicket.mitra}
               </div>
               <div style="
                 width:24px;
@@ -517,7 +529,7 @@ export default function MyTickets() {
                 white-space:nowrap;
                 margin-bottom:4px;
               ">
-                ðŸ“ Asal
+                Pos Asal
               </div>
               <div style="
                 width:20px;
@@ -554,7 +566,7 @@ export default function MyTickets() {
                 white-space:nowrap;
                 margin-bottom:4px;
               ">
-                ðŸ Tujuan
+                Pos Tujuan
               </div>
               <div style="
                 width:20px;
@@ -631,7 +643,7 @@ export default function MyTickets() {
                   white-space:nowrap;
                   margin-bottom:4px;
                 ">
-                  ðŸš— ${trackingTicket.mitra}
+                Mitra: 
                 </div>
                 <div style="
                   width:24px;
@@ -706,7 +718,7 @@ export default function MyTickets() {
   useEffect(() => {
     let interval;
     const pendingTickets = tickets.filter(
-      (t) => t.status === 'Aktif' && t.currentStatusText === 'pending_payment'
+      (t) => t.currentStatusText === 'pending_payment'
     );
 
     if (pendingTickets.length > 0) {
@@ -766,7 +778,7 @@ export default function MyTickets() {
         setQrCountdown((prev) => {
           if (prev <= 1) {
             setQrDynamicToken(`SEC-${Math.floor(1000 + Math.random() * 9000)}`);
-            return 30;
+            return 60;
           }
           return prev - 1;
         });
@@ -791,7 +803,7 @@ export default function MyTickets() {
   const filteredTickets = tickets.filter((ticket) => {
     const matchesTab =
       activeTab === 'aktif'
-        ? ticket.status === 'Aktif'
+        ? ticket.status === 'Aktif' || ticket.status === 'Menunggu Pembayaran'
         : activeTab === 'riwayat'
         ? ticket.status === 'Selesai' || ticket.status === 'Batal'
         : true;
@@ -825,13 +837,39 @@ export default function MyTickets() {
     }
   };
 
+  const handlePayPendingTicket = async (ticket) => {
+    if (payingTicketId) return;
+    setPayingTicketId(ticket.rawId);
+    try {
+      toast.info('Menghubungkan ke gateway pembayaran Xendit...', { title: 'Tunggu Sebentar' });
+      const resPayment = await apiClient.post('/payments/xendit/create-invoice', {
+        orderId: String(ticket.rawId),
+      });
+
+      const invoiceUrl = resPayment.data?.invoiceUrl;
+      if (!invoiceUrl || invoiceUrl === '/customer/tickets') {
+        throw new Error('Gagal mendapatkan tautan pembayaran Xendit yang valid.');
+      }
+
+      toast.success('Mengalihkan ke halaman pembayaran...', { title: 'Menuju Pembayaran' });
+      window.location.href = invoiceUrl;
+    } catch (err) {
+      const errorMsg =
+        err.response?.data?.message || err.message || 'Gagal memproses pembayaran tiket.';
+      const formatted = Array.isArray(errorMsg) ? errorMsg.join(', ') : errorMsg;
+      toast.error(formatted, { title: 'Gagal Membuka Pembayaran' });
+    } finally {
+      setPayingTicketId(null);
+    }
+  };
+
   const openModal = async (ticket, type) => {
     setSelectedTicket(ticket);
     setActiveModalType(type);
 
     if (type === 'qr') {
       setQrDynamicToken(`SEC-${Math.floor(1000 + Math.random() * 9000)}`);
-      setQrCountdown(30);
+      setQrCountdown(60);
     }
 
     if (type === 'chat') {
@@ -932,49 +970,76 @@ export default function MyTickets() {
 
   return (
     <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
-      {/* Header Halaman */}
-      <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-neutral-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: PRIMARY_COLOR }} />
-            <span className="text-[12px] font-bold uppercase tracking-widest flex items-center gap-1" style={{ color: PRIMARY_COLOR }}>
-              <Ticket className="w-3 h-3" /> TIKET & LIVE DIGITAL QR
-            </span>
+      {/* ── BANNER ── */}
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] p-6 text-white shadow-card sm:p-8">
+        <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10" />
+        <div className="absolute bottom-0 right-32 h-28 w-28 rounded-full bg-accent/20" />
+        <div className="relative flex flex-col gap-4 pb-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-accent flex items-center gap-1">
+                <Ticket className="w-3.5 h-3.5" /> TIKET & LIVE DIGITAL QR
+              </span>
+            </div>
+            <h1 className="font-display text-2xl sm:text-3xl font-bold text-white">
+              My Tickets & Live Digital QR
+            </h1>
+            <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl">
+              Tunjukkan QR Code digital di Pos, pantau audit checkpoint secara live, dan chat langsung dengan Mitra.
+            </p>
           </div>
-          <h1 className="text-[21px] sm:text-[23px] font-bold text-neutral-800">My Tickets & Live Digital QR</h1>
-          <p className="text-[13px] sm:text-[14px] text-neutral-400 mt-0.5">
-            Tunjukkan QR Code digital di Pos, pantau audit checkpoint secara live, dan chat langsung dengan Mitra.
-          </p>
-        </div>
-      </div>
 
-      {/* Pencarian Tiket */}
-      <div className="relative max-w-sm">
-        <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <button
+            onClick={() => refreshData()}
+            disabled={isLoadingTickets}
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-white/15 hover:bg-white/25 border border-white/25 rounded-2xl text-white text-xs font-bold transition cursor-pointer self-start sm:self-auto shadow-sm disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+          >
+            <RefreshCw className={`w-4 h-4 text-accent ${isLoadingTickets ? 'animate-spin' : ''}`} />
+            <span>{isLoadingTickets ? 'Memperbarui...' : 'Segarkan Tiket'}</span>
+          </button>
+        </div>
+        <div className="absolute bottom-4 left-6 right-6 border-t border-dashed border-white/25 sm:left-8 sm:right-8" />
+        <span className="absolute bottom-[11px] right-6 h-2.5 w-2.5 rounded-full border-2 border-white bg-accent sm:right-8" />
+      </section>
+
+      {/* Pencarian Tiket (Full Width sampai ujung) */}
+      <div className="relative w-full">
+        <Search className="w-4 h-4 text-neutral-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Cari No. Tiket, Rute, atau Mitra..."
-          className="w-full pl-9 pr-3.5 py-2.5 bg-white border border-neutral-200 rounded-xl text-[13px] font-medium text-neutral-800 focus:outline-none shadow-sm"
+          className="w-full pl-10 pr-9 py-2.5 bg-white border border-neutral-200/90 rounded-xl text-[13px] font-medium text-neutral-800 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-[#10367D]/10 focus:border-[#10367D] shadow-xs transition-all"
         />
+        {searchQuery && (
+          <button
+            type="button"
+            onClick={() => setSearchQuery('')}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 transition p-0.5 rounded-full hover:bg-neutral-100 cursor-pointer"
+            title="Hapus pencarian"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       {/* Tab Navigasi */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 max-w-full no-scrollbar">
         <button
           onClick={() => setActiveTab('aktif')}
-          className={`px-3.5 py-1.5 rounded-xl text-[13px] font-bold transition cursor-pointer ${
+          className={`shrink-0 px-3.5 py-1.5 rounded-xl text-[13px] font-bold transition cursor-pointer ${
             activeTab === 'aktif' ? 'text-white shadow-sm' : 'bg-white text-neutral-600 border border-neutral-200 hover:bg-neutral-50'
           }`}
           style={activeTab === 'aktif' ? { backgroundColor: PRIMARY_COLOR } : undefined}
         >
-          Tiket Aktif ({tickets.filter((t) => t.status === 'Aktif').length})
+          Tiket Aktif ({tickets.filter((t) => t.status === 'Aktif' || t.status === 'Menunggu Pembayaran').length})
         </button>
 
         <button
           onClick={() => setActiveTab('riwayat')}
-          className={`px-3.5 py-1.5 rounded-xl text-[13px] font-bold transition cursor-pointer ${
+          className={`shrink-0 px-3.5 py-1.5 rounded-xl text-[13px] font-bold transition cursor-pointer ${
             activeTab === 'riwayat' ? 'text-white shadow-sm' : 'bg-white text-neutral-600 border border-neutral-200 hover:bg-neutral-50'
           }`}
           style={activeTab === 'riwayat' ? { backgroundColor: PRIMARY_COLOR } : undefined}
@@ -984,7 +1049,7 @@ export default function MyTickets() {
 
         <button
           onClick={() => setActiveTab('reward')}
-          className={`px-3.5 py-1.5 rounded-xl text-[13px] font-bold transition cursor-pointer flex items-center gap-1.5 ${
+          className={`shrink-0 px-3.5 py-1.5 rounded-xl text-[13px] font-bold transition cursor-pointer flex items-center gap-1.5 ${
             activeTab === 'reward' ? 'text-white shadow-sm' : 'bg-white text-neutral-600 border border-neutral-200 hover:bg-neutral-50'
           }`}
           style={activeTab === 'reward' ? { backgroundColor: PRIMARY_COLOR } : undefined}
@@ -999,127 +1064,271 @@ export default function MyTickets() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {isLoadingTickets ? (
             Array.from({ length: 2 }).map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl p-5 shadow-sm border border-neutral-200 space-y-3">
-                <Skeleton className="h-4 w-28 rounded-full" />
-                <Skeleton className="h-5 w-48" />
+              <div key={i} className="bg-white rounded-2xl p-5 shadow-xs border border-neutral-200/90 space-y-4">
+                <div className="flex justify-between items-center">
+                  <Skeleton className="h-6 w-36 rounded-full" />
+                  <Skeleton className="h-5 w-16 rounded-md" />
+                </div>
+                <Skeleton className="h-16 w-full rounded-xl" />
+                <Skeleton className="h-24 w-full rounded-xl" />
+                <div className="flex justify-between items-center pt-2 border-t border-neutral-100">
+                  <Skeleton className="h-6 w-16 rounded-full" />
+                  <div className="flex gap-2">
+                    <Skeleton className="h-8 w-24 rounded-lg" />
+                    <Skeleton className="h-8 w-20 rounded-lg" />
+                  </div>
+                </div>
               </div>
             ))
           ) : filteredTickets.length > 0 ? (
-            filteredTickets.map((ticket) => (
-              <div key={ticket.id} className="bg-white rounded-2xl p-5 shadow-sm border border-neutral-200 flex flex-col justify-between space-y-4">
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <StatusBadge variant="purple">{ticket.title}</StatusBadge>
-                    <span className="text-[13px] font-mono font-bold text-neutral-800">ID: #{ticket.id}</span>
-                  </div>
+            filteredTickets.map((ticket) => {
+              const isParcel = ticket.type === 'parcel' || ticket.type === 'barang';
+              return (
+                <div
+                  key={ticket.id}
+                  className="bg-white rounded-2xl p-5 shadow-xs hover:shadow-md border border-neutral-200/90 flex flex-col justify-between space-y-4 transition-all duration-200"
+                >
+                  <div className="space-y-3.5">
+                    {/* Header Card: Kategori Tiket & ID */}
+                    <div className="flex justify-between items-center gap-2">
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-[#10367D] border border-blue-200/70">
+                        {isParcel ? (
+                          <Package className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                        ) : (
+                          <Users className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                        )}
+                        <span>{ticket.title}</span>
+                      </div>
+                      <span className="text-[12px] font-mono font-bold text-neutral-600 bg-neutral-100/90 px-2 py-0.5 rounded-md border border-neutral-200">
+                        ID: #{ticket.id}
+                      </span>
+                    </div>
 
-                  <div className="flex items-center gap-1.5 text-[15px] font-bold text-neutral-800">
-                    <span>{ticket.from}</span>
-                    <ArrowRight className="w-3.5 h-3.5" style={{ color: PRIMARY_COLOR }} />
-                    <span>{ticket.to}</span>
-                  </div>
+                    {/* Rute Perjalanan Visual */}
+                    <div className="bg-blue-50/30 rounded-xl p-3 border border-blue-100/70 flex items-center justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0 inline-block" />
+                          Pos Asal
+                        </span>
+                        <p className="text-[13px] font-bold text-neutral-800 truncate mt-0.5" title={ticket.from}>
+                          {ticket.from}
+                        </p>
+                      </div>
 
-                  <div className="bg-neutral-50 rounded-xl p-3 border border-neutral-100 space-y-1 text-[12px]">
-                    <p className="font-bold text-neutral-800">
-                      Mitra: <span className="font-normal text-neutral-600">{ticket.mitra} ({ticket.vehicle})</span>
-                    </p>
-                    <p className="font-bold text-neutral-800">
-                      Jadwal: <span className="font-normal text-neutral-600">{ticket.schedule}</span>
-                    </p>
-                    <p className="font-bold text-neutral-800">
-                      Detail: <span className="font-normal text-neutral-600">{ticket.detail}</span>
-                    </p>
-                    {ticket.totalPrice && (
-                      <p className="font-bold text-neutral-800">
-                        Total Bayar: <span className="font-normal text-emerald-600">{ticket.totalPrice}</span>
-                      </p>
+                      <div className="shrink-0 flex items-center justify-center">
+                        <div className="w-7 h-7 rounded-full bg-blue-50 border border-blue-200/60 flex items-center justify-center text-blue-600 shadow-xs">
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </div>
+                      </div>
+
+                      <div className="flex-1 min-w-0 text-right">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 flex items-center justify-end gap-1">
+                          Pos Tujuan
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 shrink-0 inline-block" />
+                        </span>
+                        <p className="text-[13px] font-bold text-neutral-800 truncate mt-0.5" title={ticket.to}>
+                          {ticket.to}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Detail Mitra, Jadwal, & Biaya */}
+                    <div className="bg-neutral-50/70 rounded-xl p-3 border border-neutral-100 space-y-2 text-[12px]">
+                      <div className="flex items-center gap-2 text-neutral-700">
+                        <Car className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+                        <span className="truncate">
+                          <strong className="text-neutral-800 font-semibold">Mitra:</strong> {ticket.mitra} ({ticket.vehicle})
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2 text-neutral-700">
+                        <Clock className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+                        <span className="truncate">
+                          <strong className="text-neutral-800 font-semibold">Jadwal:</strong> {ticket.schedule}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2 text-neutral-700">
+                        <Ticket className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+                        <span className="truncate">
+                          <strong className="text-neutral-800 font-semibold">Detail:</strong> {ticket.detail}
+                        </span>
+                      </div>
+
+                      {ticket.totalPrice && (
+                        ticket.discountAmount > 0 ? (
+                          <div className="pt-2 border-t border-neutral-200/70 space-y-1">
+                            <div className="flex justify-between text-neutral-600">
+                              <span>Subtotal:</span>
+                              <span className="font-semibold text-neutral-800">{ticket.subtotal}</span>
+                            </div>
+                            <div className="flex justify-between text-emerald-600 font-medium">
+                              <span>Diskon {ticket.voucherCode ? `(${ticket.voucherCode})` : ''}:</span>
+                              <span>- {ticket.discountFormatted}</span>
+                            </div>
+                            <div className="flex justify-between items-center font-bold text-neutral-800 pt-1 border-t border-neutral-200/50">
+                              <span>Total Bayar:</span>
+                              <span className="text-[13px] font-bold text-emerald-600">{ticket.totalPrice}</span>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="pt-1.5 border-t border-neutral-200/70 flex justify-between items-center font-bold text-neutral-800">
+                            <span>Total Bayar:</span>
+                            <span className="text-[13px] font-bold text-emerald-600">{ticket.totalPrice}</span>
+                          </div>
+                        )
+                      )}
+                    </div>
+
+                    {/* OTP Penyerahan Barang jika ada */}
+                    {ticket.otp && (
+                      <div className="p-2.5 rounded-xl flex items-center justify-between text-[12px] bg-blue-50/70 border border-blue-200/60">
+                        <span className="font-bold flex items-center gap-1.5 text-[#10367D]">
+                          <KeyRound className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                          OTP Penyerahan Barang:
+                        </span>
+                        <div className="flex items-center gap-2 bg-white px-2.5 py-1 rounded-lg border border-blue-200/80 shadow-xs">
+                          <span className="font-mono font-extrabold text-[13px] tracking-wider text-[#10367D]">
+                            {showOtpMap[ticket.id] ? ticket.otp : '••••••'}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => toggleOtpVisibility(ticket.id)}
+                            className="cursor-pointer text-neutral-400 hover:text-blue-700 transition"
+                            title={showOtpMap[ticket.id] ? 'Sembunyikan OTP' : 'Tampilkan OTP'}
+                          >
+                            {showOtpMap[ticket.id] ? <EyeOff size={13} /> : <Eye size={13} />}
+                          </button>
+                        </div>
+                      </div>
                     )}
                   </div>
 
-                  {ticket.otp && (
-                    <div className="p-2.5 rounded-xl flex items-center justify-between text-[12px] border" style={{ backgroundColor: `${PRIMARY_ACCENT}22`, borderColor: `${PRIMARY_ACCENT}55` }}>
-                      <span className="font-bold flex items-center gap-1" style={{ color: PRIMARY_COLOR }}>
-                        <KeyRound className="w-3 h-3" /> OTP Penyerahan Barang:
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono font-bold text-[14px] tracking-wider" style={{ color: PRIMARY_COLOR }}>
-                          {showOtpMap[ticket.id] ? ticket.otp : '******'}
+                  {/* Bagian Bawah: Status & Aksi Tombol */}
+                  <div className="space-y-3 pt-1">
+                    <div className="flex items-center justify-between pt-2 border-t border-neutral-100 flex-wrap gap-2">
+                      {ticket.status === 'Aktif' ? (
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                            Aktif
+                          </span>
+                          {(ticket.tripStatus === 'in_origin_pos' || ticket.checkpointsLogs?.some(l => l.scanType === 'checkin_origin')) && ticket.currentStatusText === 'paid' && (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200 animate-pulse">
+                              🚗 Sopir Telah Tiba di Pos
+                            </span>
+                          )}
+                          {(ticket.tripStatus === 'in_transit' || ticket.currentStatusText === 'in_transit') && (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                              🚀 Dalam Perjalanan
+                            </span>
+                          )}
+                        </div>
+                      ) : ticket.status === 'Menunggu Pembayaran' ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                          <Clock className="w-3 h-3 text-amber-600" />
+                          Menunggu Pembayaran
                         </span>
-                        <button onClick={() => toggleOtpVisibility(ticket.id)} className="cursor-pointer transition" style={{ color: PRIMARY_COLOR }}>
-                          {showOtpMap[ticket.id] ? <EyeOff size={12} /> : <Eye size={12} />}
+                      ) : (
+                        <StatusBadge variant={ticket.status === 'Selesai' ? 'default' : 'rose'}>
+                          {ticket.status}
+                        </StatusBadge>
+                      )}
+
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {/* Tombol Audit Checkpoint Timeline (Warna Biru) */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedTimelineTicket(ticket);
+                            setIsTimelineModalOpen(true);
+                          }}
+                          className="px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-[#10367D] rounded-lg text-[12px] font-bold transition flex items-center gap-1 cursor-pointer border border-blue-200"
+                        >
+                          <History className="w-3 h-3 text-blue-600" />
+                          Audit Checkpoint
                         </button>
+
+                        {/* Aksi Khusus Tiket Menunggu Pembayaran */}
+                        {ticket.status === 'Menunggu Pembayaran' && (
+                          <button
+                            type="button"
+                            onClick={() => handlePayPendingTicket(ticket)}
+                            disabled={payingTicketId === ticket.rawId}
+                            className="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-[12px] font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {payingTicketId === ticket.rawId ? (
+                              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <CreditCard className="w-3.5 h-3.5" />
+                            )}
+                            <span>Bayar Sekarang</span>
+                          </button>
+                        )}
+
+                        {ticket.status === 'Menunggu Pembayaran' && (
+                          <button
+                            type="button"
+                            onClick={() => openModal(ticket, 'cancel')}
+                            className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg text-[12px] font-bold transition flex items-center gap-1 cursor-pointer"
+                          >
+                            <XCircle className="w-3.5 h-3.5" />
+                            <span>Batalkan</span>
+                          </button>
+                        )}
+
+                        {/* Aksi Tiket Aktif (Lunas) */}
+                        {ticket.status === 'Aktif' && (
+                          <button
+                            type="button"
+                            onClick={() => openModal(ticket, 'chat')}
+                            className="px-2.5 py-1.5 bg-sky-50 hover:bg-sky-100 text-[#10367D] rounded-lg text-[12px] font-bold transition flex items-center gap-1 cursor-pointer border border-sky-200"
+                          >
+                            <MessageSquare className="w-3 h-3 text-sky-600" />
+                            <span>Chat Mitra</span>
+                          </button>
+                        )}
+
+                        {ticket.status === 'Aktif' && (
+                          <button
+                            type="button"
+                            onClick={() => handleOpenTracking(ticket)}
+                            className="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-[12px] font-bold transition flex items-center gap-1 cursor-pointer"
+                          >
+                            <Navigation className="w-3 h-3 text-emerald-600" />
+                            <span>Live GPS</span>
+                          </button>
+                        )}
+
+                        {ticket.status === 'Aktif' && (
+                          <button
+                            type="button"
+                            onClick={() => openModal(ticket, 'qr')}
+                            className="px-2.5 py-1.5 text-white rounded-lg text-[12px] font-bold transition flex items-center gap-1 cursor-pointer shadow-xs hover:opacity-95"
+                            style={{ backgroundColor: PRIMARY_COLOR }}
+                          >
+                            <QrCode className="w-3.5 h-3.5" />
+                            <span>QR Pos</span>
+                          </button>
+                        )}
+
+                        {ticket.status === 'Selesai' && (
+                          <button
+                            type="button"
+                            onClick={() => openModal(ticket, 'review')}
+                            className="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-lg text-[12px] font-bold transition flex items-center gap-1 cursor-pointer"
+                          >
+                            <Star className="w-3.5 h-3.5 fill-current text-amber-500" />
+                            <span>Ulasan</span>
+                          </button>
+                        )}
                       </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between pt-2 border-t border-neutral-100 flex-wrap gap-2">
-                    <StatusBadge variant={ticket.status === 'Aktif' ? 'emerald' : 'default'}>
-                      {ticket.status}
-                    </StatusBadge>
-
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      {/* Tombol Audit Checkpoint Timeline */}
-                      <button
-                        onClick={() => {
-                          setSelectedTimelineTicket(ticket);
-                          setIsTimelineModalOpen(true);
-                        }}
-                        className="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-[12px] font-bold transition flex items-center gap-1 cursor-pointer border border-indigo-200"
-                      >
-                        <History className="w-3 h-3" />
-                        Audit Checkpoint
-                      </button>
-
-                      {ticket.status === 'Aktif' && (
-                        <button
-                          onClick={() => openModal(ticket, 'chat')}
-                          className="px-2.5 py-1.5 rounded-lg text-[12px] font-bold transition flex items-center gap-1 cursor-pointer border"
-                          style={{ backgroundColor: `${PRIMARY_ACCENT}22`, color: PRIMARY_COLOR, borderColor: `${PRIMARY_ACCENT}55` }}
-                        >
-                          <MessageSquare className="w-3 h-3" />
-                          <span>Chat Mitra</span>
-                        </button>
-                      )}
-
-                      {ticket.status === 'Aktif' && (
-                        <button
-                          onClick={() => handleOpenTracking(ticket)}
-                          className="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-[12px] font-bold transition flex items-center gap-1 cursor-pointer"
-                        >
-                          <Navigation className="w-3 h-3" />
-                          <span>Live GPS</span>
-                        </button>
-                      )}
-
-                      {ticket.status === 'Aktif' && ticket.currentStatusText === CANCELLABLE_STATUS_TEXT && (
-                        <button onClick={() => openModal(ticket, 'cancel')} className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg text-[12px] font-bold transition flex items-center gap-1 cursor-pointer">
-                          <XCircle className="w-3.5 h-3.5" />
-                          <span>Batalkan</span>
-                        </button>
-                      )}
-
-                      {ticket.status === 'Aktif' && (
-                        <button onClick={() => openModal(ticket, 'qr')} className="px-2.5 py-1.5 text-white rounded-lg text-[12px] font-bold transition flex items-center gap-1 cursor-pointer shadow-sm" style={{ backgroundColor: PRIMARY_COLOR }}>
-                          <QrCode className="w-3.5 h-3.5" />
-                          <span>QR Pos</span>
-                        </button>
-                      )}
-
-                      {ticket.status === 'Aktif' && ticket.currentStatusText === 'pending_payment' && ( <span className="text-[12px] text-neutral-400 italic flex items-center gap-1 animate-pulse"><RefreshCw className="w-3 h-3 animate-spin" /> Sedang memverifikasi pembayaran...</span> )}
-
-                      {ticket.status === 'Selesai' && (
-                        <button onClick={() => openModal(ticket, 'review')} className="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-lg text-[12px] font-bold transition flex items-center gap-1 cursor-pointer">
-                          <Star className="w-3.5 h-3.5 fill-current text-amber-500" />
-                          <span>Ulasan</span>
-                        </button>
-                      )}
                     </div>
                   </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           ) : (
             <div className="col-span-2 bg-white rounded-2xl border border-neutral-200">
               <EmptyState
@@ -1137,7 +1346,7 @@ export default function MyTickets() {
             title="LOYALTY REWARD POINTS"
             value={`${rewardSummary.totalPoints} Poin Tersedia`}
             subtitle="Kumpulkan poin dari setiap perjalanan aman di Pos Mitra!"
-            icon={Sparkles}
+            icon={Award}
           />
 
           <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 space-y-3">

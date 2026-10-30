@@ -1,5 +1,24 @@
-﻿import { useState, useEffect, useRef } from 'react';
-import { Calendar, MapPin, Car, Bike, Plus, XCircle, Users, Package, Navigation, Radio, PauseCircle, PlayCircle } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { 
+  Calendar, 
+  MapPin, 
+  Car, 
+  Bike, 
+  Plus, 
+  XCircle, 
+  Users, 
+  Package, 
+  Navigation, 
+  Radio, 
+  PauseCircle, 
+  PlayCircle, 
+  AlertTriangle,
+  Clock,
+  CheckCircle2,
+  Search,
+  ArrowRight,
+  Sparkles
+} from 'lucide-react';
 import { useToast } from '../../../context/ToastContext';
 import { useGPS } from '../../../context/GPSContext';
 import EmptyState from '../../../components/ui/EmptyState';
@@ -10,6 +29,57 @@ import { estimateFare } from '../../../services/mitraPricing';
 
 const PRIMARY_COLOR = '#10367D';
 const PRIMARY_ACCENT = '#74B4D9';
+
+const formatTripDate = (dateStr) => {
+  if (!dateStr) return '-';
+  try {
+    const raw = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
+    const parts = raw.split('-');
+    if (parts.length === 3) {
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      const d = new Date(year, month, day);
+      return d.toLocaleDateString('id-ID', {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      });
+    }
+    const d = new Date(dateStr);
+    return isNaN(d.getTime()) ? raw : d.toLocaleDateString('id-ID', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+  } catch {
+    return dateStr.split('T')[0] || '-';
+  }
+};
+
+const formatTripTime = (timeStr) => {
+  if (!timeStr) return '-';
+  try {
+    if (typeof timeStr === 'string') {
+      if (timeStr.includes('T')) {
+        const timePart = timeStr.split('T')[1];
+        return timePart.substring(0, 5) + ' WIB';
+      }
+      if (timeStr.includes(':')) {
+        return timeStr.substring(0, 5) + ' WIB';
+      }
+    }
+    const d = new Date(timeStr);
+    if (!isNaN(d.getTime())) {
+      return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB';
+    }
+  } catch {
+    // fallback
+  }
+  return '-';
+};
 
 export default function MitraTripManagement() {
   const toast = useToast();
@@ -25,6 +95,7 @@ export default function MitraTripManagement() {
   const [trips, setTrips] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [points, setPoints] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -53,7 +124,16 @@ export default function MitraTripManagement() {
   const [cancelEvidenceUrl, setCancelEvidenceUrl] = useState('');
   const [isCancellingTrip, setIsCancellingTrip] = useState(false);
   const [isPriceManual, setIsPriceManual] = useState(false);
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const todayISO = new Date().toISOString().slice(0, 10);
+
+  const setDatePreset = (daysOffset) => {
+    const target = new Date();
+    target.setDate(target.getDate() + daysOffset);
+    const iso = target.toISOString().split('T')[0];
+    setFormData(prev => ({ ...prev, date: iso }));
+  };
 
   const calculateSuggestedFare = (originId, destinationId, vehId, currentPoints, currentVehicles) => {
     if (!originId || !destinationId || !vehId) return null;
@@ -70,10 +150,11 @@ export default function MitraTripManagement() {
   const loadMitraData = async (isMounted = true) => {
     setIsLoading(true);
     try {
-      const [resPoints, resVehicles, resMyTrips] = await Promise.all([
+      const [resPoints, resVehicles, resMyTrips, resUserMe] = await Promise.all([
         apiClient.get('/pickup-points').catch(() => ({ data: [] })),
         apiClient.get('/vehicles/me').catch(() => ({ data: [] })),
         apiClient.get('/trips/me').catch(() => ({ data: [] })),
+        apiClient.get('/auth/me').catch(() => ({ data: null })),
       ]);
 
       if (!isMounted) return;
@@ -85,6 +166,9 @@ export default function MitraTripManagement() {
       setPoints(allPoints);
       setVehicles(myVehicles);
       setTrips(myTrips);
+      if (resUserMe?.data) {
+        setCurrentUser(resUserMe.data);
+      }
 
       if (allPoints.length >= 2 && myVehicles.length > 0) {
         const initialOrigin = String(allPoints[0].id);
@@ -188,10 +272,30 @@ export default function MitraTripManagement() {
   const isSameOriginDestination = formData.originPointId && formData.destinationPointId && formData.originPointId === formData.destinationPointId;
   const isPastDate = Boolean(formData.date) && formData.date < todayISO;
 
+  const originPointObj = points.find(p => String(p.id) === String(formData.originPointId));
+  const destPointObj = points.find(p => String(p.id) === String(formData.destinationPointId));
+  const mitraRegionId = currentUser?.regionId ? String(currentUser.regionId) : null;
+  const isOriginMatchHome = Boolean(mitraRegionId && originPointObj?.regionId && String(originPointObj.regionId) === mitraRegionId);
+  const isDestMatchHome = Boolean(mitraRegionId && destPointObj?.regionId && String(destPointObj.regionId) === mitraRegionId);
+  const isOutsideHomeBase = Boolean(
+    mitraRegionId && 
+    originPointObj && 
+    destPointObj && 
+    !isOriginMatchHome && 
+    !isDestMatchHome
+  );
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isSameOriginDestination) {
       toast.warning('Pos Asal dan Pos Tujuan tidak boleh sama.', { title: 'Rute Tidak Valid' });
+      return;
+    }
+    if (isOutsideHomeBase) {
+      toast.warning(
+        `Sesuai aturan wilayah (Home Base), salah satu pos harus berada di wilayah asal Anda (${currentUser?.region?.name || 'wilayah terdaftar'}).`,
+        { title: 'Di Luar Wilayah Operasi' }
+      );
       return;
     }
     if (isPastDate) {
@@ -208,25 +312,31 @@ export default function MitraTripManagement() {
       const finalServiceType = layananCategory === 'barang' ? 'barang' : vehType;
       const isPenumpang = layananCategory === 'penumpang';
 
-      const totalSeatsPayload = isPenumpang 
-        ? (isMotor ? 1 : Math.max(1, Number(formData.totalSeats) || 1)) 
-        : (selectedVeh?.capacitySeats || 1);
+      const totalSeatsPayload = isPenumpang
+        ? (isMotor ? 1 : Math.max(1, Number(formData.totalSeats) || 1))
+        : undefined; // Barang tidak punya kursi
 
-      const maxWeightCapacityKgPayload = isPenumpang 
-        ? Number(selectedVeh?.maxWeightCapacityKg || 15) 
+      const maxWeightCapacityKgPayload = isPenumpang
+        ? Number(selectedVeh?.maxWeightCapacityKg || 15)
         : Math.max(1, Number(formData.maxWeightCapacityKg) || 1);
 
-      await apiClient.post('/trips', {
+      const payload = {
         vehicleId: String(formData.vehicleId),
         originPointId: String(formData.originPointId),
         destinationPointId: String(formData.destinationPointId),
         departureDate: formData.date,
         departureTime: `${formData.date}T${formData.time}:00.000Z`,
         price: Number(formData.price),
-        totalSeats: totalSeatsPayload,
         maxWeightCapacityKg: maxWeightCapacityKgPayload,
         serviceType: finalServiceType,
-      });
+      };
+
+      // Hanya kirim totalSeats untuk trip penumpang
+      if (isPenumpang) {
+        payload.totalSeats = totalSeatsPayload;
+      }
+
+      await apiClient.post('/trips', payload);
 
       toast.success('Trip baru berhasil dibuat dan dipublikasikan!', { title: 'Sukses' });
       setFormData(prev => ({ ...prev, date: '' }));
@@ -250,7 +360,25 @@ export default function MitraTripManagement() {
     }
   };
 
-  const visibleTrips = trips.filter((t) => t.status !== 'cancelled' && t.status !== 'completed');
+  const filteredTrips = trips.filter((t) => {
+    if (t.status === 'cancelled') return false;
+    if (filterStatus === 'scheduled') {
+      if (t.status !== 'scheduled') return false;
+    } else if (filterStatus === 'in_transit') {
+      if (t.status !== 'in_transit' && t.status !== 'in_origin_pos' && t.status !== 'arrived_dest_pos') return false;
+    } else if (filterStatus === 'completed') {
+      if (t.status !== 'completed') return false;
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const originName = (t.originPoint?.name || '').toLowerCase();
+      const destName = (t.destinationPoint?.name || '').toLowerCase();
+      const idStr = String(t.id);
+      const vehicleModel = (t.vehicle?.model || '').toLowerCase();
+      return originName.includes(q) || destName.includes(q) || idStr.includes(q) || vehicleModel.includes(q);
+    }
+    return true;
+  });
 
   // Start GPS Tracking (using GPSContext)
   const handleStartGPSTracking = async (trip) => {
@@ -398,7 +526,7 @@ export default function MitraTripManagement() {
                 white-space:nowrap;
                 margin-bottom:4px;
               ">
-                ðŸ“ ${activeTrackingTrip.originPoint?.name || 'Asal'}
+                📍 Pos Asal: ${activeTrackingTrip.originPoint?.name || 'Asal'}
               </div>
               <div style="
                 width:20px;
@@ -438,7 +566,7 @@ export default function MitraTripManagement() {
                 white-space:nowrap;
                 margin-bottom:4px;
               ">
-                ðŸ ${activeTrackingTrip.destinationPoint?.name || 'Tujuan'}
+                🏁 Pos Tujuan: ${activeTrackingTrip.destinationPoint?.name || 'Tujuan'}
               </div>
               <div style="
                 width:20px;
@@ -488,7 +616,7 @@ export default function MitraTripManagement() {
                   white-space:nowrap;
                   margin-bottom:4px;
                 ">
-                  ðŸš— Lokasi Saya
+                  🚗 Lokasi Saya
                 </div>
                 <div style="
                   width:24px;
@@ -569,7 +697,7 @@ export default function MitraTripManagement() {
                 white-space:nowrap;
                 margin-bottom:4px;
               ">
-                ðŸš— Lokasi Saya
+                🚗 Lokasi Saya
               </div>
               <div style="
                 width:24px;
@@ -611,28 +739,116 @@ export default function MitraTripManagement() {
 
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
-      <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-neutral-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: PRIMARY_COLOR }}></span>
-            <span className="text-[12px] font-bold uppercase tracking-widest flex items-center gap-1" style={{ color: PRIMARY_COLOR }}>
-              <Calendar className="w-3 h-3" /> MANAJEMEN JADWAL TRIP MITRA
-            </span>
+      {/* ── BANNER GRADIENT ── */}
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] p-6 text-white shadow-card sm:p-8">
+        <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10" />
+        <div className="absolute bottom-0 right-32 h-28 w-28 rounded-full bg-accent/20" />
+        <div className="relative flex flex-col gap-4 pb-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-accent flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5" /> MANAJEMEN JADWAL TRIP MITRA
+              </span>
+            </div>
+            <h1 className="font-display text-2xl sm:text-3xl font-bold text-white">
+              Kelola Jadwal & Trip
+            </h1>
+            <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl">
+              Buat jadwal perjalanan baru, tentukan tipe layanan (Penumpang / Barang), dan kelola trip Anda secara interaktif.
+            </p>
           </div>
-          <h1 className="text-[21px] sm:text-[23px] font-bold text-neutral-800">
-            Create & Manage Trip
-          </h1>
-          <p className="text-[13px] sm:text-[14px] text-neutral-400 mt-0.5">
-            Buat jadwal perjalanan baru, tentukan tipe layanan (Penumpang / Barang), dan kelola trip Anda dengan mudah.
-          </p>
+
+          <button
+            onClick={() => loadMitraData()}
+            disabled={isLoading}
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-white/15 hover:bg-white/25 border border-white/25 rounded-2xl backdrop-blur text-white text-xs font-bold transition cursor-pointer self-start sm:self-auto shadow-sm"
+          >
+            <Sparkles className="w-4 h-4 text-accent" />
+            <span>Segarkan Data</span>
+          </button>
+        </div>
+        <div className="absolute bottom-4 left-6 right-6 border-t border-dashed border-white/25 sm:left-8 sm:right-8" />
+        <span className="absolute bottom-[11px] right-6 h-2.5 w-2.5 rounded-full border-2 border-white bg-accent sm:right-8" />
+      </section>
+
+      {/* Interactive Quick Stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div
+          onClick={() => setFilterStatus('all')}
+          className={`p-4 rounded-2xl border transition cursor-pointer ${
+            filterStatus === 'all'
+              ? 'bg-blue-50/70 border-[#10367D] shadow-xs'
+              : 'bg-white border-slate-200/90 hover:border-slate-300'
+          }`}
+        >
+          <div className="flex items-center justify-between text-slate-400 mb-1">
+            <span className="text-[11px] font-bold uppercase tracking-wider">Total Trip</span>
+            <Calendar className="w-4 h-4 text-[#10367D]" />
+          </div>
+          <div className="text-2xl font-black text-slate-900">{trips.filter(t => t.status !== 'cancelled').length}</div>
+          <span className="text-[11px] text-slate-400 font-medium">Klik untuk lihat semua</span>
+        </div>
+
+        <div
+          onClick={() => setFilterStatus('scheduled')}
+          className={`p-4 rounded-2xl border transition cursor-pointer ${
+            filterStatus === 'scheduled'
+              ? 'bg-blue-50/70 border-[#10367D] shadow-xs'
+              : 'bg-white border-slate-200/90 hover:border-slate-300'
+          }`}
+        >
+          <div className="flex items-center justify-between text-slate-400 mb-1">
+            <span className="text-[11px] font-bold uppercase tracking-wider">Terjadwal</span>
+            <Clock className="w-4 h-4 text-blue-600" />
+          </div>
+          <div className="text-2xl font-black text-blue-600">{trips.filter(t => t.status === 'scheduled').length}</div>
+          <span className="text-[11px] text-blue-500 font-medium">Siap berangkat</span>
+        </div>
+
+        <div
+          onClick={() => setFilterStatus('in_transit')}
+          className={`p-4 rounded-2xl border transition cursor-pointer ${
+            filterStatus === 'in_transit'
+              ? 'bg-amber-50/70 border-amber-500 shadow-xs'
+              : 'bg-white border-slate-200/90 hover:border-slate-300'
+          }`}
+        >
+          <div className="flex items-center justify-between text-slate-400 mb-1">
+            <span className="text-[11px] font-bold uppercase tracking-wider">Berjalan</span>
+            <Radio className="w-4 h-4 text-amber-500 animate-pulse" />
+          </div>
+          <div className="text-2xl font-black text-amber-600">
+            {trips.filter(t => t.status === 'in_transit' || t.status === 'in_origin_pos' || t.status === 'arrived_dest_pos').length}
+          </div>
+          <span className="text-[11px] text-amber-600 font-medium">Live GPS tracking</span>
+        </div>
+
+        <div
+          onClick={() => setFilterStatus('completed')}
+          className={`p-4 rounded-2xl border transition cursor-pointer ${
+            filterStatus === 'completed'
+              ? 'bg-emerald-50/70 border-emerald-500 shadow-xs'
+              : 'bg-white border-slate-200/90 hover:border-slate-300'
+          }`}
+        >
+          <div className="flex items-center justify-between text-slate-400 mb-1">
+            <span className="text-[11px] font-bold uppercase tracking-wider">Selesai</span>
+            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+          </div>
+          <div className="text-2xl font-black text-emerald-600">{trips.filter(t => t.status === 'completed').length}</div>
+          <span className="text-[11px] text-emerald-600 font-medium">Riwayat trip sukses</span>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        {/* Form Buat Trip Baru */}
         <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 lg:col-span-1 space-y-4">
-          <h2 className="text-[17px] font-bold text-neutral-800 flex items-center gap-1.5">
-            <Plus className="w-4 h-4" style={{ color: PRIMARY_COLOR }} /> Buat Trip Baru
-          </h2>
+          <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
+            <h2 className="text-[17px] font-bold text-neutral-800 flex items-center gap-1.5">
+              <Plus className="w-4 h-4" style={{ color: PRIMARY_COLOR }} /> Buat Trip Baru
+            </h2>
+          </div>
           
           <form onSubmit={handleSubmit} className="space-y-3.5 text-[13px]">
             <div>
@@ -650,14 +866,14 @@ export default function MitraTripManagement() {
                       maxWeightCapacityKg: Number(selectedVeh?.maxWeightCapacityKg) || 15
                     }));
                   }}
-                  className={`py-2 px-3 rounded-xl text-[13px] font-bold transition flex items-center justify-center gap-1 cursor-pointer ${
+                  className={`py-2 px-3 rounded-xl text-[13px] font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
                     layananCategory === 'penumpang' 
                       ? 'text-white shadow-sm' 
                       : 'bg-neutral-50 border border-neutral-200 text-neutral-600 hover:bg-neutral-100'
                   }`}
                   style={layananCategory === 'penumpang' ? { backgroundColor: PRIMARY_COLOR } : undefined}
                 >
-                  <Users className="w-3 h-3" /> Penumpang
+                  <Users className="w-3.5 h-3.5" /> Penumpang
                 </button>
                 <button
                   type="button"
@@ -670,14 +886,14 @@ export default function MitraTripManagement() {
                       maxWeightCapacityKg: Number(selectedVeh?.maxWeightCapacityKg) || 15
                     }));
                   }}
-                  className={`py-2 px-3 rounded-xl text-[13px] font-bold transition flex items-center justify-center gap-1 cursor-pointer ${
+                  className={`py-2 px-3 rounded-xl text-[13px] font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
                     layananCategory === 'barang' 
                       ? 'text-white shadow-sm' 
                       : 'bg-neutral-50 border border-neutral-200 text-neutral-600 hover:bg-neutral-100'
                   }`}
                   style={layananCategory === 'barang' ? { backgroundColor: PRIMARY_COLOR } : undefined}
                 >
-                  <Package className="w-3 h-3" /> Barang
+                  <Package className="w-3.5 h-3.5" /> Barang
                 </button>
               </div>
             </div>
@@ -714,6 +930,20 @@ export default function MitraTripManagement() {
               </select>
             </div>
 
+            {isOutsideHomeBase && (
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-[12px] flex items-start gap-2">
+                <AlertTriangle size={15} className="text-amber-600 shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <span className="font-bold block text-[11px] uppercase tracking-wide text-amber-900">
+                    Aturan Wilayah Operasi (Home Base)
+                  </span>
+                  <span className="text-[12px] text-amber-800 leading-snug block">
+                    Salah satu pos (Asal atau Tujuan) harus berada di wilayah domisili terdaftar Anda (<strong>{currentUser?.region?.name || 'Wilayah Terdaftar'}</strong>).
+                  </span>
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-2.5">
               <div>
                 <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">Tanggal</label>
@@ -726,6 +956,37 @@ export default function MitraTripManagement() {
                   onChange={handleChange}
                   className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#10367D]"
                 />
+                <div className="grid grid-cols-3 gap-1.5 mt-2">
+                  {(() => {
+                    const getPresetISO = (offset) => {
+                      const t = new Date();
+                      t.setDate(t.getDate() + offset);
+                      return t.toISOString().split('T')[0];
+                    };
+
+                    return [
+                      { label: 'Hari Ini', offset: 0 },
+                      { label: 'Besok', offset: 1 },
+                      { label: 'Lusa', offset: 2 },
+                    ].map((preset) => {
+                      const isSelected = formData.date === getPresetISO(preset.offset);
+                      return (
+                        <button
+                          key={preset.label}
+                          type="button"
+                          onClick={() => setDatePreset(preset.offset)}
+                          className={`w-full py-1.5 px-1 rounded-lg text-center text-[11px] font-bold transition cursor-pointer whitespace-nowrap border flex items-center justify-center ${
+                            isSelected
+                              ? 'bg-blue-50 text-[#10367D] border-[#10367D]/40 shadow-xs'
+                              : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-transparent'
+                          }`}
+                        >
+                          {preset.label}
+                        </button>
+                      );
+                    });
+                  })()}
+                </div>
               </div>
               <div>
                 <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">Jam Berangkat</label>
@@ -811,9 +1072,30 @@ export default function MitraTripManagement() {
             })()}
 
             <div>
-              <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
-                {layananCategory === 'penumpang' ? 'Tarif Dasar Per Kursi (Rp)' : 'Tarif Dasar Per Paket (Rp)'}
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider">
+                  {layananCategory === 'penumpang' ? 'Tarif Dasar Per Kursi (Rp)' : 'Tarif Dasar Per Paket (Rp)'}
+                </label>
+                {(() => {
+                  const suggested = calculateSuggestedFare(formData.originPointId, formData.destinationPointId, formData.vehicleId, points, vehicles);
+                  if (suggested && Number(formData.price) !== Number(suggested)) {
+                    return (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsPriceManual(false);
+                          setFormData(prev => ({ ...prev, price: suggested }));
+                          toast.info(`Tarif disesuaikan dengan rekomendasi: Rp ${suggested.toLocaleString('id-ID')}`);
+                        }}
+                        className="text-[10px] font-bold text-[#10367D] hover:underline cursor-pointer"
+                      >
+                        Pakai Rekomendasi (Rp {suggested.toLocaleString('id-ID')})
+                      </button>
+                    );
+                  }
+                  return null;
+                })()}
+              </div>
               <input 
                 type="number" 
                 name="price" 
@@ -843,110 +1125,256 @@ export default function MitraTripManagement() {
           </form>
         </div>
 
+        {/* Daftar Trip Terjadwal Mitra */}
         <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 lg:col-span-2 space-y-4">
-          <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
-            <h2 className="text-[17px] font-bold text-neutral-800 flex items-center gap-1.5">
-              <Calendar className="w-4 h-4" style={{ color: PRIMARY_COLOR }} /> Daftar Trip Terjadwal
-            </h2>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-neutral-100 pb-3">
+            <div>
+              <h2 className="text-[17px] font-bold text-neutral-800 flex items-center gap-1.5">
+                <Calendar className="w-4 h-4" style={{ color: PRIMARY_COLOR }} /> Daftar Trip Terjadwal
+              </h2>
+              <p className="text-xs text-neutral-400">Pantau ketersediaan kursi & bagasi secara real-time</p>
+            </div>
+
+            {/* Filter Tabs */}
+            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl self-start sm:self-auto">
+              {[
+                { id: 'all', label: 'Semua', count: trips.filter(t => t.status !== 'cancelled').length },
+                { id: 'scheduled', label: 'Terjadwal', count: trips.filter(t => t.status === 'scheduled').length },
+                { id: 'in_transit', label: 'Berjalan', count: trips.filter(t => t.status === 'in_transit' || t.status === 'in_origin_pos' || t.status === 'arrived_dest_pos').length },
+                { id: 'completed', label: 'Selesai', count: trips.filter(t => t.status === 'completed').length },
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setFilterStatus(tab.id)}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
+                    filterStatus === tab.id
+                      ? 'bg-white text-[#10367D] shadow-xs'
+                      : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  <span>{tab.label}</span>
+                  <span className={`text-[10px] px-1 rounded-full ${
+                    filterStatus === tab.id ? 'bg-[#10367D]/10 text-[#10367D]' : 'bg-slate-200 text-slate-600'
+                  }`}>
+                    {tab.count}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Search Bar */}
+          <div className="relative">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Cari pos asal, tujuan, atau ID trip..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-[#10367D] focus:bg-white transition"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="text-xs font-bold text-slate-400 hover:text-slate-600 absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer"
+              >
+                Reset
+              </button>
+            )}
           </div>
 
           <div className="space-y-3">
             {isLoading ? (
-              <div className="text-[13px] text-neutral-400 p-4">Memuat data trip...</div>
-            ) : visibleTrips.length === 0 ? (
+              <div className="text-[13px] text-neutral-400 p-8 text-center bg-slate-50 rounded-2xl">
+                Memuat data trip...
+              </div>
+            ) : filteredTrips.length === 0 ? (
               <EmptyState
                 icon={Calendar}
-                title="Belum Ada Trip Terjadwal"
-                description="Publikasikan trip pertama Anda lewat form di sebelah kiri."
+                title="Tidak Ada Trip yang Cocok"
+                description={
+                  searchQuery 
+                    ? `Tidak ditemukan trip dengan kata kunci "${searchQuery}".` 
+                    : "Belum ada trip pada filter ini. Buat trip baru lewat form di sebelah kiri."
+                }
               />
-            ) : visibleTrips.map((trip) => (
-              <div key={trip.id} className="p-4 rounded-xl border border-neutral-100 bg-neutral-50/65 hover:bg-neutral-100/60 transition space-y-3">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="space-y-1.5">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-bold text-[13px] text-neutral-800 font-mono">TRIP-{trip.id}</span>
-                      
-                      {trip.status === 'completed' ? (
-                        <StatusBadge variant="emerald">Status: {trip.status}</StatusBadge>
-                      ) : trip.status === 'in_transit' ? (
-                        <StatusBadge variant="amber">Status: {trip.status}</StatusBadge>
-                      ) : (
-                        <span className="px-2 py-0.5 rounded-full text-[11px] font-bold" style={{ backgroundColor: `${PRIMARY_ACCENT}18`, color: PRIMARY_COLOR, border: `1px solid ${PRIMARY_ACCENT}35` }}>
-                          Status: {trip.status}
+            ) : filteredTrips.map((trip) => {
+              const isBarang = trip.serviceType === 'barang';
+              const maxCapacity = isBarang
+                ? Number(trip.maxWeightCapacityKg || 1)
+                : Number(trip.seatTotal ?? trip.totalSeats ?? 1);
+              const remainingCapacity = isBarang
+                ? Number(trip.remainingWeightCapacityKg ?? maxCapacity)
+                : Number(trip.seatAvailable ?? maxCapacity);
+              const usedCapacity = Math.max(0, maxCapacity - remainingCapacity);
+              const occupancyPct = Math.min(100, Math.round((usedCapacity / maxCapacity) * 100));
+
+              return (
+                <div 
+                  key={trip.id} 
+                  className="p-4 sm:p-5 rounded-2xl border border-neutral-200/90 bg-white hover:border-[#10367D]/40 hover:shadow-sm transition-all duration-200 space-y-3.5 group"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                    <div className="space-y-2 flex-1 min-w-0">
+                      {/* Badge bar: Clean styling without corrupted fonts */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-extrabold text-xs text-neutral-700 bg-slate-100 px-2 py-0.5 rounded-md font-mono">
+                          #TRIP-{trip.id}
                         </span>
-                      )}
-
-                      <span className="bg-neutral-100 text-neutral-700 px-2 py-0.5 rounded-full text-[11px] font-bold flex items-center gap-1">
-                        {trip.vehicle?.type === 'motor' ? <Bike className="w-2.5 h-2.5" /> : <Car className="w-2.5 h-2.5" />} {trip.vehicle?.model || 'Kendaraan'}
-                      </span>
-
-                      {trip.serviceType === 'barang' ? (
-                        <StatusBadge variant="purple">
-                          <Package className="w-2.5 h-2.5" /> Barang â€¢ Kursi: {trip.seatTotal ?? trip.totalSeats} | Bagasi: {trip.remainingWeightCapacityKg ?? trip.maxWeightCapacityKg} Kg
-                        </StatusBadge>
-                      ) : (
-                        <span className="px-2 py-0.5 rounded-full text-[11px] font-bold flex items-center gap-1" style={{ backgroundColor: `${PRIMARY_ACCENT}18`, color: PRIMARY_COLOR, border: `1px solid ${PRIMARY_ACCENT}35` }}>
-                          <Users className="w-2.5 h-2.5" /> {trip.serviceType?.toUpperCase()} â€¢ Kursi: {trip.seatTotal ?? trip.totalSeats}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-1.5 text-[13px] font-bold text-neutral-800">
-                      <MapPin className="w-3 h-3 shrink-0" style={{ color: PRIMARY_COLOR }} />
-                      <span>{trip.originPoint?.name || 'Asal'} &rarr; {trip.destinationPoint?.name || 'Tujuan'}</span>
-                    </div>
-
-                    <div className="flex items-center gap-3 text-[12px] text-neutral-400 font-medium">
-                      <span>{trip.departureDate?.split('T')[0]} â€¢ {trip.departureTime ? trip.departureTime.split('T')[1]?.substring(0,5) : '-'} WIB</span>
-                      <span>Kursi: {trip.seatAvailable ?? trip.totalSeats}/{trip.seatTotal ?? trip.totalSeats} | Bagasi: {trip.remainingWeightCapacityKg ?? trip.maxWeightCapacityKg} Kg</span>
-                    </div>
-                  </div>
-
-                  <div className="flex sm:flex-col items-center sm:items-end justify-between gap-2 border-t sm:border-t-0 pt-2 sm:pt-0 border-neutral-200">
-                    <div className="text-right">
-                      <span className="text-[11px] uppercase font-bold text-neutral-400 block">
-                        {trip.serviceType === 'barang' ? 'Tarif / Paket' : 'Tarif / Kursi'}
-                      </span>
-                      <span className="text-[15px] font-bold text-emerald-600">Rp {Number(trip.price || 0).toLocaleString('id-ID')}</span>
-                    </div>
-                    {trip.status === 'scheduled' && (
-                      <button
-                        onClick={() => setCancelConfirmTarget(trip.id)}
-                        className="text-[11px] font-bold text-rose-600 hover:text-rose-700 flex items-center gap-1 cursor-pointer"
-                      >
-                        <XCircle className="w-3 h-3" /> Batalkan Trip
-                      </button>
-                    )}
-
-                    {trip.status === 'in_transit' && (
-                      <div className="flex flex-col gap-1.5">
-                        {isTracking && activeTripId === trip.id ? (
-                          <button
-                            onClick={handleStopGPSTracking}
-                            className="text-[11px] font-bold text-rose-600 hover:text-rose-700 flex items-center gap-1 cursor-pointer"
-                          >
-                            <PauseCircle className="w-3 h-3" /> Stop GPS
-                          </button>
+                        
+                        {trip.status === 'completed' ? (
+                          <StatusBadge variant="emerald">Selesai</StatusBadge>
+                        ) : trip.status === 'in_transit' ? (
+                          <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                            Dalam Perjalanan
+                          </span>
+                        ) : trip.status === 'in_origin_pos' ? (
+                          <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                            Stand-by di Pos Asal
+                          </span>
+                        ) : trip.status === 'arrived_dest_pos' ? (
+                          <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                            Tiba di Pos Tujuan
+                          </span>
+                        ) : trip.status === 'scheduled' ? (
+                          <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-brand-700 border border-brand-200">
+                            Dijadwalkan
+                          </span>
                         ) : (
+                          <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                            Dibatalkan
+                          </span>
+                        )}
+
+                        {/* Service & Capacity: Bug fixed (clean dot separator, no broken bullet) */}
+                        {isBarang ? (
+                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-50 text-[#4B2172] border border-purple-200 flex items-center gap-1.5">
+                            <Package className="w-3 h-3 text-[#4B2172]" />
+                            <span>Nebeng Barang</span>
+                            <span className="w-1 h-1 rounded-full bg-purple-300" />
+                            <span>Bagasi: {trip.remainingWeightCapacityKg ?? trip.maxWeightCapacityKg} Kg</span>
+                          </span>
+                        ) : (
+                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-[#10367D] border border-blue-200 flex items-center gap-1.5">
+                            <Users className="w-3 h-3 text-[#10367D]" />
+                            <span>{trip.vehicle?.type?.toLowerCase() === 'motor' ? 'Motor' : 'Mobil'}</span>
+                            <span className="w-1 h-1 rounded-full bg-blue-300" />
+                            <span>Kursi: {trip.seatTotal ?? trip.totalSeats ?? 1}</span>
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Visual Route */}
+                      <div className="bg-slate-50/90 rounded-xl p-3 border border-slate-100 flex items-center gap-2 text-xs font-bold text-slate-800">
+                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-emerald-100 shrink-0" />
+                        <span className="truncate">{trip.originPoint?.name || 'Pos Asal'}</span>
+                        <ArrowRight className="w-3.5 h-3.5 text-slate-400 shrink-0 mx-1" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-[#10367D] ring-2 ring-blue-100 shrink-0" />
+                        <span className="truncate">{trip.destinationPoint?.name || 'Pos Tujuan'}</span>
+                      </div>
+
+                      {/* Metadata Grid */}
+                      <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 font-medium">
+                        <div className="flex items-center gap-1.5">
+                          <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                          <span>{formatTripDate(trip.departureDate)}</span>
+                        </div>
+                        <span className="w-1 h-1 rounded-full bg-slate-300" />
+                        <div className="flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5 text-slate-400" />
+                          <span>{formatTripTime(trip.departureTime)}</span>
+                        </div>
+                        <span className="w-1 h-1 rounded-full bg-slate-300" />
+                        <div className="flex items-center gap-1">
+                          {trip.vehicle?.type === 'motor' ? <Bike className="w-3.5 h-3.5 text-slate-400" /> : <Car className="w-3.5 h-3.5 text-slate-400" />}
+                          <span className="font-semibold text-slate-700">{trip.vehicle?.model || 'Kendaraan'}</span>
+                          {trip.vehicle?.plateNumber && (
+                            <span className="text-slate-400 text-[11px]">({trip.vehicle.plateNumber})</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Interactive Occupancy Progress Bar */}
+                      <div className="pt-1 space-y-1">
+                        <div className="flex justify-between items-center text-[11px]">
+                          <span className="text-slate-500 font-medium">
+                            {isBarang ? 'Muatan Terisi:' : 'Kursi Terisi:'}
+                          </span>
+                          <span className="font-bold text-slate-700">
+                            {usedCapacity} / {maxCapacity} {isBarang ? 'Kg' : 'Kursi'} ({occupancyPct}%)
+                          </span>
+                        </div>
+                        <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-300 ${
+                              occupancyPct >= 100 
+                                ? 'bg-rose-500' 
+                                : occupancyPct >= 60 
+                                ? 'bg-amber-500' 
+                                : 'bg-[#10367D]'
+                            }`}
+                            style={{ width: `${occupancyPct}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Price and Actions */}
+                    <div className="flex sm:flex-col items-center sm:items-end justify-between gap-3 border-t sm:border-t-0 pt-3 sm:pt-0 border-neutral-100 shrink-0">
+                      <div className="text-left sm:text-right">
+                        <span className="text-[10px] uppercase font-bold text-neutral-400 block">
+                          {isBarang ? 'Tarif / Paket' : 'Tarif / Kursi'}
+                        </span>
+                        <span className="text-lg font-black text-emerald-600">
+                          Rp {Number(trip.price || 0).toLocaleString('id-ID')}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {trip.status === 'scheduled' && (
                           <button
-                            onClick={() => handleStartGPSTracking(trip)}
-                            className="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 cursor-pointer"
+                            onClick={() => setCancelConfirmTarget(trip.id)}
+                            className="px-3 py-1.5 rounded-lg text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 flex items-center gap-1 transition cursor-pointer"
                           >
-                            <PlayCircle className="w-3 h-3" /> Start GPS
+                            <XCircle className="w-3.5 h-3.5" /> Batalkan
                           </button>
                         )}
-                        <button
-                          onClick={() => openSelfTrackingModal(trip)}
-                          className="text-[11px] font-bold text-neutral-600 hover:text-neutral-700 flex items-center gap-1 cursor-pointer"
-                        >
-                          <Navigation className="w-3 h-3" /> Lihat Peta
-                        </button>
+
+                        {(trip.status === 'in_transit' || trip.status === 'in_origin_pos' || trip.status === 'arrived_dest_pos') && (
+                          <div className="flex items-center gap-1.5">
+                            {isTracking && activeTripId === trip.id ? (
+                              <button
+                                onClick={handleStopGPSTracking}
+                                className="px-3 py-1.5 rounded-lg text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 flex items-center gap-1 transition cursor-pointer"
+                              >
+                                <PauseCircle className="w-3.5 h-3.5" /> Stop GPS
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => handleStartGPSTracking(trip)}
+                                className="px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 flex items-center gap-1 transition shadow-xs cursor-pointer"
+                              >
+                                <PlayCircle className="w-3.5 h-3.5" /> Start GPS
+                              </button>
+                            )}
+                            <button
+                              onClick={() => openSelfTrackingModal(trip)}
+                              className="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 flex items-center gap-1 transition cursor-pointer"
+                            >
+                              <Navigation className="w-3.5 h-3.5" /> Peta
+                            </button>
+                          </div>
+                        )}
                       </div>
-                    )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
@@ -984,7 +1412,7 @@ export default function MitraTripManagement() {
         isOpen={isSelfTrackingModalOpen}
         onClose={closeSelfTrackingModal}
         title={`Self Tracking - Trip #${activeTrackingTrip?.id}`}
-        subtitle={`${activeTrackingTrip?.originPoint?.name} â†’ ${activeTrackingTrip?.destinationPoint?.name}`}
+        subtitle={`${activeTrackingTrip?.originPoint?.name} → ${activeTrackingTrip?.destinationPoint?.name}`}
         maxWidth="max-w-2xl"
       >
         {activeTrackingTrip && (

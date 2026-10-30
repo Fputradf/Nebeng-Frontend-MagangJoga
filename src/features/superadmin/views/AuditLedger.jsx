@@ -13,7 +13,11 @@ import { SkeletonTableRows } from '../../../components/ui/Skeleton';
 import EmptyState from '../../../components/ui/EmptyState';
 import StatCard from '../../../components/ui/StatCard';
 import StatusBadge from '../../../components/ui/StatusBadge';
+import PrintReportHeader from '../../../components/ui/PrintReportHeader';
+import PrintReportFooter from '../../../components/ui/PrintReportFooter';
 import { getEscrowLedgerData } from '../../../services/auditService';
+
+const ITEMS_PER_PAGE = 5;
 
 export default function AuditFinancialReport() {
   const [activeTab, setActiveTab] = useState('escrow');
@@ -41,7 +45,7 @@ export default function AuditFinancialReport() {
           setIsFetchingPage(true);
         }
 
-        const res = await getEscrowLedgerData(currentPage, 20);
+        const res = await getEscrowLedgerData(currentPage, ITEMS_PER_PAGE);
 
         if (isMounted && res) {
           const rawTransactions =
@@ -58,6 +62,14 @@ export default function AuditFinancialReport() {
 
           if (res.pagination) {
             setPaginationMeta(res.pagination);
+          } else {
+            const totalCount = Array.isArray(res) ? res.length : rawTransactions.length;
+            setPaginationMeta({
+              totalData: totalCount,
+              currentPage: currentPage,
+              totalPages: Math.max(1, Math.ceil(totalCount / ITEMS_PER_PAGE)),
+              limit: ITEMS_PER_PAGE,
+            });
           }
 
           const mappedLedger = rawTransactions.map((tx) => ({
@@ -122,47 +134,94 @@ export default function AuditFinancialReport() {
     return matchesSearch && matchesStatus;
   });
 
+  const displayedTotalAmount = filteredEscrow.reduce((acc, curr) => {
+    const rawNum = Number(String(curr.amount || '0').replace(/[^0-9]/g, '')) || 0;
+    return acc + rawNum;
+  }, 0);
+
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter'] print:p-0 print:max-w-none print:bg-white">
 
-      <div className="hidden print:block pb-6 mb-6 border-b-2 border-neutral-900 text-center space-y-1">
-        <h2 className="text-[25px] font-extrabold uppercase tracking-wider text-neutral-900">
-          NEBENG TRANSPORT & LOGISTICS
-        </h2>
-        <p className="text-[15px] font-bold text-neutral-700">
-          LAPORAN RESMI AUDIT KEUANGAN & ARUS KAS ESCROW SYSTEM
-        </p>
-        <p className="text-[13px] text-neutral-500 pt-1">
-          Dicetak pada: {new Date().toLocaleString('id-ID')} • Status: Dokumen Resmi Terverifikasi Superadmin
-        </p>
-      </div>
+      {/* ── KOP SURAT CETAK RESMI ── */}
+      <PrintReportHeader
+        title="LAPORAN AUDIT TRANSAKSI ESCROW & REKONSILIASI KEUANGAN"
+        subtitle="DIREKTORAT KEUANGAN, AUDIT & TATA KELOLA ESCROW"
+        documentNumber={`DOC/AUD-ESC/${new Date().toISOString().slice(0, 10).replace(/-/g, '')}/${String(currentPage).padStart(3, '0')}`}
+        printedBy="Superadmin Escrow Engine"
+        extraMeta={[
+          { label: 'Filter Status', value: statusFilter === 'All' ? 'Semua Status Transaksi' : statusFilter },
+          { label: 'Halaman Dokumen', value: `Hal ${currentPage} dari ${paginationMeta?.totalPages || 1}` },
+          { label: 'Total Rekord Terdata', value: `${paginationMeta?.totalData || escrowLedger.length} Transaksi` },
+          { label: 'Basis Rekonsiliasi', value: 'Ledger Immutable Database' },
+        ]}
+      />
 
-      <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-neutral-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 print:shadow-none print:border-none print:p-0 print:mb-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1 print:hidden">
-            <span className="w-2 h-2 rounded-full bg-[#10367D] animate-pulse"></span>
-            <span className="text-[12px] font-bold uppercase tracking-widest text-[#10367D]">
-              AUDIT LEDGER & FINANCIAL REPORTING
-            </span>
-          </div>
-          <h1 className="text-[21px] sm:text-[23px] font-bold text-neutral-800 print:text-neutral-900">
-            Audit Keuangan & Arus Kas
-          </h1>
-          <p className="text-[13px] sm:text-[14px] text-neutral-400 mt-0.5 print:text-neutral-600">
-            Pantau arus kas Escrow System secara langsung dari database sistem.
+      {/* ── RINGKASAN EKSEKUTIF KHUSUS CETAK PDF ── */}
+      <div className="hidden print:grid grid-cols-3 gap-3 mb-6">
+        <div className="border border-slate-300 rounded p-3 bg-slate-50/70">
+          <span className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+            Escrow Held (Ditahan)
+          </span>
+          <p className="text-[15px] font-black font-mono text-slate-900 mt-0.5">
+            Rp {Number(financialStats.totalHeldEscrow).toLocaleString('id-ID')}
           </p>
+          <span className="text-[9.5px] text-slate-500 block mt-0.5">Dana mengendap menunggu trip rampung</span>
         </div>
 
-        <button
-          onClick={() => window.print()}
-          className="flex items-center gap-2 px-4 py-2 bg-[#10367D] hover:bg-[#0C2C66] text-white rounded-full text-[13px] sm:text-[14px] font-bold transition cursor-pointer shadow-sm shrink-0 print:hidden"
-        >
-          <Printer size={14} />
-          <span>Cetak Laporan PDF</span>
-        </button>
+        <div className="border border-slate-300 rounded p-3 bg-slate-50/70">
+          <span className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+            Escrow Released (Dicairkan)
+          </span>
+          <p className="text-[15px] font-black font-mono text-emerald-800 mt-0.5">
+            Rp {Number(financialStats.totalReleasedEscrow).toLocaleString('id-ID')}
+          </p>
+          <span className="text-[9.5px] text-slate-500 block mt-0.5">Dana terverifikasi cair ke mitra</span>
+        </div>
+
+        <div className="border border-slate-300 rounded p-3 bg-slate-50/70">
+          <span className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+            Total Volume Transaksi
+          </span>
+          <p className="text-[15px] font-black font-mono text-slate-900 mt-0.5">
+            Rp {Number(financialStats.totalTransactions).toLocaleString('id-ID')}
+          </p>
+          <span className="text-[9.5px] text-slate-500 block mt-0.5">Akumulasi total nilai perputaran kas</span>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 print:grid-cols-3">
+      {/* ── BANNER GRADIENT ── */}
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] p-6 text-white shadow-card sm:p-8 print:hidden">
+        <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10" />
+        <div className="absolute bottom-0 right-32 h-28 w-28 rounded-full bg-accent/20" />
+        <div className="relative flex flex-col gap-4 pb-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-accent">
+                AUDIT LEDGER & FINANCIAL REPORTING
+              </span>
+            </div>
+            <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
+              Audit Keuangan & Arus Kas
+            </h1>
+            <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
+              Pantau arus kas Escrow System secara langsung dari database sistem.
+            </p>
+          </div>
+
+          <button
+            onClick={() => window.print()}
+            className="flex items-center gap-2 px-4 py-2.5 bg-accent hover:bg-accent/90 text-slate-900 rounded-2xl text-xs sm:text-sm font-bold transition cursor-pointer shadow-sm shrink-0 self-start sm:self-auto"
+          >
+            <Printer size={16} />
+            <span>Cetak Laporan PDF</span>
+          </button>
+        </div>
+        <div className="absolute bottom-4 left-6 right-6 border-t border-dashed border-white/25 sm:left-8 sm:right-8" />
+        <span className="absolute bottom-[11px] right-6 h-2.5 w-2.5 rounded-full border-2 border-white bg-accent sm:right-8" />
+      </section>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 print:hidden">
         <StatCard
           title="ESCROW HELD (DITAHAN)"
           value={`Rp ${Number(
@@ -196,6 +255,7 @@ export default function AuditFinancialReport() {
             onClick={() => {
               setActiveTab('escrow');
               setStatusFilter('All');
+              setCurrentPage(1);
             }}
             className={`px-4 py-1.5 rounded-full text-[13px] font-bold transition cursor-pointer flex items-center gap-1.5 ${
               activeTab === 'escrow'
@@ -218,12 +278,18 @@ export default function AuditFinancialReport() {
               type="text"
               placeholder="Cari ID ledger, order, atau referensi..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
               className="w-full bg-white border border-neutral-200 rounded-full pl-9 pr-8 py-1.5 text-[13px] font-medium text-neutral-700 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-[#74B4D9]"
             />
             {searchTerm && (
               <button
-                onClick={() => setSearchTerm('')}
+                onClick={() => {
+                  setSearchTerm('');
+                  setCurrentPage(1);
+                }}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
               >
                 <X size={12} />
@@ -233,7 +299,10 @@ export default function AuditFinancialReport() {
 
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setCurrentPage(1);
+            }}
             className="bg-white border border-neutral-200 rounded-full px-3 py-1.5 text-[13px] font-semibold text-neutral-700 focus:outline-none focus:ring-2 focus:ring-[#74B4D9] cursor-pointer"
           >
             <option value="All">Semua Status</option>
@@ -245,7 +314,7 @@ export default function AuditFinancialReport() {
 
       <div className="space-y-4">
         <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 overflow-hidden print:border print:shadow-none print:rounded-none">
-          <div className={`hidden sm:block overflow-x-auto transition-opacity duration-200 ${isFetchingPage ? 'opacity-40' : 'opacity-100'}`}>
+          <div className={`overflow-x-auto transition-opacity duration-200 ${isFetchingPage ? 'opacity-40' : 'opacity-100'}`}>
             <table className="w-full text-left border-collapse print:text-black">
               <thead>
                 <tr className="bg-gray-50/70 text-neutral-400 text-[12px] uppercase tracking-wider font-bold print:bg-neutral-100 print:text-neutral-800">
@@ -258,7 +327,7 @@ export default function AuditFinancialReport() {
               </thead>
               <tbody className="divide-y divide-gray-100 text-[12px] print:divide-neutral-300">
                 {isLoadingLedger ? (
-                  <SkeletonTableRows rows={4} columns={5} />
+                  <SkeletonTableRows rows={5} columns={5} />
                 ) : filteredEscrow.length > 0 ? (
                   filteredEscrow.map((item) => (
                     <tr key={item.id} className="hover:bg-[#74B4D9]/10 transition-colors">
@@ -310,28 +379,61 @@ export default function AuditFinancialReport() {
                   </tr>
                 )}
               </tbody>
+              <tfoot className="hidden print:table-footer-group border-t-2 border-slate-800 font-bold bg-slate-50 text-[11px]">
+                <tr>
+                  <td colSpan={2} className="py-2.5 px-5 text-slate-700 uppercase">
+                    Total Nilai Transaksi Halaman Ini ({filteredEscrow.length} Transaksi):
+                  </td>
+                  <td className="py-2.5 px-5 font-mono text-[12px] text-slate-900 font-black">
+                    Rp {displayedTotalAmount.toLocaleString('id-ID')}
+                  </td>
+                  <td colSpan={2} className="py-2.5 px-5 text-slate-500 text-[10px] italic">
+                    Tervalidasi pada ledger immutable sistem escrow
+                  </td>
+                </tr>
+              </tfoot>
             </table>
           </div>
 
           {paginationMeta && paginationMeta.totalPages > 1 && (
-            <div className="flex items-center justify-between p-4 bg-neutral-50/50 border-t border-neutral-200 text-[13px] print:hidden">
+            <div className="flex flex-col sm:flex-row items-center justify-between p-4 bg-neutral-50/50 border-t border-neutral-200 text-[13px] gap-3 print:hidden">
               <span className="text-neutral-500">
                 Halaman <strong>{paginationMeta.currentPage}</strong> dari{' '}
                 <strong>{paginationMeta.totalPages}</strong> (Total: {paginationMeta.totalData} Transaksi)
               </span>
 
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1.5">
                 <button
                   disabled={currentPage <= 1 || isFetchingPage}
                   onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                  className="px-3 py-1 bg-white border border-neutral-200 rounded-lg font-bold disabled:opacity-40 cursor-pointer shadow-sm"
+                  className="px-3 py-1.5 bg-white border border-neutral-200 rounded-lg text-neutral-600 font-bold disabled:opacity-40 cursor-pointer shadow-sm hover:bg-neutral-50 transition"
                 >
                   Sebelumnya
                 </button>
+
+                {Array.from({ length: paginationMeta.totalPages }, (_, i) => i + 1)
+                  .filter((p) => p === 1 || p === paginationMeta.totalPages || Math.abs(p - currentPage) <= 1)
+                  .map((p, idx, arr) => (
+                    <span key={p} className="flex items-center">
+                      {idx > 0 && arr[idx - 1] !== p - 1 && <span className="px-1 text-neutral-400">...</span>}
+                      <button
+                        disabled={isFetchingPage}
+                        onClick={() => setCurrentPage(p)}
+                        className={`w-8 h-8 rounded-lg text-[13px] font-bold transition cursor-pointer ${
+                          currentPage === p
+                            ? 'bg-[#10367D] text-white shadow-sm'
+                            : 'bg-white border border-neutral-200 text-neutral-600 hover:bg-neutral-50'
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    </span>
+                  ))}
+
                 <button
                   disabled={currentPage >= paginationMeta.totalPages || isFetchingPage}
                   onClick={() => setCurrentPage((prev) => prev + 1)}
-                  className="px-3 py-1 bg-white border border-neutral-200 rounded-lg font-bold disabled:opacity-40 cursor-pointer shadow-sm"
+                  className="px-3 py-1.5 bg-white border border-neutral-200 rounded-lg text-neutral-600 font-bold disabled:opacity-40 cursor-pointer shadow-sm hover:bg-neutral-50 transition"
                 >
                   Selanjutnya
                 </button>
@@ -341,16 +443,29 @@ export default function AuditFinancialReport() {
         </div>
       </div>
 
-      <div className="hidden print:flex justify-between pt-16 mt-16 text-[13px] text-neutral-900 page-break-inside-avoid">
-        <div className="text-center space-y-16">
-          <p>Mengetahui,</p>
-          <p className="font-bold underline">Direktur Keuangan & Operasional</p>
-        </div>
-        <div className="text-center space-y-16">
-          <p>Surakarta, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-          <p className="font-bold underline">Superadmin Sistem Escrow</p>
-        </div>
-      </div>
+      {/* ── LEMBAR PENGESAHAN CETAK ── */}
+      <PrintReportFooter
+        leftSigner={{
+          role: 'Disiapkan Oleh,',
+          title: 'Superadmin Tata Kelola & Sistem Escrow',
+          name: 'Superadmin Eksekutif',
+          idLabel: 'ID Petugas',
+          idValue: 'SYS-ESC-SUPERADMIN',
+        }}
+        rightSigner={{
+          role: 'Mengetahui & Menyetujui,',
+          title: 'Direktur Keuangan & Operasional',
+          name: 'Direktorat Keuangan PT Nebeng Transport Indonesia',
+          idLabel: 'Otoritas Verifikasi',
+          idValue: 'DIR-FIN-001',
+          locationDate: `Surakarta, ${new Date().toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+          })}`,
+        }}
+        notes="Laporan audit ini merupakan ringkasan resmi sistem escrow backend Nebeng Transport. Seluruh data tercatat permanen pada ledger database."
+      />
     </div>
   );
 }

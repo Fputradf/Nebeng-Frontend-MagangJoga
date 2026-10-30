@@ -17,9 +17,12 @@ import UserGovernance from './features/superadmin/views/UserGovernance';
 import SuperadminAccountSettings from './features/superadmin/views/SuperadminAccountSettings';
 import MerchandiseManagement from './features/superadmin/views/MerchandiseManagement';
 import BannerManagement from './features/superadmin/views/BannerManagement';
+import VoucherManagement from './features/superadmin/views/VoucherManagement';
+import SocialLinksManagement from './features/superadmin/views/SocialLinksManagement';
 
 // Regional
 import RegionalLayout from './features/regional/RegionalLayout';
+import RegionalSupportChat from './features/regional/views/RegionalSupportChat';
 import AdminRegionalDashboard from './features/regional/views/AdminRegionalDashboard';
 import PosMitraManagement from './features/regional/views/PosMitraManagement';
 import OperatorPosPage from './features/regional/views/OperatorPosManagement';
@@ -32,10 +35,12 @@ import RegionalAccountSettings from './features/regional/views/RegionalAccountSe
 // Operator Pos
 import OperatorLayout from './features/operator-pos/OperatorLayout';
 import OperatorDashboard from './features/operator-pos/views/OperatorDashboard';
+import OperatorManifest from './features/operator-pos/views/OperatorManifest';
 import OperatorInspection from './features/operator-pos/views/OperatorInspection';
 import OperatorDualScanner from './features/operator-pos/views/OperatorDualScanner';
 import OperatorHandover from './features/operator-pos/views/OperatorHandover';
 import OperatorFinancial from './features/operator-pos/views/OperatorFinancial';
+import OperatorGuide from './features/operator-pos/views/OperatorGuide';
 import OperatorAccountSettings from './features/operator-pos/components/OperatorAccountSettings';
 
 // Mitra
@@ -48,6 +53,9 @@ import MitraBalance from './features/mitra/views/MitraBalance';
 import MitraChat from './features/mitra/views/MitraChat';
 import MitraAccountSettings from './features/mitra/views/MitraAccountSettings';
 
+// Help & FAQ
+import HelpCenterView from './features/help/HelpCenterView';
+
 // Customer
 import CustomerLayout from './features/customer/CustomerLayout';
 import BiometricOnboarding from './features/customer/views/BiometricOnboarding';
@@ -55,8 +63,15 @@ import SearchTrip from './features/customer/views/SearchTrip';
 import MyTickets from './features/customer/views/MyTickets';
 import CustomerAccountSettings from './features/customer/views/CustomerAccountSettings';
 import CustomerRewards from './features/customer/views/CustomerRewards';
+import CustomerVouchers from './features/customer/views/CustomerVouchers';
 import CustomerChat from './features/customer/views/CustomerChat';
+import CustomerWallet from './features/customer/views/CustomerWallet';
 import { NotificationSettings, NotificationHistory, NotificationPermissionRequest } from './features/notifications';
+
+// PWA Components
+import OfflineIndicator from './components/pwa/OfflineIndicator';
+import PWAInstallPrompt from './components/pwa/PWAInstallPrompt';
+import PWAUpdateToast from './components/pwa/PWAUpdateToast';
 
 function CustomerIndexRedirect() {
   const { isCustomerVerified } = useAuth();
@@ -101,7 +116,10 @@ export default function App() {
 
   return (
     <>
+      <OfflineIndicator />
       <NotificationPermissionRequest />
+      <PWAInstallPrompt />
+      <PWAUpdateToast />
       <Routes>
       <Route path="/" element={<Navigate to="/login" replace />} />
 
@@ -150,12 +168,15 @@ export default function App() {
         <Route path="tarif" element={<PricingManagement />} />
         <Route path="merchandise" element={<MerchandiseManagement />} />
         <Route path="banner" element={<BannerManagement />} />
+        <Route path="voucher" element={<VoucherManagement />} />
+        <Route path="sosial-link" element={<SocialLinksManagement />} />
         <Route path="audit" element={<AuditLedger />} />
         <Route path="governance" element={<UserGovernance />} />
         <Route path="notifications" element={<NotificationHistory />} />
         <Route path="notifications/settings" element={<NotificationSettings />} />
         <Route path="profile/pengaturan" element={<SuperadminAccountSettings />} />
-        <Route path="*" element={<Navigate to="dashboard" replace />} />
+        <Route path="pengaturan" element={<SuperadminAccountSettings />} />
+        <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
       </Route>
 
       {/* Admin Regional */}
@@ -175,10 +196,12 @@ export default function App() {
         <Route path="trip-order" element={<TripOrderPage />} />
         <Route path="armada-kurir" element={<ArmadaKurirTabs />} />
         <Route path="laporan" element={<FinancialReportPage />} />
+        <Route path="bantuan-chat" element={<RegionalSupportChat />} />
         <Route path="notifications" element={<NotificationHistory />} />
         <Route path="notifications/settings" element={<NotificationSettings />} />
         <Route path="profile/pengaturan" element={<RegionalAccountSettings />} />
-        <Route path="*" element={<Navigate to="dashboard" replace />} />
+        <Route path="pengaturan" element={<RegionalAccountSettings />} />
+        <Route path="*" element={<Navigate to="/regional/dashboard" replace />} />
       </Route>
 
       {/* Operator Pos */}
@@ -192,15 +215,18 @@ export default function App() {
       >
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<OperatorDashboard />} />
+        <Route path="manifest" element={<OperatorManifest />} />
         <Route path="inspection" element={<OperatorInspection />} />
         <Route path="scanner" element={<OperatorDualScanner />} />
         <Route path="handover" element={<OperatorHandover />} />
         <Route path="financial" element={<OperatorFinancial />} />
+        <Route path="guide" element={<OperatorGuide />} />
+        <Route path="pengaturan" element={<OperatorAccountSettings />} />
         <Route path="notifications" element={<NotificationHistory />} />
         <Route path="notifications/settings" element={<NotificationSettings />} />
         <Route path="profile" element={<Navigate to="pengaturan" replace />} />
         <Route path="profile/pengaturan" element={<OperatorAccountSettings />} />
-        <Route path="*" element={<Navigate to="dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/operator-pos/dashboard" replace />} />
       </Route>
 
       {/* Mitra */}
@@ -219,10 +245,11 @@ export default function App() {
         <Route path="qr" element={<MitraQrDisplay />} />
         <Route path="saldo" element={<MitraBalance />} />
         <Route path="chat" element={<MitraChat />} />
+        <Route path="bantuan" element={<HelpCenterView userRole="mitra" />} />
         <Route path="notifications" element={<NotificationHistory />} />
         <Route path="notifications/settings" element={<NotificationSettings />} />
         <Route path="profile/pengaturan" element={<MitraAccountSettings />} />
-        <Route path="*" element={<Navigate to="dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/mitra/dashboard" replace />} />
       </Route>
 
       {/* Customer */}
@@ -238,8 +265,11 @@ export default function App() {
         <Route path="onboarding" element={<BiometricOnboarding />} />
         <Route path="booking" element={<SearchTrip />} />
         <Route path="tickets" element={<MyTickets />} />
+        <Route path="vouchers" element={<CustomerVouchers />} />
         <Route path="chat" element={<CustomerChat />} />
         <Route path="rewards" element={<CustomerRewards />} />
+        <Route path="wallet" element={<CustomerWallet />} />
+        <Route path="bantuan" element={<HelpCenterView userRole="customer" />} />
         <Route path="notifications" element={<NotificationHistory />} />
         <Route path="notifications/settings" element={<NotificationSettings />} />
         <Route path="profile" element={<Navigate to="pengaturan" replace />} />

@@ -85,13 +85,24 @@ body {
 }
 
 @media print {
-  body {
+  @page {
+    size: A4 portrait;
+    margin: 12mm 14mm;
+  }
+
+  *, *:before, *:after {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
-    background-color: white !important;
+  }
+
+  html, body {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    font-size: 12px;
+    line-height: 1.4;
   }
   
-  aside, header, nav, button, .print\:hidden {
+  aside, header, nav, button, .print\:hidden, .print-hidden, .no-print {
     display: none !important;
   }
   
@@ -100,9 +111,10 @@ body {
     padding: 0 !important;
     width: 100% !important;
     min-height: auto !important;
+    background: transparent !important;
   }
 
-  .shadow-sm, .shadow-md, .shadow-xl {
+  .shadow-sm, .shadow-md, .shadow-lg, .shadow-xl, .shadow-2xl, .shadow-card {
     box-shadow: none !important;
   }
   
@@ -110,13 +122,22 @@ body {
     border-collapse: collapse !important;
     width: 100% !important;
   }
-  
-  th, td {
-    border: 1px solid #d1d5db !important; 
-    color: #000 !important;
+
+  thead {
+    display: table-header-group;
+  }
+
+  tr {
+    page-break-inside: avoid;
+    break-inside: avoid;
   }
   
-  .break-inside-avoid {
-    page-break-inside: avoid;
+  .break-inside-avoid, .page-break-inside-avoid {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  a[href]:after {
+    content: none !important;
   }
 }

@@ -1,4 +1,4 @@
-﻿import { X, CheckCircle2, Clock, MapPin, ShieldCheck, UserCheck, AlertCircle } from 'lucide-react';
+import { X, CheckCircle2, Clock, MapPin, ShieldCheck, UserCheck, AlertCircle } from 'lucide-react';
 import BaseModal from '../../../components/ui/BaseModal';
 
 // const PRIMARY_COLOR = '#10367D';
@@ -20,11 +20,12 @@ export default function TicketTimelineModal({ isOpen, onClose, ticket }) {
   // Temukan detail log spesifik jika ada
   const originLog = logs.find((l) => l.scanType === 'checkin_origin');
   const destLog = logs.find((l) => l.scanType === 'checkin_destination');
+  const isDriverAtOrigin = ticket.tripStatus === 'in_origin_pos' || originLog != null;
 
   const formatTime = (isoString) => {
     if (!isoString) return '-';
     const d = new Date(isoString);
-    return `${d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })} â€¢ ${d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`;
+    return `${d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })} • ${d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`;
   };
 
   const steps = [
@@ -51,24 +52,32 @@ export default function TicketTimelineModal({ isOpen, onClose, ticket }) {
     {
       id: 'origin_scan',
       title: `Check-in Pos Asal (${ticket.from || 'Pos Asal'})`,
-      subtitle: originLog
-        ? `Diperiksa & Disegel oleh ${originLog.operatorName} di ${originLog.posName}`
-        : 'Menunggu pemeriksaan fisik & scan oleh Operator Pos Asal',
-      time: originLog ? formatTime(originLog.createdAt) : '--:--',
-      isDone: isCheckedInOrigin,
-      isActive: status === 'checked_in_origin',
+      subtitle: isCheckedInOrigin
+        ? `Pemeriksaan selesai & penumpang/barang check-in oleh ${originLog?.operatorName || 'Operator'} di ${originLog?.posName || ticket.from}`
+        : isDriverAtOrigin
+        ? `Sopir (${ticket.mitra || 'Mitra'}) sudah sampai di pos asal (Stand-by). Silakan tunjukkan QR tiket Anda ke Operator Pos.`
+        : 'Menunggu kedatangan armada & pemeriksaan fisik oleh Operator Pos Asal',
+      time: originLog
+        ? (originLog.isTripLog && !isCheckedInOrigin
+            ? `Sopir Tiba • ${formatTime(originLog.createdAt)}`
+            : formatTime(originLog.createdAt))
+        : isDriverAtOrigin
+        ? 'Sopir Tiba di Pos'
+        : '--:--',
+      isDone: isCheckedInOrigin || isDriverAtOrigin,
+      isActive: status === 'checked_in_origin' || isDriverAtOrigin,
       icon: UserCheck,
-      color: 'bg-indigo-600',
+      color: isCheckedInOrigin ? 'bg-blue-600' : 'bg-emerald-600',
     },
     {
       id: 'in_transit',
       title: 'Dalam Perjalanan Menuju Pos Tujuan',
-      subtitle: `Armada: ${ticket.vehicle || 'Mitra'} â€¢ Sopir: ${ticket.mitra || 'Mitra'}`,
+      subtitle: `Armada: ${ticket.vehicle || 'Mitra'} • Sopir: ${ticket.mitra || 'Mitra'}`,
       time: isCheckedInOrigin && !isCompleted ? 'Sedang Bergerak' : isCompleted ? 'Selesai' : '--:--',
       isDone: isCheckedInOrigin,
       isActive: status === 'in_transit',
       icon: MapPin,
-      color: 'bg-amber-600',
+      color: 'bg-blue-600',
     },
     {
       id: 'dest_scan',
@@ -96,7 +105,7 @@ export default function TicketTimelineModal({ isOpen, onClose, ticket }) {
               Riwayat & Audit Checkpoint Tiket
             </h3>
             <p className="text-xs text-gray-500 mt-0.5">
-              ID Pesanan: #{ticket.id} â€¢ {ticket.title}
+              ID Pesanan: #{ticket.id} • {ticket.title}
             </p>
           </div>
           <button
@@ -114,6 +123,24 @@ export default function TicketTimelineModal({ isOpen, onClose, ticket }) {
             <div className="text-xs">
               <span className="font-bold">Pesanan Telah Dibatalkan.</span>
               <p className="mt-0.5">Seluruh proses perjalanan dihentikan.</p>
+            </div>
+          </div>
+        )}
+
+        {/* Banner Informasi Sopir Sudah Tiba di Pos Asal */}
+        {isDriverAtOrigin && !isCheckedInOrigin && !isCancelled && !isNoShow && (
+          <div className="my-4 p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center gap-3 text-emerald-800">
+            <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center shrink-0 text-emerald-700">
+              <UserCheck className="w-4 h-4" />
+            </div>
+            <div className="text-xs">
+              <span className="font-bold text-[13px] text-emerald-900 flex items-center gap-1.5">
+                Sopir Telah Tiba di Pos Asal!
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              </span>
+              <p className="mt-0.5 text-emerald-700 leading-relaxed">
+                Armada & Sopir (<strong>{ticket.mitra || 'Mitra'}</strong>) sudah stand-by di <strong>{ticket.from || 'Pos Asal'}</strong>. Silakan menuju petugas pos dan tunjukkan QR Tiket Anda untuk verifikasi boarding.
+              </p>
             </div>
           </div>
         )}

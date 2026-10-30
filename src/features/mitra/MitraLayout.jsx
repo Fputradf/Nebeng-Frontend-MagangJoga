@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+﻿import { useEffect, useState, useRef } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import MitraSidebar from './components/MitraSidebar';
 import MitraTopbar from './components/MitraTopbar';
@@ -17,11 +17,13 @@ const MITRA_MENU_PATH = {
   'Digital QR Trip': 'qr',
   'Saldo & Komisi': 'saldo',
   'Chat Pelanggan': 'chat',
-  'Profil & Pengaturan': 'profile',
+  'Pusat Bantuan & FAQ': 'bantuan',
+  'Pengaturan Akun': 'profile/pengaturan',
+  'Profil & Pengaturan': 'profile/pengaturan',
 };
 
 // Kunci SEMUA menu selain onboarding jika mitra belum disetujui Admin Regional
-const VERIFIED_ONLY_SLUGS = ['dashboard', 'trip', 'qr', 'saldo', 'chat', 'profile'];
+const VERIFIED_ONLY_SLUGS = ['dashboard', 'trip', 'qr', 'saldo', 'chat', 'profile', 'profile/pengaturan'];
 
 export default function MitraLayout() {
   const navigate = useNavigate();
@@ -142,7 +144,7 @@ export default function MitraLayout() {
   return (
     <MitraDataProvider>
       <MitraTopbar />
-      <AppShell
+      <AppShell role="mitra"
         sidebar={
           <MitraSidebar
             activeMenu={activeMenu}

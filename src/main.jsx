@@ -5,6 +5,7 @@ import './index.css'
 import 'leaflet/dist/leaflet.css'
 import App from './App.jsx'
 import { ToastProvider } from './context/ToastContext.jsx'
+import { ConfirmProvider } from './context/ConfirmContext.jsx'
 import { AuthProvider } from './context/AuthContext.jsx'
 import { TicketsProvider } from './context/TicketsContext.jsx'
 import { GPSProvider } from './context/GPSContext.jsx'
@@ -25,9 +26,11 @@ createRoot(document.getElementById('root')).render(
           <NotificationAuthHandler />
           <GPSProvider>
             <ToastProvider>
-              <TicketsProvider>
+              <ConfirmProvider>
+                <TicketsProvider>
                 <App />
-              </TicketsProvider>
+                </TicketsProvider>
+              </ConfirmProvider>
             </ToastProvider>
           </GPSProvider>
         </AuthProvider>

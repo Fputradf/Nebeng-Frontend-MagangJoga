@@ -9,10 +9,13 @@ import { useAuth } from '../../context/AuthContext';
 
 const OPERATOR_MENU_PATH = {
   'Dashboard Pos': 'dashboard',
+  'Manifes & No-Show': 'manifest',
   'Inspection & Sealing': 'inspection',
   'Dual QR Scanner': 'scanner',
   'Handover & OTP': 'handover',
   'Laporan Kas Pos': 'financial',
+  'Panduan Pos': 'guide',
+  'Pengaturan Akun': 'pengaturan',
 };
 
 export default function OperatorLayout() {
@@ -42,7 +45,7 @@ export default function OperatorLayout() {
   };
 
   return (
-    <AppShell
+    <AppShell role="operator"
       sidebar={
         <OperatorSidebar
           activeMenu={activeMenu}
