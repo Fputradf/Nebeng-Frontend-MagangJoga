@@ -210,14 +210,14 @@ export default function AuditFinancialReport() {
             <div className="flex items-center gap-2 mb-2">
               <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
               <span className="text-[11px] font-bold uppercase tracking-widest text-accent">
-                AUDIT LEDGER & FINANCIAL REPORTING
+                AUDIT & FINANCIAL REPORTING
               </span>
             </div>
             <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
-              Audit Keuangan & Arus Dana Jaminan
+              Audit Keuangan & Dana Jaminan
             </h1>
             <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
-              Pantau arus kas Dana Jaminan Perjalanan secara langsung dari database sistem.
+              Pantau Pendapatan Dana Jaminan Perjalanan secara langsung dari database sistem.
             </p>
           </div>
 
@@ -278,7 +278,7 @@ export default function AuditFinancialReport() {
             }`}
           >
             <Receipt size={13} />
-            Ledger Dana Jaminan
+            Dana Jaminan
           </button>
         </div>
 

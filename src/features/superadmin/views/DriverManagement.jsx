@@ -19,7 +19,8 @@ import {
   Check,
   Filter,
   RefreshCw,
-  ExternalLink
+  ExternalLink,
+  ArrowRight
 } from 'lucide-react';
 import apiClient from '../../../services/apiClient';
 import { BASE_URL } from '../../../config/env';
@@ -229,24 +230,44 @@ export default function DriverManagement() {
     }
   };
 
-  // Toggle status account (active / suspended)
-  const handleToggleStatus = async (driver) => {
-    const newStatus = driver.status === 'active' ? 'suspended' : 'active';
-    const actionLabel = newStatus === 'active' ? 'mengaktifkan' : 'menonaktifkan';
+  // Status alert confirmation modal
+  const [driverStatusModal, setDriverStatusModal] = useState({
+    isOpen: false,
+    driver: null,
+    targetStatus: null
+  });
 
-    if (!window.confirm(`Apakah Anda yakin ingin ${actionLabel} akun driver ${driver.name}?`)) {
-      return;
-    }
+  const handleInitiateStatusChange = (driver) => {
+    const targetStatus = driver.status === 'active' ? 'suspended' : 'active';
+    setDriverStatusModal({
+      isOpen: true,
+      driver,
+      targetStatus
+    });
+  };
+
+  const handleConfirmStatusChange = async () => {
+    const { driver, targetStatus } = driverStatusModal;
+    if (!driver || !targetStatus) return;
 
     setIsUpdatingStatus(true);
     try {
-      await updateUserStatus(driver.id, newStatus);
-      toast.success(`Akun driver ${driver.name} berhasil diubah menjadi ${newStatus.toUpperCase()}.`, {
-        title: 'Status Diperbarui'
-      });
-      setDrivers((prev) =>
-        prev.map((d) => (d.id === driver.id ? { ...d, status: newStatus } : d))
+      await updateUserStatus(driver.id, targetStatus);
+      toast.success(
+        targetStatus === 'active'
+          ? `Akun driver ${driver.name} berhasil diaktifkan kembali.`
+          : `Akun driver ${driver.name} berhasil ditangguhkan (SUSPENDED).`,
+        {
+          title: 'Status Akun Diperbarui'
+        }
       );
+      setDrivers((prev) =>
+        prev.map((d) => (d.id === driver.id ? { ...d, status: targetStatus } : d))
+      );
+      if (selectedDriverForDetail && selectedDriverForDetail.id === driver.id) {
+        setSelectedDriverForDetail((prev) => ({ ...prev, status: targetStatus }));
+      }
+      setDriverStatusModal({ isOpen: false, driver: null, targetStatus: null });
     } catch (err) {
       console.error('Gagal mengubah status akun driver:', err);
       toast.error(err.response?.data?.message || 'Gagal memperbarui status akun driver.', { title: 'Gagal' });
@@ -491,13 +512,13 @@ export default function DriverManagement() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-gray-50/70 text-neutral-400 text-[12px] uppercase tracking-wider font-bold">
-                <th className="py-3 px-5">ID & Driver</th>
-                <th className="py-3 px-5">Kontak</th>
-                <th className="py-3 px-5">Wilayah</th>
-                <th className="py-3 px-5">Armada / Kendaraan</th>
-                <th className="py-3 px-5 text-center">Status Akun</th>
-                <th className="py-3 px-5 text-center">Status KYC</th>
-                <th className="py-3 px-5 text-center">Aksi & Sanksi</th>
+                <th className="py-3 px-5 whitespace-nowrap">ID & Driver</th>
+                <th className="py-3 px-5 whitespace-nowrap">Kontak</th>
+                <th className="py-3 px-5 whitespace-nowrap">Wilayah</th>
+                <th className="py-3 px-5 whitespace-nowrap">Armada / Kendaraan</th>
+                <th className="py-3 px-5 text-center whitespace-nowrap">Status Akun</th>
+                <th className="py-3 px-5 text-center whitespace-nowrap">Status KYC</th>
+                <th className="py-3 px-5 text-center whitespace-nowrap min-w-[260px]">Aksi & Sanksi</th>
               </tr>
             </thead>
 
@@ -543,7 +564,7 @@ export default function DriverManagement() {
                           <button
                             type="button"
                             onClick={() => toggleMaskPhone(driver.id)}
-                            className="p-0.5 rounded hover:bg-neutral-100 text-neutral-400 hover:text-neutral-700 transition"
+                            className="p-0.5 rounded hover:bg-neutral-100 text-neutral-400 hover:text-neutral-700 transition cursor-pointer"
                             title={isUnmasked ? 'Sembunyikan Telepon' : 'Lihat Nomor Telepon Lengkap'}
                           >
                             {isUnmasked ? <EyeOff size={11} /> : <Eye size={11} />}
@@ -578,22 +599,25 @@ export default function DriverManagement() {
                       </td>
 
                       {/* Status Akun */}
-                      <td className="py-3.5 px-5 text-center">
-                        <span
-                          className={`px-2.5 py-1 rounded-full text-[11px] font-bold inline-block ${
+                      <td className="py-3.5 px-5 text-center whitespace-nowrap">
+                        <button
+                          type="button"
+                          onClick={() => handleInitiateStatusChange(driver)}
+                          className={`w-28 py-1 rounded-full text-[11px] font-bold text-center inline-flex items-center justify-center transition cursor-pointer hover:opacity-90 hover:scale-[1.02] active:scale-95 tracking-wide ${
                             driver.status === 'active'
-                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                              : 'bg-rose-50 text-rose-700 border border-rose-200'
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
+                              : 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100'
                           }`}
+                          title={`Status saat ini: ${driver.status === 'active' ? 'AKTIF' : 'SUSPENDED'}. Klik untuk mengubah status.`}
                         >
                           {driver.status === 'active' ? 'AKTIF' : 'SUSPENDED'}
-                        </span>
+                        </button>
                       </td>
 
                       {/* Status KYC */}
-                      <td className="py-3.5 px-5 text-center">
+                      <td className="py-3.5 px-5 text-center whitespace-nowrap">
                         <span
-                          className={`px-2.5 py-1 rounded-full text-[11px] font-bold inline-block ${
+                          className={`w-32 py-1 rounded-full text-[11px] font-bold text-center inline-flex items-center justify-center tracking-wide ${
                             driver.statusVerification === 'approved'
                               ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                               : driver.statusVerification === 'pending'
@@ -614,41 +638,54 @@ export default function DriverManagement() {
                       </td>
 
                       {/* Actions */}
-                      <td className="py-3.5 px-5 text-center">
-                        <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                      <td className="py-3.5 px-5 text-center whitespace-nowrap">
+                        <div className="inline-flex items-center justify-center gap-1.5">
                           <button
                             type="button"
                             onClick={() => {
                               setSelectedDriverForDetail(driver);
                               setIsDetailModalOpen(true);
                             }}
-                            className="px-2.5 py-1 bg-white hover:bg-neutral-100 text-neutral-700 border border-neutral-300 text-[11px] font-bold rounded-lg shadow-2xs transition cursor-pointer"
+                            className="px-2.5 py-1.5 bg-white hover:bg-neutral-50 active:bg-neutral-100 text-neutral-700 border border-neutral-200 hover:border-neutral-300 text-xs font-semibold rounded-xl shadow-2xs transition inline-flex items-center gap-1.5 cursor-pointer"
+                            title="Lihat detail lengkap profil driver"
                           >
-                            Detail
+                            <Eye className="w-3.5 h-3.5 text-neutral-500" />
+                            <span>Detail</span>
                           </button>
 
                           <button
                             type="button"
                             onClick={() => handleOpenSanctionsModal(driver)}
-                            className="px-2.5 py-1 bg-[#10367D] hover:bg-[#0C2C66] text-white text-[11px] font-bold rounded-lg shadow-2xs transition cursor-pointer inline-flex items-center gap-1"
+                            className="px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 text-[#10367D] border border-blue-200 text-xs font-semibold rounded-xl shadow-2xs transition inline-flex items-center gap-1.5 cursor-pointer"
+                            title="Lihat data sanksi dan permohonan banding"
                           >
-                            <ShieldAlert className="w-3 h-3" />
+                            <ShieldAlert className="w-3.5 h-3.5 text-[#10367D]" />
                             <span>Sanksi</span>
                           </button>
 
-                          <button
-                            type="button"
-                            onClick={() => handleToggleStatus(driver)}
-                            disabled={isUpdatingStatus}
-                            className={`px-2 py-1 text-[11px] font-bold rounded-lg shadow-2xs transition cursor-pointer ${
-                              driver.status === 'active'
-                                ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200'
-                                : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200'
-                            }`}
-                            title={driver.status === 'active' ? 'Nonaktifkan Driver' : 'Aktifkan Driver'}
-                          >
-                            {driver.status === 'active' ? 'Suspend' : 'Aktifkan'}
-                          </button>
+                          {driver.status === 'active' ? (
+                            <button
+                              type="button"
+                              onClick={() => handleInitiateStatusChange(driver)}
+                              disabled={isUpdatingStatus}
+                              className="w-[88px] justify-center px-2 py-1.5 bg-rose-50 hover:bg-rose-100 active:bg-rose-200 text-rose-700 border border-rose-200 text-xs font-semibold rounded-xl shadow-2xs transition inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                              title="Tangguhkan (Suspend) Akun Driver"
+                            >
+                              <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
+                              <span>Suspend</span>
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleInitiateStatusChange(driver)}
+                              disabled={isUpdatingStatus}
+                              className="w-[88px] justify-center px-2 py-1.5 bg-emerald-50 hover:bg-emerald-100 active:bg-emerald-200 text-emerald-700 border border-emerald-200 text-xs font-semibold rounded-xl shadow-2xs transition inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                              title="Aktifkan Kembali Akun Driver"
+                            >
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                              <span>Aktifkan</span>
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -799,11 +836,50 @@ export default function DriverManagement() {
             </div>
 
             {/* Aksi footer modal */}
-            <div className="flex justify-end gap-2 pt-2 border-t border-neutral-100">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 pt-3 border-t border-neutral-100">
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const driver = selectedDriverForDetail;
+                    setIsDetailModalOpen(false);
+                    handleOpenSanctionsModal(driver);
+                  }}
+                  className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 text-[#10367D] border border-blue-200 text-xs font-bold rounded-xl transition inline-flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                >
+                  <ShieldAlert className="w-3.5 h-3.5 text-[#10367D]" />
+                  <span>Lihat Sanksi</span>
+                </button>
+
+                {selectedDriverForDetail.status === 'active' ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleInitiateStatusChange(selectedDriverForDetail);
+                    }}
+                    className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 active:bg-rose-200 text-rose-700 border border-rose-200 text-xs font-bold rounded-xl transition inline-flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                  >
+                    <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
+                    <span>Suspend Driver</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleInitiateStatusChange(selectedDriverForDetail);
+                    }}
+                    className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 active:bg-emerald-200 text-emerald-700 border border-emerald-200 text-xs font-bold rounded-xl transition inline-flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Aktifkan Driver</span>
+                  </button>
+                )}
+              </div>
+
               <button
                 type="button"
                 onClick={() => setIsDetailModalOpen(false)}
-                className="px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-xs font-bold rounded-xl transition"
+                className="px-4 py-1.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-xs font-bold rounded-xl transition cursor-pointer"
               >
                 Tutup
               </button>
@@ -1024,6 +1100,183 @@ export default function DriverManagement() {
             </button>
           </div>
         </div>
+      </BaseModal>
+
+      {/* ── POP-UP ALERT / MODAL KONFIRMASI STATUS DRIVER ── */}
+      <BaseModal
+        isOpen={driverStatusModal.isOpen}
+        onClose={() => {
+          if (!isUpdatingStatus) {
+            setDriverStatusModal({ isOpen: false, driver: null, targetStatus: null });
+          }
+        }}
+        title={
+          driverStatusModal.targetStatus === 'suspended'
+            ? 'Konfirmasi Penangguhan Akun Driver'
+            : 'Konfirmasi Pengaktifan Akun Driver'
+        }
+        subtitle="Peringatan Operasional Superadmin"
+        maxWidth="max-w-md"
+      >
+        {driverStatusModal.driver && (
+          <div className="space-y-4 pt-1 text-neutral-800">
+            {/* Alert Banner / Icon Header */}
+            <div
+              className={`flex items-start gap-3 p-3.5 rounded-2xl border ${
+                driverStatusModal.targetStatus === 'suspended'
+                  ? 'bg-rose-50/70 border-rose-200'
+                  : 'bg-emerald-50/70 border-emerald-200'
+              }`}
+            >
+              <div
+                className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                  driverStatusModal.targetStatus === 'suspended'
+                    ? 'bg-rose-100 text-rose-600 ring-4 ring-rose-50'
+                    : 'bg-emerald-100 text-emerald-600 ring-4 ring-emerald-50'
+                }`}
+              >
+                {driverStatusModal.targetStatus === 'suspended' ? (
+                  <AlertTriangle className="w-5 h-5" />
+                ) : (
+                  <CheckCircle2 className="w-5 h-5" />
+                )}
+              </div>
+              <div className="space-y-1">
+                <h4
+                  className={`font-bold text-sm leading-tight ${
+                    driverStatusModal.targetStatus === 'suspended' ? 'text-rose-900' : 'text-emerald-900'
+                  }`}
+                >
+                  {driverStatusModal.targetStatus === 'suspended'
+                    ? 'Apakah Anda yakin ingin menangguhkan driver ini?'
+                    : 'Apakah Anda yakin ingin mengaktifkan kembali driver ini?'}
+                </h4>
+                <p
+                  className={`text-xs leading-relaxed ${
+                    driverStatusModal.targetStatus === 'suspended' ? 'text-rose-700' : 'text-emerald-700'
+                  }`}
+                >
+                  {driverStatusModal.targetStatus === 'suspended'
+                    ? 'Driver yang disuspend tidak akan dapat menerima order tebengan baru dan tidak muncul di hasil pencarian aplikasi penumpang.'
+                    : 'Driver akan langsung aktif kembali di sistem dan siap menerima order tebengan pelanggan.'}
+                </p>
+              </div>
+            </div>
+
+            {/* Driver Profile Summary Card */}
+            <div className="p-3.5 bg-neutral-50 rounded-2xl border border-neutral-200 text-xs space-y-2.5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-brand-50 border border-brand-200 text-brand-700 font-bold flex items-center justify-center shrink-0 overflow-hidden text-sm">
+                  {driverStatusModal.driver.avatar ? (
+                    <img
+                      src={getFullFileUrl(driverStatusModal.driver.avatar)}
+                      alt={driverStatusModal.driver.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                  ) : (
+                    driverStatusModal.driver.name.charAt(0).toUpperCase()
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-neutral-900 text-sm truncate">
+                    {driverStatusModal.driver.name}
+                  </p>
+                  <p className="text-[11px] font-mono text-[#10367D] font-bold">
+                    ID Driver: #{driverStatusModal.driver.id}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-neutral-200/60 text-[11px]">
+                <div>
+                  <span className="text-neutral-400 block">Wilayah:</span>
+                  <span className="font-semibold text-neutral-800">
+                    {driverStatusModal.driver.regionName}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-neutral-400 block">Kendaraan:</span>
+                  <span className="font-semibold text-neutral-800 truncate block">
+                    {driverStatusModal.driver.vehicle
+                      ? `${driverStatusModal.driver.vehicle.brand} (${driverStatusModal.driver.vehicle.plateNumber})`
+                      : 'Belum Terdaftar'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Status Transition Visual */}
+              <div className="flex items-center justify-between p-2 bg-white rounded-xl border border-neutral-200/80 text-xs">
+                <span className="text-neutral-500 font-medium">Perubahan Status:</span>
+                <div className="flex items-center gap-2 font-bold text-[11px]">
+                  <span
+                    className={`px-2 py-0.5 rounded-full ${
+                      driverStatusModal.driver.status === 'active'
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        : 'bg-rose-50 text-rose-700 border border-rose-200'
+                    }`}
+                  >
+                    {driverStatusModal.driver.status === 'active' ? 'AKTIF' : 'SUSPENDED'}
+                  </span>
+                  <ArrowRight className="w-3.5 h-3.5 text-neutral-400" />
+                  <span
+                    className={`px-2 py-0.5 rounded-full ${
+                      driverStatusModal.targetStatus === 'active'
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        : 'bg-rose-50 text-rose-700 border border-rose-200'
+                    }`}
+                  >
+                    {driverStatusModal.targetStatus === 'active' ? 'AKTIF' : 'SUSPENDED'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-neutral-100">
+              <button
+                type="button"
+                onClick={() =>
+                  setDriverStatusModal({ isOpen: false, driver: null, targetStatus: null })
+                }
+                disabled={isUpdatingStatus}
+                className="px-4 py-2 text-xs font-bold text-neutral-600 hover:bg-neutral-100 rounded-xl transition cursor-pointer disabled:opacity-50"
+              >
+                Batal
+              </button>
+
+              <button
+                type="button"
+                onClick={handleConfirmStatusChange}
+                disabled={isUpdatingStatus}
+                className={`px-4 py-2 text-xs font-bold text-white rounded-xl transition cursor-pointer flex items-center gap-1.5 shadow-sm disabled:opacity-50 ${
+                  driverStatusModal.targetStatus === 'suspended'
+                    ? 'bg-rose-600 hover:bg-rose-700 active:bg-rose-800 shadow-rose-200'
+                    : 'bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 shadow-emerald-200'
+                }`}
+              >
+                {isUpdatingStatus ? (
+                  <>
+                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Menyimpan...</span>
+                  </>
+                ) : driverStatusModal.targetStatus === 'suspended' ? (
+                  <>
+                    <AlertTriangle className="w-3.5 h-3.5" />
+                    <span>Ya, Suspend Driver</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Ya, Aktifkan Driver</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
       </BaseModal>
     </div>
   );

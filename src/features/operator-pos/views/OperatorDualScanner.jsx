@@ -312,7 +312,14 @@ export default function OperatorDualScanner() {
         type: scanMode === 'origin' ? 'Scan 1 (Origin)' : 'Scan 2 (Destination / Selesai)',
         trip: cleanTrip || response.data?.checkpoint?.trip?.qrCodeTrip || response.data?.trip?.qrCodeTrip || '(Otomatis dari Tiket)',
         ticket: cleanTicket || response.data?.checkpoint?.order?.qrCodeTicket || '(Scan Trip Mitra)',
-        status: scanMode === 'origin' ? 'IN_TRANSIT (Berangkat)' : 'SUCCESS (Trip Selesai & Dana Dicairkan)',
+        status:
+          scanMode === 'destination'
+            ? 'SUCCESS (Trip Selesai & Dana Dicairkan)'
+            : response.data?.message?.includes('IN_TRANSIT')
+            ? 'IN_TRANSIT (Berangkat)'
+            : cleanTrip && !cleanTicket
+            ? 'STAND-BY DI POS ASAL'
+            : 'CHECK-IN POS ASAL',
         time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
       };
 

@@ -557,7 +557,7 @@ export default function CustomerWallet() {
               {isLoading ? '...' : formatRupiah(wallet?.heldEscrowBalance || 0)}
             </div>
             <p className="text-[12px] text-neutral-500 mt-1">
-              Dana dalam proses order perjalanan atau titip barang yang sedang aktif. Dana ini otomatis dicairkan setelah trip diselesaikan.
+              Dana pesanan aktif yang ditahan aman di sistem rekening bersama (Escrow). Dana otomatis dicairkan ke mitra setelah perjalanan selesai, atau di-refund ke Saldo Tersedia jika trip dibatalkan.
             </p>
           </div>
         </div>

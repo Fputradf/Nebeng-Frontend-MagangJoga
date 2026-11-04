@@ -46,7 +46,6 @@ import OperatorManifest from './features/operator-pos/views/OperatorManifest';
 import OperatorInspection from './features/operator-pos/views/OperatorInspection';
 import OperatorDualScanner from './features/operator-pos/views/OperatorDualScanner';
 import OperatorHandover from './features/operator-pos/views/OperatorHandover';
-import OperatorFinancial from './features/operator-pos/views/OperatorFinancial';
 import OperatorGuide from './features/operator-pos/views/OperatorGuide';
 import OperatorAccountSettings from './features/operator-pos/components/OperatorAccountSettings';
 
@@ -127,7 +126,6 @@ export default function App() {
       '/admin/wilayah':                'Manajemen Wilayah',
       '/admin/pos-mitra':              'Pos Mitra',
       '/admin/admin-wilayah':          'Admin Wilayah',
-      '/admin/armada':                 'Manajemen Armada',
       '/admin/driver':                 'Manajemen Driver',
       '/admin/verifikasi-kyc':         'Pusat Verifikasi KYC',
       '/admin/tarif':                  'Manajemen Tarif',
@@ -157,12 +155,11 @@ export default function App() {
       '/regional/bantuan-chat':        'Chat Bantuan',
       '/regional/notifications':       'Notifikasi',
       '/regional/pengaturan':          'Pengaturan Akun',
-      '/operator-pos/dashboard':       'Dashboard Operator',
-      '/operator-pos/manifest':        'Manifest',
-      '/operator-pos/scanner':         'Scanner QR',
-      '/operator-pos/financial':       'Keuangan',
+      '/operator-pos/dashboard':       'Dashboard',
+      '/operator-pos/manifest':        'Kehadiran',
+      '/operator-pos/scanner':         'Scan QR',
       '/operator-pos/guide':           'Panduan',
-      '/operator-pos/pengaturan':      'Pengaturan Akun',
+      '/operator-pos/pengaturan':      'Pengaturan',
       '/operator-pos/notifications':   'Notifikasi',
       '/mitra/dashboard':              'Dashboard Mitra',
       '/mitra/onboarding':             'Onboarding Mitra',
@@ -247,8 +244,8 @@ export default function App() {
         <Route path="wilayah" element={<RegionsManagement />} />
         <Route path="pos-mitra" element={<PosMitraManagement />} />
         <Route path="admin-wilayah" element={<RegionalAdminsManagement />} />
-        <Route path="armada" element={<ArmadaKurirTabs defaultTab="armada" />} />
-        <Route path="armada-kurir" element={<Navigate to="/admin/armada" replace />} />
+        <Route path="armada" element={<Navigate to="/admin/driver" replace />} />
+        <Route path="armada-kurir" element={<Navigate to="/admin/driver" replace />} />
         <Route path="driver" element={<DriverManagement />} />
         <Route path="verifikasi-kyc" element={<VerificationCenterPage />} />
         <Route path="verifikasi" element={<Navigate to="/admin/verifikasi-kyc" replace />} />
@@ -314,7 +311,7 @@ export default function App() {
         <Route path="inspection" element={<Navigate to="/operator-pos/scanner" replace />} />
         <Route path="scanner" element={<OperatorDualScanner />} />
         <Route path="handover" element={<Navigate to="/operator-pos/scanner" replace />} />
-        <Route path="financial" element={<OperatorFinancial />} />
+        <Route path="financial" element={<Navigate to="/operator-pos/dashboard" replace />} />
         <Route path="guide" element={<OperatorGuide />} />
         <Route path="pengaturan" element={<OperatorAccountSettings />} />
         <Route path="notifications" element={<NotificationHistory />} />

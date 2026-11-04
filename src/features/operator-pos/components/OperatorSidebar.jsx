@@ -4,13 +4,9 @@ import {
   LayoutDashboard,
   QrCode,
   LogOut,
-  ClipboardCheck,
   ClipboardList,
-  AlertTriangle,
   Menu,
   X,
-  UserCheck,
-  FileText,
   BookOpen,
   Settings,
 } from 'lucide-react';
@@ -18,9 +14,12 @@ import logoAsset from '../../../assets/logo.png';
 import { useAppConfig } from '../../../context/AppConfigContext';
 
 export default function OperatorSidebar({
-  activeMenu = 'Dashboard Pos',
+  activeMenu = 'Dashboard',
   onMenuSelect,
-  onLogout, isOpen: propIsOpen, onClose: propOnClose }) {
+  onLogout,
+  isOpen: propIsOpen,
+  onClose: propOnClose,
+}) {
   const { appName, appLogo } = useAppConfig();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -50,19 +49,18 @@ export default function OperatorSidebar({
 
   const MENU_GROUPS = [
     {
-      label: 'Operasional Pos',
+      label: 'Menu',
       items: [
-        { name: 'Dashboard Pos', path: 'dashboard', icon: LayoutDashboard },
-        { name: 'Manifest Keberangkatan', path: 'manifest', icon: ClipboardList },
-        { name: 'Dual Scanner (Validasi & Serah Terima)', path: 'scanner', icon: QrCode },
-        { name: 'Arus Kas & Setoran Harian', path: 'financial', icon: FileText },
+        { name: 'Dashboard', path: 'dashboard', icon: LayoutDashboard },
+        { name: 'Kehadiran', path: 'manifest', icon: ClipboardList },
+        { name: 'Scan QR', path: 'scanner', icon: QrCode },
       ],
     },
     {
-      label: 'Informasi & Pengaturan',
+      label: 'Lainnya',
       items: [
-        { name: 'Panduan Operasional SOP', path: 'guide', icon: BookOpen },
-        { name: 'Pengaturan Akun', path: 'pengaturan', icon: Settings },
+        { name: 'Panduan', path: 'guide', icon: BookOpen },
+        { name: 'Pengaturan', path: 'pengaturan', icon: Settings },
       ],
     },
   ];
@@ -94,11 +92,16 @@ export default function OperatorSidebar({
       {isMobileOpen && (
         <div
           onClick={handleClose}
-          className="lg:hidden fixed inset-0 bg-black/60 z-40 backdrop-blur-xs transition-opacity" aria-hidden="true"
+          className="lg:hidden fixed inset-0 bg-black/60 z-40 backdrop-blur-xs transition-opacity"
+          aria-hidden="true"
         />
       )}
 
-      <aside className={`w-64 h-screen bg-gradient-to-b from-[#0c2353] via-[#10367D] to-[#18458f] border-r border-blue-400/20 shadow-2xl text-white flex flex-col justify-between p-5 fixed left-0 top-0 overflow-y-auto z-50 transition-transform duration-300 font-sans print:hidden select-none ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
+      <aside
+        className={`w-64 h-screen bg-gradient-to-b from-[#0c2353] via-[#10367D] to-[#18458f] border-r border-blue-400/20 shadow-2xl text-white flex flex-col justify-between p-5 fixed left-0 top-0 overflow-y-auto z-50 transition-transform duration-300 font-sans print:hidden select-none ${
+          isMobileOpen ? 'translate-x-0' : '-translate-x-full'
+        } lg:translate-x-0`}
+      >
         <div>
           <div className="mb-8 px-2 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -144,7 +147,9 @@ export default function OperatorSidebar({
                             : 'text-white/85 font-medium hover:bg-white/10 hover:text-white'
                         }`}
                       >
-                        <IconComponent className={`w-4 h-4 ${isActive ? 'text-[#10367D]' : 'text-white/80'}`} />
+                        <IconComponent
+                          className={`w-4 h-4 ${isActive ? 'text-[#10367D]' : 'text-white/80'}`}
+                        />
                         {item.name}
                       </button>
                     );
@@ -158,11 +163,11 @@ export default function OperatorSidebar({
         <div className="pt-5 border-t border-white/10">
           <button
             onClick={() => setShowLogoutModal(true)}
-            aria-label="Keluar Sistem"
+            aria-label="Keluar"
             className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold text-white bg-white/10 hover:bg-white/20 transition cursor-pointer border border-white/10 shadow-2xs"
           >
             <LogOut className="w-4 h-4 text-white shrink-0" />
-            <span>Log Out</span>
+            <span>Keluar</span>
           </button>
         </div>
       </aside>
@@ -171,8 +176,8 @@ export default function OperatorSidebar({
         isOpen={showLogoutModal}
         onClose={() => setShowLogoutModal(false)}
         onConfirm={handleConfirmLogout}
-        title="Konfirmasi Keluar Sistem"
-        message="Apakah Anda yakin ingin mengakhiri sesi aktif ini? Anda harus masuk kembali untuk mengakses terminal operasional."
+        title="Konfirmasi Keluar"
+        message="Apakah Anda yakin ingin keluar dari akun ini?"
         confirmText="Ya, Keluar"
         cancelText="Batal"
         variant="danger"

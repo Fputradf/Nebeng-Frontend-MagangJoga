@@ -15,6 +15,7 @@ import {
   CalendarClock,
   ShieldAlert,
   Lock,
+  Navigation,
 } from 'lucide-react';
 import ReportModal from '../../../components/common/ReportModal';
 import { evaluateOperatorReportEligibility } from '../../../utils/reportCheckpointValidation';
@@ -22,6 +23,7 @@ import { useToast } from '../../../context/ToastContext';
 import { useConfirm } from '../../../context/ConfirmContext';
 import StatusBadge from '../../../components/ui/StatusBadge';
 import EmptyState from '../../../components/ui/EmptyState';
+import BaseModal from '../../../components/ui/BaseModal';
 import apiClient from '../../../services/apiClient';
 
 const PRIMARY_COLOR = '#10367D';
@@ -50,6 +52,11 @@ export default function OperatorManifest() {
   const [reportTargetUser, setReportTargetUser] = useState(null);
   const [reportContext, setReportContext] = useState({});
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+
+  // No-Show Modal State
+  const [noShowModalConfig, setNoShowModalConfig] = useState(null);
+  const [noShowReason, setNoShowReason] = useState('');
+  const [isSubmittingNoShow, setIsSubmittingNoShow] = useState(false);
 
   const handleOpenReportDriver = (trip) => {
     // Validasi audit checkpoint: Driver harus sudah datang di pos
@@ -132,52 +139,87 @@ export default function OperatorManifest() {
     }
   };
 
-  const handlePassengerNoShow = async (orderId, tripId, passengerName) => {
-    const isConfirmed = await confirm({
-      title: 'Tandai Penumpang Tidak Hadir (No-Show)',
-      message: `Apakah Anda yakin ingin menandai penumpang ${
-        passengerName ? `"${passengerName}"` : 'ini'
-      } tidak datang ke pos? Tiket akan dinyatakan hangus tanpa pengembalian dana (refund).`,
-      confirmText: 'Ya, Tandai Tidak Hadir',
-      cancelText: 'Batal',
-      variant: 'warning',
+  const handleOpenPassengerNoShow = (passenger, trip) => {
+    setNoShowModalConfig({
+      type: 'passenger',
+      id: passenger.orderId,
+      tripId: trip.tripId,
+      name: passenger.customerName || `Penumpang #${passenger.orderId}`,
+      seats: passenger.seatsBooked || 1,
+      phone: passenger.customerPhone,
+      defaultReason: 'Penumpang tidak hadir di pos asal sampai batas waktu toleransi habis.',
     });
-    if (!isConfirmed) return;
+    setNoShowReason('Penumpang tidak hadir di pos asal sampai batas waktu toleransi habis.');
+  };
+
+  const handleOpenMitraNoShow = (trip) => {
+    setNoShowModalConfig({
+      type: 'mitra',
+      id: trip.tripId,
+      name: trip.mitraName || `Supir #${trip.tripId}`,
+      plate: trip.vehicle || '',
+      defaultReason: 'Mitra supir tidak hadir ke pos asal melebihi batas waktu toleransi 15 menit.',
+    });
+    setNoShowReason('Mitra supir tidak hadir ke pos asal melebihi batas waktu toleransi 15 menit.');
+  };
+
+  const handleConfirmNoShow = async () => {
+    if (!noShowModalConfig) return;
+    if (!noShowReason.trim()) {
+      toast.warning('Harap masukkan alasan ketidakhadiran', { title: 'Alasan Diperlukan' });
+      return;
+    }
 
     try {
-      await apiClient.post('/checkpoints/passenger-no-show-by-id', {
-        orderId,
-        posId: manifest?.posId || selectedPosId,
-      });
-      toast.success('Penumpang berhasil dicatat tidak hadir (no-show)', { title: 'Berhasil' });
+      setIsSubmittingNoShow(true);
+      if (noShowModalConfig.type === 'mitra') {
+        await apiClient.post('/checkpoints/mitra-no-show-by-id', {
+          tripId: noShowModalConfig.id,
+          posId: manifest?.posId || selectedPosId,
+          reason: noShowReason.trim(),
+        });
+        toast.success(
+          'Mitra supir berhasil ditandai Tidak Hadir (No-Show). Trip dibatalkan dan seluruh penumpang di-refund.',
+          { title: 'Supir No-Show Berhasil Diproses' }
+        );
+      } else {
+        await apiClient.post('/checkpoints/passenger-no-show-by-id', {
+          orderId: noShowModalConfig.id,
+          posId: manifest?.posId || selectedPosId,
+          reason: noShowReason.trim(),
+        });
+        toast.success(
+          `Penumpang "${noShowModalConfig.name}" berhasil dicatat Tidak Hadir. Tiket hangus tanpa refund.`,
+          { title: 'Penumpang No-Show Dicatat' }
+        );
+      }
+      setNoShowModalConfig(null);
       loadManifest();
     } catch (error) {
-      console.error('Gagal menandai tidak hadir:', error);
-      toast.error(error.response?.data?.message || 'Gagal menandai penumpang tidak hadir', {
-        title: 'Error',
+      console.error('Gagal memproses status tidak hadir:', error);
+      toast.error(error.response?.data?.message || 'Gagal memproses status Tidak Hadir', {
+        title: 'Gagal Memproses',
       });
+    } finally {
+      setIsSubmittingNoShow(false);
     }
   };
 
-  const handleMitraNoShow = async (tripId, mitraName) => {
-    const reason = prompt(
-      `Masukkan alasan supir/mitra ${mitraName ? `"${mitraName}"` : ''} tidak hadir di pos asal:`
-    );
-    if (!reason || !reason.trim()) return;
-
+  const handleDispatchTrip = async (tripId, vehicle) => {
+    if (!window.confirm(`Konfirmasi keberangkatan armada ${vehicle ? `(${vehicle})` : ''} dari pos ini menuju pos tujuan?`)) {
+      return;
+    }
     try {
-      await apiClient.post('/checkpoints/mitra-no-show-by-id', {
-        tripId,
+      const res = await apiClient.post('/checkpoints/scan', {
+        qrCodeTrip: `TRIP-${tripId}`,
         posId: manifest?.posId || selectedPosId,
-        reason: reason.trim(),
+        scanType: 'checkin_origin',
       });
-      toast.success('Supir/mitra berhasil dicatat tidak hadir (no-show)', { title: 'Berhasil' });
+      toast.success(res.data?.message || 'Armada resmi diberangkatkan!', { title: 'Armada Berangkat' });
       loadManifest();
     } catch (error) {
-      console.error('Gagal menandai supir tidak hadir:', error);
-      toast.error(error.response?.data?.message || 'Gagal menandai supir tidak hadir', {
-        title: 'Error',
-      });
+      console.error('Gagal memberangkatkan armada:', error);
+      toast.error(error.response?.data?.message || 'Gagal memberangkatkan armada.', { title: 'Error' });
     }
   };
 
@@ -506,6 +548,22 @@ export default function OperatorManifest() {
             <span className="text-lg font-bold text-rose-900">{stats.noShowPassengers} Orang</span>
           </div>
         </div>
+
+        {/* ── INFO PANDUAN KEHADIRAN & NO-SHOW POS ── */}
+        <div className="p-3.5 bg-blue-50/70 border border-blue-200/80 rounded-2xl flex items-start gap-3 text-xs text-blue-900">
+          <AlertCircle className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <p className="font-bold">Panduan Status Kehadiran & Fitur No-Show:</p>
+            <ul className="list-disc pl-4 space-y-0.5 text-blue-800 text-[11px]">
+              <li>
+                <strong>Supir Tidak Hadir:</strong> Aktif jika supir belum check-in di pos hingga lewat batas toleransi 15 menit dari jam berangkat. Menandai supir no-show akan membatalkan trip, me-refund 100% dana penumpang, dan menjatuhkan sanksi pada supir.
+              </li>
+              <li>
+                <strong>Penumpang Tidak Hadir:</strong> Aktif jika supir sudah tiba di pos atau toleransi keberangkatan telah habis namun penumpang belum datang. Tiket hangus tanpa refund dan kursi dikembalikan ke kuota trip.
+              </li>
+            </ul>
+          </div>
+        </div>
       </div>
 
       {/* ── DAFTAR PERJALANAN ── */}
@@ -590,17 +648,80 @@ export default function OperatorManifest() {
                     <span>{formatDepartureTime(trip.departureTime)}</span>
                   </div>
 
-                  {trip.canMarkMitraNoShow && (
+                  {trip.status === 'in_origin_pos' && (
                     <button
                       type="button"
-                      onClick={() => handleMitraNoShow(trip.tripId, trip.mitraName)}
-                      className="min-h-[44px] px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition cursor-pointer flex items-center gap-1.5 shadow-xs"
-                      title="Tandai jika supir tidak datang ke pos melewati batas waktu toleransi"
+                      onClick={() => handleDispatchTrip(trip.tripId, trip.vehicle)}
+                      className="min-h-[44px] px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition cursor-pointer flex items-center gap-1.5 shadow-xs"
+                      title="Berangkatkan armada dan penumpang menuju pos tujuan"
                     >
-                      <Car className="w-3.5 h-3.5" />
-                      <span>Supir Tidak Hadir</span>
+                      <Navigation className="w-3.5 h-3.5" />
+                      <span>Berangkatkan Armada</span>
                     </button>
                   )}
+
+                  {/* Status & Kontrol Kehadiran Supir */}
+                  {(() => {
+                    // 1. Supir sudah dinyatakan no-show
+                    if (trip.status === 'mitra_no_show') {
+                      return (
+                        <span className="min-h-[44px] px-3 py-1.5 bg-rose-100 text-rose-800 border border-rose-300 rounded-xl text-xs font-bold flex items-center gap-1.5">
+                          <UserX className="w-3.5 h-3.5 text-rose-600" />
+                          <span>Supir No-Show</span>
+                        </span>
+                      );
+                    }
+
+                    // 2. Supir sudah hadir di pos asal / dalam perjalanan / selesai
+                    if (
+                      trip.isMitraCheckedIn ||
+                      trip.status === 'in_origin_pos' ||
+                      trip.status === 'in_transit' ||
+                      trip.status === 'completed'
+                    ) {
+                      return (
+                        <span className="min-h-[44px] px-3 py-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-bold flex items-center gap-1.5">
+                          <UserCheck className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>Supir Sudah di Pos</span>
+                        </span>
+                      );
+                    }
+
+                    // 3. Supir belum hadir dan batas toleransi sudah lewat
+                    if (trip.canMarkMitraNoShow || trip.isPastGracePeriod) {
+                      return (
+                        <button
+                          type="button"
+                          onClick={() => handleOpenMitraNoShow(trip)}
+                          className="min-h-[44px] px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition cursor-pointer flex items-center gap-1.5 shadow-xs"
+                          title="Tandai supir tidak hadir di pos asal setelah melewati batas toleransi"
+                        >
+                          <Car className="w-3.5 h-3.5" />
+                          <span>Tandai Supir Tidak Hadir</span>
+                        </button>
+                      );
+                    }
+
+                    // 4. Supir belum hadir namun toleransi belum lewat
+                    return (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          toast.info(
+                            `Supir "${trip.mitraName}" belum check-in di pos. Batas toleransi keberangkatan adalah s/d ${formatDepartureTime(
+                              trip.gracePeriodEnd || trip.departureTime
+                            )} (toleransi 15 menit). Tombol No-Show akan otomatis aktif jika supir belum tiba setelah waktu tersebut.`,
+                            { title: 'Status Kehadiran Supir' }
+                          )
+                        }
+                        className="min-h-[44px] px-3.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold rounded-xl transition cursor-pointer flex items-center gap-1.5"
+                        title="Klik untuk info batas toleransi kehadiran supir"
+                      >
+                        <Clock className="w-3.5 h-3.5 text-amber-600" />
+                        <span>Supir Belum Tiba (Toleransi 15 Mnt)</span>
+                      </button>
+                    );
+                  })()}
 
                   {(() => {
                     const eligibility = evaluateOperatorReportEligibility({ targetType: 'driver', trip });
@@ -711,23 +832,67 @@ export default function OperatorManifest() {
                             );
                           })()}
 
-                          {passenger.canMarkNoShow && (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handlePassengerNoShow(
-                                  passenger.orderId,
-                                  trip.tripId,
-                                  passenger.customerName
-                                )
+                          {/* Status & Kontrol Kehadiran Penumpang */}
+                          {(() => {
+                            if (passenger.status === 'no_show') {
+                              return (
+                                <span className="px-2.5 py-1 bg-rose-50 text-rose-700 border border-rose-200 text-[11px] font-bold rounded-lg flex items-center gap-1">
+                                  <UserX className="w-3 h-3 text-rose-500" />
+                                  <span>No-Show (Hangus)</span>
+                                </span>
+                              );
+                            }
+
+                            if (passenger.status === 'checked_in_origin') {
+                              return (
+                                <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold rounded-lg flex items-center gap-1">
+                                  <UserCheck className="w-3 h-3 text-emerald-600" />
+                                  <span>Hadir di Pos</span>
+                                </span>
+                              );
+                            }
+
+                            if (passenger.status === 'in_transit' || passenger.status === 'completed') {
+                              return null;
+                            }
+
+                            if (passenger.status === 'paid') {
+                              if (passenger.canMarkNoShow) {
+                                return (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenPassengerNoShow(passenger, trip)}
+                                    className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-bold rounded-lg transition cursor-pointer flex items-center gap-1 shadow-2xs"
+                                    title="Tandai penumpang tidak datang di pos asal"
+                                  >
+                                    <UserX className="w-3 h-3" />
+                                    <span>Tandai Tidak Hadir</span>
+                                  </button>
+                                );
                               }
-                              className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-bold rounded-lg transition cursor-pointer flex items-center gap-1 shadow-2xs"
-                              title="Tandai penumpang tidak datang setelah batas toleransi habis"
-                            >
-                              <UserX className="w-3 h-3" />
-                              <span>Tidak Hadir</span>
-                            </button>
-                          )}
+
+                              return (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    toast.info(
+                                      `Penumpang "${passenger.customerName}" belum check-in di pos. Fitur No-Show aktif jika supir sudah tiba di pos asal atau setelah batas toleransi keberangkatan (${formatDepartureTime(
+                                        trip.departureTime
+                                      )}) terlewati.`,
+                                      { title: 'Status Kehadiran Penumpang' }
+                                    )
+                                  }
+                                  className="px-2.5 py-1 bg-neutral-100 hover:bg-neutral-200 text-neutral-500 border border-neutral-200 text-[11px] font-medium rounded-lg transition cursor-pointer flex items-center gap-1"
+                                  title="Klik untuk info status No-Show penumpang"
+                                >
+                                  <Lock className="w-3 h-3 text-neutral-400" />
+                                  <span>Belum Hadir</span>
+                                </button>
+                              );
+                            }
+
+                            return null;
+                          })()}
                         </div>
                       </div>
                     ))}
@@ -751,6 +916,104 @@ export default function OperatorManifest() {
           });
         }}
       />
+
+      {/* Modal Konfirmasi Tidak Hadir (No-Show) Mitra / Penumpang */}
+      <BaseModal
+        isOpen={Boolean(noShowModalConfig)}
+        onClose={() => !isSubmittingNoShow && setNoShowModalConfig(null)}
+        title={
+          noShowModalConfig?.type === 'mitra'
+            ? 'Konfirmasi Supir Tidak Hadir'
+            : 'Konfirmasi Penumpang Tidak Hadir'
+        }
+        subtitle={
+          noShowModalConfig?.type === 'mitra'
+            ? `Tandai supir ${noShowModalConfig?.name} (${noShowModalConfig?.plate}) no-show di pos asal`
+            : `Tandai penumpang ${noShowModalConfig?.name} (${noShowModalConfig?.seats} Kursi) no-show di pos asal`
+        }
+        maxWidth="max-w-md"
+      >
+        <div className="space-y-4 pt-1">
+          <div
+            className={`p-3.5 rounded-xl border text-xs space-y-1.5 ${
+              noShowModalConfig?.type === 'mitra'
+                ? 'bg-rose-50 border-rose-200 text-rose-900'
+                : 'bg-amber-50 border-amber-200 text-amber-900'
+            }`}
+          >
+            <div className="flex items-center gap-1.5 font-bold">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>Dampak Konsekuensi Aksi Ini:</span>
+            </div>
+            {noShowModalConfig?.type === 'mitra' ? (
+              <ul className="list-disc pl-4 space-y-1 text-[11px] leading-relaxed">
+                <li>
+                  Jadwal perjalanan ini akan <strong>langsung dibatalkan</strong> (status <code>mitra_no_show</code>).
+                </li>
+                <li>
+                  Seluruh dana pesanan penumpang akan <strong>dikembalikan 100% (Full Refund)</strong> ke dompet customer.
+                </li>
+                <li>
+                  Mitra supir otomatis dikenakan sanksi <strong>pengurangan skor -30 poin</strong> dan <strong>suspensi akun 1 hari</strong>.
+                </li>
+              </ul>
+            ) : (
+              <ul className="list-disc pl-4 space-y-1 text-[11px] leading-relaxed">
+                <li>
+                  Tiket pemesanan penumpang dinyatakan <strong>hangus tanpa pengembalian dana (tanpa refund)</strong>.
+                </li>
+                <li>
+                  Kuota kursi penumpang yang dipesan akan <strong>dikembalikan</strong> ke kapasitas trip armada.
+                </li>
+                <li>Mitra supir tetap aman dan berhak atas pembayaran perjalanan.</li>
+              </ul>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-neutral-700 mb-1.5">
+              Alasan Ketidakhadiran (No-Show):
+            </label>
+            <textarea
+              rows={3}
+              value={noShowReason}
+              onChange={(e) => setNoShowReason(e.target.value)}
+              placeholder="Masukkan catatan/alasan detail..."
+              className="w-full p-2.5 bg-neutral-50 border border-neutral-200 rounded-xl text-xs text-neutral-800 placeholder-neutral-400 focus:outline-none focus:border-blue-500 transition"
+            />
+          </div>
+
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-neutral-100">
+            <button
+              type="button"
+              disabled={isSubmittingNoShow}
+              onClick={() => setNoShowModalConfig(null)}
+              className="px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-xs font-bold rounded-xl transition cursor-pointer disabled:opacity-50"
+            >
+              Batal
+            </button>
+            <button
+              type="button"
+              disabled={isSubmittingNoShow || !noShowReason.trim()}
+              onClick={handleConfirmNoShow}
+              className={`px-4 py-2 text-white text-xs font-bold rounded-xl transition cursor-pointer flex items-center gap-1.5 shadow-sm disabled:opacity-50 ${
+                noShowModalConfig?.type === 'mitra'
+                  ? 'bg-rose-600 hover:bg-rose-700'
+                  : 'bg-amber-600 hover:bg-amber-700'
+              }`}
+            >
+              {isSubmittingNoShow && (
+                <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              )}
+              <span>
+                {noShowModalConfig?.type === 'mitra'
+                  ? 'Tetapkan Supir Tidak Hadir'
+                  : 'Tetapkan Penumpang Tidak Hadir'}
+              </span>
+            </button>
+          </div>
+        </div>
+      </BaseModal>
     </div>
   );
 }

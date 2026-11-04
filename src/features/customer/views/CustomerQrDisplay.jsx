@@ -82,6 +82,9 @@ export default function CustomerQrDisplay() {
           if (order.status === 'pending_payment') {
             statusDisplay = 'Menunggu Pembayaran';
             statusVariant = 'amber';
+          } else if (order.status === 'checked_in_origin' && trip.status !== 'in_transit') {
+            statusDisplay = isParcel ? 'Terkonfirmasi di Pos Asal' : 'Check-in Pos 1 Selesai';
+            statusVariant = 'blue';
           } else if (trip.status === 'in_transit' || order.status === 'in_transit') {
             statusDisplay = 'Dalam Perjalanan';
             statusVariant = 'blue';

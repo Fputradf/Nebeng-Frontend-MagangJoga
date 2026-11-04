@@ -20,7 +20,6 @@ import {
   SlidersHorizontal,
   Landmark,
   ShieldAlert,
-  Truck,
   Car,
   FileCheck,
 } from 'lucide-react';
@@ -35,7 +34,6 @@ const MENU_GROUPS = [
       { name: 'Manajemen Wilayah', icon: ShieldCheck },
       { name: 'Admin Wilayah', icon: UserCheck },
       { name: 'Pos Mitra', icon: MapPin },
-      { name: 'Armada', icon: Truck },
       { name: 'Driver', icon: Car },
       { name: 'Verifikasi KYC', icon: FileCheck },
     ],

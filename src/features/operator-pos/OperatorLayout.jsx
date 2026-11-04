@@ -12,25 +12,25 @@ import emergencyService from '../../services/emergencyService';
 import EmergencySosAlertModal from '../regional/components/EmergencySosAlertModal';
 
 const OPERATOR_MENU_PATH = {
+  'Dashboard': 'dashboard',
+  'Kehadiran': 'manifest',
+  'Scan QR': 'scanner',
+  'Panduan': 'guide',
+  'Pengaturan': 'pengaturan',
+
+  // Fallback aliases
+  'Manifest': 'manifest',
   'Dashboard Pos': 'dashboard',
   'Manifest Keberangkatan': 'manifest',
   'Dual Scanner (Validasi & Serah Terima)': 'scanner',
-  'Arus Kas & Setoran Harian': 'financial',
   'Panduan Operasional SOP': 'guide',
   'Pengaturan Akun': 'pengaturan',
-
-  // Fallback aliases
   'Daftar Penumpang & Kehadiran': 'manifest',
   'Manifes & No-Show': 'manifest',
   'Inspection & Sealing': 'scanner',
   'Scan QR Pos': 'scanner',
   'Dual QR Scanner': 'scanner',
   'Handover & OTP': 'scanner',
-  'Laporan Keuangan': 'financial',
-  'Laporan Kas Pos': 'financial',
-  'Laporan Pendapatan': 'financial',
-  'Laporan Keuangan Pos': 'financial',
-  'Kas Pos': 'financial',
   'Panduan Pos': 'guide',
 };
 
@@ -123,7 +123,7 @@ export default function OperatorLayout() {
       currentPath.includes(`/operator-pos/${slug}/`) ||
       (slug === 'pengaturan' && (currentPath.includes('/operator-pos/profile') || currentPath.includes('/operator-pos/pengaturan')))
     );
-  }) || 'Dashboard Pos';
+  }) || 'Dashboard';
 
   const handleLogout = () => {
     logout();

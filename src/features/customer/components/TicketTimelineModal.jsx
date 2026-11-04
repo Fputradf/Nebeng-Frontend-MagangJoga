@@ -12,6 +12,7 @@ export default function TicketTimelineModal({ isOpen, onClose, ticket }) {
   // Cek pencapaian tahapan perjalanan
   const isPaid = ['paid', 'checked_in_origin', 'in_transit', 'arrived_destination', 'completed'].includes(status);
   const isCheckedInOrigin = ['checked_in_origin', 'in_transit', 'arrived_destination', 'completed'].includes(status);
+  const isInTransit = ['in_transit', 'arrived_destination', 'completed'].includes(status) || ticket.tripStatus === 'in_transit';
   const isCompleted = status === 'completed';
   const isCancelled = status === 'cancelled';
   const isCancelledByMitra = status === 'cancelled_by_mitra' || ticket.status === 'Dibatalkan oleh Mitra';
@@ -73,9 +74,9 @@ export default function TicketTimelineModal({ isOpen, onClose, ticket }) {
       id: 'in_transit',
       title: 'Dalam Perjalanan Menuju Pos Tujuan',
       subtitle: `Armada: ${ticket.vehicle || 'Mitra'} • Sopir: ${ticket.mitra || 'Mitra'}`,
-      time: isCheckedInOrigin && !isCompleted ? 'Sedang Bergerak' : isCompleted ? 'Selesai' : '--:--',
-      isDone: isCheckedInOrigin,
-      isActive: status === 'in_transit',
+      time: isInTransit && !isCompleted ? 'Sedang Bergerak' : isCompleted ? 'Selesai' : '--:--',
+      isDone: isCompleted || status === 'arrived_destination',
+      isActive: status === 'in_transit' || ticket.tripStatus === 'in_transit',
       icon: MapPin,
       color: 'bg-blue-600',
     },

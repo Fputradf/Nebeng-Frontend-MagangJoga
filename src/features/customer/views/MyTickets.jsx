@@ -283,7 +283,7 @@ export default function MyTickets() {
         } else if (order.status === 'pending_payment') {
           statusText = 'Menunggu Pembayaran';
         } else if (order.status === 'cancelled' || order.status === 'cancelled_by_mitra') {
-          statusText = 'Batal';
+          statusText = trip.status === 'mitra_no_show' || order.noShowReason ? 'Batal (Supir Tidak Hadir)' : 'Batal';
         } else if (order.status === 'completed') {
           statusText = 'Selesai';
         } else if (order.status === 'no_show') {
@@ -295,6 +295,7 @@ export default function MyTickets() {
           rawId: order.id,
           tripId: trip.id,
           tripStatus: trip.status,
+          noShowReason: order.noShowReason || trip.mitraNoShowReason || null,
           isExpired: isPastTolerance,
           durationMinutes: trip.estimatedDurationMinutes ? Number(trip.estimatedDurationMinutes) : null,
           durationFormatted: formatDurationMinutes(trip.estimatedDurationMinutes),
@@ -1710,12 +1711,14 @@ Tunjukkan Kode Tiket / QR ini kepada Mitra Sopir atau Petugas Pos saat keberangk
                         )}
 
                         {/* Aksi Khusus Tiket Batal / Trip Dibatalkan */}
-                        {ticket.status === 'Batal' && (
+                        {(ticket.status.startsWith('Batal') || ticket.currentStatusText === 'cancelled' || ticket.currentStatusText === 'cancelled_by_mitra') && (
                           <div className="pt-2.5 border-t border-neutral-100 flex items-center justify-between gap-2 flex-wrap">
                             <div className="flex items-center gap-1.5 text-[11px] text-rose-600 font-semibold bg-rose-50/80 border border-rose-200/60 px-2.5 py-1 rounded-lg">
                               <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-rose-500" />
                               <span>
-                                {ticket.currentStatusText === 'cancelled_by_mitra'
+                                {ticket.tripStatus === 'mitra_no_show' || ticket.noShowReason
+                                  ? 'Supir tidak hadir (Dana di-refund 100% ke Dompet)'
+                                  : ticket.currentStatusText === 'cancelled_by_mitra'
                                   ? 'Trip dibatalkan oleh Mitra'
                                   : 'Perjalanan dibatalkan'}
                               </span>
