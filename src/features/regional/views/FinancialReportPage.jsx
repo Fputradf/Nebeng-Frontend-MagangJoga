@@ -83,6 +83,12 @@ export default function FinancialReportPage() {
             : 10;
           const commissionVal = Math.round((amountVal * feePercentage) / 100);
 
+          const currentRegionId = user?.regionId ? String(user.regionId) : null;
+          const mitraHomeRegionId = item.order?.trip?.mitra?.regionId ? String(item.order.trip.mitra.regionId) : null;
+          const isLocalDriver = Boolean(currentRegionId && mitraHomeRegionId && currentRegionId === mitraHomeRegionId);
+          const driverHomeRegionName = item.order?.trip?.mitra?.region?.name || item.order?.trip?.mitra?.homeRegionName || (isLocalDriver ? 'Wilayah Lokal' : 'Lintas Wilayah');
+          const mitraName = item.order?.trip?.mitra?.name || 'Mitra Driver';
+
           return {
             id: String(item.id || `TRX-${Math.floor(Math.random() * 9000 + 1000)}`),
             tripId: String(item.order?.trip?.id || item.tripId || 'TRIP-9081'),
@@ -90,6 +96,9 @@ export default function FinancialReportPage() {
               item.order?.trip?.originPoint?.name ||
               item.pickupPoint?.name ||
               'Pos Regional Utama',
+            mitraName,
+            isLocalDriver,
+            driverHomeRegionName,
             serviceType:
               item.serviceType ||
               item.order?.type ||
@@ -102,7 +111,7 @@ export default function FinancialReportPage() {
               item.status === 'success'
                 ? 'Lunas / Selesai'
                 : 'Pending',
-            statusDetail: 'Transaksi tervalidasi sistem database escrow.',
+            statusDetail: 'Transaksi tervalidasi sistem pembayaran.',
             date: item.createdAt
               ? new Date(item.createdAt).toLocaleString('id-ID')
               : 'Hari ini',
@@ -244,6 +253,23 @@ export default function FinancialReportPage() {
         <span className="absolute bottom-[11px] right-6 h-2.5 w-2.5 rounded-full border-2 border-white bg-accent sm:right-8" />
       </section>
 
+      {/* ── ATURAN ATRIBUSI PENDAPATAN & POS ASAL (ORIGIN-BASED REVENUE) ── */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-4 text-[13px] text-blue-950 leading-relaxed print:hidden">
+        <div className="flex items-start gap-3">
+          <div className="p-2 bg-blue-100/80 rounded-xl text-[#10367D] font-bold shrink-0">
+            ℹ️
+          </div>
+          <div className="space-y-1">
+            <h4 className="font-bold text-[#10367D] text-[14px]">
+              Kebijakan Atribusi Komisi Berbasis Pos Asal (Origin Checkpoint Revenue)
+            </h4>
+            <p className="text-blue-900 text-[12px] leading-relaxed">
+              Sesuai sistem multi-pos terbuka, seluruh nilai transaksi dan hak komisi platform pada pembukuan ini <strong>diatribusikan ke wilayah berdasarkan Pos Keberangkatan (Pos Asal)</strong>. Walaupun trip diselesaikan oleh Mitra dari wilayah lain (lintas wilayah), pendapatan komisi tetap sah menjadi pemasukan kas operasional wilayah Anda.
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* STAT CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 print:hidden">
         <StatCard
@@ -271,7 +297,7 @@ export default function FinancialReportPage() {
           <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400" />
           <input
             type="text"
-            placeholder="Cari ID transaksi, layanan..."
+            placeholder="Cari ID transaksi, layanan, atau pos..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-neutral-50 border border-neutral-200 rounded-full pl-9 pr-8 py-2 text-[13px] sm:text-[14px] font-medium text-neutral-700 focus:outline-none focus:ring-2 focus:ring-[#10367D] transition"
@@ -304,7 +330,8 @@ export default function FinancialReportPage() {
             <thead className="print:table-header-group">
               <tr className="bg-gray-50/70 text-neutral-400 text-[12px] uppercase tracking-wider font-bold print:bg-slate-100 print:text-slate-800 print:border-b-2 print:border-slate-300">
                 <th className="py-3 px-5 print:py-2 print:px-3">ID TRX & Waktu</th>
-                <th className="py-3 px-5 print:py-2 print:px-3">Pos Asal</th>
+                <th className="py-3 px-5 print:py-2 print:px-3">Pos Keberangkatan</th>
+                <th className="py-3 px-5 print:py-2 print:px-3">Mitra & Homebase</th>
                 <th className="py-3 px-5 print:py-2 print:px-3">Layanan</th>
                 <th className="py-3 px-5 print:py-2 print:px-3">Total Tarif</th>
                 <th className="py-3 px-5 print:py-2 print:px-3">Komisi Wilayah</th>
@@ -314,7 +341,7 @@ export default function FinancialReportPage() {
 
             <tbody className="divide-y divide-gray-100 text-[12px] print:divide-slate-200">
               {isLoadingReports ? (
-                <SkeletonTableRows rows={4} columns={6} />
+                <SkeletonTableRows rows={4} columns={7} />
               ) : filteredReports.length > 0 ? (
                 filteredReports.map((item) => (
                   <tr
@@ -327,7 +354,25 @@ export default function FinancialReportPage() {
                       <div className="text-[11px] text-neutral-400 print:text-slate-500 font-mono">{item.date}</div>
                     </td>
 
-                    <td className="py-3.5 px-5 print:py-2 print:px-3 font-bold text-neutral-800 print:text-slate-900">{item.posName}</td>
+                    <td className="py-3.5 px-5 print:py-2 print:px-3">
+                      <div className="font-bold text-neutral-800 print:text-slate-900">{item.posName}</div>
+                      <span className="inline-block mt-0.5 px-1.5 py-0.2 rounded text-[10px] font-bold bg-blue-100 text-blue-800">
+                        Pos Wilayah
+                      </span>
+                    </td>
+
+                    <td className="py-3.5 px-5 print:py-2 print:px-3">
+                      <div className="font-bold text-neutral-800 print:text-slate-900">{item.mitraName}</div>
+                      {item.isLocalDriver ? (
+                        <span className="inline-block mt-0.5 px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                          Mitra Lokal
+                        </span>
+                      ) : (
+                        <span className="inline-block mt-0.5 px-1.5 py-0.2 rounded text-[10px] font-bold bg-indigo-100 text-indigo-800">
+                          Lintas: {item.driverHomeRegionName}
+                        </span>
+                      )}
+                    </td>
 
                     <td className="py-3.5 px-5 print:py-2 print:px-3 font-semibold text-neutral-700 print:text-slate-800">{item.serviceType}</td>
 
@@ -344,7 +389,7 @@ export default function FinancialReportPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="6">
+                  <td colSpan="7">
                     <EmptyState
                       icon={FileText}
                       title="Transaksi Tidak Ditemukan"
@@ -356,7 +401,7 @@ export default function FinancialReportPage() {
             </tbody>
             <tfoot className="hidden print:table-footer-group border-t-2 border-slate-800 font-bold bg-slate-50 text-[11px]">
               <tr>
-                <td colSpan={3} className="py-2.5 px-3 text-slate-700 uppercase">
+                <td colSpan={4} className="py-2.5 px-3 text-slate-700 uppercase">
                   Total Nilai Halaman Ini ({filteredReports.length} Transaksi):
                 </td>
                 <td className="py-2.5 px-3 font-mono text-[12px] text-slate-900 font-black">

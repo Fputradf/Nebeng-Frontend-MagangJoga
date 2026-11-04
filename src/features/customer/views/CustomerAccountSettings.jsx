@@ -582,7 +582,7 @@ export default function CustomerAccountSettings() {
                 PIN Keamanan Transaksi
               </h2>
               <p className="text-[13px] text-neutral-400">
-                Digunakan untuk otorisasi pembayaran dan pencairan dana Escrow.
+                Digunakan untuk otorisasi pembayaran dan pencairan dana ke rekening bank.
               </p>
             </div>
           </div>

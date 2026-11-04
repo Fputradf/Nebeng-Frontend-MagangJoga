@@ -10,18 +10,22 @@ import {
   Tag,
   Trash2,
   Calendar,
+  Clock,
   Car,
   Bike,
   Package,
-  Users
+  Users,
+  Star
 } from 'lucide-react';
 import EmptyState from '../../../components/ui/EmptyState';
 import BaseModal from '../../../components/ui/BaseModal';
 import { BannerSlider } from '../../../components/ui/BannerSlider';
+import DashboardRegionSwitcher from '../../../components/ui/DashboardRegionSwitcher';
 import { useToast } from '../../../context/ToastContext';
 import apiClient from '../../../services/apiClient';
 import { walletService } from '../../../services/walletService';
 import { voucherService } from '../../../services/voucherService';
+import { formatDurationMinutes, getEstimatedArrivalTime } from '../../../utils/dateUtils';
 
 const PHONE_REGEX = /^(\+?62|0)?8[1-9][0-9]{7,11}$/;
 const TODAY_ISO = new Date().toISOString().split('T')[0];
@@ -117,6 +121,7 @@ export default function SearchTrip() {
 
   const [seatCount, setSeatCount] = useState(1);
   const [bookingForOthers, setBookingForOthers] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [passengersList, setPassengersList] = useState([
     { name: '', phone: '', isContact: true },
   ]);
@@ -236,7 +241,7 @@ export default function SearchTrip() {
     return () => {
       ignore = true;
     };
-  }, [origin, destination, date, activeService]);
+  }, [origin, destination, date, activeService, refreshKey]);
 
   const isPassengerService = activeService === 'motor' || activeService === 'mobil';
 
@@ -637,7 +642,13 @@ export default function SearchTrip() {
         <div className="relative flex flex-col gap-3 pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="font-display text-2xl font-bold">Cari & Booking Trip</h1>
-            <p className="mt-1 text-sm text-blue-100">Temukan perjalanan antar kota atau pengiriman barang dengan sistem Escrow terintegrasi.</p>
+            <p className="mt-1 text-sm text-blue-100">Temukan perjalanan antar kota atau pengiriman barang dengan pembayaran aman terproteksi.</p>
+          </div>
+          <div className="shrink-0 flex items-center">
+            <DashboardRegionSwitcher
+              variant="banner"
+              onRegionChanged={() => setRefreshKey((k) => k + 1)}
+            />
           </div>
         </div>
         <div className="absolute bottom-4 left-6 right-6 border-t border-dashed border-white/25 sm:left-8 sm:right-8" />
@@ -830,6 +841,24 @@ export default function SearchTrip() {
                       </div>
                     </div>
 
+                    {/* Estimasi Waktu & Jarak Perjalanan */}
+                    {(trip.estimatedDurationMinutes || trip.distanceKm) && (
+                      <div className="flex items-center justify-between text-xs px-3 py-2 rounded-xl bg-blue-50/70 border border-blue-100 text-blue-900 mb-3 font-semibold">
+                        <div className="flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5 text-blue-700 shrink-0" />
+                          <span>
+                            Estimasi: <strong>{formatDurationMinutes(trip.estimatedDurationMinutes) || `${trip.estimatedDurationMinutes} mnt`}</strong>
+                            {trip.distanceKm ? ` (${Number(trip.distanceKm)} km)` : ''}
+                          </span>
+                        </div>
+                        {getEstimatedArrivalTime(trip.departureDate, trip.departureTime, trip.estimatedDurationMinutes) && (
+                          <span className="text-[11px] text-blue-700/80 font-normal">
+                            Tiba ~{getEstimatedArrivalTime(trip.departureDate, trip.departureTime, trip.estimatedDurationMinutes)}
+                          </span>
+                        )}
+                      </div>
+                    )}
+
                     {/* Key Trip Meta Grid */}
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       {/* Jadwal */}
@@ -855,14 +884,30 @@ export default function SearchTrip() {
                         ) : (
                           <Car className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
                         )}
-                        <div className="min-w-0">
-                          <span className="text-[10px] uppercase font-bold text-slate-400 block">Kendaraan</span>
+                        <div className="min-w-0 flex-1">
+                          <span className="text-[10px] uppercase font-bold text-slate-400 block">Kendaraan & Mitra</span>
                           <span className="font-bold text-slate-800 truncate block">
                             {vehicleModel}
                           </span>
-                          <span className="text-[11px] text-slate-500 font-medium truncate block mt-0.5">
-                            {trip.mitra?.name ? trip.mitra.name : trip.vehicle?.plateNumber || 'Mitra Nebeng'}
-                          </span>
+                          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                            <span className="text-[11px] text-slate-600 font-medium truncate max-w-[120px]">
+                              {trip.mitra?.name ? trip.mitra.name : trip.vehicle?.plateNumber || 'Mitra Nebeng'}
+                            </span>
+                            {trip.mitra?.rating ? (
+                              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-amber-50 text-amber-800 text-[10px] font-bold rounded border border-amber-200/80">
+                                <Star className="w-2.5 h-2.5 fill-amber-400 text-amber-500 shrink-0" />
+                                <span>{trip.mitra.rating}</span>
+                                {trip.mitra.totalReviews > 0 && (
+                                  <span className="text-amber-600/70 font-normal">({trip.mitra.totalReviews})</span>
+                                )}
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-0.5 px-1 py-0.2 bg-slate-100 text-slate-500 text-[10px] font-medium rounded">
+                                <Star className="w-2.5 h-2.5 text-slate-400 shrink-0" />
+                                <span>Baru</span>
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
 
@@ -939,6 +984,37 @@ export default function SearchTrip() {
         maxWidth="max-w-lg"
       >
         <form onSubmit={handleCheckout} className="space-y-3.5 text-[13px]">
+          {/* Ringkasan Mitra & Armada */}
+          {selectedTrip && (
+            <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3 flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Mitra Driver</span>
+                <p className="font-bold text-slate-800 text-[13px] truncate">
+                  {selectedTrip.mitra?.name || 'Mitra Nebeng'}
+                </p>
+                <p className="text-[11px] text-slate-500 truncate">
+                  {selectedTrip.vehicle?.model || 'Kendaraan Resmi'} {selectedTrip.vehicle?.plateNumber ? `(${selectedTrip.vehicle.plateNumber})` : ''}
+                </p>
+              </div>
+              <div className="shrink-0 text-right">
+                {selectedTrip.mitra?.rating ? (
+                  <div className="inline-flex items-center gap-1 px-2 py-1 bg-amber-50 text-amber-800 text-xs font-bold rounded-lg border border-amber-200">
+                    <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500" />
+                    <span>{selectedTrip.mitra.rating}</span>
+                    {selectedTrip.mitra.totalReviews > 0 && (
+                      <span className="text-[10px] text-amber-600 font-normal">({selectedTrip.mitra.totalReviews} ulasan)</span>
+                    )}
+                  </div>
+                ) : (
+                  <div className="inline-flex items-center gap-1 px-2 py-1 bg-slate-100 text-slate-500 text-xs font-medium rounded-lg">
+                    <Star className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Mitra Baru</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {isPassengerService ? (
             <div className="space-y-3">
               {/* Kuota Kursi */}

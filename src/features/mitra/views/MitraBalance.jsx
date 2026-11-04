@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import {
   Wallet,
   Lock,
@@ -24,32 +24,22 @@ import {
   TrendingUp,
   Receipt,
   RotateCcw,
+  KeyRound,
 } from 'lucide-react';
 import { useToast } from '../../../context/ToastContext';
 import StatusBadge from '../../../components/ui/StatusBadge';
 import BaseModal from '../../../components/ui/BaseModal';
 import apiClient from '../../../services/apiClient';
 import { walletService } from '../../../services/walletService';
+import { disbursementBankService, FALLBACK_SUPPORTED_BANKS } from '../../../services/disbursementBankService';
 
 const PRIMARY_COLOR = '#10367D';
-const MIN_WITHDRAWAL = 50000;
-
-const SUPPORTED_BANKS = [
-  { code: 'BCA', name: 'Bank Central Asia (BCA)' },
-  { code: 'BNI', name: 'Bank Negara Indonesia (BNI)' },
-  { code: 'BRI', name: 'Bank Rakyat Indonesia (BRI)' },
-  { code: 'MANDIRI', name: 'Bank Mandiri' },
-  { code: 'PERMATA', name: 'Bank Permata' },
-  { code: 'CIMB', name: 'CIMB Niaga' },
-  { code: 'BSI', name: 'Bank Syariah Indonesia (BSI)' },
-  { code: 'DANAMON', name: 'Bank Danamon' },
-  { code: 'BTPN', name: 'Bank BTPN / Jenius' },
-];
+const MIN_WITHDRAWAL = 10000;
 
 const STATUS_LABEL = {
   scheduled: 'Menunggu Keberangkatan',
   in_origin_pos: 'Di Pos Asal',
-  in_transit: 'Dalam Perjalanan (Escrow Hold)',
+  in_transit: 'Dalam Perjalanan (Dana Ditahan)',
   arrived_dest_pos: 'Tiba di Pos Tujuan',
   completed: 'Selesai',
   cancelled: 'Dibatalkan',
@@ -68,15 +58,28 @@ const formatDate = (dateString) => {
   });
 };
 
+const cleanTransactionDescription = (desc) => {
+  if (!desc) return '';
+  return desc
+    .replace(/dana ditahan escrow/gi, 'Dana ditahan')
+    .replace(/pencairan auto-escrow/gi, 'Pencairan dana otomatis')
+    .replace(/pencairan escrow/gi, 'Pencairan dana perjalanan')
+    .replace(/dana escrow/gi, 'dana jaminan')
+    .replace(/\bescrow\b/gi, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+};
+
 const getMitraTransactionMeta = (row) => {
   const desc = (row.description || '').toLowerCase();
   const type = (row.type || '').toLowerCase();
+  const safeDesc = cleanTransactionDescription(row.description);
 
   if (type === 'credit') {
     if (desc.includes('top up') || desc.includes('topup')) {
       return {
         label: 'Top Up Saldo',
-        description: row.description || 'Top Up Saldo Dompet Mitra',
+        description: safeDesc || 'Top Up Saldo Dompet Mitra',
         isPositive: true,
         badgeVariant: 'bg-blue-50 text-blue-700 border-blue-200',
         iconBg: 'bg-blue-100 text-blue-600',
@@ -88,7 +91,7 @@ const getMitraTransactionMeta = (row) => {
     if (desc.includes('refund') || desc.includes('pengembalian')) {
       return {
         label: 'Pengembalian Dana',
-        description: row.description || 'Pengembalian Dana / Penyesuaian Saldo',
+        description: safeDesc || 'Pengembalian Dana / Penyesuaian Saldo',
         isPositive: true,
         badgeVariant: 'bg-blue-50 text-blue-700 border-blue-200',
         iconBg: 'bg-blue-100 text-blue-600',
@@ -99,7 +102,7 @@ const getMitraTransactionMeta = (row) => {
 
     return {
       label: 'Pendapatan Komisi',
-      description: row.description || 'Pencairan Komisi Perjalanan',
+      description: safeDesc || 'Pencairan Komisi Perjalanan',
       isPositive: true,
       badgeVariant: 'bg-emerald-50 text-emerald-700 border-emerald-200',
       iconBg: 'bg-emerald-100 text-emerald-600',
@@ -111,31 +114,31 @@ const getMitraTransactionMeta = (row) => {
   if (type === 'debit') {
     return {
       label: 'Penarikan Saldo',
-      description: row.description || 'Pencairan ke Rekening Bank',
+      description: safeDesc || 'Pencairan ke Rekening Bank',
       isPositive: false,
-      badgeVariant: 'bg-blue-50 text-blue-700 border-blue-200',
-      iconBg: 'bg-blue-100 text-blue-600',
-      Icon: ArrowUpRight,
+      badgeVariant: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      iconBg: 'bg-emerald-100 text-emerald-600',
+      Icon: ArrowDownToLine,
       filterCategory: 'withdraw',
     };
   }
 
   if (type === 'escrow_hold') {
     return {
-      label: 'Dana Escrow Ditahan',
-      description: row.description || 'Dana perjalanan ditahan sementara di sistem escrow',
+      label: 'Dana Perjalanan Ditahan',
+      description: safeDesc || 'Dana perjalanan ditahan sementara hingga verifikasi pos tujuan selesai',
       isPositive: false,
       badgeVariant: 'bg-amber-50 text-amber-700 border-amber-200',
       iconBg: 'bg-amber-100 text-amber-600',
-      Icon: ShieldCheck,
+      Icon: Lock,
       filterCategory: 'escrow',
     };
   }
 
   if (type === 'escrow_release') {
     return {
-      label: 'Pencairan Auto-Escrow',
-      description: row.description || 'Pencairan dana escrow perjalanan selesai ke saldo utama',
+      label: 'Dana Perjalanan Cair',
+      description: safeDesc || 'Dana perjalanan dicairkan ke saldo utama setelah trip selesai',
       isPositive: true,
       badgeVariant: 'bg-teal-50 text-teal-700 border-teal-200',
       iconBg: 'bg-teal-100 text-teal-600',
@@ -147,7 +150,7 @@ const getMitraTransactionMeta = (row) => {
   if (type === 'payment') {
     return {
       label: 'Pembayaran / Potongan',
-      description: row.description || 'Pemotongan Biaya Operasional / Pembayaran',
+      description: safeDesc || 'Pemotongan Biaya Operasional / Pembayaran',
       isPositive: false,
       badgeVariant: 'bg-rose-50 text-rose-700 border-rose-200',
       iconBg: 'bg-rose-100 text-rose-600',
@@ -158,7 +161,7 @@ const getMitraTransactionMeta = (row) => {
 
   return {
     label: row.type || 'Mutasi Keuangan',
-    description: row.description || '-',
+    description: safeDesc || '-',
     isPositive: Number(row.amount) > 0,
     badgeVariant: 'bg-neutral-100 text-neutral-700 border-neutral-200',
     iconBg: 'bg-neutral-100 text-neutral-600',
@@ -191,6 +194,7 @@ export default function MitraBalance() {
   const [totalEscrowItems, setTotalEscrowItems] = useState(0);
 
   // Rekening Bank Mitra
+  const [availableBanks, setAvailableBanks] = useState(FALLBACK_SUPPORTED_BANKS);
   const [bankInfo, setBankInfo] = useState({
     bankName: 'BCA',
     accountNumber: '',
@@ -201,11 +205,27 @@ export default function MitraBalance() {
   const [bankDraft, setBankDraft] = useState(bankInfo);
   const [isSavingBank, setIsSavingBank] = useState(false);
 
+  const isRegisteredBankActive = useMemo(() => {
+    if (!bankInfo?.bankName) return true;
+    return availableBanks.some(
+      (b) =>
+        b.code?.toUpperCase() === bankInfo.bankName.toUpperCase() ||
+        b.name?.toUpperCase() === bankInfo.bankName.toUpperCase()
+    );
+  }, [bankInfo?.bankName, availableBanks]);
+
   // State Penarikan (Withdrawal)
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+
+  // State PIN Transaksi Mitra
+  const [hasPin, setHasPin] = useState(false);
+  const [withdrawPin, setWithdrawPin] = useState('');
+  const [showWithdrawPin, setShowWithdrawPin] = useState(false);
+  const [isCreatingPin, setIsCreatingPin] = useState(false);
+  const [createPinForm, setCreatePinForm] = useState({ pin: '', confirmPin: '' });
 
   // State Top Up Saldo
   const [isTopUpModalOpen, setIsTopUpModalOpen] = useState(false);
@@ -236,7 +256,7 @@ export default function MitraBalance() {
         await walletService.syncTopUp().catch(() => null);
       }
 
-      const [userRes, walletRes, tripsRes] = await Promise.all([
+      const [userRes, walletRes, tripsRes, banksData] = await Promise.all([
         apiClient.get('/auth/me').catch(() => ({ data: null })),
         apiClient.get('/wallets/me').catch(() => ({ data: null })),
         apiClient.get('/trips/me', {
@@ -246,11 +266,16 @@ export default function MitraBalance() {
             activeEscrow: 'true',
           },
         }).catch(() => ({ data: null })),
+        disbursementBankService.getActiveBanks().catch(() => FALLBACK_SUPPORTED_BANKS),
       ]);
+
+      const activeBanks = Array.isArray(banksData) && banksData.length > 0 ? banksData : FALLBACK_SUPPORTED_BANKS;
+      setAvailableBanks(activeBanks);
 
       if (userRes?.data) {
         const userData = userRes.data;
-        const bName = userData.bankName || userData.profile?.bankName || 'BCA';
+        setHasPin(Boolean(userData.hasPin));
+        const bName = userData.bankName || userData.profile?.bankName || activeBanks[0]?.code || 'BCA';
         const accNum = userData.bankAccountNumber || userData.profile?.bankAccountNumber || '';
         const accHold = userData.bankAccountHolder || userData.profile?.bankAccountHolder || userData.name || '';
 
@@ -298,7 +323,7 @@ export default function MitraBalance() {
       if (res?.syncedCount > 0) {
         toast.success(res.message, { title: 'Sinkronisasi Berhasil' });
       } else {
-        toast.info('Saldo Anda sudah tersinkronkan dengan status pembayaran dan escrow terbaru.', {
+        toast.info('Saldo Anda sudah tersinkronkan dengan status pembayaran dan dana tertahan terbaru.', {
           title: 'Status Terkini',
         });
       }
@@ -380,8 +405,50 @@ export default function MitraBalance() {
       handleStartEditBank();
       return;
     }
+    if (!isRegisteredBankActive) {
+      toast.error(
+        `Bank ${bankInfo.bankName} saat ini dinonaktifkan oleh Administrator. Harap perbarui ke rekening bank yang diizinkan.`,
+        { title: 'Bank Dinonaktifkan' }
+      );
+      handleStartEditBank();
+      return;
+    }
     setWithdrawAmount('');
+    setWithdrawPin('');
+    setShowWithdrawPin(false);
+    setCreatePinForm({ pin: '', confirmPin: '' });
     setIsWithdrawModalOpen(true);
+  };
+
+  const handleCreateWithdrawPin = async (e) => {
+    e?.preventDefault();
+    if (createPinForm.pin.length !== 6 || !/^\d{6}$/.test(createPinForm.pin)) {
+      toast.warning('PIN transaksi harus berupa 6 digit angka.', {
+        title: 'Format PIN Tidak Valid',
+      });
+      return;
+    }
+    if (createPinForm.pin !== createPinForm.confirmPin) {
+      toast.warning('Konfirmasi PIN tidak cocok.', {
+        title: 'PIN Tidak Cocok',
+      });
+      return;
+    }
+
+    setIsCreatingPin(true);
+    try {
+      await apiClient.post('/users/me/pin', { pin: createPinForm.pin });
+      toast.success('PIN transaksi berhasil dibuat!', { title: 'PIN Aktif' });
+      setHasPin(true);
+      setWithdrawPin(createPinForm.pin);
+      setCreatePinForm({ pin: '', confirmPin: '' });
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Gagal membuat PIN transaksi.', {
+        title: 'Gagal Membuat PIN',
+      });
+    } finally {
+      setIsCreatingPin(false);
+    }
   };
 
   const handleSetQuickWithdraw = (type) => {
@@ -394,6 +461,16 @@ export default function MitraBalance() {
 
   const handleWithdraw = async (e) => {
     e.preventDefault();
+    if (!isRegisteredBankActive) {
+      toast.error(
+        `Bank ${bankInfo.bankName} saat ini dinonaktifkan oleh Administrator. Harap perbarui ke rekening yang diizinkan.`,
+        { title: 'Bank Dinonaktifkan' }
+      );
+      setIsWithdrawModalOpen(false);
+      handleStartEditBank();
+      return;
+    }
+
     const amount = Number(withdrawAmount);
 
     if (!amount || amount < MIN_WITHDRAWAL) {
@@ -412,10 +489,31 @@ export default function MitraBalance() {
       return;
     }
 
+    if (!hasPin) {
+      toast.warning(
+        'Silakan buat PIN transaksi terlebih dahulu sebelum melanjutkan penarikan saldo.',
+        { title: 'PIN Belum Diatur' }
+      );
+      return;
+    }
+
+    if (!withdrawPin || withdrawPin.length !== 6) {
+      toast.warning('Harap masukkan 6 digit PIN transaksi Anda.', {
+        title: 'PIN Transaksi Diperlukan',
+      });
+      return;
+    }
+
     setIsWithdrawing(true);
     try {
-      await walletService.withdrawWallet(amount);
+      // 1. Verifikasi PIN terlebih dahulu
+      await apiClient.post('/users/me/pin/verify', { pin: withdrawPin });
+
+      // 2. Eksekusi penarikan dengan menyertakan PIN
+      await walletService.withdrawWallet(amount, withdrawPin);
+
       setWithdrawAmount('');
+      setWithdrawPin('');
       setIsWithdrawModalOpen(false);
       setIsSuccessModalOpen(true);
       await fetchWalletData(false);
@@ -541,8 +639,22 @@ export default function MitraBalance() {
               </span>
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/10 backdrop-blur-xs border border-white/15 text-xs text-blue-100">
                 <Clock className="w-3.5 h-3.5 text-accent shrink-0" />
-                Pencairan Otomatis via Auto-Escrow
+                Pencairan Otomatis via Sistem Penahanan Dana
               </span>
+              {hasPin ? (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-500/20 backdrop-blur-xs border border-emerald-400/30 text-xs text-emerald-200">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  PIN Transaksi Aktif
+                </span>
+              ) : (
+                <Link
+                  to="/mitra/profile/pengaturan"
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 backdrop-blur-xs border border-amber-400/30 text-xs text-amber-200 transition"
+                >
+                  <KeyRound className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+                  Atur PIN Transaksi
+                </Link>
+              )}
             </div>
           </div>
 
@@ -553,7 +665,7 @@ export default function MitraBalance() {
               disabled={isLoading || availableBalance < MIN_WITHDRAWAL}
               className="px-6 py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs sm:text-sm rounded-2xl shadow-lg shadow-emerald-950/20 transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
-              <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
+              <ArrowDownToLine className="w-4 h-4 stroke-[2.5]" />
               <span>Tarik Saldo</span>
             </button>
 
@@ -571,21 +683,21 @@ export default function MitraBalance() {
         </div>
       </div>
 
-      {/* ──────────────── KARTU ESCROW & REKENING PENCAIRAN ──────────────── */}
+      {/* ──────────────── KARTU DANA DITAHAN & REKENING PENCAIRAN ──────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {/* Kartu Saldo Escrow */}
+        {/* Kartu Dana Ditahan */}
         <div className="bg-white p-6 rounded-2xl border border-neutral-200/90 shadow-sm flex flex-col justify-between space-y-4">
           <div className="flex items-start justify-between">
             <div className="space-y-1">
               <span className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">
-                Sistem Auto-Escrow
+                Sistem Penahanan Dana
               </span>
               <h3 className="text-[16px] font-bold text-neutral-800">
-                Saldo Tertahan (Escrow Hold)
+                Saldo Tertahan (Dana Aktif)
               </h3>
             </div>
             <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl shrink-0 border border-amber-200/60">
-              <ShieldCheck className="w-5 h-5" />
+              <Lock className="w-5 h-5" />
             </div>
           </div>
 
@@ -628,31 +740,41 @@ export default function MitraBalance() {
 
           <div>
             {bankInfo.bankName && bankInfo.accountNumber ? (
-              <div className="p-3.5 bg-neutral-50 rounded-xl border border-neutral-200/80 flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <p className="text-[14px] font-bold text-neutral-900">
-                      Bank {bankInfo.bankName} - {showAccountPii ? bankInfo.accountNumber : maskAccountNumber(bankInfo.accountNumber)}
+              <div className="space-y-2">
+                <div className="p-3.5 bg-neutral-50 rounded-xl border border-neutral-200/80 flex items-center justify-between">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="text-[14px] font-bold text-neutral-900">
+                        Bank {bankInfo.bankName} - {showAccountPii ? bankInfo.accountNumber : maskAccountNumber(bankInfo.accountNumber)}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setShowAccountPii(!showAccountPii)}
+                        className="text-neutral-400 hover:text-neutral-600 transition cursor-pointer"
+                        title={showAccountPii ? 'Sembunyikan' : 'Tampilkan'}
+                      >
+                        {showAccountPii ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                    <p className="text-[12px] text-neutral-500">
+                      a.n {bankInfo.accountHolder || 'Mitra'}
                     </p>
-                    <button
-                      type="button"
-                      onClick={() => setShowAccountPii(!showAccountPii)}
-                      className="text-neutral-400 hover:text-neutral-600 transition cursor-pointer"
-                      title={showAccountPii ? 'Sembunyikan' : 'Tampilkan'}
-                    >
-                      {showAccountPii ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                    </button>
                   </div>
-                  <p className="text-[12px] text-neutral-500">
-                    a.n {bankInfo.accountHolder || 'Mitra'}
-                  </p>
+                  <button
+                    onClick={handleStartEditBank}
+                    className="px-3 py-1.5 bg-white hover:bg-neutral-100 border border-neutral-200 text-neutral-700 text-[11px] font-bold rounded-lg transition cursor-pointer flex items-center gap-1 shadow-2xs"
+                  >
+                    <Edit3 className="w-3 h-3" /> Ubah
+                  </button>
                 </div>
-                <button
-                  onClick={handleStartEditBank}
-                  className="px-3 py-1.5 bg-white hover:bg-neutral-100 border border-neutral-200 text-neutral-700 text-[11px] font-bold rounded-lg transition cursor-pointer flex items-center gap-1 shadow-2xs"
-                >
-                  <Edit3 className="w-3 h-3" /> Ubah
-                </button>
+                {!isRegisteredBankActive && (
+                  <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-xl flex items-center gap-2 text-rose-700 text-xs">
+                    <AlertTriangle className="w-4 h-4 shrink-0 text-rose-600" />
+                    <span>
+                      Bank <strong>{bankInfo.bankName}</strong> saat ini dinonaktifkan oleh Administrator. Harap ubah ke bank yang tersedia.
+                    </span>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="flex items-center justify-between gap-3">
@@ -671,20 +793,20 @@ export default function MitraBalance() {
         </div>
       </div>
 
-      {/* ──────────────── RINCIAN DANA ESCROW AKTIF (PERJALANAN BERJALAN) ──────────────── */}
+      {/* ──────────────── RINCIAN DANA DITAHAN AKTIF (PERJALANAN BERJALAN) ──────────────── */}
       <div className="bg-white rounded-3xl p-5 sm:p-7 border border-neutral-200 shadow-sm space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-100 pb-4">
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-lg font-bold text-neutral-900">
-                Perjalanan & Dana Escrow Aktif
+                Perjalanan dengan Dana Ditahan
               </h3>
               <span className="px-2.5 py-0.5 bg-amber-50 text-amber-700 text-[11px] font-bold rounded-full border border-amber-200">
                 {totalEscrowItems} Trip Berjalan
               </span>
             </div>
             <p className="text-[12px] text-neutral-400 mt-0.5">
-              Daftar trip yang sedang menahan dana escrow dan akan dicairkan saat verifikasi pos tujuan.
+              Daftar trip yang sedang menahan dana dan akan dicairkan saat verifikasi pos tujuan selesai.
             </p>
           </div>
 
@@ -711,7 +833,7 @@ export default function MitraBalance() {
               <tr className="border-b border-neutral-100 text-[11px] text-neutral-400 uppercase font-bold tracking-wider">
                 <th className="py-3 px-3">ID Trip</th>
                 <th className="py-3 px-3">Rute Perjalanan</th>
-                <th className="py-3 px-3">Nilai Escrow</th>
+                <th className="py-3 px-3">Dana Ditahan</th>
                 <th className="py-3 px-3">Status Sistem</th>
               </tr>
             </thead>
@@ -720,13 +842,13 @@ export default function MitraBalance() {
                 <tr>
                   <td colSpan={4} className="py-8 text-center text-neutral-400">
                     <span className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin inline-block mr-2" />
-                    Memuat data escrow...
+                    Memuat data perjalanan...
                   </td>
                 </tr>
               ) : escrowTransactions.length === 0 ? (
                 <tr>
                   <td colSpan={4} className="py-8 text-center text-neutral-400 font-medium">
-                    Tidak ada dana escrow perjalanan yang sedang tertahan saat ini.
+                    Tidak ada dana tertahan dari perjalanan yang sedang aktif saat ini.
                   </td>
                 </tr>
               ) : (
@@ -789,7 +911,7 @@ export default function MitraBalance() {
               Riwayat Mutasi Saldo & Komisi
             </h3>
             <p className="text-[12px] text-neutral-400">
-              Menampilkan seluruh riwayat pendapatan komisi, pencairan saldo, dan mutasi escrow akun Anda.
+              Menampilkan seluruh riwayat pendapatan komisi, pencairan saldo, dan mutasi dana tertahan akun Anda.
             </p>
           </div>
 
@@ -799,7 +921,7 @@ export default function MitraBalance() {
               { id: 'all', label: 'Semua' },
               { id: 'income', label: 'Komisi / Pendapatan' },
               { id: 'withdraw', label: 'Penarikan' },
-              { id: 'escrow', label: 'Escrow' },
+              { id: 'escrow', label: 'Dana Ditahan' },
               { id: 'topup', label: 'Top Up' },
             ].map((tab) => (
               <button
@@ -843,9 +965,6 @@ export default function MitraBalance() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-[14px] font-bold text-neutral-900 truncate">
                           {meta.label}
-                        </span>
-                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${meta.badgeVariant}`}>
-                          {tx.type}
                         </span>
                       </div>
                       <p className="text-[12px] text-neutral-500 truncate mt-0.5">
@@ -966,7 +1085,7 @@ export default function MitraBalance() {
                 Jumlah Penarikan (Rp)
               </label>
               <div className="flex items-center gap-1">
-                {[50000, 100000, 250000].map((nominal) => (
+                {[10000, 50000, 100000].map((nominal) => (
                   <button
                     key={nominal}
                     type="button"
@@ -1006,6 +1125,131 @@ export default function MitraBalance() {
             </div>
           )}
 
+          {/* ── PIN KEAMANAN TRANSAKSI ── */}
+          {!hasPin ? (
+            <div className="p-3.5 bg-amber-50/80 border border-amber-200 rounded-xl space-y-3">
+              <div className="flex items-start gap-2.5">
+                <div className="p-1.5 bg-amber-100 text-amber-800 rounded-lg shrink-0 mt-0.5">
+                  <KeyRound className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="text-[12px] font-bold text-amber-900">
+                    PIN Transaksi Belum Diatur
+                  </p>
+                  <p className="text-[11px] text-amber-700">
+                    Demi keamanan pencairan dana ke rekening Anda, buat 6 digit PIN transaksi terlebih dahulu.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                <div>
+                  <label className="block text-[10px] font-bold text-neutral-600 uppercase mb-1">
+                    PIN Baru (6 Digit)
+                  </label>
+                  <input
+                    type="password"
+                    inputMode="numeric"
+                    maxLength={6}
+                    placeholder="••••••"
+                    value={createPinForm.pin}
+                    onChange={(e) =>
+                      setCreatePinForm({
+                        ...createPinForm,
+                        pin: e.target.value.replace(/\D/g, '').slice(0, 6),
+                      })
+                    }
+                    className="w-full p-2 bg-white border border-amber-300 rounded-lg font-bold text-center tracking-widest text-[13px] focus:outline-none focus:border-blue-500 font-mono"
+                    disabled={isCreatingPin}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-neutral-600 uppercase mb-1">
+                    Ulangi PIN
+                  </label>
+                  <input
+                    type="password"
+                    inputMode="numeric"
+                    maxLength={6}
+                    placeholder="••••••"
+                    value={createPinForm.confirmPin}
+                    onChange={(e) =>
+                      setCreatePinForm({
+                        ...createPinForm,
+                        confirmPin: e.target.value.replace(/\D/g, '').slice(0, 6),
+                      })
+                    }
+                    className="w-full p-2 bg-white border border-amber-300 rounded-lg font-bold text-center tracking-widest text-[13px] focus:outline-none focus:border-blue-500 font-mono"
+                    disabled={isCreatingPin}
+                  />
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleCreateWithdrawPin}
+                disabled={
+                  isCreatingPin ||
+                  createPinForm.pin.length !== 6 ||
+                  createPinForm.confirmPin.length !== 6 ||
+                  createPinForm.pin !== createPinForm.confirmPin
+                }
+                className="w-full py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-xs"
+              >
+                {isCreatingPin ? (
+                  <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                )}
+                <span>Simpan & Gunakan PIN</span>
+              </button>
+            </div>
+          ) : (
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase">
+                  PIN Transaksi (6 Digit)
+                </label>
+                <span className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
+                  <ShieldCheck className="w-3 h-3" /> PIN Terverifikasi
+                </span>
+              </div>
+
+              <div className="relative">
+                <input
+                  type={showWithdrawPin ? 'text' : 'password'}
+                  inputMode="numeric"
+                  maxLength={6}
+                  required
+                  value={withdrawPin}
+                  onChange={(e) => setWithdrawPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="Masukkan 6 digit PIN"
+                  className="w-full px-4 py-2.5 pr-10 bg-white border border-neutral-200 rounded-xl font-bold tracking-widest text-center text-[15px] focus:outline-none focus:border-blue-500 shadow-sm font-mono"
+                  disabled={isWithdrawing}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowWithdrawPin(!showWithdrawPin)}
+                  className="absolute right-3 top-3 text-neutral-400 hover:text-neutral-600 cursor-pointer"
+                  title={showWithdrawPin ? 'Sembunyikan PIN' : 'Tampilkan PIN'}
+                >
+                  {showWithdrawPin ? <EyeOff size={15} /> : <Eye size={15} />}
+                </button>
+              </div>
+              <div className="flex items-center justify-between mt-1 text-[11px]">
+                <span className="text-neutral-400">Diperlukan untuk otorisasi pencairan dana.</span>
+                <Link
+                  to="/mitra/profile/pengaturan"
+                  className="text-brand-600 hover:underline font-semibold"
+                  onClick={() => setIsWithdrawModalOpen(false)}
+                >
+                  Ubah PIN
+                </Link>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center gap-3 pt-2">
             <button
               type="button"
@@ -1021,10 +1265,11 @@ export default function MitraBalance() {
                 isWithdrawing ||
                 !withdrawAmount ||
                 Number(withdrawAmount) < MIN_WITHDRAWAL ||
-                Number(withdrawAmount) > availableBalance
+                Number(withdrawAmount) > availableBalance ||
+                !hasPin ||
+                withdrawPin.length !== 6
               }
-              className="flex-1 py-2.5 text-white text-[13px] font-bold rounded-xl transition shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-              style={{ backgroundColor: PRIMARY_COLOR }}
+              className="flex-1 py-2.5 text-white bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-[13px] font-bold rounded-xl transition shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
               {isWithdrawing ? (
                 <>
@@ -1060,9 +1305,9 @@ export default function MitraBalance() {
               onChange={(e) => setBankDraft((prev) => ({ ...prev, bankName: e.target.value }))}
               className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xl text-[13px] font-bold text-neutral-800 focus:outline-none focus:border-blue-500"
             >
-              {SUPPORTED_BANKS.map((b) => (
-                <option key={b.code} value={b.code}>
-                  {b.name}
+              {availableBanks.map((b) => (
+                <option key={b.code || b.id} value={b.code}>
+                  {b.name || b.bankName}
                 </option>
               ))}
             </select>
@@ -1289,8 +1534,7 @@ export default function MitraBalance() {
 
           <button
             onClick={() => setIsSuccessModalOpen(false)}
-            className="w-full py-2.5 text-white font-bold rounded-xl transition cursor-pointer shadow-sm"
-            style={{ backgroundColor: PRIMARY_COLOR }}
+            className="w-full py-2.5 text-white bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 font-bold rounded-xl transition cursor-pointer shadow-sm"
           >
             Selesai
           </button>

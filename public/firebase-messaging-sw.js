@@ -27,17 +27,18 @@ self.addEventListener('activate', (event) => {
 messaging.onBackgroundMessage((payload) => {
   console.log('Background notification received:', payload);
 
-  const notificationTitle = payload.notification?.title || 'Nebeng';
+  const notificationTitle = payload.notification?.title || payload.data?.title || 'Nebeng';
+  const notificationBody = payload.notification?.body || payload.data?.body || '';
   const tag = payload.data?.conversationId
     ? `chat-${payload.data.conversationId}`
     : payload.data?.orderId
     ? `order-${payload.data.orderId}`
     : payload.data?.id
     ? `notif-${payload.data.id}`
-    : (payload.notification?.title ? `title-${payload.notification.title}` : 'nebeng-notif');
+    : (notificationTitle ? `title-${notificationTitle}` : 'nebeng-notif');
 
   const notificationOptions = {
-    body: payload.notification?.body || '',
+    body: notificationBody,
     icon: '/favicon.svg',
     badge: '/favicon.svg',
     tag,

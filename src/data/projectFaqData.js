@@ -24,7 +24,7 @@ export const PROJECT_FAQS = [
     
 Perbedaan utama Nebeng dengan travel konvensional:
 1. **Verifikasi Biometrik & Identitas Ketat**: Seluruh pengguna (Customer & Mitra) diverifikasi oleh Admin Wilayah dan sistem biometrik wajah untuk menjamin keamanan bersama.
-2. **Titik Jemput Pos Mitra Resmi**: Penumpang berkumpul di Pos Mitra resmi terdaftar, bukan sembarang pinggir jalan, sehingga waktu keberangkatan tepat waktu dan terpantau operator pos.
+2. **Titik Jemput Pos Mitra Resmi**: Penumpang berkumpul di Pos Mitra resmi terdaftar, bukan sembarang pinggir jalan, sehingga waktu keberangkatan tepat waktu dan terpantau mitra pos.
 3. **Sistem Tiket Digital & QR Code**: Tiket diterbitkan secara digital dengan QR validasi ganda saat check-in di pos asal dan tiba di pos tujuan.
 4. **Keamanan Dana (Escrow)**: Pembayaran disimpan aman di dompet digital/escrow dan baru dicairkan ke mitra setelah perjalanan dikonfirmasi selesai dengan selamat.`,
     helpfulCount: 142,
@@ -36,7 +36,7 @@ Perbedaan utama Nebeng dengan travel konvensional:
     question: 'Siapa itu Admin Wilayah dan apa perannya bagi pengguna?',
     answer: `Admin Wilayah adalah perwakilan operasional resmi Nebeng di tingkat regional (kota/kabupaten). Admin Wilayah bertugas:
 - Memverifikasi berkas KTP, SIM, STNK, dan biometrik wajah Mitra & Pengguna di wilayahnya.
-- Mengawasi operasional Pos Mitra dan Operator Pos di wilayahnya.
+- Mengawasi operasional Pos Mitra dan Mitra Pos di wilayahnya.
 - Menangani kendala langsung (bantuan chat, pelaporan trip darurat, kendala tiket, dan sengketa perjalanan) secara cepat dan tanggap.`,
     helpfulCount: 98,
   },
@@ -52,7 +52,7 @@ Perbedaan utama Nebeng dengan travel konvensional:
 3. Pilih armada/mitra yang tersedia sesuai jam keberangkatan dan ketersediaan kursi.
 4. Tentukan pos keberangkatan dan pos penurunan yang paling dekat dengan lokasi Anda.
 5. Selesaikan pembayaran menggunakan Saldo Dompet Nebeng atau metode pembayaran instan.
-6. Tiket digital berserta QR Code otomatis muncul di menu **Tickets & Digital QR**.`,
+6. Tiket digital otomatis tersimpan di menu **Tiket Saya**, dan QR Code dinamis dapat diakses langsung di menu **Digital QR Aktif**.`,
     helpfulCount: 185,
   },
   {
@@ -62,7 +62,7 @@ Perbedaan utama Nebeng dengan travel konvensional:
     question: 'Berapa menit sebelum keberangkatan saya harus tiba di Pos Mitra?',
     answer: `Penumpang disarankan tiba di Pos Mitra resmi minimal **15–20 menit sebelum jadwal keberangkatan**.
     
-Waktu ini diperlukan oleh Operator Pos untuk:
+Waktu ini diperlukan oleh Mitra Pos untuk:
 - Melakukan verifikasi identitas dan scan QR tiket digital Anda.
 - Pemeriksaan bawaan/bagasi penumpang demi keamanan bersama.
 - Penataan tempat duduk sebelum armada diberangkatkan tepat waktu.`,
@@ -73,7 +73,7 @@ Waktu ini diperlukan oleh Operator Pos untuk:
     category: 'booking',
     targetRoles: ['all', 'customer'],
     question: 'Apakah saya bisa membatalkan tiket dan mendapatkan pengembalian dana (refund)?',
-    answer: `Ya, pembatalan tiket dapat dilakukan melalui menu **Tickets & Digital QR**:
+    answer: `Ya, pembatalan tiket dapat dilakukan melalui menu **Tiket Saya**:
 - **Pembatalan > 6 jam sebelum keberangkatan**: Pengembalian dana 100% ke saldo Dompet Anda tanpa potongan.
 - **Pembatalan 2 - 6 jam sebelum keberangkatan**: Pengembalian dana 85% (15% kompensasi mitra).
 - **Pembatalan < 2 jam sebelum keberangkatan**: Tiket hangus tidak dapat dikembalikan karena kursi telah dipersiapkan.
@@ -90,7 +90,7 @@ Waktu ini diperlukan oleh Operator Pos untuk:
     answer: `Nebeng menerapkan sistem **Escrow Terproteksi**:
 - Ketika penumpang memesan tiket, dana dipotong dari dompet penumpang dan disimpan aman di rekening penampung (Escrow).
 - Dana TIDAK langsung ditransfer ke mitra agar keamanan penumpang terjamin.
-- Setelah penumpang tiba di pos tujuan dan scan QR selesai divalidasi oleh Operator Pos, dana secara otomatis dicairkan ke saldo Mitra.
+- Setelah penumpang tiba di pos tujuan dan scan QR selesai divalidasi oleh Mitra Pos, dana secara otomatis dicairkan ke saldo Mitra.
 - Sistem ini melindungi penumpang dari penipuan dan menjamin mitra mendapatkan bayaran pasti.`,
     helpfulCount: 153,
   },
@@ -115,7 +115,7 @@ Masuk ke menu Saldo & Komisi, pilih Tarik Saldo ke rekening bank terdaftar Anda.
     question: 'Kenapa penjemputan harus dilakukan di Pos Mitra dan bukan di sembarang jalan?',
     answer: `Penjemputan di Pos Mitra resmi bertujuan untuk:
 1. **Keamanan & Kenyamanan**: Penumpang menunggu di tempat yang aman, terang, beratap, dan memiliki fasilitas ruang tunggu.
-2. **Inspeksi Armada**: Operator Pos memeriksa kondisi fisik kendaraan mitra dan kelengkapan keselamatan sebelum perjalanan jauh.
+2. **Inspeksi Armada**: Mitra Pos memeriksa kondisi fisik kendaraan mitra dan kelengkapan keselamatan sebelum perjalanan jauh.
 3. **Verifikasi Ganda**: Memastikan nama penumpang di tiket sesuai dengan orang fisik yang naik kendaraan.`,
     helpfulCount: 95,
   },

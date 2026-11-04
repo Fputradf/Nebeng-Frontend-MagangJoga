@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   User,
   FileText,
@@ -7,6 +7,8 @@ import {
   CheckCircle2,
   ShieldCheck,
   AlertCircle,
+  AlertTriangle,
+  Loader2,
   X,
   CreditCard,
   RefreshCw
@@ -16,6 +18,7 @@ import apiClient from '../../../services/apiClient';
 import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
 import { useNavigate } from 'react-router-dom';
+import { disbursementBankService, FALLBACK_SUPPORTED_BANKS } from '../../../services/disbursementBankService';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png'];
@@ -83,6 +86,66 @@ export default function MitraOnboarding() {
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckingStatus, setIsCheckingStatus] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+
+  const [nikError, setNikError] = useState(null);
+  const [isCheckingNik, setIsCheckingNik] = useState(false);
+  const nikCheckTimeoutRef = useRef(null);
+
+  const [availableBanks, setAvailableBanks] = useState(FALLBACK_SUPPORTED_BANKS);
+
+  useEffect(() => {
+    disbursementBankService
+      .getActiveBanks()
+      .then((banks) => {
+        if (Array.isArray(banks) && banks.length > 0) {
+          setAvailableBanks(banks);
+          setFormData((prev) => ({
+            ...prev,
+            bankName: prev.bankName || banks[0]?.code || 'BCA',
+          }));
+        }
+      })
+      .catch(() => null);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (nikCheckTimeoutRef.current) {
+        clearTimeout(nikCheckTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const validateNikOnline = useCallback(async (nikToTest) => {
+    const clean = (nikToTest || '').trim();
+    if (clean.length !== 16) {
+      setNikError(null);
+      return false;
+    }
+
+    setIsCheckingNik(true);
+    try {
+      const res = await apiClient.get(`/verifications/check-nik?nik=${clean}`);
+      const data = res.data?.data || res.data || {};
+      if (data.available === false || data.isAvailable === false) {
+        const errorMsg =
+          data.message || 'Nomor NIK / KTP sudah terdaftar oleh pengguna lain.';
+        setNikError(errorMsg);
+        return false;
+      } else {
+        setNikError(null);
+        return true;
+      }
+    } catch (err) {
+      const msg =
+        err.response?.data?.message ||
+        'Nomor NIK / KTP sudah terdaftar oleh pengguna lain.';
+      setNikError(msg);
+      return false;
+    } finally {
+      setIsCheckingNik(false);
+    }
+  }, []);
   const [verificationStatusDetail, setVerificationStatusDetail] = useState('pending');
 
   useEffect(() => {
@@ -199,6 +262,17 @@ export default function MitraOnboarding() {
 
     if (name === 'nik') {
       nextValue = value.replace(/\D/g, '').slice(0, 16);
+      setNikError(null);
+
+      if (nikCheckTimeoutRef.current) {
+        clearTimeout(nikCheckTimeoutRef.current);
+      }
+
+      if (nextValue.length === 16) {
+        nikCheckTimeoutRef.current = setTimeout(() => {
+          validateNikOnline(nextValue);
+        }, 350);
+      }
     } else if (name === 'bankAccountNumber') {
       // Batasi hanya angka, maksimal 18 digit
       nextValue = value.replace(/\D/g, '').slice(0, 18);
@@ -378,7 +452,7 @@ export default function MitraOnboarding() {
 
   const targetDocs = isResubmissionMode ? rejectedDocTypes : ['ktp', 'sim', 'skck', 'stnk'];
   const missingDocuments = targetDocs.filter((field) => !rawFiles[field]);
-  const isNikValid = formData.nik.length === 16;
+  const isNikValid = formData.nik.length === 16 && !nikError && !isCheckingNik;
   const isPhoneValid = PHONE_REGEX.test(formData.phone.trim());
   const isPlateValid = !formData.plateNumber.trim() || PLATE_REGEX.test(formData.plateNumber.trim());
   const isBankAccountValid = formData.bankAccountNumber.trim().length >= 8 && formData.bankAccountNumber.trim().length <= 18;
@@ -403,6 +477,19 @@ export default function MitraOnboarding() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isFormComplete) return;
+
+    if (nikError) {
+      setErrorMessage(nikError);
+      return;
+    }
+
+    if (!isResubmissionMode) {
+      const isAvailable = await validateNikOnline(formData.nik);
+      if (!isAvailable) {
+        setErrorMessage('Nomor NIK / KTP sudah terdaftar oleh pengguna lain.');
+        return;
+      }
+    }
 
     setIsLoading(true);
     setErrorMessage('');
@@ -577,9 +664,23 @@ export default function MitraOnboarding() {
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
-                      Nomor NIK KTP (16 Digit)
-                    </label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider">
+                        Nomor NIK KTP (16 Digit)
+                      </label>
+                      {isCheckingNik && (
+                        <span className="text-[11px] text-brand-600 flex items-center gap-1 font-medium">
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          Memeriksa...
+                        </span>
+                      )}
+                      {!isCheckingNik && formData.nik.length === 16 && !nikError && (
+                        <span className="text-[11px] text-emerald-600 flex items-center gap-1 font-medium">
+                          <CheckCircle2 className="w-3 h-3" />
+                          NIK Tersedia
+                        </span>
+                      )}
+                    </div>
                     <input
                       type="text"
                       name="nik"
@@ -589,10 +690,18 @@ export default function MitraOnboarding() {
                       placeholder="3372xxxxxxxxxxxx"
                       value={formData.nik}
                       onChange={handleInputChange}
-                      className={`w-full px-3.5 py-2.5 bg-neutral-50 border rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#10367D] ${
-                        formData.nik.length !== 16 ? 'border-rose-300' : 'border-neutral-200'
+                      className={`w-full px-3.5 py-2.5 bg-neutral-50 border rounded-xl font-bold text-neutral-800 focus:outline-none transition-all ${
+                        nikError || formData.nik.length !== 16
+                          ? 'border-rose-300 focus:border-rose-500 focus:ring-1 focus:ring-rose-200'
+                          : 'border-neutral-200 focus:border-[#10367D]'
                       }`}
                     />
+                    {nikError && (
+                      <p className="text-[12px] font-semibold text-rose-600 mt-1 flex items-center gap-1.5">
+                        <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{nikError}</span>
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -721,17 +830,22 @@ export default function MitraOnboarding() {
                     <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                       Nama Bank
                     </label>
-                    <input
-                      type="text"
+                    <select
                       name="bankName"
                       required
-                      placeholder="cth: BCA / Mandiri"
                       value={formData.bankName}
                       onChange={handleInputChange}
                       className={`w-full px-3.5 py-2.5 bg-neutral-50 border rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#10367D] ${
                         !formData.bankName.trim() ? 'border-rose-300' : 'border-neutral-200'
                       }`}
-                    />
+                    >
+                      <option value="" disabled>-- Pilih Bank Pencairan --</option>
+                      {availableBanks.map((b) => (
+                        <option key={b.code || b.id} value={b.code}>
+                          {b.name || b.bankName}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   <div>

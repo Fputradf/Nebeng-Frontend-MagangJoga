@@ -9,9 +9,6 @@ import {
   Car,
   Headset,
   Send,
-  AlertCircle,
-  AlertTriangle,
-  ShieldAlert,
   Building2,
   Phone,
   Mail,
@@ -22,7 +19,6 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { supportChatService } from '../../../services/supportChatService';
-import { disruptedTripsService } from '../../../services/disruptedTripsService';
 import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
 import BaseModal from '../../../components/ui/BaseModal';
@@ -31,7 +27,7 @@ const CANNED_RESPONSES = [
   'Halo! Berkas Anda telah kami terima dan saat ini sedang kami verifikasi secara manual. Mohon ditunggu ya.',
   'Tiket digital Anda sah dan terdata di sistem. Silakan tiba di Pos Mitra 15 menit sebelum waktu keberangkatan.',
   'Dana pembatalan tiket telah diproses kembali ke saldo Dompet Digital Nebeng Anda. Silakan cek menu Dompet.',
-  'Pos Mitra di wilayah kami beroperasi 24 jam dengan Operator Pos yang siap membantu validasi QR tiket.',
+  'Pos Mitra di wilayah kami beroperasi 24 jam dengan Mitra Pos yang siap membantu validasi QR tiket.',
   'Mohon pastikan foto KTP dan foto selfie wajah Anda jelas tanpa masker/kacamata hitam agar verifikasi dapat disetujui.',
 ];
 
@@ -48,19 +44,6 @@ export default function RegionalSupportChat() {
   const [statusFilter, setStatusFilter] = useState('all'); // 'all' | 'open' | 'resolved'
   const [replyText, setReplyText] = useState('');
   const messagesEndRef = useRef(null);
-
-  // Modal Eskalasi ke Trip Disrupted
-  const [isEscalateModalOpen, setIsEscalateModalOpen] = useState(false);
-  const [escalateForm, setEscalateForm] = useState({
-    id: '',
-    mitra: '',
-    vehicle: '',
-    phone: '',
-    origin: '',
-    destination: '',
-    issue: '',
-    location: '',
-  });
 
   // Load tickets and subscribe to real-time changes
   useEffect(() => {
@@ -197,58 +180,6 @@ export default function RegionalSupportChat() {
   const handleStatusChange = (newStatus) => {
     if (!selectedTicket) return;
     supportChatService.updateTicketStatus(selectedTicket.id, newStatus);
-  };
-
-  const handleOpenEscalate = (ticket) => {
-    if (!ticket) return;
-    const lastUserMsg = [...(ticket.messages || [])].reverse().find(m => m.sender === 'user');
-    setEscalateForm({
-      id: `TRP-${Math.floor(1000 + Math.random() * 9000)}`,
-      mitra: ticket.userName,
-      vehicle: ticket.userRole === 'mitra' ? 'Armada Mitra Terdaftar' : 'Armada Penumpang',
-      phone: ticket.userPhone || '-',
-      origin: 'Pos Asal Wilayah',
-      destination: 'Pos Tujuan Wilayah',
-      issue: lastUserMsg ? lastUserMsg.text.slice(0, 80) : ticket.subject,
-      location: ticket.region || 'Wilayah Terkait',
-    });
-    setIsEscalateModalOpen(true);
-  };
-
-  const handleConfirmEscalate = (e) => {
-    e.preventDefault();
-    if (!selectedTicket) return;
-
-    const created = disruptedTripsService.addDisruptedTrip({
-      id: escalateForm.id || `TRP-${Math.floor(1000 + Math.random() * 9000)}`,
-      mitra: escalateForm.mitra,
-      vehicle: escalateForm.vehicle || 'Armada Operasional',
-      phone: escalateForm.phone || '-',
-      origin: escalateForm.origin || 'Pos Asal Wilayah',
-      destination: escalateForm.destination || 'Pos Tujuan Wilayah',
-      issue: escalateForm.issue,
-      location: escalateForm.location,
-      ticketId: selectedTicket.id,
-      regionId: adminProfile?.regionId || session?.regionId || '1',
-      assistanceStatus: 'Pending',
-    });
-
-    // Otomatis kirim pesan konfirmasi eskalasi di chat
-    supportChatService.sendMessage(selectedTicket.id, {
-      sender: 'admin',
-      senderName: `${currentAdminName} (${currentRegion})`,
-      senderRole: 'regional_admin',
-      text: `🚨 Laporan kendala Anda telah kami eskalasikan ke Pemantauan Trip Disrupted (ID: ${created.id}). Tim Pos Operasional terdekat sedang dikoordinasikan untuk bantuan penanganan di lokasi.`,
-    });
-
-    // Tandai status tiket menjadi in_progress
-    supportChatService.updateTicketStatus(selectedTicket.id, 'in_progress');
-
-    toast.success(`Laporan berhasil dieskalasikan ke Pemantauan Trip Disrupted (${created.id})!`, {
-      title: 'Eskalasi Insiden Berhasil',
-    });
-
-    setIsEscalateModalOpen(false);
   };
 
   // Metrics
@@ -482,17 +413,6 @@ export default function RegionalSupportChat() {
 
                 {/* Actions & Status Changer */}
                 <div className="flex items-center gap-2 flex-wrap">
-                  <button
-                    type="button"
-                    onClick={() => handleOpenEscalate(selectedTicket)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition cursor-pointer shadow-2xs"
-                    title="Eskalasikan laporan chat ini ke Pemantauan Trip Disrupted di Dashboard Wilayah"
-                  >
-                    <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
-                    <span className="hidden sm:inline">Eskalasi ke Trip Disrupted</span>
-                    <span className="sm:hidden">Eskalasi</span>
-                  </button>
-
                   <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1">
                     <label className="text-[11px] font-bold text-slate-500">Status:</label>
                     <select
@@ -633,129 +553,6 @@ export default function RegionalSupportChat() {
         </div>
       </div>
 
-      {/* Modal Eskalasi ke Trip Disrupted */}
-      <BaseModal
-        isOpen={isEscalateModalOpen}
-        onClose={() => setIsEscalateModalOpen(false)}
-        title="Eskalasi Laporan ke Trip Disrupted"
-        subtitle={`Tiket ${selectedTicket?.id} · ${selectedTicket?.userName}`}
-        maxWidth="max-w-lg"
-      >
-        <form onSubmit={handleConfirmEscalate} className="space-y-4 text-xs font-medium text-slate-700">
-          <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-[11px] leading-relaxed flex items-start gap-2">
-            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-            <div>
-              Laporan ini akan langsung dicatat ke panel <strong>Pemantauan Trip Disrupted</strong> pada Dashboard Wilayah agar tim pos dapat mengoordinasikan bantuan darurat.
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block mb-1 font-bold text-slate-700">ID Perjalanan (Trip ID)</label>
-              <input
-                type="text"
-                value={escalateForm.id}
-                onChange={(e) => setEscalateForm({ ...escalateForm, id: e.target.value })}
-                className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500 font-mono"
-                required
-              />
-            </div>
-            <div>
-              <label className="block mb-1 font-bold text-slate-700">Nama Pelapor / Mitra</label>
-              <input
-                type="text"
-                value={escalateForm.mitra}
-                onChange={(e) => setEscalateForm({ ...escalateForm, mitra: e.target.value })}
-                className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500"
-                required
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block mb-1 font-bold text-slate-700">Armada / Kendaraan</label>
-              <input
-                type="text"
-                value={escalateForm.vehicle}
-                onChange={(e) => setEscalateForm({ ...escalateForm, vehicle: e.target.value })}
-                className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500"
-                placeholder="Contoh: Avanza (D 1234 ABC)"
-              />
-            </div>
-            <div>
-              <label className="block mb-1 font-bold text-slate-700">Nomor Telepon Kontak</label>
-              <input
-                type="text"
-                value={escalateForm.phone}
-                onChange={(e) => setEscalateForm({ ...escalateForm, phone: e.target.value })}
-                className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500 font-mono"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block mb-1 font-bold text-slate-700">Pos Asal</label>
-              <input
-                type="text"
-                value={escalateForm.origin}
-                onChange={(e) => setEscalateForm({ ...escalateForm, origin: e.target.value })}
-                className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500"
-              />
-            </div>
-            <div>
-              <label className="block mb-1 font-bold text-slate-700">Pos Tujuan</label>
-              <input
-                type="text"
-                value={escalateForm.destination}
-                onChange={(e) => setEscalateForm({ ...escalateForm, destination: e.target.value })}
-                className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block mb-1 font-bold text-slate-700">Ringkasan Kendala / Hambatan</label>
-            <input
-              type="text"
-              value={escalateForm.issue}
-              onChange={(e) => setEscalateForm({ ...escalateForm, issue: e.target.value })}
-              className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500"
-              placeholder="Jelaskan masalah, misal: Mogok, ban bocor, kecelakaan"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block mb-1 font-bold text-slate-700">Titik / Lokasi Kejadian</label>
-            <input
-              type="text"
-              value={escalateForm.location}
-              onChange={(e) => setEscalateForm({ ...escalateForm, location: e.target.value })}
-              className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500"
-              placeholder="Contoh: Tol KM 72 / Jl. Soekarno Hatta No. 12"
-              required
-            />
-          </div>
-
-          <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
-            <button
-              type="button"
-              onClick={() => setIsEscalateModalOpen(false)}
-              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full font-bold cursor-pointer transition"
-            >
-              Batal
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-full font-bold cursor-pointer shadow-sm transition flex items-center gap-1.5"
-            >
-              <ShieldAlert className="w-4 h-4" /> Konfirmasi & Eskalasi
-            </button>
-          </div>
-        </form>
-      </BaseModal>
     </div>
   );
 }

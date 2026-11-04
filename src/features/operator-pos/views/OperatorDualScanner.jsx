@@ -69,7 +69,7 @@ export default function OperatorDualScanner() {
     try {
       setIsLoadingManifest(true);
       const res = await apiClient.get('/checkpoints/manifest', {
-        params: { posId: String(targetPosId) }
+        params: { posId: String(targetPosId), scope: 'upcoming' }
       });
       if (res.data?.trips) {
         setManifestTrips(res.data.trips);
@@ -173,7 +173,7 @@ export default function OperatorDualScanner() {
           .catch((err) => {
             console.warn('Gagal akses kamera langsung:', err);
             toast.info(
-              'Kamera tidak aktif atau izin diblokir. Anda bisa menggunakan unggah file gambar atau pilih dari manifest pos.',
+              'Kamera tidak aktif atau izin diblokir. Anda bisa menggunakan unggah file gambar atau pilih dari daftar jadwal pos.',
               { title: 'Mode Alternatif Aktif' }
             );
           });
@@ -266,7 +266,7 @@ export default function OperatorDualScanner() {
     } else {
       setTicketQr(qrValue);
     }
-    toast.success(`Kode valid (${qrValue}) berhasil dipilih dari Manifest Pos!`, {
+    toast.success(`Kode valid (${qrValue}) berhasil dipilih dari daftar jadwal pos!`, {
       title: 'Kode Terisi'
     });
     stopCamera();
@@ -287,7 +287,7 @@ export default function OperatorDualScanner() {
     }
 
     if (!posId) {
-      toast.warning('ID Pos bertugas belum terdeteksi dari sistem. Pastikan akun operator terikat ke sebuah pos.', { title: 'Pos Belum Dimuat' });
+      toast.warning('ID Pos bertugas belum terdeteksi dari sistem. Pastikan akun mitra pos terikat ke sebuah pos.', { title: 'Pos Belum Dimuat' });
       return;
     }
 
@@ -312,7 +312,7 @@ export default function OperatorDualScanner() {
         type: scanMode === 'origin' ? 'Scan 1 (Origin)' : 'Scan 2 (Destination / Selesai)',
         trip: cleanTrip || response.data?.checkpoint?.trip?.qrCodeTrip || response.data?.trip?.qrCodeTrip || '(Otomatis dari Tiket)',
         ticket: cleanTicket || response.data?.checkpoint?.order?.qrCodeTicket || '(Scan Trip Mitra)',
-        status: scanMode === 'origin' ? 'IN_TRANSIT (Berangkat)' : 'SUCCESS (Trip Selesai & Escrow Released)',
+        status: scanMode === 'origin' ? 'IN_TRANSIT (Berangkat)' : 'SUCCESS (Trip Selesai & Dana Dicairkan)',
         time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
       };
 
@@ -360,10 +360,10 @@ export default function OperatorDualScanner() {
               </span>
             </div>
             <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight break-words">
-              Dual QR Scanner
+              Scanner QR Checkpoint Pos
             </h1>
             <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
-              Validasi check-in keberangkatan pos asal & pelepasan dana escrow di pos tujuan secara instan.
+              Pusat scan tunggal untuk Penumpang & Paket Barang: validasi check-in keberangkatan pos asal & penyelesaian tujuan instan tanpa OTP.
             </p>
           </div>
 
@@ -377,7 +377,7 @@ export default function OperatorDualScanner() {
                   : 'text-white/80 hover:text-white hover:bg-white/10'
               }`}
             >
-              Scan 1 Asal
+              Scan 1: Pos Asal
             </button>
 
             <button
@@ -389,7 +389,7 @@ export default function OperatorDualScanner() {
                   : 'text-white/80 hover:text-white hover:bg-white/10'
               }`}
             >
-              Scan 2 Tujuan
+              Scan 2: Pos Tujuan
             </button>
           </div>
         </div>
@@ -452,28 +452,14 @@ export default function OperatorDualScanner() {
                 }}
               />
 
-              {availableTrips.length > 0 && (
-                <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
-                  <span className="text-[10px] text-neutral-400 font-medium">Manifest:</span>
-                  {availableTrips.slice(0, 2).map((t) => (
-                    <button
-                      key={t.tripId}
-                      type="button"
-                      onClick={() => setTripQr(t.qrCode)}
-                      className="px-2 py-0.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 text-[11px] font-mono font-bold transition"
-                    >
-                      Trip #{t.tripId}
-                    </button>
-                  ))}
-                </div>
-              )}
+              
             </div>
 
             {/* INPUT QR TIKET */}
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-wider">
-                  QR TIKET/PAKET CUSTOMER
+                  QR TIKET PENUMPANG / PAKET BARANG
                 </label>
 
                 <div className="flex items-center gap-2">
@@ -503,27 +489,7 @@ export default function OperatorDualScanner() {
                 }}
               />
 
-              {availableTickets.length > 0 && (
-                <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
-                  <span className="text-[10px] text-neutral-400 font-medium">Manifest:</span>
-                  {availableTickets.slice(0, 2).map((p) => (
-                    <button
-                      key={p.orderId}
-                      type="button"
-                      onClick={() => {
-                        setTicketQr(p.qrCode);
-                        const matchedTrip = availableTrips.find((t) => String(t.tripId) === String(p.tripId));
-                        if (matchedTrip) {
-                          setTripQr(matchedTrip.qrCode);
-                        }
-                      }}
-                      className="px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-[11px] font-mono font-bold transition"
-                    >
-                      Tiket #{p.orderId} ({p.customerName})
-                    </button>
-                  ))}
-                </div>
-              )}
+              
             </div>
 
             <button
@@ -563,7 +529,7 @@ export default function OperatorDualScanner() {
               className="text-brand-600 hover:underline flex items-center gap-1 font-semibold"
             >
               <RefreshCw className={`w-3 h-3 ${isLoadingManifest ? 'animate-spin' : ''}`} />
-              Refresh Manifest
+              Segarkan Jadwal
             </button>
           </div>
         </div>

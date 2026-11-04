@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FileText, DollarSign, Printer, Wallet, ChevronLeft, ChevronRight } from 'lucide-react';
+import { FileText, DollarSign, Printer, Wallet, ChevronLeft, ChevronRight, Calendar, RotateCcw } from 'lucide-react';
 import { SkeletonTableRows } from '../../../components/ui/Skeleton';
 import EmptyState from '../../../components/ui/EmptyState';
 import StatCard from '../../../components/ui/StatCard';
@@ -13,12 +13,56 @@ const PRIMARY_COLOR = '#10367D';
 const PRIMARY_HOVER = '#0C2C66';
 const PRIMARY_ACCENT = '#74B4D9';
 
+const MONTH_NAMES = [
+  { value: '', label: 'Semua Bulan' },
+  { value: '1', label: 'Januari' },
+  { value: '2', label: 'Februari' },
+  { value: '3', label: 'Maret' },
+  { value: '4', label: 'April' },
+  { value: '5', label: 'Mei' },
+  { value: '6', label: 'Juni' },
+  { value: '7', label: 'Juli' },
+  { value: '8', label: 'Agustus' },
+  { value: '9', label: 'September' },
+  { value: '10', label: 'Oktober' },
+  { value: '11', label: 'November' },
+  { value: '12', label: 'Desember' },
+];
+
+const CURRENT_YEAR = new Date().getFullYear();
+const YEAR_OPTIONS = [
+  { value: '', label: 'Semua Tahun' },
+  { value: String(CURRENT_YEAR + 1), label: String(CURRENT_YEAR + 1) },
+  { value: String(CURRENT_YEAR), label: String(CURRENT_YEAR) },
+  { value: String(CURRENT_YEAR - 1), label: String(CURRENT_YEAR - 1) },
+  { value: String(CURRENT_YEAR - 2), label: String(CURRENT_YEAR - 2) },
+];
+
+const getFilterPeriodLabel = (m, y) => {
+  if (m && y) {
+    const monthObj = MONTH_NAMES.find((item) => String(item.value) === String(m));
+    return `${monthObj?.label || m} ${y}`;
+  }
+  if (m) {
+    const monthObj = MONTH_NAMES.find((item) => String(item.value) === String(m));
+    return `Bulan ${monthObj?.label || m}`;
+  }
+  if (y) {
+    return `Tahun ${y}`;
+  }
+  return 'Semua Periode';
+};
+
 export default function OperatorFinancial() {
   const { user } = useAuth();
   const [dailyTransactions, setDailyTransactions] = useState([]);
   const [serverTotalRevenue, setServerTotalRevenue] = useState(0);
   const [posInfo, setPosInfo] = useState(null);
   const [isLoadingTransactions, setIsLoadingTransactions] = useState(true);
+
+  // Filter Bulan & Tahun
+  const [selectedMonth, setSelectedMonth] = useState(String(new Date().getMonth() + 1));
+  const [selectedYear, setSelectedYear] = useState(String(CURRENT_YEAR));
 
   // State Pagination & Limit
   const [currentPage, setCurrentPage] = useState(1);
@@ -35,7 +79,12 @@ export default function OperatorFinancial() {
     const fetchData = async () => {
       setIsLoadingTransactions(true);
       try {
-        const responseData = await operatorService.getPayments(currentPage, limit);
+        const responseData = await operatorService.getPayments({
+          page: currentPage,
+          limit,
+          month: selectedMonth ? Number(selectedMonth) : undefined,
+          year: selectedYear ? Number(selectedYear) : undefined,
+        });
 
         if (ignore) return;
 
@@ -113,7 +162,7 @@ export default function OperatorFinancial() {
     return () => {
       ignore = true;
     };
-  }, [currentPage, limit]);
+  }, [currentPage, limit, selectedMonth, selectedYear]);
 
   // Handler ubah limit data per halaman
   const handleLimitChange = (e) => {
@@ -153,7 +202,7 @@ export default function OperatorFinancial() {
                 </span>
               </div>
               <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
-                Laporan Finansial Pos Terminal
+                Laporan Pendapatan Pos Terminal
               </h1>
               <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
                 Kelola setoran tunai harian, rekonsiliasi kasir, dan pantau pendapatan total pos dari server.
@@ -172,11 +221,94 @@ export default function OperatorFinancial() {
           <span className="absolute bottom-[11px] right-6 h-2.5 w-2.5 rounded-full border-2 border-white bg-accent sm:right-8" />
         </section>
 
+        {/* ── FILTER BULAN & TAHUN ── */}
+        <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#10367D] flex items-center justify-center shrink-0 border border-blue-100">
+              <Calendar className="w-5 h-5 text-[#10367D]" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-neutral-800 flex items-center gap-2">
+                <span>Filter Periode Laporan</span>
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-100/80 text-[#10367D] border border-blue-200">
+                  {getFilterPeriodLabel(selectedMonth, selectedYear)}
+                </span>
+              </h3>
+              <p className="text-xs text-neutral-500 mt-0.5">
+                Sesuaikan rekapitulasi transaksi dan pendapatan kas pos per bulan dan tahun
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Dropdown Bulan */}
+            <div className="flex items-center gap-1.5">
+              <label htmlFor="filter-month" className="text-xs font-bold text-neutral-600">
+                Bulan:
+              </label>
+              <select
+                id="filter-month"
+                value={selectedMonth}
+                onChange={(e) => {
+                  setSelectedMonth(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="bg-neutral-50 border border-neutral-300 rounded-xl px-3 py-2 text-xs font-bold text-neutral-700 focus:outline-none focus:ring-2 focus:ring-[#10367D] focus:border-[#10367D] cursor-pointer shadow-2xs"
+              >
+                {MONTH_NAMES.map((m) => (
+                  <option key={m.value} value={m.value}>
+                    {m.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Dropdown Tahun */}
+            <div className="flex items-center gap-1.5">
+              <label htmlFor="filter-year" className="text-xs font-bold text-neutral-600">
+                Tahun:
+              </label>
+              <select
+                id="filter-year"
+                value={selectedYear}
+                onChange={(e) => {
+                  setSelectedYear(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="bg-neutral-50 border border-neutral-300 rounded-xl px-3 py-2 text-xs font-bold text-neutral-700 focus:outline-none focus:ring-2 focus:ring-[#10367D] focus:border-[#10367D] cursor-pointer shadow-2xs"
+              >
+                {YEAR_OPTIONS.map((y) => (
+                  <option key={y.value} value={y.value}>
+                    {y.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Tombol Reset Filter */}
+            {(selectedMonth !== String(new Date().getMonth() + 1) || selectedYear !== String(CURRENT_YEAR)) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedMonth(String(new Date().getMonth() + 1));
+                  setSelectedYear(String(CURRENT_YEAR));
+                  setCurrentPage(1);
+                }}
+                className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-neutral-600 hover:text-neutral-900 bg-neutral-100 hover:bg-neutral-200 rounded-xl transition cursor-pointer"
+                title="Kembalikan ke bulan saat ini"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Reset</span>
+              </button>
+            )}
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
           <StatCard
             title="TOTAL PENDAPATAN POS"
             value={`Rp ${totalRevenue.toLocaleString('id-ID')}`}
-            subtitle={`Total omzet terdaftar`}
+            subtitle={`Periode: ${getFilterPeriodLabel(selectedMonth, selectedYear)}`}
             icon={DollarSign}
           />
           <StatCard
@@ -188,7 +320,7 @@ export default function OperatorFinancial() {
           <StatCard
             title="SETORAN REGIONAL (15%)"
             value={`Rp ${regionalCommission.toLocaleString('id-ID')}`}
-            subtitle="Potongan otomatis sistem"
+            subtitle={`Bagi hasil periode ${getFilterPeriodLabel(selectedMonth, selectedYear)}`}
             icon={FileText}
           />
         </div>
@@ -234,7 +366,7 @@ export default function OperatorFinancial() {
                       <EmptyState
                         icon={FileText}
                         title="Belum Ada Transaksi"
-                        description="Belum ada data transaksi finansial tercatat di database pos Anda."
+                        description={selectedMonth || selectedYear ? `Tidak ada data transaksi finansial tercatat untuk ${getFilterPeriodLabel(selectedMonth, selectedYear)}.` : "Belum ada data transaksi finansial tercatat di database pos Anda."}
                       />
                     </td>
                   </tr>
@@ -328,9 +460,10 @@ export default function OperatorFinancial() {
           subtitle={`UNIT PELAYANAN TERMINAL & CHECKPOINT • ${posInfo?.posName || user?.assignedPickupPointName || user?.posName || 'POS TERMINAL UTAMA'}`}
           documentNumber={`DOC/POS-KAS/${new Date().toISOString().slice(0, 10).replace(/-/g, '')}/${user?.id || 'OPR'}`}
           printedAt={printDate}
-          printedBy={user?.name || 'Operator Kasir Shift'}
+          printedBy={user?.name || 'Mitra Pos Shift'}
           extraMeta={[
             { label: 'Pos / Terminal', value: posInfo?.posName || user?.assignedPickupPointName || user?.posName || 'Pos Terminal Utama' },
+            { label: 'Periode Laporan', value: getFilterPeriodLabel(selectedMonth, selectedYear) },
             { label: 'ID Petugas Kasir', value: user?.id ? `OPR-${user.id}` : 'OPR-KASIR' },
             { label: 'Total Transaksi Shift', value: `${paginationMeta.totalData || dailyTransactions.length} Transaksi` },
             { label: 'Status Rekonsiliasi', value: 'Kasir Shift Selesai & Sah' },
@@ -417,9 +550,9 @@ export default function OperatorFinancial() {
         {/* ── LEMBAR PENGESAHAN SERAH TERIMA KASIR POS ── */}
         <PrintReportFooter
           leftSigner={{
-            role: 'Diserahkan Oleh (Operator Shift),',
+            role: 'Diserahkan Oleh (Mitra Pos Shift),',
             title: 'Petugas Kasir Shift Pos Terminal',
-            name: user?.name || 'Operator Kasir',
+            name: user?.name || 'Mitra Pos',
             idLabel: 'NIP / ID Kasir',
             idValue: user?.id ? `OPR-${user.id}` : 'OPR-POS',
           }}

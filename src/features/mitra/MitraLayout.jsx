@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import MitraSidebar from './components/MitraSidebar';
 import MitraTopbar from './components/MitraTopbar';
@@ -11,14 +11,24 @@ import { MitraDataProvider } from '../../context/MitraDataContext';
 import apiClient from '../../services/apiClient';
 
 const MITRA_MENU_PATH = {
+  // Menu Utama
   'Dashboard Mitra': 'dashboard',
   'Onboarding & Verifikasi': 'onboarding',
+
+  // Operasional & Layanan (Label sidebar saat ini)
+  'Manajemen Trip & Pesanan': 'trip',
+  'Tampilkan QR Code': 'qr',
+  'Saldo & Pendapatan': 'saldo',
+  'Chat Penumpang': 'chat',
+  'Pusat Bantuan': 'bantuan',
+  'Pengaturan Akun': 'profile/pengaturan',
+
+  // Fallback aliases (Label alternatif / versi sebelumnya)
   'Kelola Trip & Jadwal': 'trip',
   'Digital QR Trip': 'qr',
   'Saldo & Komisi': 'saldo',
   'Chat Pelanggan': 'chat',
   'Pusat Bantuan & FAQ': 'bantuan',
-  'Pengaturan Akun': 'profile/pengaturan',
   'Profil & Pengaturan': 'profile/pengaturan',
 };
 
@@ -110,8 +120,15 @@ export default function MitraLayout() {
     navigate('/login', { replace: true });
   };
 
-  const handleMenuSelect = (name) => {
-    const slug = MITRA_MENU_PATH[name];
+  const handleMenuSelect = (nameOrSlug) => {
+    const slug =
+      MITRA_MENU_PATH[nameOrSlug] ||
+      (Object.values(MITRA_MENU_PATH).includes(nameOrSlug) ? nameOrSlug : null);
+
+    if (!slug) {
+      console.warn(`[MitraLayout] Menu tidak ditemukan: ${nameOrSlug}`);
+      return;
+    }
 
     if (!isVerified && VERIFIED_ONLY_SLUGS.includes(slug)) {
       alert('Akun Anda belum disetujui oleh Admin Regional. Selesaikan verifikasi terlebih dahulu.');
@@ -155,6 +172,7 @@ export default function MitraLayout() {
         }
         topbar={
           <AppTopbar
+            basePath="/mitra"
             profile={user || mitraProfile}
             roleLabel="Mitra"
             onProfileClick={() => setShowProfileModal(true)}

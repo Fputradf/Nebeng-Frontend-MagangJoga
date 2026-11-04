@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import 'leaflet/dist/leaflet.css'
 import App from './App.jsx'
+import { AppConfigProvider } from './context/AppConfigContext.jsx'
 import { ToastProvider } from './context/ToastContext.jsx'
 import { ConfirmProvider } from './context/ConfirmContext.jsx'
 import { AuthProvider } from './context/AuthContext.jsx'
@@ -21,20 +22,22 @@ import '@fontsource/plus-jakarta-sans/800.css';
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
-      <NotificationProvider>
-        <AuthProvider>
-          <NotificationAuthHandler />
-          <GPSProvider>
-            <ToastProvider>
-              <ConfirmProvider>
-                <TicketsProvider>
-                <App />
-                </TicketsProvider>
-              </ConfirmProvider>
-            </ToastProvider>
-          </GPSProvider>
-        </AuthProvider>
-      </NotificationProvider>
+      <AppConfigProvider>
+        <NotificationProvider>
+          <AuthProvider>
+            <NotificationAuthHandler />
+            <GPSProvider>
+              <ToastProvider>
+                <ConfirmProvider>
+                  <TicketsProvider>
+                    <App />
+                  </TicketsProvider>
+                </ConfirmProvider>
+              </ToastProvider>
+            </GPSProvider>
+          </AuthProvider>
+        </NotificationProvider>
+      </AppConfigProvider>
     </BrowserRouter>
   </StrictMode>,
 )

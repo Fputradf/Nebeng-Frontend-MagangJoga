@@ -56,7 +56,7 @@ export default function AppShell({ sidebar, topbar, banner = null, children = nu
 
       <AppBottomNav
         role={role}
-        onOpenSidebar={() => setIsMobileSidebarOpen(true)}
+        onOpenSidebar={() => setIsMobileSidebarOpen((prev) => !prev)}
       />
 
       {children}

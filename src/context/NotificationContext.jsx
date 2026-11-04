@@ -126,23 +126,31 @@ export const NotificationProvider = ({ children }) => {
         let swRegistration;
         if ('serviceWorker' in navigator) {
           try {
-            // Cek apakah sudah ada registration (utamakan /sw.js yang menyatukan PWA & Firebase)
+            // Cek apakah sudah ada registration (utamakan /sw.js yang menyatukan PWA & Firebase, atau fallback /firebase-messaging-sw.js)
             const existingRegistration = await navigator.serviceWorker.getRegistration();
             if (existingRegistration) {
               swRegistration = existingRegistration;
             } else {
-              swRegistration = await navigator.serviceWorker.register('/sw.js');
+              try {
+                swRegistration = await navigator.serviceWorker.register('/sw.js');
+              } catch (swErr) {
+                console.warn('[NotificationContext] Registrasi /sw.js gagal, beralih ke /firebase-messaging-sw.js:', swErr);
+                swRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+              }
             }
 
             // Tunggu service worker aktif
             if (swRegistration.installing) {
-              await new Promise((resolve) => {
-                swRegistration.installing.addEventListener('statechange', (e) => {
-                  if (e.target.state === 'activated') {
-                    resolve();
-                  }
-                });
-              });
+              await Promise.race([
+                new Promise((resolve) => {
+                  swRegistration.installing.addEventListener('statechange', (e) => {
+                    if (e.target.state === 'activated') {
+                      resolve();
+                    }
+                  });
+                }),
+                new Promise((resolve) => setTimeout(resolve, 2000)),
+              ]);
             } else if (swRegistration.waiting) {
               await swRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
             }
@@ -398,13 +406,26 @@ export const NotificationProvider = ({ children }) => {
       const rawAuth = localStorage.getItem('nebeng_auth') || sessionStorage.getItem('nebeng_auth');
       if (rawAuth) {
         const parsed = JSON.parse(rawAuth);
-        userRole = parsed?.user?.role || 'customer';
+        userRole = parsed?.role || parsed?.user?.role || 'customer';
       }
     } catch {}
 
     const isMitra = userRole === 'mitra';
     const isOperator = userRole === 'operator';
-    const isAdmin = userRole === 'admin' || userRole === 'regional';
+    const isRegional = userRole === 'regional';
+    const isAdmin = userRole === 'admin';
+
+    const ROLE_BASE_PATHS = {
+      admin: '/admin',
+      superadmin: '/admin',
+      regional: '/regional',
+      operator: '/operator-pos',
+      'operator-pos': '/operator-pos',
+      mitra: '/mitra',
+      driver: '/mitra',
+      customer: '/customer',
+    };
+    const basePath = ROLE_BASE_PATHS[userRole] || '/customer';
 
     const { type, orderId, tripId, actionUrl } = data;
 
@@ -428,20 +449,25 @@ export const NotificationProvider = ({ children }) => {
     if (isOperator) {
       switch (type) {
         case 'checkpoint_scanned':
-          navigateTo('/operator/scanner');
+          navigateTo('/operator-pos/scanner');
           break;
         case 'trip_started':
         case 'trip_arrived':
         case 'trip_completed':
-          navigateTo('/operator/manifest');
+          navigateTo('/operator-pos/manifest');
           break;
         default:
-          navigateTo('/operator/dashboard');
+          navigateTo('/operator-pos/dashboard');
       }
       return;
     }
 
     if (isAdmin) {
+      navigateTo('/admin/dashboard');
+      return;
+    }
+
+    if (isRegional) {
       navigateTo('/regional/dashboard');
       return;
     }
@@ -481,7 +507,7 @@ export const NotificationProvider = ({ children }) => {
         navigateTo(isMitra ? '/mitra/onboarding' : '/customer/profile/pengaturan');
         break;
       default:
-        navigateTo(isMitra ? '/mitra/notifications' : '/customer/notifications');
+        navigateTo(`${basePath}/notifications`);
     }
   }, []);
 
@@ -549,7 +575,10 @@ export const NotificationProvider = ({ children }) => {
             console.log('Service Worker already registered:', existingRegistration);
           } else {
             console.log('Registering PWA Service Worker...');
-            return navigator.serviceWorker.register('/sw.js');
+            return navigator.serviceWorker.register('/sw.js').catch((err) => {
+              console.warn('[NotificationContext] Register /sw.js gagal, fallback ke /firebase-messaging-sw.js:', err);
+              return navigator.serviceWorker.register('/firebase-messaging-sw.js');
+            });
           }
         })
         .then((registration) => {
@@ -629,7 +658,8 @@ export const NotificationProvider = ({ children }) => {
       if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
         try {
           const swReg = await navigator.serviceWorker.getRegistration();
-          const isUrgent = notification.data?.priority === 'high';
+          const isEmergency = notification.type === 'emergency_sos' || notification.data?.type === 'emergency_sos';
+          const isUrgent = notification.data?.priority === 'high' || isEmergency;
           const notifOptions = {
             body: notification.body || '',
             icon: '/favicon.svg',
@@ -637,6 +667,7 @@ export const NotificationProvider = ({ children }) => {
             tag: notifTag,
             data: notification.data || {},
             requireInteraction: isUrgent,
+            vibrate: isEmergency ? [300, 100, 300, 100, 300] : undefined,
           };
 
           if (swReg && swReg.showNotification) {

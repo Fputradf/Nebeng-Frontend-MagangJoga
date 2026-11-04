@@ -44,9 +44,23 @@ export default function HelpCenterView({ userRole = 'customer' }) {
   const { user, customerProfile, mitraProfile } = useAuth();
 
   const profile = userRole === 'mitra' ? (mitraProfile || user) : (customerProfile || user);
-  const userName = profile?.fullName || profile?.name || (userRole === 'mitra' ? 'Mitra Nebeng' : 'Pelanggan Nebeng');
-  const userRegion = profile?.region || profile?.city || 'Jawa Barat (Bandung)';
-  const userId = profile?.id || `${userRole}-${profile?.email || 'user'}`;
+  const rawName = profile?.fullName || profile?.name || (userRole === 'mitra' ? 'Mitra Nebeng' : 'Pelanggan Nebeng');
+  const userName = typeof rawName === 'string' ? rawName : 'Pelanggan Nebeng';
+
+  const rawRegion =
+    (typeof profile?.region === 'string' ? profile.region : profile?.region?.name) ||
+    profile?.regionName ||
+    (typeof profile?.city === 'string' ? profile.city : profile?.city?.name) ||
+    profile?.cityName ||
+    'Jawa Barat (Bandung)';
+  const userRegion = String(rawRegion || 'Jawa Barat (Bandung)');
+  const safeRegionDisplay = userRegion
+    .replace(/Jawa Barat\s*/i, '')
+    .replace(/[\(\)]/g, '')
+    .trim() || userRegion;
+
+  const rawId = profile?.id || profile?.userId || (profile?.email ? `${userRole}-${profile.email}` : `${userRole}-user`);
+  const userId = String(rawId);
 
   // Tab State: 'faq' | 'chat'
   const [activeTab, setActiveTab] = useState('faq');
@@ -63,11 +77,13 @@ export default function HelpCenterView({ userRole = 'customer' }) {
   const messagesEndRef = useRef(null);
 
   // Filter FAQ items
-  const filteredFaqs = PROJECT_FAQS.filter((faq) => {
+  const filteredFaqs = (PROJECT_FAQS || []).filter((faq) => {
+    if (!faq) return false;
     // Role match
+    const targetRoles = Array.isArray(faq.targetRoles) ? faq.targetRoles : ['all'];
     const roleMatches =
-      faq.targetRoles.includes('all') ||
-      faq.targetRoles.includes(userRole);
+      targetRoles.includes('all') ||
+      targetRoles.includes(userRole);
     if (!roleMatches) return false;
 
     // Category match
@@ -78,8 +94,8 @@ export default function HelpCenterView({ userRole = 'customer' }) {
     // Search query match
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      const questionMatch = faq.question.toLowerCase().includes(q);
-      const answerMatch = faq.answer.toLowerCase().includes(q);
+      const questionMatch = String(faq.question || '').toLowerCase().includes(q);
+      const answerMatch = String(faq.answer || '').toLowerCase().includes(q);
       return questionMatch || answerMatch;
     }
 
@@ -113,7 +129,7 @@ export default function HelpCenterView({ userRole = 'customer' }) {
     });
 
     return () => unsubscribe();
-  }, [userId, userName, userRole, userRegion, profile, activeTab]);
+  }, [userId, userName, userRole, userRegion, profile?.email, profile?.phone, activeTab]);
 
   // Auto scroll chat
   useEffect(() => {
@@ -328,7 +344,7 @@ export default function HelpCenterView({ userRole = 'customer' }) {
               Pusat Bantuan & FAQ
             </h1>
             <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
-              Temukan solusi cepat seputar pemesanan tiket, dompet escrow, pos mitra, atau hubungi langsung Admin Wilayah {userRegion}.
+              Temukan solusi cepat seputar pemesanan tiket, dompet & saldo, pos mitra, atau hubungi langsung Admin Wilayah {userRegion}.
             </p>
           </div>
 
@@ -343,7 +359,7 @@ export default function HelpCenterView({ userRole = 'customer' }) {
                   Admin Wilayah
                 </div>
                 <div className="text-sm font-black text-white">
-                  {userRegion.replace(/Jawa Barat\s*/i, '').replace(/[\(\)]/g, '') || 'Online'} &bull; Standby
+                  {safeRegionDisplay || 'Online'} &bull; Standby
                 </div>
               </div>
             </div>
@@ -363,7 +379,7 @@ export default function HelpCenterView({ userRole = 'customer' }) {
         />
         <StatCard
           title="ADMIN WILAYAH"
-          value={userRegion.replace(/Jawa Barat\s*/i, '').replace(/[\(\)]/g, '') || 'Regional'}
+          value={safeRegionDisplay || 'Regional'}
           subtitle="Siap melayani chat & kendala"
           icon={Building2}
         />

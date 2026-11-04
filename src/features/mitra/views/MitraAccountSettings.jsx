@@ -21,6 +21,8 @@ import {
   FileText,
   Send,
   Link as LinkIcon,
+  Upload,
+  ExternalLink,
 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
@@ -92,6 +94,10 @@ export default function MitraAccountSettings() {
   const [appealModalTarget, setAppealModalTarget] = useState(null);
   const [appealReason, setAppealReason] = useState('');
   const [appealEvidenceUrl, setAppealEvidenceUrl] = useState('');
+  const [appealFile, setAppealFile] = useState(null);
+  const [appealFilePreview, setAppealFilePreview] = useState(null);
+  const [isUploadingAppealFile, setIsUploadingAppealFile] = useState(false);
+  const appealFileInputRef = useRef(null);
   const [isSubmittingAppeal, setIsSubmittingAppeal] = useState(false);
 
   const [avatarPreview, setAvatarPreview] = useState(null);
@@ -111,6 +117,13 @@ export default function MitraAccountSettings() {
     next: false,
     confirm: false,
   });
+
+  const [pinForm, setPinForm] = useState({
+    pin: '',
+    confirmPin: '',
+  });
+  const [showPin, setShowPin] = useState(false);
+  const [isSubmittingPin, setIsSubmittingPin] = useState(false);
 
   const [notifPrefs, setNotifPrefs] = useState({
     tripUpdates: true,
@@ -503,12 +516,73 @@ export default function MitraAccountSettings() {
     setAppealModalTarget(sanction);
     setAppealReason('');
     setAppealEvidenceUrl('');
+    setAppealFile(null);
+    setAppealFilePreview(null);
+    setIsUploadingAppealFile(false);
+  };
+
+  const handleAppealFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.warning('Hanya file foto/gambar (JPG, PNG, WEBP) yang diperbolehkan.', { title: 'Format Tidak Sesuai' });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.warning('Ukuran foto maksimal 5MB.', { title: 'Ukuran Terlalu Besar' });
+      return;
+    }
+
+    setAppealFile(file);
+    const localUrl = URL.createObjectURL(file);
+    setAppealFilePreview(localUrl);
+
+    setIsUploadingAppealFile(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      let res;
+      try {
+        res = await apiClient.post('/uploads/appeals', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+      } catch {
+        res = await apiClient.post('/uploads/file', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+      }
+      const uploadedPath = res.data?.filePath || res.data?.data?.filePath;
+      if (uploadedPath) {
+        setAppealEvidenceUrl(uploadedPath);
+        toast.success('Foto bukti berhasil diunggah.', { title: 'Unggah Berhasil' });
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Gagal mengunggah foto bukti.', { title: 'Gagal Unggah' });
+      setAppealFile(null);
+      setAppealFilePreview(null);
+    } finally {
+      setIsUploadingAppealFile(false);
+      if (e.target) e.target.value = '';
+    }
+  };
+
+  const handleRemoveAppealFile = () => {
+    setAppealFile(null);
+    setAppealFilePreview(null);
+    setAppealEvidenceUrl('');
   };
 
   const handleSubmitAppeal = async (e) => {
     e.preventDefault();
     if (!appealModalTarget || !appealReason.trim()) {
       toast.warning('Alasan banding wajib diisi.', { title: 'Peringatan' });
+      return;
+    }
+
+    if (isUploadingAppealFile) {
+      toast.warning('Foto bukti sedang diunggah. Mohon tunggu sebentar.', { title: 'Sedang Mengunggah' });
       return;
     }
 
@@ -520,6 +594,8 @@ export default function MitraAccountSettings() {
       });
       toast.success(res.data?.message || 'Banding berhasil diajukan.', { title: 'Sukses' });
       setAppealModalTarget(null);
+      setAppealFile(null);
+      setAppealFilePreview(null);
 
       // Refresh sanctions
       const freshSanctions = await apiClient.get('/users/me/sanctions').catch(() => ({ data: null }));
@@ -584,6 +660,42 @@ export default function MitraAccountSettings() {
           title: 'Error',
         }
       );
+    }
+  };
+
+  const handleSavePin = async (e) => {
+    e.preventDefault();
+
+    if (pinForm.pin.length !== 6 || !/^\d+$/.test(pinForm.pin)) {
+      toast.warning('PIN keamanan harus tepat 6 digit angka.', {
+        title: 'PIN Tidak Valid',
+      });
+      return;
+    }
+
+    if (pinForm.pin !== pinForm.confirmPin) {
+      toast.warning('Konfirmasi PIN baru tidak cocok.', {
+        title: 'PIN Tidak Cocok',
+      });
+      return;
+    }
+
+    setIsSubmittingPin(true);
+
+    try {
+      await apiClient.post('/users/me/pin', { pin: pinForm.pin });
+      setPinForm({ pin: '', confirmPin: '' });
+      setLiveUser((prev) => (prev ? { ...prev, hasPin: true } : prev));
+      toast.success('PIN transaksi berhasil diperbarui.', {
+        title: 'PIN Disimpan',
+      });
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || 'Gagal memperbarui PIN transaksi.',
+        { title: 'Error' }
+      );
+    } finally {
+      setIsSubmittingPin(false);
     }
   };
 
@@ -1101,15 +1213,25 @@ export default function MitraAccountSettings() {
                           </p>
 
                           {latestAppeal.evidenceUrl && (
-                            <div>
+                            <div className="space-y-1.5 pt-1">
                               <a
-                                href={latestAppeal.evidenceUrl}
+                                href={getFullFileUrl(latestAppeal.evidenceUrl)}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="text-blue-600 hover:underline text-[11px] inline-flex items-center gap-1 font-bold"
                               >
-                                Lihat Bukti Lampiran &rarr;
+                                <ExternalLink className="w-3 h-3" />
+                                <span>Lihat Bukti Lampiran &rarr;</span>
                               </a>
+                              {/\.(jpg|jpeg|png|webp)($|\?)/i.test(latestAppeal.evidenceUrl) && (
+                                <div className="w-24 h-24 rounded-lg overflow-hidden border border-neutral-200 bg-neutral-100">
+                                  <img
+                                    src={getFullFileUrl(latestAppeal.evidenceUrl)}
+                                    alt="Bukti Lampiran"
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                              )}
                             </div>
                           )}
 
@@ -1141,6 +1263,250 @@ export default function MitraAccountSettings() {
           </div>
         </div>
 
+        {/* PIN KEAMANAN TRANSAKSI */}
+        <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <div
+                className="p-2 rounded-xl shrink-0"
+                style={{ backgroundColor: `${PRIMARY_ACCENT}22`, color: PRIMARY_COLOR }}
+              >
+                <KeyRound className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-[17px] font-bold text-neutral-800">
+                  PIN Keamanan Transaksi
+                </h3>
+                <p className="text-[12px] text-neutral-400">
+                  Digunakan untuk otorisasi penarikan saldo komisi perjalanan dan verifikasi keamanan.
+                </p>
+              </div>
+            </div>
+
+            <div>
+              {liveUser?.hasPin ? (
+                <span className="px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full text-[11px] font-bold flex items-center gap-1.5 self-start sm:self-auto">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                  PIN Aktif
+                </span>
+              ) : (
+                <span className="px-3 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-[11px] font-bold flex items-center gap-1.5 self-start sm:self-auto">
+                  <KeyRound className="w-3.5 h-3.5 text-amber-600" />
+                  Belum Diatur
+                </span>
+              )}
+            </div>
+          </div>
+
+          <form onSubmit={handleSavePin} className="space-y-3.5 text-[13px] border-t border-neutral-100 pt-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                  {liveUser?.hasPin ? 'PIN Baru (6 Digit Angka)' : 'Buat PIN (6 Digit Angka)'}
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPin ? 'text' : 'password'}
+                    maxLength={6}
+                    inputMode="numeric"
+                    placeholder="••••••"
+                    value={pinForm.pin}
+                    onChange={(e) =>
+                      setPinForm({ ...pinForm, pin: e.target.value.replace(/\D/g, '').slice(0, 6) })
+                    }
+                    className="w-full px-3.5 py-2.5 pr-9 bg-neutral-50 border border-neutral-200 rounded-xl font-mono font-bold text-neutral-800 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all text-center tracking-widest text-[16px]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPin(!showPin)}
+                    className="absolute right-3 top-3.5 text-neutral-400 hover:text-neutral-600 cursor-pointer"
+                    title={showPin ? 'Sembunyikan PIN' : 'Tampilkan PIN'}
+                  >
+                    {showPin ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                  Konfirmasi PIN {liveUser?.hasPin ? 'Baru' : ''}
+                </label>
+                <input
+                  type={showPin ? 'text' : 'password'}
+                  maxLength={6}
+                  inputMode="numeric"
+                  placeholder="••••••"
+                  value={pinForm.confirmPin}
+                  onChange={(e) =>
+                    setPinForm({ ...pinForm, confirmPin: e.target.value.replace(/\D/g, '').slice(0, 6) })
+                  }
+                  className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-mono font-bold text-neutral-800 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all text-center tracking-widest text-[16px]"
+                />
+              </div>
+            </div>
+
+            {pinForm.pin.length > 0 && pinForm.pin.length < 6 && (
+              <p className="text-[11px] text-amber-600 font-semibold">
+                PIN harus terdiri dari 6 digit angka.
+              </p>
+            )}
+
+            {pinForm.confirmPin.length > 0 && pinForm.pin !== pinForm.confirmPin && (
+              <p className="text-[11px] text-rose-600 font-semibold">
+                Konfirmasi PIN belum cocok dengan PIN di atas.
+              </p>
+            )}
+
+            <p className="text-[11px] text-neutral-400">
+              Pastikan Anda mengingat PIN ini karena diperlukan setiap kali melakukan penarikan saldo komisi perjalanan.
+            </p>
+
+            <div className="flex justify-end pt-1">
+              <button
+                type="submit"
+                disabled={pinForm.pin.length !== 6 || pinForm.pin !== pinForm.confirmPin || isSubmittingPin}
+                className={`px-5 py-2.5 rounded-xl text-[13px] font-bold transition shadow-sm ${
+                  pinForm.pin.length === 6 && pinForm.pin === pinForm.confirmPin && !isSubmittingPin
+                    ? 'text-white cursor-pointer'
+                    : 'bg-neutral-200 text-neutral-400 cursor-not-allowed'
+                }`}
+                style={
+                  pinForm.pin.length === 6 && pinForm.pin === pinForm.confirmPin && !isSubmittingPin
+                    ? { backgroundColor: PRIMARY_COLOR }
+                    : undefined
+                }
+                onMouseEnter={(e) => {
+                  if (pinForm.pin.length === 6 && pinForm.pin === pinForm.confirmPin && !isSubmittingPin) {
+                    e.currentTarget.style.backgroundColor = PRIMARY_HOVER;
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (pinForm.pin.length === 6 && pinForm.pin === pinForm.confirmPin && !isSubmittingPin) {
+                    e.currentTarget.style.backgroundColor = PRIMARY_COLOR;
+                  }
+                }}
+              >
+                {isSubmittingPin
+                  ? 'Menyimpan PIN...'
+                  : liveUser?.hasPin
+                  ? 'Perbarui PIN Transaksi'
+                  : 'Simpan PIN Transaksi'}
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* GANTI KATA SANDI */}
+        <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 space-y-4">
+          <div className="flex items-center gap-2.5">
+            <div
+              className="p-2 rounded-xl shrink-0"
+              style={{ backgroundColor: `${PRIMARY_COLOR}15`, color: PRIMARY_COLOR }}
+            >
+              <KeyRound className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-[17px] font-bold text-neutral-800">
+                Ganti Kata Sandi Akun
+              </h3>
+              <p className="text-[12px] text-neutral-400">
+                Perbarui kata sandi akun Mitra Anda secara berkala untuk menjaga keamanan.
+              </p>
+            </div>
+          </div>
+
+          <form onSubmit={handleChangePassword} className="space-y-3.5 text-[13px] border-t border-neutral-100 pt-4">
+            <div>
+              <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                Kata Sandi Saat Ini
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword.current ? 'text' : 'password'}
+                  placeholder="Masukkan kata sandi saat ini"
+                  value={passwordForm.current}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, current: e.target.value })}
+                  className="w-full px-3.5 py-2.5 pr-9 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-brand-500 transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((p) => ({ ...p, current: !p.current }))}
+                  className="absolute right-3 top-3 text-neutral-400 hover:text-neutral-600 cursor-pointer"
+                >
+                  {showPassword.current ? <EyeOff size={15} /> : <Eye size={15} />}
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                  Kata Sandi Baru (Min. 8 Karakter)
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword.next ? 'text' : 'password'}
+                    placeholder="Minimal 8 karakter"
+                    value={passwordForm.next}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, next: e.target.value })}
+                    className="w-full px-3.5 py-2.5 pr-9 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-brand-500 transition-all"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((p) => ({ ...p, next: !p.next }))}
+                    className="absolute right-3 top-3 text-neutral-400 hover:text-neutral-600 cursor-pointer"
+                  >
+                    {showPassword.next ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                  Konfirmasi Kata Sandi Baru
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword.confirm ? 'text' : 'password'}
+                    placeholder="Ulangi kata sandi baru"
+                    value={passwordForm.confirm}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
+                    className="w-full px-3.5 py-2.5 pr-9 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-brand-500 transition-all"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((p) => ({ ...p, confirm: !p.confirm }))}
+                    className="absolute right-3 top-3 text-neutral-400 hover:text-neutral-600 cursor-pointer"
+                  >
+                    {showPassword.confirm ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-1">
+              <button
+                type="submit"
+                disabled={!passwordForm.current || passwordForm.next.length < 8 || passwordForm.next !== passwordForm.confirm}
+                className="px-5 py-2.5 text-white rounded-xl font-bold transition shadow-sm cursor-pointer disabled:bg-neutral-200 disabled:text-neutral-400 disabled:cursor-not-allowed"
+                style={{ backgroundColor: PRIMARY_COLOR }}
+                onMouseEnter={(e) => {
+                  if (passwordForm.current && passwordForm.next.length >= 8 && passwordForm.next === passwordForm.confirm) {
+                    e.currentTarget.style.backgroundColor = PRIMARY_HOVER;
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (passwordForm.current && passwordForm.next.length >= 8 && passwordForm.next === passwordForm.confirm) {
+                    e.currentTarget.style.backgroundColor = PRIMARY_COLOR;
+                  }
+                }}
+              >
+                Perbarui Kata Sandi
+              </button>
+            </div>
+          </form>
+        </div>
+
         <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 space-y-4">
           <h3 className="text-[17px] font-bold text-neutral-800 flex items-center gap-1.5">
             <Bell
@@ -1159,8 +1525,8 @@ export default function MitraAccountSettings() {
               },
               {
                 key: 'walletActivity',
-                label: 'Aktivitas Dompet & Escrow',
-                desc: 'Notifikasi saat dana escrow cair atau penarikan diproses.',
+                label: 'Aktivitas Dompet & Dana',
+                desc: 'Notifikasi saat dana perjalanan cair atau penarikan diproses.',
               },
               {
                 key: 'customerChat',
@@ -1548,24 +1914,118 @@ export default function MitraAccountSettings() {
             </div>
 
             {/* Field: Bukti Foto / Dokumen */}
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <label className="flex items-center justify-between text-[12px] font-bold text-neutral-700">
                 <span className="flex items-center gap-1.5">
-                  <LinkIcon className="w-3.5 h-3.5 text-[#10367D]" />
-                  Tautan Bukti Dokumen / Foto
+                  <Camera className="w-3.5 h-3.5 text-[#10367D]" />
+                  Foto Bukti Pendukung
                 </span>
                 <span className="text-[10px] font-semibold text-neutral-400">Opsional</span>
               </label>
+
+              {/* Hidden file input */}
               <input
-                type="url"
-                value={appealEvidenceUrl}
-                onChange={(e) => setAppealEvidenceUrl(e.target.value)}
-                placeholder="https://contoh.com/foto-bukti-bengkel.jpg"
-                className="w-full px-3.5 py-2.5 border border-neutral-300 rounded-xl text-[13px] text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#10367D] focus:border-[#10367D] bg-white transition shadow-2xs"
+                ref={appealFileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/jpg"
+                onChange={handleAppealFileChange}
+                className="hidden"
               />
-              <p className="text-[11px] text-neutral-400">
-                Masukkan tautan Google Drive publik, link gambar kuitansi bengkel, atau surat dokter.
-              </p>
+
+              {/* Preview or Upload Trigger Box */}
+              {appealFilePreview || appealEvidenceUrl ? (
+                <div className="relative rounded-xl border border-neutral-200 bg-neutral-50/90 p-3 flex items-center gap-3 shadow-2xs">
+                  <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-neutral-200 shrink-0 border border-neutral-300">
+                    <img
+                      src={appealFilePreview || getFullFileUrl(appealEvidenceUrl)}
+                      alt="Bukti Banding"
+                      className="w-full h-full object-cover"
+                    />
+                    {isUploadingAppealFile && (
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                        <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[12px] font-bold text-neutral-800 truncate">
+                        {appealFile?.name || 'Foto Bukti Terlampir'}
+                      </span>
+                      {isUploadingAppealFile ? (
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-700">
+                          Mengunggah...
+                        </span>
+                      ) : (
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 text-emerald-700">
+                          Terunggah
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-neutral-500 mt-0.5 truncate">
+                      {appealFile ? `${(appealFile.size / 1024).toFixed(0)} KB` : 'Tersimpan'}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={isUploadingAppealFile || isSubmittingAppeal}
+                    onClick={handleRemoveAppealFile}
+                    className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition cursor-pointer"
+                    title="Hapus Foto"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <div
+                  onClick={() => appealFileInputRef.current?.click()}
+                  className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition flex flex-col items-center justify-center gap-1.5 ${
+                    isUploadingAppealFile
+                      ? 'border-neutral-300 bg-neutral-100 cursor-not-allowed'
+                      : 'border-blue-200 bg-blue-50/40 hover:bg-blue-50/80 hover:border-blue-400'
+                  }`}
+                >
+                  <div className="w-9 h-9 rounded-full bg-blue-100 text-[#10367D] flex items-center justify-center">
+                    {isUploadingAppealFile ? (
+                      <span className="w-4 h-4 border-2 border-[#10367D] border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Upload className="w-4 h-4" />
+                    )}
+                  </div>
+                  <span className="text-[12px] font-bold text-[#10367D]">
+                    {isUploadingAppealFile ? 'Sedang mengunggah...' : 'Klik untuk Upload Foto Bukti'}
+                  </span>
+                  <p className="text-[11px] text-neutral-500">
+                    Format JPG, PNG, WEBP (Maksimal 5MB). Foto surat dokter, kuitansi bengkel, atau kondisi darurat.
+                  </p>
+                </div>
+              )}
+
+              {/* Optional external URL fallback */}
+              <div className="pt-1">
+                <details className="group">
+                  <summary className="text-[11px] text-neutral-500 hover:text-neutral-700 font-medium cursor-pointer list-none flex items-center gap-1">
+                    <LinkIcon className="w-3 h-3" />
+                    <span>Atau gunakan tautan link dokumen eksternal</span>
+                  </summary>
+                  <div className="mt-2 space-y-1">
+                    <input
+                      type="url"
+                      value={appealEvidenceUrl}
+                      onChange={(e) => {
+                        setAppealEvidenceUrl(e.target.value);
+                        setAppealFile(null);
+                        setAppealFilePreview(null);
+                      }}
+                      placeholder="https://drive.google.com/... atau link foto online"
+                      className="w-full px-3 py-2 border border-neutral-300 rounded-xl text-[12px] text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#10367D] focus:border-[#10367D] bg-white transition shadow-2xs"
+                    />
+                    <p className="text-[10px] text-neutral-400">
+                      Gunakan ini jika foto tersimpan di Google Drive atau penyimpanan daring publik.
+                    </p>
+                  </div>
+                </details>
+              </div>
             </div>
 
             {/* Actions */}

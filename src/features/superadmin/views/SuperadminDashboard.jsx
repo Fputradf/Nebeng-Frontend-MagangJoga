@@ -9,12 +9,24 @@ import {
   TrendingUp, MapPin, SlidersHorizontal, CheckCircle2, XCircle,
   Clock, LineChart as LineChartIcon, BarChart3,
   ArrowUpRight, ArrowDownRight, Activity,
-  Wallet, ShieldAlert, PieChart as PieChartIcon,
+  Wallet, Lock, PieChart as PieChartIcon,
   Layers
 } from 'lucide-react';
 import { SkeletonStatCard, SkeletonTableRows } from '../../../components/ui/Skeleton';
 import EmptyState from '../../../components/ui/EmptyState';
 import { getGlobalDashboard, getEscrowLedger } from '../../../services/adminService';
+
+const cleanTransactionDescription = (desc) => {
+  if (!desc) return '';
+  return desc
+    .replace(/dana ditahan escrow/gi, 'Dana ditahan')
+    .replace(/pencairan auto-escrow/gi, 'Pencairan dana otomatis')
+    .replace(/pencairan escrow/gi, 'Pencairan dana perjalanan')
+    .replace(/dana escrow/gi, 'dana jaminan')
+    .replace(/\bescrow\b/gi, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+};
 
 // ─── Formatters ────────────────────────────────────────────────────────────────
 const MONTHS_ID = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
@@ -95,6 +107,7 @@ export default function SuperadminDashboard() {
   const regionLimit = 5;
 
   const [selectedChartRegion] = useState('Semua');
+  const [distributionMetric, setDistributionMetric] = useState('revenue'); // 'revenue' | 'users'
 
   useEffect(() => {
     let isMounted = true;
@@ -150,8 +163,8 @@ export default function SuperadminDashboard() {
       sub: `${totalRevenue > 0 ? ((platformCommission/totalRevenue)*100).toFixed(1) : 0}% dari pendapatan`, trend: kpiTrends.commission, change: +5.1
     },
     {
-      icon: ShieldAlert, color: '#ef4444', bg: 'bg-rose-50',
-      label: 'ESCROW DITAHAN', value: formatRp(heldEscrow),
+      icon: Lock, color: '#d97706', bg: 'bg-amber-50',
+      label: 'DANA DITAHAN', value: formatRp(heldEscrow),
       sub: 'Dana tertahan aktif', trend: kpiTrends.escrow, change: -2.3
     },
     {
@@ -266,11 +279,18 @@ export default function SuperadminDashboard() {
     if (!regionalActivities.length) return [];
     return regionalActivities.slice(0, 6).map((r, i) => ({
       name: r.name,
-      value: r.revenueVal || r.activeOrders || 1,
+      value: distributionMetric === 'revenue' ? r.revenueVal : r.activeOrders,
       color: PIE_COLORS[i % PIE_COLORS.length],
     }));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [regionalActivities]);
+  }, [regionalActivities, distributionMetric]);
+
+  const activePieSlices = useMemo(() => {
+    return pieData.filter(d => d.value > 0);
+  }, [pieData]);
+
+  const totalMetricValue = useMemo(() => {
+    return pieData.reduce((s, d) => s + d.value, 0);
+  }, [pieData]);
 
   // ── Escrow transactions ───────────────────────────────────────────────────────
   const recentActivity = useMemo(() => {
@@ -278,17 +298,17 @@ export default function SuperadminDashboard() {
     if (!Array.isArray(rawTx) || !rawTx.length) return [];
     return rawTx.map(tx => ({
       time: tx.createdAt ? new Date(tx.createdAt).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Hari ini',
-      title: tx.description || `Order #${tx.orderId || '-'}`,
-      desc: `Wallet: ${tx.walletId || '-'} · ${tx.type || '-'}`,
+      title: cleanTransactionDescription(tx.description) || `Order #${tx.orderId || '-'}`,
+      desc: tx.orderId ? `Pesanan #${tx.orderId}` : `ID Dompet #${tx.walletId || '-'}`,
       status: tx.type === 'escrow_release' ? 'Completed' : 'Pending',
       amount: formatRp(tx.amount || 0),
     }));
   }, [escrowLedgerData]);
 
   const statusStyle = {
-    Completed: { icon: CheckCircle2, text: 'text-emerald-600', bg: 'bg-emerald-50', dot: 'bg-emerald-500', label: 'Selesai' },
+    Completed: { icon: CheckCircle2, text: 'text-emerald-600', bg: 'bg-emerald-50', dot: 'bg-emerald-500', label: 'Dicairkan' },
     Canceled:  { icon: XCircle,      text: 'text-rose-600',    bg: 'bg-rose-50',    dot: 'bg-rose-500',    label: 'Dibatalkan' },
-    Pending:   { icon: Clock,        text: 'text-[#10367D]',   bg: 'bg-[#10367D]/10', dot: 'bg-[#10367D]', label: 'Menunggu' },
+    Pending:   { icon: Lock,         text: 'text-amber-700',   bg: 'bg-amber-50',   dot: 'bg-amber-500',   label: 'Ditahan' },
   };
 
   const rowAccents = [
@@ -472,15 +492,41 @@ export default function SuperadminDashboard() {
           )}
         </div>
 
-        {/* Pie Chart — Revenue by Region */}
+        {/* Pie Chart — Revenue / User by Region */}
         <div className="bg-white p-5 rounded-2xl shadow-card border border-slate-200 flex flex-col">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="p-2 bg-[#10367D]/10 text-[#10367D] rounded-xl">
-              <PieChartIcon className="w-4 h-4" />
+          <div className="flex items-center justify-between gap-2 mb-4">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="p-2 bg-[#10367D]/10 text-[#10367D] rounded-xl shrink-0">
+                <PieChartIcon className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-[16px] font-bold text-neutral-800 truncate">Distribusi Wilayah</h2>
+                <p className="text-[12px] text-neutral-400 truncate">
+                  {distributionMetric === 'revenue' ? 'Kontribusi revenue per region' : 'Distribusi pengguna per region'}
+                </p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-[16px] font-bold text-neutral-800">Distribusi Wilayah</h2>
-              <p className="text-[12px] text-neutral-400">Kontribusi revenue per region</p>
+            <div className="flex items-center gap-0.5 bg-neutral-50 border border-neutral-200 rounded-full p-0.5 shrink-0">
+              <button
+                onClick={() => setDistributionMetric('revenue')}
+                className={`text-[11px] font-semibold px-2.5 py-1 rounded-full transition cursor-pointer ${
+                  distributionMetric === 'revenue'
+                    ? 'bg-[#10367D] text-white shadow-sm'
+                    : 'text-neutral-400 hover:text-neutral-600'
+                }`}
+              >
+                Revenue
+              </button>
+              <button
+                onClick={() => setDistributionMetric('users')}
+                className={`text-[11px] font-semibold px-2.5 py-1 rounded-full transition cursor-pointer ${
+                  distributionMetric === 'users'
+                    ? 'bg-[#10367D] text-white shadow-sm'
+                    : 'text-neutral-400 hover:text-neutral-600'
+                }`}
+              >
+                Pengguna
+              </button>
             </div>
           </div>
 
@@ -490,30 +536,61 @@ export default function SuperadminDashboard() {
             </div>
           ) : pieData.length > 0 ? (
             <>
-              <ResponsiveContainer width="100%" height={190}>
-                <PieChart>
-                  <Pie data={pieData} cx="50%" cy="50%" innerRadius={50} outerRadius={78} paddingAngle={3} dataKey="value">
-                    {pieData.map((entry) => (
-                      <Cell key={entry.name} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(v, name) => [formatRp(v), name]}
-                    contentStyle={{ borderRadius: 12, fontSize: 12, border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.12)' }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="space-y-1.5 mt-1">
+              {totalMetricValue > 0 ? (
+                <ResponsiveContainer width="100%" height={190}>
+                  <PieChart>
+                    <Pie
+                      data={activePieSlices}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={50}
+                      outerRadius={78}
+                      paddingAngle={3}
+                      dataKey="value"
+                    >
+                      {activePieSlices.map((entry) => (
+                        <Cell key={entry.name} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      formatter={(v, name) => [
+                        distributionMetric === 'revenue' ? formatRp(v) : `${v} Pengguna`,
+                        name,
+                      ]}
+                      contentStyle={{ borderRadius: 12, fontSize: 12, border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.12)' }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-[190px] flex flex-col items-center justify-center text-center p-3">
+                  <div className="p-2.5 bg-neutral-50 rounded-xl mb-1.5 text-neutral-300">
+                    <PieChartIcon className="w-6 h-6" />
+                  </div>
+                  <p className="text-[12px] font-semibold text-neutral-600">
+                    Belum ada {distributionMetric === 'revenue' ? 'pendapatan' : 'pengguna'}
+                  </p>
+                  <p className="text-[11px] text-neutral-400 max-w-[200px] mt-0.5">
+                    {distributionMetric === 'revenue'
+                      ? 'Revenue wilayah akan tercatat setelah pesanan berhasil diselesaikan.'
+                      : 'Data wilayah akan muncul saat ada pengguna terdaftar.'}
+                  </p>
+                </div>
+              )}
+              <div className="space-y-1.5 mt-2 max-h-[140px] overflow-y-auto pr-1">
                 {pieData.map(item => {
-                  const total = pieData.reduce((s,d) => s+d.value, 0);
-                  const pct = total > 0 ? Math.round((item.value/total)*100) : 0;
+                  const pct = totalMetricValue > 0 ? Math.round((item.value / totalMetricValue) * 100) : 0;
                   return (
-                    <div key={item.name} className="flex items-center justify-between text-[12px]">
+                    <div key={item.name} className="flex items-center justify-between text-[12px] py-0.5">
                       <div className="flex items-center gap-2 min-w-0">
                         <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
-                        <span className="text-neutral-600 font-medium truncate">{item.name}</span>
+                        <span className="text-neutral-600 font-medium truncate" title={item.name}>{item.name}</span>
                       </div>
-                      <span className="font-bold text-neutral-800 ml-2">{pct}%</span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="text-neutral-400 text-[11px]">
+                          {distributionMetric === 'revenue' ? formatRp(item.value) : `${item.value} user`}
+                        </span>
+                        <span className="font-bold text-neutral-800 min-w-[32px] text-right">{pct}%</span>
+                      </div>
                     </div>
                   );
                 })}
@@ -711,13 +788,13 @@ export default function SuperadminDashboard() {
                   <div className="p-1.5 bg-[#10367D]/10 text-[#10367D] rounded-lg">
                     <Wallet className="w-4 h-4" />
                   </div>
-                  <h2 className="text-[16px] font-bold text-neutral-800">Aktivitas Escrow</h2>
+                  <h2 className="text-[16px] font-bold text-neutral-800">Aktivitas Dana Jaminan</h2>
                 </div>
               </div>
 
               <div className="space-y-3 flex-1">
                 {recentActivity.length === 0 ? (
-                  <div className="text-center py-8 text-neutral-400 text-[13px]">Tidak ada riwayat escrow.</div>
+                  <div className="text-center py-8 text-neutral-400 text-[13px]">Tidak ada riwayat transaksi dana.</div>
                 ) : recentActivity.map((activity, idx) => {
                   const s = statusStyle[activity.status] || statusStyle.Completed;
                   const StatusIcon = s.icon;

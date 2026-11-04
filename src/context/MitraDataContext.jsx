@@ -63,7 +63,7 @@ export function MitraDataProvider({ children }) {
               type: `Komisi Trip ${tripId}`,
               amount: releaseAmount,
               status: 'success',
-              statusLabel: 'Masuk ke Available Balance (Escrow Cair)',
+              statusLabel: 'Masuk ke Saldo Utama (Dana Perjalanan Cair)',
             },
             ...hist,
           ]);

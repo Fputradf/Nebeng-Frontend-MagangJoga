@@ -441,7 +441,7 @@ export default function OperatorAccountSettings() {
               Pengaturan Akun
             </h1>
             <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
-              Ubah data profil, foto profil, keamanan login, dan preferensi notifikasi akun operator Anda.
+              Ubah data profil, foto profil, keamanan login, dan preferensi notifikasi akun mitra pos Anda.
             </p>
           </div>
         </div>
@@ -873,7 +873,7 @@ export default function OperatorAccountSettings() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 bg-rose-50/50 border border-rose-100 rounded-xl">
             <div>
               <p className="text-[13px] font-bold text-neutral-800">
-                Nonaktifkan Akun Operator
+                Nonaktifkan Akun Mitra Pos
               </p>
 
               <p className="text-[11px] text-neutral-400 max-w-md">

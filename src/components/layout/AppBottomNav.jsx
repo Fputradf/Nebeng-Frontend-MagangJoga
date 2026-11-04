@@ -3,7 +3,6 @@ import {
   Compass,
   Ticket,
   Wallet,
-  Gift,
   LayoutDashboard,
   Route,
   QrCode,
@@ -22,22 +21,22 @@ const ROLE_NAV_ITEMS = {
   customer: [
     { label: 'Cari Trip', path: '/customer/booking', icon: Compass },
     { label: 'Tiket Saya', path: '/customer/tickets', icon: Ticket },
+    { label: 'Digital QR', path: '/customer/qr', icon: QrCode, isCenter: true },
     { label: 'Dompet', path: '/customer/wallet', icon: Wallet },
-    { label: 'Rewards', path: '/customer/rewards', icon: Gift },
     { label: 'Menu', isMenuToggle: true, icon: Menu },
   ],
   mitra: [
     { label: 'Dashboard', path: '/mitra/dashboard', icon: LayoutDashboard },
     { label: 'Trip', path: '/mitra/trip', icon: Route },
-    { label: 'QR Trip', path: '/mitra/qr', icon: QrCode },
+    { label: 'QR Trip', path: '/mitra/qr', icon: QrCode, isCenter: true },
     { label: 'Saldo', path: '/mitra/saldo', icon: Wallet },
     { label: 'Menu', isMenuToggle: true, icon: Menu },
   ],
   operator: [
     { label: 'Dashboard', path: '/operator-pos/dashboard', icon: LayoutDashboard },
     { label: 'Scanner', path: '/operator-pos/scanner', icon: ScanLine },
-    { label: 'Manifes', path: '/operator-pos/manifest', icon: ClipboardList },
-    { label: 'Handover', path: '/operator-pos/handover', icon: ArrowLeftRight },
+    { label: 'Kehadiran', path: '/operator-pos/manifest', icon: ClipboardList },
+    { label: 'Kas Pos', path: '/operator-pos/financial', icon: Wallet },
     { label: 'Menu', isMenuToggle: true, icon: Menu },
   ],
   regional: [
@@ -101,6 +100,8 @@ export default function AppBottomNav({ role: propRole, onOpenSidebar }) {
             }
           };
 
+          const isCenter = item.isCenter || idx === 2;
+
           return (
             <button
               key={item.label || idx}
@@ -108,28 +109,42 @@ export default function AppBottomNav({ role: propRole, onOpenSidebar }) {
               onClick={handleClick}
               aria-label={item.label}
               aria-current={isActive ? 'page' : undefined}
-              className={`group relative flex flex-col items-center justify-center gap-1 py-1.5 transition-all duration-150 active:scale-90 ${
-                isActive ? 'text-brand-500' : 'text-slate-500 hover:text-brand-600'
+              className={`group relative flex flex-col items-center justify-center gap-1 py-1.5 transition-all duration-150 active:scale-95 ${
+                isActive ? 'text-brand-600' : 'text-slate-500 hover:text-brand-600'
               }`}
             >
-              {/* Active pill background indicator */}
+              {/* Active / Center pill indicator */}
               <div
                 className={`relative flex h-8 w-12 items-center justify-center rounded-full transition-all duration-200 ${
                   isActive
-                    ? 'bg-brand-50 text-brand-600 ring-1 ring-brand-500/20 shadow-xs'
+                    ? isCenter
+                      ? 'bg-brand-500 text-white ring-2 ring-brand-300 shadow-sm'
+                      : 'bg-brand-50 text-brand-600 ring-1 ring-brand-500/20 shadow-xs'
+                    : isCenter
+                    ? 'bg-brand-50/80 text-brand-600 ring-1 ring-brand-500/20 shadow-2xs group-hover:bg-brand-100/70'
                     : 'bg-transparent text-slate-500 group-hover:bg-slate-100/60'
                 }`}
               >
                 <Icon
                   className={`h-5 w-5 transition-transform duration-200 ${
-                    isActive ? 'scale-110 stroke-[2.4]' : 'stroke-[1.8]'
+                    isActive
+                      ? isCenter
+                        ? 'scale-110 stroke-[2.4] text-white'
+                        : 'scale-110 stroke-[2.4] text-brand-600'
+                      : isCenter
+                      ? 'stroke-[2] text-brand-600'
+                      : 'stroke-[1.8]'
                   }`}
                 />
               </div>
 
               <span
                 className={`max-w-[4.2rem] truncate text-[11px] leading-tight tracking-tight transition-colors ${
-                  isActive ? 'font-bold text-brand-700' : 'font-medium text-slate-500'
+                  isActive
+                    ? 'font-bold text-brand-700'
+                    : isCenter
+                    ? 'font-semibold text-brand-600'
+                    : 'font-medium text-slate-500'
                 }`}
               >
                 {item.label}

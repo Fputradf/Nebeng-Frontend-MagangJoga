@@ -21,8 +21,12 @@ export const walletService = {
     return response.data;
   },
 
-  async withdrawWallet(amount) {
-    const response = await apiClient.post('/wallets/withdraw', { amount });
+  async withdrawWallet(amount, pin) {
+    const payload = { amount: Number(amount) };
+    if (pin) {
+      payload.pin = String(pin);
+    }
+    const response = await apiClient.post('/wallets/withdraw', payload);
     return response.data;
   },
 

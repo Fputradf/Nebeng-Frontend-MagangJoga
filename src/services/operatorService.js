@@ -52,9 +52,20 @@ export const operatorService = {
     };
   },
 
-  getPayments: async () => {
-    const response = await apiClient.get('/payments/operator-summary');
-    return Array.isArray(response.data) ? response.data : (response.data?.data || []);
+  getPayments: async (pageOrParams = 1, limit = 10, month, year) => {
+    let params = {};
+    if (typeof pageOrParams === 'object' && pageOrParams !== null) {
+      params = { ...pageOrParams };
+    } else {
+      params = { page: pageOrParams, limit, month, year };
+    }
+    Object.keys(params).forEach((key) => {
+      if (params[key] === undefined || params[key] === null || params[key] === '') {
+        delete params[key];
+      }
+    });
+    const response = await apiClient.get('/payments/operator-summary', { params });
+    return response.data;
   },
 
   scanCheckpoint: async (payload) => {

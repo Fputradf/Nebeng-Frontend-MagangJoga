@@ -6,7 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
 import { loginRequest } from '../../services/authService';
 import { socialLinkService } from '../../services/socialLinkService';
-import logoImage from '../../assets/logo.png';
+import { useAppConfig } from '../../context/AppConfigContext';
 
 export default function Login({ onSwitchToRegister, onSwitchToForgotPassword, onLogin }) {
   const [showPassword, setShowPassword] = useState(false);
@@ -19,6 +19,7 @@ export default function Login({ onSwitchToRegister, onSwitchToForgotPassword, on
 
   const { login } = useAuth();
   const { registerToken } = useNotification();
+  const { appName, appLogo } = useAppConfig();
 
   useEffect(() => {
     let isMounted = true;
@@ -150,8 +151,8 @@ export default function Login({ onSwitchToRegister, onSwitchToForgotPassword, on
 
   return (
     <AuthLayout
-      logo={logoImage}
-      brandName="Nebeng"
+      logo={appLogo}
+      brandName={appName}
       title="Selamat Datang Kembali!"
       subtitle="Masuk ke akun Anda untuk melanjutkan perjalanan atau kelola kiriman."
       authMode="login"

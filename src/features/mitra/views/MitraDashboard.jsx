@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Wallet,
@@ -20,15 +20,39 @@ import {
   Car,
   Layers,
   Plus,
-  ChevronRight
+  ChevronRight,
+  Camera,
+  Upload,
+  Trash2,
+  ExternalLink,
+  Lock,
 } from 'lucide-react';
 import StatusBadge from '../../../components/ui/StatusBadge';
 import EmptyState from '../../../components/ui/EmptyState';
 import BaseModal from '../../../components/ui/BaseModal';
+import ReportModal from '../../../components/common/ReportModal';
+import {
+  evaluateDriverReportEligibility,
+  isDriverArrivedAtOriginPos,
+  isDriverArrivedAtDestPos,
+} from '../../../utils/reportCheckpointValidation';
 import { BannerSlider } from '../../../components/ui/BannerSlider';
+import DashboardRegionSwitcher from '../../../components/ui/DashboardRegionSwitcher';
 import apiClient from '../../../services/apiClient';
+import { BASE_URL } from '../../../config/env';
 import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
+
+const getFullFileUrl = (path) => {
+  if (!path) return null;
+  if (path.startsWith('blob:') || path.startsWith('data:') || path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
+  }
+  const baseURL = apiClient.defaults.baseURL
+    ? apiClient.defaults.baseURL.replace('/api', '')
+    : BASE_URL;
+  return `${baseURL}${path.startsWith('/') ? '' : '/'}${path}`;
+};
 
 const PRIMARY_COLOR = '#10367D';
 const PRIMARY_ACCENT = '#74B4D9';
@@ -134,11 +158,126 @@ export default function MitraDashboard() {
   const [appealModalTarget, setAppealModalTarget] = useState(null);
   const [appealReason, setAppealReason] = useState('');
   const [appealEvidenceUrl, setAppealEvidenceUrl] = useState('');
+  const [appealFile, setAppealFile] = useState(null);
+  const [appealFilePreview, setAppealFilePreview] = useState(null);
+  const [isUploadingAppealFile, setIsUploadingAppealFile] = useState(false);
+  const appealFileInputRef = useRef(null);
   const [isSubmittingAppeal, setIsSubmittingAppeal] = useState(false);
+
+  // State untuk Fitur Pelaporan Masalah Pos Checkpoint
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [reportTargetUser, setReportTargetUser] = useState(null);
+  const [reportAvailableTargets, setReportAvailableTargets] = useState([]);
+  const [reportContext, setReportContext] = useState({});
+
+  const handleOpenReportPos = (history) => {
+    // Validasi audit checkpoint: Driver harus sudah tiba / check-in di Pos
+    const eligibility = evaluateDriverReportEligibility(history);
+    if (!eligibility.canReport) {
+      toast.warning(eligibility.reason, {
+        title: 'Fitur Lapor Pos Terkunci',
+      });
+      return;
+    }
+
+    const targets = [];
+    const hasReachedOrigin = isDriverArrivedAtOriginPos(history);
+    if (hasReachedOrigin && history.originPoint) {
+      targets.push({
+        key: 'origin_pos',
+        id: history.originPoint.operatorId || 1,
+        pickupPointId: history.originPoint.id,
+        name: `Pos Asal: ${history.originPoint.name}`,
+        role: 'Mitra Pos',
+        subtitle: history.originPoint.address || 'Pos Keberangkatan',
+        tripId: history.id,
+      });
+    }
+
+    // Pos Tujuan: Hanya bisa dilaporkan jika Driver sudah tiba di Pos Tujuan
+    const hasReachedDestination = isDriverArrivedAtDestPos(history);
+    if (hasReachedDestination && history.destinationPoint) {
+      targets.push({
+        key: 'dest_pos',
+        id: history.destinationPoint.operatorId || 1,
+        pickupPointId: history.destinationPoint.id,
+        name: `Pos Tujuan: ${history.destinationPoint.name}`,
+        role: 'Mitra Pos',
+        subtitle: history.destinationPoint.address || 'Pos Kedatangan',
+        tripId: history.id,
+      });
+    }
+
+    if (targets.length === 0) {
+      toast.warning('Belum ada pos checkpoint yang memenuhi syarat audit untuk dilaporkan saat ini.');
+      return;
+    }
+
+    setReportAvailableTargets(targets);
+    setReportTargetUser(targets[0] || null);
+    setReportContext({ tripId: history.id });
+    setIsReportModalOpen(true);
+  };
 
   const handleOpenAppeal = (sanction) => {
     setAppealModalTarget(sanction);
     setAppealReason('');
+    setAppealEvidenceUrl('');
+    setAppealFile(null);
+    setAppealFilePreview(null);
+    setIsUploadingAppealFile(false);
+  };
+
+  const handleAppealFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.warning('Hanya file foto/gambar (JPG, PNG, WEBP) yang diperbolehkan.', { title: 'Format Tidak Sesuai' });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.warning('Ukuran foto maksimal 5MB.', { title: 'Ukuran Terlalu Besar' });
+      return;
+    }
+
+    setAppealFile(file);
+    const localUrl = URL.createObjectURL(file);
+    setAppealFilePreview(localUrl);
+
+    setIsUploadingAppealFile(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      let res;
+      try {
+        res = await apiClient.post('/uploads/appeals', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+      } catch {
+        res = await apiClient.post('/uploads/file', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+      }
+      const uploadedPath = res.data?.filePath || res.data?.data?.filePath;
+      if (uploadedPath) {
+        setAppealEvidenceUrl(uploadedPath);
+        toast.success('Foto bukti berhasil diunggah.', { title: 'Unggah Berhasil' });
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Gagal mengunggah foto bukti.', { title: 'Gagal Unggah' });
+      setAppealFile(null);
+      setAppealFilePreview(null);
+    } finally {
+      setIsUploadingAppealFile(false);
+      if (e.target) e.target.value = '';
+    }
+  };
+
+  const handleRemoveAppealFile = () => {
+    setAppealFile(null);
+    setAppealFilePreview(null);
     setAppealEvidenceUrl('');
   };
 
@@ -146,6 +285,11 @@ export default function MitraDashboard() {
     e.preventDefault();
     if (!appealModalTarget || !appealReason.trim()) {
       toast.warning('Alasan banding wajib diisi.', { title: 'Peringatan' });
+      return;
+    }
+
+    if (isUploadingAppealFile) {
+      toast.warning('Foto bukti sedang diunggah. Mohon tunggu sebentar.', { title: 'Sedang Mengunggah' });
       return;
     }
 
@@ -157,6 +301,8 @@ export default function MitraDashboard() {
       });
       toast.success(res.data?.message || 'Banding berhasil diajukan.', { title: 'Sukses' });
       setAppealModalTarget(null);
+      setAppealFile(null);
+      setAppealFilePreview(null);
 
       // Refresh sanctions
       const freshSanctions = await apiClient.get('/users/me/sanctions').catch(() => ({ data: null }));
@@ -172,73 +318,66 @@ export default function MitraDashboard() {
 
   const mitraName = mitraProfile?.name || user?.name || 'Mitra';
 
-  useEffect(() => {
-    let isMounted = true;
+  const fetchMitraData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const [resMyTrips, resWallet, resRating, resSanctions] = await Promise.all([
+        apiClient.get('/trips/me', { params: { limit: 50 } }).catch(() => ({ data: [] })),
+        apiClient.get('/wallets/me').catch(() => ({
+          data: { balance: 0, heldEscrowBalance: 0 }
+        })),
+        apiClient.get('/reviews/me').catch(() => ({
+          data: { averageRating: 0, totalReviews: 0, reviews: [] }
+        })),
+        apiClient.get('/users/me/sanctions').catch(() => ({
+          data: { currentScore: 100, baseScore: 100, isSuspended: false, suspendedUntil: null, sanctions: [] }
+        })),
+      ]);
 
-    const fetchMitraData = async () => {
-      setIsLoading(true);
-      try {
-        const [resMyTrips, resWallet, resRating, resSanctions] = await Promise.all([
-          apiClient.get('/trips/me', { params: { limit: 50 } }).catch(() => ({ data: [] })),
-          apiClient.get('/wallets/me').catch(() => ({
-            data: { balance: 0, heldEscrowBalance: 0 }
-          })),
-          apiClient.get('/reviews/me').catch(() => ({
-            data: { averageRating: 0, totalReviews: 0, reviews: [] }
-          })),
-          apiClient.get('/users/me/sanctions').catch(() => ({
-            data: { currentScore: 100, baseScore: 100, isSuspended: false, suspendedUntil: null, sanctions: [] }
-          })),
-        ]);
+      const rawTrips = Array.isArray(resMyTrips.data?.data)
+        ? resMyTrips.data.data
+        : Array.isArray(resMyTrips.data)
+        ? resMyTrips.data
+        : [];
+      const ratingData = resRating.data || { averageRating: 0, totalReviews: 0, reviews: [] };
+      const reviewsList = Array.isArray(ratingData.reviews) ? ratingData.reviews : [];
 
-        const rawTrips = Array.isArray(resMyTrips.data?.data)
-          ? resMyTrips.data.data
-          : Array.isArray(resMyTrips.data)
-          ? resMyTrips.data
-          : [];
-        const ratingData = resRating.data || { averageRating: 0, totalReviews: 0, reviews: [] };
-        const reviewsList = Array.isArray(ratingData.reviews) ? ratingData.reviews : [];
+      const mappedTrips = rawTrips.map((trip) => {
+        const tripReview = reviewsList.find(
+          (rev) => String(rev.tripId) === String(trip.id)
+        );
+        return {
+          ...trip,
+          rating: tripReview ? tripReview.rating : null
+        };
+      });
 
-        const mappedTrips = rawTrips.map((trip) => {
-          const tripReview = reviewsList.find(
-            (rev) => String(rev.tripId) === String(trip.id)
-          );
-          return {
-            ...trip,
-            rating: tripReview ? tripReview.rating : null
-          };
-        });
-
-        if (isMounted) {
-          setTrips(mappedTrips);
-          setWallet(resWallet.data || { balance: 0, heldEscrowBalance: 0 });
-          setRatingStats({
-            averageRating: ratingData.averageRating || 0,
-            totalReviews: ratingData.totalReviews ?? ratingData.totalReviewa ?? 0
-          });
-          if (resSanctions?.data) {
-            setSanctionData(resSanctions.data);
-          }
-        }
-      } catch (err) {
-        console.error('Gagal memuat data dashboard mitra:', err);
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
+      setTrips(mappedTrips);
+      setWallet(resWallet.data || { balance: 0, heldEscrowBalance: 0 });
+      setRatingStats({
+        averageRating: ratingData.averageRating || 0,
+        totalReviews: ratingData.totalReviews ?? ratingData.totalReviewa ?? 0
+      });
+      if (resSanctions?.data) {
+        setSanctionData(resSanctions.data);
       }
-    };
+    } catch (err) {
+      console.error('Gagal memuat data dashboard mitra:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
+  useEffect(() => {
     fetchMitraData();
 
     const handleFocus = () => fetchMitraData();
     window.addEventListener('focus', handleFocus);
 
     return () => {
-      isMounted = false;
       window.removeEventListener('focus', handleFocus);
     };
-  }, []);
+  }, [fetchMitraData]);
 
   const filteredTrips = trips.filter(t => {
     if (activeService === 'all') return true;
@@ -338,13 +477,19 @@ export default function MitraDashboard() {
             <h1 className="font-display text-2xl font-bold">Ringkasan Aktivitas Mitra</h1>
             <p className="mt-1 text-sm text-blue-100">Kelola trip mendatang, pantau riwayat perjalanan, statistik rating, dan total saldo dompet Anda.</p>
           </div>
-          <div className="flex items-center gap-2.5 px-3.5 py-2 bg-white/15 border border-white/25 rounded-full backdrop-blur shrink-0">
-            <div className="w-7 h-7 rounded-full bg-white/20 text-white flex items-center justify-center shrink-0">
-              <Calendar className="w-3.5 h-3.5" />
-            </div>
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-wider text-white/80">STATUS MITRA</p>
-              <p className="text-[13px] font-bold text-white">Aktif & Terverifikasi</p>
+          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+            <DashboardRegionSwitcher
+              variant="banner"
+              onRegionChanged={() => fetchMitraData()}
+            />
+            <div className="flex items-center gap-2.5 px-3.5 py-2 bg-white/15 border border-white/25 rounded-2xl backdrop-blur shrink-0">
+              <div className="w-7 h-7 rounded-full bg-white/20 text-white flex items-center justify-center shrink-0">
+                <Calendar className="w-3.5 h-3.5" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-white/80">STATUS MITRA</p>
+                <p className="text-[13px] font-bold text-white">Aktif & Terverifikasi</p>
+              </div>
             </div>
           </div>
         </div>
@@ -483,7 +628,7 @@ export default function MitraDashboard() {
               <Wallet className="w-5 h-5" />
             </div>
             <Link
-              to="/mitra/balance"
+              to="/mitra/saldo"
               className="text-[12px] font-bold text-brand-600 hover:text-brand-700 hover:underline flex items-center gap-0.5"
             >
               Kelola Saldo <ChevronRight className="w-3.5 h-3.5" />
@@ -743,9 +888,39 @@ export default function MitraDashboard() {
                     </div>
 
                     <div className="flex items-center justify-between pt-2 border-t border-neutral-200/60 text-[12px] text-neutral-500 font-medium">
-                      <span>
-                        {formatIndoDate(history.departureDate)}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span>
+                          {formatIndoDate(history.departureDate)}
+                        </span>
+                        {(() => {
+                          const eligibility = evaluateDriverReportEligibility(history);
+                          return eligibility.canReport ? (
+                            <button
+                              type="button"
+                              onClick={() => handleOpenReportPos(history)}
+                              className="px-2 py-0.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded text-[11px] font-bold transition flex items-center gap-1 cursor-pointer"
+                              title="Laporkan pos checkpoint jika ada kendala layanan atau pungli"
+                            >
+                              <ShieldAlert className="w-3 h-3 text-rose-600" />
+                              <span>Lapor Pos</span>
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                toast.info(eligibility.reason, {
+                                  title: 'Fitur Lapor Pos Terkunci',
+                                })
+                              }
+                              className="px-2 py-0.5 bg-neutral-100 text-neutral-400 border border-neutral-200 rounded text-[11px] font-medium transition flex items-center gap-1 cursor-not-allowed"
+                              title={eligibility.reason}
+                            >
+                              <Lock className="w-3 h-3 text-neutral-400" />
+                              <span>Lapor Pos (Terkunci)</span>
+                            </button>
+                          );
+                        })()}
+                      </div>
                       {history.rating ? (
                         <div className="flex items-center gap-1 text-amber-500 font-bold">
                           <Star className="w-3 h-3 fill-current" />
@@ -890,15 +1065,25 @@ export default function MitraDashboard() {
                           </p>
 
                           {latestAppeal.evidenceUrl && (
-                            <div>
+                            <div className="space-y-1.5 pt-1">
                               <a
-                                href={latestAppeal.evidenceUrl}
+                                href={getFullFileUrl(latestAppeal.evidenceUrl)}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="text-blue-600 hover:underline text-[11px] inline-flex items-center gap-1 font-bold"
                               >
-                                Lihat Bukti Lampiran &rarr;
+                                <ExternalLink className="w-3 h-3" />
+                                <span>Lihat Bukti Lampiran &rarr;</span>
                               </a>
+                              {/\.(jpg|jpeg|png|webp)($|\?)/i.test(latestAppeal.evidenceUrl) && (
+                                <div className="w-24 h-24 rounded-lg overflow-hidden border border-neutral-200 bg-neutral-100">
+                                  <img
+                                    src={getFullFileUrl(latestAppeal.evidenceUrl)}
+                                    alt="Bukti Lampiran"
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                              )}
                             </div>
                           )}
 
@@ -991,24 +1176,118 @@ export default function MitraDashboard() {
           </div>
 
           {/* Field: Bukti Foto / Dokumen */}
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             <label className="flex items-center justify-between text-[12px] font-bold text-neutral-700">
               <span className="flex items-center gap-1.5">
-                <LinkIcon className="w-3.5 h-3.5 text-[#10367D]" />
-                Tautan Bukti Dokumen / Foto
+                <Camera className="w-3.5 h-3.5 text-[#10367D]" />
+                Foto Bukti Pendukung
               </span>
               <span className="text-[10px] font-semibold text-neutral-400">Opsional</span>
             </label>
+
+            {/* Hidden file input */}
             <input
-              type="url"
-              value={appealEvidenceUrl}
-              onChange={(e) => setAppealEvidenceUrl(e.target.value)}
-              placeholder="https://contoh.com/foto-bukti-bengkel.jpg"
-              className="w-full px-3.5 py-2.5 border border-neutral-300 rounded-xl text-[13px] text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#10367D] focus:border-[#10367D] bg-white transition shadow-2xs"
+              ref={appealFileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/jpg"
+              onChange={handleAppealFileChange}
+              className="hidden"
             />
-            <p className="text-[11px] text-neutral-400">
-              Masukkan tautan Google Drive publik, link gambar kuitansi bengkel, atau surat dokter.
-            </p>
+
+            {/* Preview or Upload Trigger Box */}
+            {appealFilePreview || appealEvidenceUrl ? (
+              <div className="relative rounded-xl border border-neutral-200 bg-neutral-50/90 p-3 flex items-center gap-3 shadow-2xs">
+                <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-neutral-200 shrink-0 border border-neutral-300">
+                  <img
+                    src={appealFilePreview || getFullFileUrl(appealEvidenceUrl)}
+                    alt="Bukti Banding"
+                    className="w-full h-full object-cover"
+                  />
+                  {isUploadingAppealFile && (
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                      <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[12px] font-bold text-neutral-800 truncate">
+                      {appealFile?.name || 'Foto Bukti Terlampir'}
+                    </span>
+                    {isUploadingAppealFile ? (
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-700">
+                        Mengunggah...
+                      </span>
+                    ) : (
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 text-emerald-700">
+                        Terunggah
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-neutral-500 mt-0.5 truncate">
+                    {appealFile ? `${(appealFile.size / 1024).toFixed(0)} KB` : 'Tersimpan'}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  disabled={isUploadingAppealFile || isSubmittingAppeal}
+                  onClick={handleRemoveAppealFile}
+                  className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition cursor-pointer"
+                  title="Hapus Foto"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <div
+                onClick={() => appealFileInputRef.current?.click()}
+                className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition flex flex-col items-center justify-center gap-1.5 ${
+                  isUploadingAppealFile
+                    ? 'border-neutral-300 bg-neutral-100 cursor-not-allowed'
+                    : 'border-blue-200 bg-blue-50/40 hover:bg-blue-50/80 hover:border-blue-400'
+                }`}
+              >
+                <div className="w-9 h-9 rounded-full bg-blue-100 text-[#10367D] flex items-center justify-center">
+                  {isUploadingAppealFile ? (
+                    <span className="w-4 h-4 border-2 border-[#10367D] border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Upload className="w-4 h-4" />
+                  )}
+                </div>
+                <span className="text-[12px] font-bold text-[#10367D]">
+                  {isUploadingAppealFile ? 'Sedang mengunggah...' : 'Klik untuk Upload Foto Bukti'}
+                </span>
+                <p className="text-[11px] text-neutral-500">
+                  Format JPG, PNG, WEBP (Maksimal 5MB). Foto surat dokter, kuitansi bengkel, atau kondisi darurat.
+                </p>
+              </div>
+            )}
+
+            {/* Optional external URL fallback */}
+            <div className="pt-1">
+              <details className="group">
+                <summary className="text-[11px] text-neutral-500 hover:text-neutral-700 font-medium cursor-pointer list-none flex items-center gap-1">
+                  <LinkIcon className="w-3 h-3" />
+                  <span>Atau gunakan tautan link dokumen eksternal</span>
+                </summary>
+                <div className="mt-2 space-y-1">
+                  <input
+                    type="url"
+                    value={appealEvidenceUrl}
+                    onChange={(e) => {
+                      setAppealEvidenceUrl(e.target.value);
+                      setAppealFile(null);
+                      setAppealFilePreview(null);
+                    }}
+                    placeholder="https://drive.google.com/... atau link foto online"
+                    className="w-full px-3 py-2 border border-neutral-300 rounded-xl text-[12px] text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#10367D] focus:border-[#10367D] bg-white transition shadow-2xs"
+                  />
+                  <p className="text-[10px] text-neutral-400">
+                    Gunakan ini jika foto tersimpan di Google Drive atau penyimpanan daring publik.
+                  </p>
+                </div>
+              </details>
+            </div>
           </div>
 
           {/* Actions */}
@@ -1038,6 +1317,18 @@ export default function MitraDashboard() {
           </div>
         </form>
       </BaseModal>
+
+      {/* Modal Pelaporan Masalah Pos Checkpoint */}
+      <ReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        targetUser={reportTargetUser}
+        availableTargets={reportAvailableTargets}
+        context={reportContext}
+        onSuccess={() => {
+          toast.success('Laporan kendala pos Anda berhasil dikirim ke tim pengawas regional.');
+        }}
+      />
     </div>
   );
 }

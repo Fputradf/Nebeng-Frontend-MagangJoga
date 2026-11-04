@@ -91,13 +91,13 @@ export default function OperatorPosPage() {
   const handleSave = async (e) => {
     e.preventDefault();
     if (!formData.name || !formData.email) {
-      toast.warning('Nama dan Email akun operator wajib diisi!', { title: 'Form Belum Lengkap' });
+      toast.warning('Nama dan Email akun mitra pos wajib diisi!', { title: 'Form Belum Lengkap' });
       return;
     }
 
     try {
       if (isEditing) {
-        toast.success('Data operator diperbarui.', { title: 'Berhasil' });
+        toast.success('Data mitra pos diperbarui.', { title: 'Berhasil' });
       } else {
         await regionalService.createOperator({
           name: formData.name.trim(),
@@ -106,7 +106,7 @@ export default function OperatorPosPage() {
           phone: formData.phone.trim(),
           regionId: String(user?.regionId || formData.regionId)
         });
-        toast.success('Akun operator baru berhasil dibuat di database.', { title: 'Operator Dibuat' });
+        toast.success('Akun mitra pos baru berhasil dibuat di database.', { title: 'Mitra Pos Dibuat' });
       }
       setIsModalOpen(false);
 
@@ -129,14 +129,14 @@ export default function OperatorPosPage() {
 
     } catch (error) {
       console.error('Gagal menyimpan operator:', error);
-      toast.error(error.response?.data?.message || 'Gagal menyimpan akun operator ke server.', { title: 'Error' });
+      toast.error(error.response?.data?.message || 'Gagal menyimpan akun mitra pos ke server.', { title: 'Error' });
     }
   };
 
   const handleDeleteOperator = async (op) => {
     const isConfirmed = await confirm({
       title: 'Konfirmasi Nonaktifkan Akun',
-      message: `Apakah Anda yakin ingin menonaktifkan akun operator "${op.name}" (${op.id})?`,
+      message: `Apakah Anda yakin ingin menonaktifkan akun mitra pos "${op.name}" (${op.id})?`,
       confirmText: 'Ya, Nonaktifkan',
       cancelText: 'Batal',
       variant: 'danger',
@@ -144,7 +144,7 @@ export default function OperatorPosPage() {
     if (!isConfirmed) return;
     try {
       await regionalService.updateOperatorStatus(op.id, 'inactive');
-      toast.success(`Akun operator ${op.id} berhasil dinonaktifkan.`, { title: 'Berhasil' });
+      toast.success(`Akun mitra pos ${op.id} berhasil dinonaktifkan.`, { title: 'Berhasil' });
 
 
       const data = await regionalService.getOperators('operator');
@@ -164,7 +164,7 @@ export default function OperatorPosPage() {
         }));
       setOperatorList(formatted);
     } catch (error) {
-      toast.error('Gagal menonaktifkan operator.', { title: error });
+      toast.error('Gagal menonaktifkan mitra pos.', { title: error });
     }
   };
 
@@ -181,11 +181,11 @@ export default function OperatorPosPage() {
           <div className="flex items-center gap-2 mb-1">
             <span className="w-2 h-2 rounded-full bg-[#10367D] animate-pulse"></span>
             <span className="text-[12px] font-bold uppercase tracking-widest text-[#10367D]">
-              MANAJEMEN AKUN OPERATOR POS REGIONAL
+              MANAJEMEN AKUN MITRA POS REGIONAL
             </span>
           </div>
-          <h1 className="text-[21px] sm:text-[23px] font-bold text-neutral-800">Akun & Penugasan Operator Pos</h1>
-          <p className="text-[13px] sm:text-[14px] text-neutral-400 mt-0.5">Buat akun operator, tentukan pos penugasan, dan atur shift operasional dengan proteksi data PII.</p>
+          <h1 className="text-[21px] sm:text-[23px] font-bold text-neutral-800">Akun & Penugasan Mitra Pos</h1>
+          <p className="text-[13px] sm:text-[14px] text-neutral-400 mt-0.5">Buat akun mitra pos, tentukan pos penugasan, dan atur shift operasional dengan proteksi data PII.</p>
         </div>
 
         <button 
@@ -193,7 +193,7 @@ export default function OperatorPosPage() {
           className="flex items-center gap-2 px-4 py-2 bg-[#10367D] hover:bg-[#0C2C66] text-white rounded-full text-[13px] sm:text-[14px] font-bold transition cursor-pointer shadow-sm shrink-0"
         >
           <Plus size={14} />
-          <span>Buat Operator Baru</span>
+          <span>Buat Mitra Pos Baru</span>
         </button>
       </div>
 
@@ -209,7 +209,7 @@ export default function OperatorPosPage() {
           />
         </div>
         <div className="text-[13px] font-semibold text-neutral-400 px-2">
-          Total: <span className="font-bold text-neutral-800">{filteredOperators.length} Operator</span>
+          Total: <span className="font-bold text-neutral-800">{filteredOperators.length} Mitra Pos</span>
         </div>
       </div>
 
@@ -218,7 +218,7 @@ export default function OperatorPosPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-gray-50/70 text-neutral-400 text-[12px] uppercase tracking-wider font-bold">
-                <th className="py-3 px-5">ID & Nama Operator</th>
+                <th className="py-3 px-5">ID & Nama Mitra Pos</th>
                 <th className="py-3 px-5">Email Akun (PII Protected)</th>
                 <th className="py-3 px-5">Pos Penugasan</th>
                 <th className="py-3 px-5">Shift Operasional</th>
@@ -270,7 +270,7 @@ export default function OperatorPosPage() {
               ) : (
                 <tr>
                   <td colSpan="6">
-                    <EmptyState icon={Users} title="Operator Tidak Ditemukan" description="Tidak ada operator pos yang ditemukan dari backend untuk wilayah ini." />
+                    <EmptyState icon={Users} title="Mitra Pos Tidak Ditemukan" description="Tidak ada mitra pos yang ditemukan dari backend untuk wilayah ini." />
                   </td>
                 </tr>
               )}
@@ -282,7 +282,7 @@ export default function OperatorPosPage() {
       <BaseModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title="Buat Operator Pos Baru"
+        title="Buat Mitra Pos Baru"
         subtitle="Sistem Akun Operasional Regional"
         maxWidth="max-w-md"
       >

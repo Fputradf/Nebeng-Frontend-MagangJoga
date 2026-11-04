@@ -4,6 +4,7 @@ import apiClient from '../../services/apiClient';
 import { BASE_URL } from '../../config/env';
 import logoAsset from '../../assets/LOGO.png';
 import NotificationBell from '../ui/NotificationBell';
+import { useAppConfig } from '../../context/AppConfigContext';
 
 const formatTanggal = new Intl.DateTimeFormat('id-ID', {
   weekday: 'long',
@@ -12,50 +13,39 @@ const formatTanggal = new Intl.DateTimeFormat('id-ID', {
   year: 'numeric',
 });
 
-function sapaan(jam) {
-  if (jam >= 4 && jam < 11) return 'Selamat pagi';
-  if (jam >= 11 && jam < 15) return 'Selamat siang';
-  if (jam >= 15 && jam < 19) return 'Selamat sore';
-  return 'Selamat malam';
+function getWaktu(jam) {
+  if (jam >= 4 && jam < 11) return 'pagi';
+  if (jam >= 11 && jam < 15) return 'siang';
+  if (jam >= 15 && jam < 19) return 'sore';
+  return 'malam';
 }
 
 function resolveFileUrl(path) {
   if (!path) return null;
   if (/^(blob:|data:|https?:\/\/)/.test(path)) return path;
   const base = apiClient.defaults.baseURL ? apiClient.defaults.baseURL.replace('/api', '') : BASE_URL;
-  return `${base}${path.startsWith('/') ? '' : '/'}${path}`;
+  return `${base}${path.startsWith('/') ? path : `/${path}`}`;
 }
 
-const FOCUS =
-  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500';
+const FOCUS = 'focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500 focus-visible:outline-offset-2';
 
-/**
- * Topbar bersama semua role.
- * `profile` boleh berbentuk apa saja dari AuthContext (name/fullName, avatar/photoDataUrl).
- * Kalau nama tidak ada di profile, diambil dari /auth/me.
- * Tepi bawah berupa garis rute putus-putus dengan satu titik tujuan: motif identitas Nebeng.
- */
-export default function AppTopbar({ profile, roleLabel, onProfileClick, onToggleSidebar }) {
-  const [me, setMe] = useState(null);
-  const hasName = Boolean(profile?.name || profile?.fullName);
+export default function AppTopbar({ profile, roleLabel, onProfileClick, onToggleSidebar, basePath }) {
+  const { appName, appLogo } = useAppConfig();
+  const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
-    if (hasName) return undefined;
-    let alive = true;
-    apiClient
-      .get('/auth/me')
-      .then((res) => alive && setMe(res?.data || null))
-      .catch(() => {});
-    return () => {
-      alive = false;
-    };
-  }, [hasName]);
+    const timer = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(timer);
+  }, []);
 
-  const fullName = profile?.name || profile?.fullName || me?.name || '';
-  const displayName = fullName || roleLabel || 'Pengguna';
+  const fullName = profile?.fullName || profile?.name || 'Pengguna';
   const firstName = fullName.split(' ')[0];
-  const photoUrl = resolveFileUrl(profile?.avatar || profile?.photoDataUrl || me?.avatar);
-  const now = new Date();
+  const avatarUrl = resolveFileUrl(profile?.avatarUrl || profile?.avatar || profile?.photoDataUrl);
+
+  const initial = (fullName || 'U')
+    .trim()
+    .charAt(0)
+    .toUpperCase();
 
   return (
     <header className="sticky top-0 z-20 border-b border-dashed border-brand-500/25 bg-white/80 backdrop-blur-md">
@@ -71,9 +61,17 @@ export default function AppTopbar({ profile, roleLabel, onProfileClick, onToggle
               <Menu className="h-5 w-5 text-brand-600" />
             </button>
           )}
-          <img src={logoAsset} alt="" className="h-7 w-7 shrink-0 object-contain" />
-          <span className="hidden font-display text-lg font-extrabold leading-none text-brand-500 min-[380px]:inline">
-            Nebeng
+          <img
+            src={appLogo || logoAsset}
+            alt={appName || 'Logo'}
+            className="h-7 w-7 shrink-0 object-contain"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = logoAsset;
+            }}
+          />
+          <span className="hidden font-display text-lg font-extrabold leading-none text-brand-500 min-[380px]:inline truncate max-w-[150px]">
+            {appName || 'Nebeng'}
           </span>
         </div>
 
@@ -81,49 +79,42 @@ export default function AppTopbar({ profile, roleLabel, onProfileClick, onToggle
           <p className="hidden text-[11px] font-semibold uppercase tracking-wider text-brand-500/70 sm:block">
             {formatTanggal.format(now)}
           </p>
-          <p className="truncate font-display text-sm font-bold leading-tight text-brand-700 sm:text-lg">
-            {firstName ? `${sapaan(now.getHours())}, ${firstName}` : sapaan(now.getHours())}
+          <p className="truncate font-display text-sm font-bold leading-tight text-brand-700 sm:text-lg hidden sm:block">
+            <span>Selamat {getWaktu(now.getHours())}</span>
+            {firstName ? `, ${firstName}` : ''}
           </p>
         </div>
 
         <div className="ml-auto flex items-center gap-3">
-          <NotificationBell />
-
-          <span aria-hidden="true" className="hidden h-8 w-px bg-slate-200 sm:block" />
+          <NotificationBell basePath={basePath} />
 
           <button
             type="button"
             onClick={onProfileClick}
-            aria-label={`Buka profil ${displayName}`}
-            className={`flex h-12 cursor-pointer items-center gap-2.5 rounded-full border border-slate-200 bg-white py-1 pl-1 pr-1 shadow-soft transition hover:border-brand-500/30 hover:shadow-card sm:pr-3.5 ${FOCUS}`}
+            aria-label="Profil pengguna"
+            className={`flex items-center gap-3 rounded-2xl border border-dashed border-brand-500/30 bg-brand-50/40 p-1.5 transition hover:bg-brand-50/70 hover:border-brand-500/50 sm:pr-3.5 ${FOCUS}`}
           >
-            <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-sm font-bold text-white">
-              {photoUrl ? (
-                <img src={photoUrl} alt="" className="h-full w-full rounded-full object-cover" />
+            <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-brand-500 font-display text-sm font-bold text-white shadow-soft ring-2 ring-white">
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
               ) : (
-                displayName.charAt(0).toUpperCase()
+                <span>{initial}</span>
               )}
-              <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-500" />
-            </span>
-            <span className="hidden min-w-0 text-left sm:block">
-              <span className="block max-w-[10rem] truncate text-sm font-semibold leading-tight text-slate-900">
-                {displayName}
-              </span>
-              {roleLabel && (
-                <span className="mt-0.5 inline-block rounded-full bg-brand-500/10 px-2 py-px text-[11px] font-semibold leading-tight text-brand-500">
-                  {roleLabel}
-                </span>
-              )}
-            </span>
-            <ChevronDown className="hidden h-4 w-4 text-slate-400 sm:block" />
+            </div>
+
+            <div className="hidden text-left min-[420px]:block">
+              <p className="max-w-[140px] truncate text-xs font-bold leading-tight text-brand-900 sm:max-w-[180px]">
+                {fullName}
+              </p>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-brand-500">
+                {roleLabel}
+              </p>
+            </div>
+
+            <ChevronDown className="hidden h-4 w-4 text-brand-500 min-[420px]:block" />
           </button>
         </div>
       </div>
-
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute -bottom-[5px] left-4 h-2.5 w-2.5 rounded-full border-2 border-brand-500 bg-accent sm:left-6 lg:left-8"
-      />
     </header>
   );
 }

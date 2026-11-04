@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import {
-  ShieldCheck,
+  Receipt,
   Wallet,
   Search,
   Printer,
   Lock,
-  Unlock,
+  ArrowDownToLine,
   X,
 } from 'lucide-react';
 
@@ -18,6 +18,18 @@ import PrintReportFooter from '../../../components/ui/PrintReportFooter';
 import { getEscrowLedgerData } from '../../../services/auditService';
 
 const ITEMS_PER_PAGE = 5;
+
+const cleanTransactionDescription = (desc) => {
+  if (!desc) return '';
+  return desc
+    .replace(/dana ditahan escrow/gi, 'Dana ditahan')
+    .replace(/pencairan auto-escrow/gi, 'Pencairan dana otomatis')
+    .replace(/pencairan escrow/gi, 'Pencairan dana perjalanan')
+    .replace(/dana escrow/gi, 'dana jaminan')
+    .replace(/\bescrow\b/gi, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+};
 
 export default function AuditFinancialReport() {
   const [activeTab, setActiveTab] = useState('escrow');
@@ -77,16 +89,16 @@ export default function AuditFinancialReport() {
             orderId: tx.orderId
               ? `ORD-${String(tx.orderId)}`
               : 'SYS-TX',
-            client: tx.reference || tx.description || 'Sistem Escrow',
+            client: tx.reference || cleanTransactionDescription(tx.description) || 'Sistem Dana Jaminan',
             amount: `Rp ${Number(tx.amount || 0).toLocaleString('id-ID')}`,
             type:
               tx.type === 'escrow_hold'
-                ? 'Escrow Held'
-                : 'Escrow Release',
+                ? 'Dana Ditahan'
+                : 'Dana Dicairkan',
             status:
               tx.type === 'escrow_hold'
-                ? 'Held'
-                : 'Released',
+                ? 'Ditahan'
+                : 'Dicairkan',
             time: tx.createdAt
               ? new Date(tx.createdAt).toLocaleString('id-ID', {
                   dateStyle: 'medium',
@@ -94,7 +106,7 @@ export default function AuditFinancialReport() {
                 })
               : 'Waktu tidak tersedia',
             note:
-              tx.description ||
+              cleanTransactionDescription(tx.description) ||
               'Pencatatan ledger otomatis dari database'
           }));
 
@@ -144,10 +156,10 @@ export default function AuditFinancialReport() {
 
       {/* ── KOP SURAT CETAK RESMI ── */}
       <PrintReportHeader
-        title="LAPORAN AUDIT TRANSAKSI ESCROW & REKONSILIASI KEUANGAN"
-        subtitle="DIREKTORAT KEUANGAN, AUDIT & TATA KELOLA ESCROW"
+        title="LAPORAN AUDIT TRANSAKSI DANA JAMINAN & REKONSILIASI KEUANGAN"
+        subtitle="DIREKTORAT KEUANGAN, AUDIT & TATA KELOLA DANA"
         documentNumber={`DOC/AUD-ESC/${new Date().toISOString().slice(0, 10).replace(/-/g, '')}/${String(currentPage).padStart(3, '0')}`}
-        printedBy="Superadmin Escrow Engine"
+        printedBy="Superadmin Keuangan"
         extraMeta={[
           { label: 'Filter Status', value: statusFilter === 'All' ? 'Semua Status Transaksi' : statusFilter },
           { label: 'Halaman Dokumen', value: `Hal ${currentPage} dari ${paginationMeta?.totalPages || 1}` },
@@ -160,7 +172,7 @@ export default function AuditFinancialReport() {
       <div className="hidden print:grid grid-cols-3 gap-3 mb-6">
         <div className="border border-slate-300 rounded p-3 bg-slate-50/70">
           <span className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-            Escrow Held (Ditahan)
+            Dana Ditahan
           </span>
           <p className="text-[15px] font-black font-mono text-slate-900 mt-0.5">
             Rp {Number(financialStats.totalHeldEscrow).toLocaleString('id-ID')}
@@ -170,7 +182,7 @@ export default function AuditFinancialReport() {
 
         <div className="border border-slate-300 rounded p-3 bg-slate-50/70">
           <span className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-            Escrow Released (Dicairkan)
+            Dana Dicairkan
           </span>
           <p className="text-[15px] font-black font-mono text-emerald-800 mt-0.5">
             Rp {Number(financialStats.totalReleasedEscrow).toLocaleString('id-ID')}
@@ -202,10 +214,10 @@ export default function AuditFinancialReport() {
               </span>
             </div>
             <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
-              Audit Keuangan & Arus Kas
+              Audit Keuangan & Arus Dana Jaminan
             </h1>
             <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
-              Pantau arus kas Escrow System secara langsung dari database sistem.
+              Pantau arus kas Dana Jaminan Perjalanan secara langsung dari database sistem.
             </p>
           </div>
 
@@ -223,20 +235,22 @@ export default function AuditFinancialReport() {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 print:hidden">
         <StatCard
-          title="ESCROW HELD (DITAHAN)"
+          title="DANA JAMINAN DITAHAN"
           value={`Rp ${Number(
             financialStats.totalHeldEscrow
           ).toLocaleString('id-ID')}`}
           subtitle="Menunggu penyelesaian trip"
           icon={Lock}
+          iconVariant="amber"
         />
         <StatCard
-          title="ESCROW RELEASED (CAIR)"
+          title="PENCAIRAN / PENARIKAN DANA"
           value={`Rp ${Number(
             financialStats.totalReleasedEscrow
           ).toLocaleString('id-ID')}`}
           subtitle="Berhasil ditransfer ke mitra"
-          icon={Unlock}
+          icon={ArrowDownToLine}
+          iconVariant="emerald"
         />
         <StatCard
           variant="primary"
@@ -263,8 +277,8 @@ export default function AuditFinancialReport() {
                 : 'text-neutral-500 hover:text-neutral-700'
             }`}
           >
-            <ShieldCheck size={12} />
-            Escrow Ledger
+            <Receipt size={13} />
+            Ledger Dana Jaminan
           </button>
         </div>
 
@@ -306,8 +320,8 @@ export default function AuditFinancialReport() {
             className="bg-white border border-neutral-200 rounded-full px-3 py-1.5 text-[13px] font-semibold text-neutral-700 focus:outline-none focus:ring-2 focus:ring-[#74B4D9] cursor-pointer"
           >
             <option value="All">Semua Status</option>
-            <option value="Held">Held (Ditahan)</option>
-            <option value="Released">Released (Dicairkan)</option>
+            <option value="Ditahan">Ditahan</option>
+            <option value="Dicairkan">Dicairkan</option>
           </select>
         </div>
       </div>
@@ -321,7 +335,7 @@ export default function AuditFinancialReport() {
                   <th className="py-3 px-5 border-b print:border-neutral-300">ID Ledger & Pesanan</th>
                   <th className="py-3 px-5 border-b print:border-neutral-300">Referensi / Klien</th>
                   <th className="py-3 px-5 border-b print:border-neutral-300">Nominal Transaksi</th>
-                  <th className="py-3 px-5 border-b print:border-neutral-300">Status Escrow</th>
+                  <th className="py-3 px-5 border-b print:border-neutral-300">Status Dana</th>
                   <th className="py-3 px-5 border-b print:border-neutral-300">Waktu & Catatan Database</th>
                 </tr>
               </thead>
@@ -352,7 +366,7 @@ export default function AuditFinancialReport() {
                       </td>
                       <td className="py-3.5 px-5">
                         <StatusBadge
-                          variant={item.status === 'Held' ? 'amber' : 'emerald'}
+                          variant={item.status === 'Ditahan' ? 'amber' : 'emerald'}
                         >
                           {item.status}
                         </StatusBadge>
@@ -371,9 +385,9 @@ export default function AuditFinancialReport() {
                   <tr>
                     <td colSpan="5">
                       <EmptyState
-                        icon={ShieldCheck}
-                        title="Ledger Escrow Kosong"
-                        description="Belum ada catatan transaksi escrow dari database."
+                        icon={Receipt}
+                        title="Ledger Dana Jaminan Kosong"
+                        description="Belum ada catatan transaksi dana jaminan dari database."
                       />
                     </td>
                   </tr>
@@ -388,7 +402,7 @@ export default function AuditFinancialReport() {
                     Rp {displayedTotalAmount.toLocaleString('id-ID')}
                   </td>
                   <td colSpan={2} className="py-2.5 px-5 text-slate-500 text-[10px] italic">
-                    Tervalidasi pada ledger immutable sistem escrow
+                    Tervalidasi pada ledger immutable sistem dana jaminan
                   </td>
                 </tr>
               </tfoot>
@@ -447,7 +461,7 @@ export default function AuditFinancialReport() {
       <PrintReportFooter
         leftSigner={{
           role: 'Disiapkan Oleh,',
-          title: 'Superadmin Tata Kelola & Sistem Escrow',
+          title: 'Superadmin Tata Kelola & Keuangan',
           name: 'Superadmin Eksekutif',
           idLabel: 'ID Petugas',
           idValue: 'SYS-ESC-SUPERADMIN',
@@ -464,7 +478,7 @@ export default function AuditFinancialReport() {
             year: 'numeric',
           })}`,
         }}
-        notes="Laporan audit ini merupakan ringkasan resmi sistem escrow backend Nebeng Transport. Seluruh data tercatat permanen pada ledger database."
+        notes="Laporan audit ini merupakan ringkasan resmi sistem dana jaminan Nebeng Transport. Seluruh data tercatat permanen pada ledger database."
       />
     </div>
   );

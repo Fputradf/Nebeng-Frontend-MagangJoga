@@ -1,4 +1,4 @@
-import { X, CheckCircle2, Clock, MapPin, ShieldCheck, UserCheck, AlertCircle, Users } from 'lucide-react';
+import { X, CheckCircle2, Clock, MapPin, ShieldCheck, UserCheck, AlertCircle, Users, Star } from 'lucide-react';
 import BaseModal from '../../../components/ui/BaseModal';
 
 // const PRIMARY_COLOR = '#10367D';
@@ -41,7 +41,7 @@ export default function TicketTimelineModal({ isOpen, onClose, ticket }) {
     },
     {
       id: 'paid',
-      title: 'Pembayaran Dikonfirmasi & Dana Ditahan di Escrow',
+      title: 'Pembayaran Dikonfirmasi & Dana Aman Ditahan',
       subtitle: isNoShow ? 'Tiket hangus (penumpang tidak datang)' : 'Pembayaran aman tersimpan di sistem rekening bersama',
       time: isPaid ? (isNoShow ? 'No-Show (Hangus)' : 'Pembayaran Sukses') : 'Menunggu Pembayaran',
       isDone: isPaid,
@@ -53,10 +53,10 @@ export default function TicketTimelineModal({ isOpen, onClose, ticket }) {
       id: 'origin_scan',
       title: `Check-in Pos Asal (${ticket.from || 'Pos Asal'})`,
       subtitle: isCheckedInOrigin
-        ? `Pemeriksaan selesai & penumpang/barang check-in oleh ${originLog?.operatorName || 'Operator'} di ${originLog?.posName || ticket.from}`
+        ? `Pemeriksaan selesai & penumpang/barang check-in oleh ${originLog?.operatorName || 'Mitra Pos'} di ${originLog?.posName || ticket.from}`
         : isDriverAtOrigin
-        ? `Sopir (${ticket.mitra || 'Mitra'}) sudah sampai di pos asal (Stand-by). Silakan tunjukkan QR tiket Anda ke Operator Pos.`
-        : 'Menunggu kedatangan armada & pemeriksaan fisik oleh Operator Pos Asal',
+        ? `Sopir (${ticket.mitra || 'Mitra'}) sudah sampai di pos asal (Stand-by). Silakan tunjukkan QR tiket Anda ke Mitra Pos.`
+        : 'Menunggu kedatangan armada & pemeriksaan fisik oleh Mitra Pos Asal',
       time: originLog
         ? (originLog.isTripLog && !isCheckedInOrigin
             ? `Sopir Tiba • ${formatTime(originLog.createdAt)}`
@@ -83,10 +83,8 @@ export default function TicketTimelineModal({ isOpen, onClose, ticket }) {
       id: 'dest_scan',
       title: `Tiba & Serah Terima di ${ticket.to || 'Pos Tujuan'}`,
       subtitle: destLog
-        ? `Diverifikasi dengan OTP oleh ${destLog.operatorName}. Dana Escrow berhasil dicairkan ke Mitra.`
-        : ticket.otp
-        ? `Tunjukkan Kode OTP: [ ${ticket.otp} ] kepada Operator Pos Tujuan saat pengambilan`
-        : 'Menunggu kedatangan di Pos Tujuan',
+        ? `Diverifikasi dan diserahkan oleh ${destLog.operatorName}. Dana berhasil dicairkan ke Mitra.`
+        : 'Tunjukkan QR Tiket kepada Mitra Pos Tujuan saat tiba / pengambilan barang',
       time: destLog ? formatTime(destLog.createdAt) : '--:--',
       isDone: isCompleted,
       isActive: status === 'arrived_destination',
@@ -115,6 +113,57 @@ export default function TicketTimelineModal({ isOpen, onClose, ticket }) {
             <X className="w-5 h-5" />
           </button>
         </div>
+
+        {/* Info Mitra Driver & Rating */}
+        <div className="mt-4 p-3 bg-slate-50 border border-slate-200/80 rounded-xl flex items-center justify-between gap-3 text-xs">
+          <div className="min-w-0">
+            <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Mitra Driver & Armada</span>
+            <p className="font-bold text-slate-800 text-[13px] truncate">
+              {ticket.mitra || 'Mitra Driver'}
+            </p>
+            <p className="text-[11px] text-slate-500 truncate">
+              {ticket.vehicle || 'Armada Resmi'}
+            </p>
+          </div>
+          <div className="shrink-0 text-right">
+            {ticket.mitraRating ? (
+              <div className="inline-flex items-center gap-1 px-2 py-1 bg-amber-50 text-amber-800 text-xs font-bold rounded-lg border border-amber-200">
+                <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500" />
+                <span>{ticket.mitraRating}</span>
+                {ticket.mitraTotalReviews > 0 && (
+                  <span className="text-[10px] text-amber-600 font-normal">({ticket.mitraTotalReviews} ulasan)</span>
+                )}
+              </div>
+            ) : (
+              <div className="inline-flex items-center gap-1 px-2 py-1 bg-slate-100 text-slate-500 text-xs font-medium rounded-lg">
+                <Star className="w-3.5 h-3.5 text-slate-400" />
+                <span>Mitra Baru</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Estimasi Waktu Tempuh & Perkiraan Tiba */}
+        {(ticket.durationFormatted || ticket.estimatedArrivalTime || ticket.distanceKm) && (
+          <div className="mt-3 p-3 bg-blue-50/70 border border-blue-200/60 rounded-xl flex items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-blue-700 shrink-0" />
+              <div>
+                <span className="text-[10px] uppercase font-bold text-blue-500 block tracking-wider">Estimasi Waktu Tempuh</span>
+                <span className="font-bold text-blue-950">
+                  {ticket.durationFormatted || `${ticket.durationMinutes} menit`}
+                  {ticket.distanceKm ? ` (~${ticket.distanceKm} km)` : ''}
+                </span>
+              </div>
+            </div>
+            {ticket.estimatedArrivalTime && (
+              <div className="text-right">
+                <span className="text-[10px] uppercase font-bold text-blue-500 block tracking-wider">Perkiraan Tiba</span>
+                <span className="font-bold text-blue-950">{ticket.estimatedArrivalTime}</span>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Kondisi Batal */}
         {isCancelled && (

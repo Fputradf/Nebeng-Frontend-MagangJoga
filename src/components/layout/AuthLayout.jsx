@@ -13,7 +13,7 @@ export default function AuthLayout({
   title,
   subtitle,
   illustration = defaultIllustration,
-  illustrationAlt = 'Ilustrasi layanan Nebeng',
+  illustrationAlt,
   authMode = 'login',
   onSwitchMode,
   maxWidth = 'max-w-xl',
@@ -22,8 +22,9 @@ export default function AuthLayout({
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
+  const resolvedAlt = illustrationAlt || `Ilustrasi layanan ${brandName}`;
   return (
-    <main className="min-h-screen w-full flex flex-col lg:flex-row bg-white font-sans antialiased overflow-x-hidden">
+    <main className="min-h-screen w-full flex flex-col lg:flex-row bg-white font-sans antialiased overflow-x-hidden overflow-y-auto lg:overflow-y-hidden">
       {/* =========================
           LEFT PANEL - FULL-SIZE HERO ILLUSTRATION (Desktop)
       ========================== */}
@@ -32,7 +33,7 @@ export default function AuthLayout({
         <div className="relative z-10 flex items-center justify-between">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 border border-white/20 text-xs font-bold text-accent">
             <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Escrow Terintegrasi</span>
+            <span>Dana Aman Terjamin</span>
           </span>
           <span className="text-xs text-blue-100 font-medium tracking-wide">
             Platform Resmi Antarkota
@@ -44,7 +45,7 @@ export default function AuthLayout({
           <div className="relative w-full max-w-md aspect-4/3 rounded-3xl overflow-hidden shadow-xl border border-white/20 bg-slate-900/30 p-2.5 group">
             <img
               src={illustration}
-              alt={illustrationAlt}
+              alt={resolvedAlt}
               width={448}
               height={336}
               fetchpriority="high"
@@ -60,7 +61,7 @@ export default function AuthLayout({
                 </div>
                 <div>
                   <p className="text-xs font-bold text-white">Perjalanan Hemat & Pengiriman Cepat</p>
-                  <p className="text-[10px] text-blue-100">Solusi nebeng antar kota terpercaya di Indonesia</p>
+                  <p className="text-[10px] text-blue-100">Solusi {brandName} antar kota terpercaya di Indonesia</p>
                 </div>
               </div>
             </div>
@@ -74,7 +75,7 @@ export default function AuthLayout({
             </div>
             <div className="flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl bg-white/10 border border-white/15 text-[11px] text-blue-50 font-medium shadow-xs">
               <ShieldCheck className="w-3.5 h-3.5 text-accent shrink-0" />
-              <span className="truncate">Proteksi Escrow</span>
+              <span className="truncate">Dana Terjamin</span>
             </div>
             <div className="flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl bg-white/10 border border-white/15 text-[11px] text-blue-50 font-medium shadow-xs">
               <CheckCircle2 className="w-3.5 h-3.5 text-accent shrink-0" />
@@ -99,9 +100,9 @@ export default function AuthLayout({
                 >
                   <SocialIcon
                     platform={item.platform}
-                    iconType="preset"
+                    iconType={item.iconType || 'preset'}
                     logoUrl={item.logoUrl}
-                    className="w-3.5 h-3.5 fill-current"
+                    className="w-3.5 h-3.5"
                   />
                 </a>
               ))}
@@ -116,18 +117,19 @@ export default function AuthLayout({
       {/* =========================
           RIGHT PANEL - FULL-SIZE FORM AREA
       ========================== */}
-      <div className="flex-1 min-h-screen flex flex-col justify-between px-5 sm:px-8 md:px-12 lg:px-8 xl:px-14 py-4 sm:py-6 bg-slate-50/50 overflow-y-auto">
-        {/* Top Bar with Mode Switcher & Logo on the Right Corner */}
-        <div className={`w-full ${maxWidth} mx-auto flex items-center justify-between pb-3 border-b border-slate-200 shrink-0`}>
+      <div className="flex-1 flex flex-col justify-between px-5 sm:px-8 md:px-12 lg:px-8 xl:px-14 py-4 sm:py-6 bg-gradient-to-br from-brand-700 via-brand-600 to-[#10367D] lg:bg-none lg:bg-slate-50/50 min-h-screen lg:min-h-0 lg:overflow-y-auto">
+
+        {/* Top Bar with Mode Switcher & Logo */}
+        <div className={`w-full ${maxWidth} mx-auto flex items-center justify-between pb-3 border-b border-white/25 lg:border-slate-200 shrink-0`}>
           {onSwitchMode && (authMode === 'login' || authMode === 'register') ? (
-            <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-xl border border-slate-200">
+            <div className="hidden lg:flex items-center gap-1 p-1 bg-white/10 lg:bg-slate-100 rounded-xl border border-white/20 lg:border-slate-200">
               <button
                 type="button"
                 onClick={authMode === 'login' ? undefined : onSwitchMode}
-                className={`min-h-[40px] px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1 ${
+                className={`min-h-[40px] px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white lg:focus-visible:ring-brand-500 focus-visible:ring-offset-1 ${
                   authMode === 'login'
-                    ? 'bg-white text-brand-700 shadow-xs border border-slate-200'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'bg-white text-brand-700 shadow-xs border border-white/10 lg:border-slate-200'
+                    : 'text-white/80 hover:text-white lg:text-slate-600 lg:hover:text-slate-900'
                 }`}
               >
                 Masuk Akun
@@ -135,10 +137,10 @@ export default function AuthLayout({
               <button
                 type="button"
                 onClick={authMode === 'register' ? undefined : onSwitchMode}
-                className={`min-h-[40px] px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1 ${
+                className={`min-h-[40px] px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white lg:focus-visible:ring-brand-500 focus-visible:ring-offset-1 ${
                   authMode === 'register'
-                    ? 'bg-white text-brand-700 shadow-xs border border-slate-200'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'bg-white text-brand-700 shadow-xs border border-white/10 lg:border-slate-200'
+                    : 'text-white/80 hover:text-white lg:text-slate-600 lg:hover:text-slate-900'
                 }`}
               >
                 Daftar Baru
@@ -148,7 +150,7 @@ export default function AuthLayout({
             <div />
           )}
 
-          {/* Logo on the Right Corner */}
+          {/* Logo */}
           <div className="flex items-center gap-2">
             {logo && (
               <img
@@ -159,7 +161,7 @@ export default function AuthLayout({
                 className="w-8 h-8 object-contain"
               />
             )}
-            <span className="font-display text-xl sm:text-2xl font-black tracking-tight text-[#10367D]">
+            <span className="font-display text-xl sm:text-2xl font-black tracking-tight text-white lg:text-[#10367D]">
               {brandName}
             </span>
           </div>
@@ -170,47 +172,47 @@ export default function AuthLayout({
           {/* Form Header */}
           <div className="text-center sm:text-left mb-3">
             {title && (
-              <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+              <h1 className="text-xl sm:text-2xl font-extrabold text-white lg:text-slate-900 tracking-tight">
                 {title}
               </h1>
             )}
             {subtitle && (
-              <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
+              <p className="text-xs text-blue-100 lg:text-slate-600 mt-0.5 leading-relaxed">
                 {subtitle}
               </p>
             )}
           </div>
 
           {/* Form Card */}
-          <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm transition-all duration-200">
+          <div className="bg-white p-4 sm:p-5 rounded-2xl border border-white/20 lg:border-slate-200 shadow-lg lg:shadow-sm transition-all duration-200">
             {children}
           </div>
         </div>
 
-        {/* Bottom Footer - High Contrast WCAG AA compliant */}
-        <div className={`w-full ${maxWidth} mx-auto pt-3 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-600 shrink-0`}>
+        {/* Bottom Footer */}
+        <div className={`w-full ${maxWidth} mx-auto pt-3 border-t border-white/25 lg:border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-blue-100 lg:text-slate-600 shrink-0`}>
           <span>&copy; {new Date().getFullYear()} {brandName}. Semua hak dilindungi.</span>
           <span className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => setShowHelpModal(true)}
-              className="text-slate-600 hover:text-brand-700 transition cursor-pointer font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1 rounded"
+              className="text-blue-100 hover:text-white lg:text-slate-600 lg:hover:text-brand-700 transition cursor-pointer font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white lg:focus-visible:ring-brand-500 focus-visible:ring-offset-1 rounded"
             >
               Bantuan
             </button>
-            <span className="text-slate-300">&bull;</span>
+            <span className="text-white/30 lg:text-slate-300">&bull;</span>
             <button
               type="button"
               onClick={() => setShowPrivacyModal(true)}
-              className="text-slate-600 hover:text-brand-700 transition cursor-pointer font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1 rounded"
+              className="text-blue-100 hover:text-white lg:text-slate-600 lg:hover:text-brand-700 transition cursor-pointer font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white lg:focus-visible:ring-brand-500 focus-visible:ring-offset-1 rounded"
             >
               Privasi
             </button>
-            <span className="text-slate-300">&bull;</span>
+            <span className="text-white/30 lg:text-slate-300">&bull;</span>
             <button
               type="button"
               onClick={() => setShowTermsModal(true)}
-              className="text-slate-600 hover:text-brand-700 transition cursor-pointer font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1 rounded"
+              className="text-blue-100 hover:text-white lg:text-slate-600 lg:hover:text-brand-700 transition cursor-pointer font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white lg:focus-visible:ring-brand-500 focus-visible:ring-offset-1 rounded"
             >
               Syarat & Ketentuan
             </button>

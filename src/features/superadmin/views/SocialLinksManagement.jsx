@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Plus,
   Edit2,
@@ -7,6 +7,10 @@ import {
   Share2,
   ChevronUp,
   ChevronDown,
+  Upload,
+  Sparkles,
+  Check,
+  Loader2,
 } from 'lucide-react';
 import { socialLinkService } from '../../../services/socialLinkService';
 import SocialIcon, { SOCIAL_PRESETS } from '../../../components/ui/SocialIcon';
@@ -22,6 +26,8 @@ export default function SocialLinksManagement() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const fileInputRef = useRef(null);
 
   const toast = useToast();
   const confirm = useConfirm();
@@ -29,6 +35,7 @@ export default function SocialLinksManagement() {
   const [formData, setFormData] = useState({
     platform: 'Instagram',
     url: 'https://instagram.com/',
+    iconType: 'preset',
     logoUrl: 'instagram',
     isActive: true,
   });
@@ -57,6 +64,7 @@ export default function SocialLinksManagement() {
     setFormData({
       platform: 'Instagram',
       url: 'https://instagram.com/',
+      iconType: 'preset',
       logoUrl: 'instagram',
       isActive: activeCount < 5,
     });
@@ -65,13 +73,58 @@ export default function SocialLinksManagement() {
 
   const handleOpenEditModal = (item) => {
     setEditingItem(item);
+    const isCustom =
+      item.iconType === 'custom' ||
+      (typeof item.logoUrl === 'string' &&
+        (item.logoUrl.startsWith('/') ||
+          item.logoUrl.startsWith('http://') ||
+          item.logoUrl.startsWith('https://')));
+
     setFormData({
       platform: item.platform,
       url: item.url,
+      iconType: isCustom ? 'custom' : 'preset',
       logoUrl: item.logoUrl || 'instagram',
       isActive: item.isActive,
     });
     setIsModalOpen(true);
+  };
+
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Reset input so re-selecting same file triggers onChange
+    e.target.value = '';
+
+    // Check size max 2MB
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Ukuran file logo maksimal 2MB');
+      return;
+    }
+
+    // Check mime type
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'];
+    if (!validTypes.includes(file.type)) {
+      toast.error('Format file tidak didukung. Gunakan JPG, PNG, WEBP, atau SVG');
+      return;
+    }
+
+    setIsUploadingLogo(true);
+    try {
+      const res = await socialLinkService.uploadSocialLogo(file);
+      setFormData((prev) => ({
+        ...prev,
+        iconType: 'custom',
+        logoUrl: res.filePath,
+      }));
+      toast.success('Logo berhasil diunggah');
+    } catch (error) {
+      console.error('Error uploading social logo:', error);
+      toast.error(error.response?.data?.message || 'Gagal mengunggah file logo');
+    } finally {
+      setIsUploadingLogo(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -84,6 +137,11 @@ export default function SocialLinksManagement() {
 
     if (!formData.url.trim()) {
       toast.error('Tautan (URL) wajib diisi');
+      return;
+    }
+
+    if (formData.iconType === 'custom' && !formData.logoUrl?.trim()) {
+      toast.error('Silakan upload file logo terlebih dahulu');
       return;
     }
 
@@ -102,8 +160,10 @@ export default function SocialLinksManagement() {
       const payload = {
         platform: formData.platform.trim(),
         url: formData.url.trim(),
-        iconType: 'preset',
-        logoUrl: formData.logoUrl.trim() || 'instagram',
+        iconType: formData.iconType || 'preset',
+        logoUrl:
+          formData.logoUrl?.trim() ||
+          (formData.iconType === 'preset' ? 'instagram' : ''),
         isActive: formData.isActive,
       };
 
@@ -296,15 +356,33 @@ export default function SocialLinksManagement() {
                       {/* Logo & Platform */}
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center p-2 text-slate-800 shrink-0">
+                          <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center p-2 text-slate-800 shrink-0">
                             <SocialIcon
                               platform={item.platform}
-                              iconType="preset"
+                              iconType={item.iconType || 'preset'}
                               logoUrl={item.logoUrl}
                               className="w-5 h-5"
                             />
                           </div>
-                          <div className="font-bold text-slate-900">{item.platform}</div>
+                          <div>
+                            <div className="font-bold text-slate-900 flex items-center gap-2">
+                              <span>{item.platform}</span>
+                              {item.iconType === 'custom' ? (
+                                <span className="text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200/80 px-1.5 py-0.5 rounded-md">
+                                  Logo Kustom
+                                </span>
+                              ) : (
+                                <span className="text-[10px] font-medium bg-slate-100 text-slate-500 border border-slate-200/60 px-1.5 py-0.5 rounded-md">
+                                  Preset
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-[11px] text-slate-400">
+                              {item.iconType === 'custom'
+                                ? 'Upload mandiri'
+                                : `Preset ${item.logoUrl || item.platform}`}
+                            </div>
+                          </div>
                         </div>
                       </td>
 
@@ -374,43 +452,199 @@ export default function SocialLinksManagement() {
       {/* ── MODAL TAMBAH / EDIT ── */}
       <BaseModal
         isOpen={isModalOpen}
-        onClose={() => !isSubmitting && setIsModalOpen(false)}
+        onClose={() => !isSubmitting && !isUploadingLogo && setIsModalOpen(false)}
         title={editingItem ? 'Edit Link Sosial Media' : 'Tambah Link Sosial Media'}
-        maxWidth="max-w-md"
+        maxWidth="max-w-lg"
       >
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Pilih Logo Preset */}
+          {/* Mode Pemilihan Logo / Icon */}
           <div>
             <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
-              Pilih Icon Platform <span className="text-rose-500">*</span>
+              Pilihan Icon / Logo <span className="text-rose-500">*</span>
             </label>
-            <div className="grid grid-cols-4 gap-2">
-              {SOCIAL_PRESETS.map((preset) => {
-                const isSelected = formData.logoUrl?.toLowerCase() === preset.key;
-                return (
-                  <button
-                    key={preset.key}
-                    type="button"
-                    onClick={() =>
-                      setFormData({
-                        ...formData,
-                        logoUrl: preset.key,
-                        platform: preset.label,
-                      })
-                    }
-                    className={`p-2.5 rounded-xl border flex flex-col items-center gap-1.5 transition text-xs font-medium cursor-pointer ${
-                      isSelected
-                        ? 'border-[#10367D] bg-blue-50/50 text-[#10367D] shadow-xs ring-2 ring-[#10367D]/20 font-bold'
-                        : 'border-slate-200 bg-white hover:border-slate-300 text-slate-700 hover:bg-slate-50'
+            <div className="grid grid-cols-2 p-1 bg-slate-100 rounded-xl border border-slate-200 mb-3">
+              <button
+                type="button"
+                onClick={() =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    iconType: 'preset',
+                    logoUrl:
+                      prev.iconType === 'preset' && prev.logoUrl
+                        ? prev.logoUrl
+                        : 'instagram',
+                  }))
+                }
+                className={`py-2 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
+                  formData.iconType === 'preset'
+                    ? 'bg-white text-[#10367D] shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Pilih Icon Preset</span>
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    iconType: 'custom',
+                    logoUrl: prev.iconType === 'custom' ? prev.logoUrl : '',
+                  }))
+                }
+                className={`py-2 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
+                  formData.iconType === 'custom'
+                    ? 'bg-white text-[#10367D] shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Upload className="w-3.5 h-3.5" />
+                <span>Upload Logo File</span>
+              </button>
+            </div>
+
+            {/* TAB 1: PRESET SELECTION */}
+            {formData.iconType === 'preset' ? (
+              <div className="grid grid-cols-4 gap-2">
+                {SOCIAL_PRESETS.map((preset) => {
+                  const isSelected = formData.logoUrl?.toLowerCase() === preset.key;
+                  return (
+                    <button
+                      key={preset.key}
+                      type="button"
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          iconType: 'preset',
+                          logoUrl: preset.key,
+                          platform:
+                            !prev.platform ||
+                            SOCIAL_PRESETS.some((p) => p.label === prev.platform)
+                              ? preset.label
+                              : prev.platform,
+                        }))
+                      }
+                      className={`p-2.5 rounded-xl border flex flex-col items-center gap-1.5 transition text-xs font-medium cursor-pointer ${
+                        isSelected
+                          ? 'border-[#10367D] bg-blue-50/50 text-[#10367D] shadow-xs ring-2 ring-[#10367D]/20 font-bold'
+                          : 'border-slate-200 bg-white hover:border-slate-300 text-slate-700 hover:bg-slate-50'
+                      }`}
+                    >
+                      <div className="w-5 h-5 flex items-center justify-center">
+                        {preset.svg}
+                      </div>
+                      <span className="text-[10px] truncate max-w-full">{preset.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              /* TAB 2: UPLOAD LOGO FILE */
+              <div className="space-y-2">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleLogoUpload}
+                  accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                  className="hidden"
+                />
+
+                {formData.logoUrl &&
+                (formData.logoUrl.startsWith('/') ||
+                  formData.logoUrl.startsWith('http') ||
+                  formData.logoUrl.startsWith('blob:') ||
+                  formData.logoUrl.startsWith('data:')) ? (
+                  <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                    <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 p-2 flex items-center justify-center shrink-0 shadow-xs">
+                      <SocialIcon
+                        platform={formData.platform}
+                        iconType="custom"
+                        logoUrl={formData.logoUrl}
+                        className="w-8 h-8"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-slate-800 truncate">
+                        {formData.logoUrl.split('/').pop() || 'Logo kustom'}
+                      </p>
+                      <p className="text-[11px] text-emerald-600 font-medium flex items-center gap-1 mt-0.5">
+                        <Check className="w-3 h-3" /> Logo berhasil diunggah
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        disabled={isUploadingLogo}
+                        onClick={() => fileInputRef.current?.click()}
+                        className="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-lg border border-slate-200 transition cursor-pointer shadow-xs"
+                      >
+                        Ganti
+                      </button>
+                      <button
+                        type="button"
+                        disabled={isUploadingLogo}
+                        onClick={() =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            logoUrl: '',
+                          }))
+                        }
+                        className="p-1.5 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-lg transition cursor-pointer"
+                        title="Hapus logo"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => !isUploadingLogo && fileInputRef.current?.click()}
+                    className={`border-2 border-dashed rounded-xl p-5 text-center transition cursor-pointer ${
+                      isUploadingLogo
+                        ? 'border-blue-300 bg-blue-50/50 cursor-wait'
+                        : 'border-slate-300 hover:border-[#10367D] hover:bg-slate-50/70'
                     }`}
                   >
-                    <div className="w-5 h-5 flex items-center justify-center">
-                      {preset.svg}
+                    <div className="w-10 h-10 mx-auto rounded-full bg-blue-50 text-[#10367D] flex items-center justify-center mb-2">
+                      {isUploadingLogo ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <Upload className="w-5 h-5" />
+                      )}
                     </div>
-                    <span className="text-[10px] truncate max-w-full">{preset.label}</span>
-                  </button>
-                );
-              })}
+                    <p className="text-xs font-bold text-slate-700">
+                      {isUploadingLogo ? 'Mengunggah logo...' : 'Klik untuk memilih file logo'}
+                    </p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      Format: PNG, JPG, WEBP, atau SVG (Maks. 2MB). Disarankan rasio 1:1.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Live Preview Box */}
+          <div className="p-3 bg-gradient-to-r from-slate-50 to-blue-50/40 rounded-xl border border-slate-200/90 flex items-center gap-3">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 shrink-0">
+              Preview Tombol Login:
+            </div>
+            <div className="w-8 h-8 rounded-lg bg-[#10367D] text-white border border-white/20 flex items-center justify-center p-1.5 shadow-xs shrink-0">
+              <SocialIcon
+                platform={formData.platform}
+                iconType={formData.iconType}
+                logoUrl={formData.logoUrl}
+                className="w-4 h-4"
+              />
+            </div>
+            <div className="min-w-0 flex-1 text-xs">
+              <div className="font-bold text-slate-800 truncate">
+                {formData.platform || 'Nama Platform'}
+              </div>
+              <div className="text-[11px] text-slate-400 truncate">
+                {formData.url || 'https://...'}
+              </div>
             </div>
           </div>
 
@@ -425,7 +659,7 @@ export default function SocialLinksManagement() {
               value={formData.platform}
               onChange={(e) => setFormData({ ...formData, platform: e.target.value })}
               className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-[#10367D] focus:ring-2 focus:ring-[#10367D]/20 focus:bg-white transition-all"
-              placeholder="Contoh: Instagram"
+              placeholder="Contoh: Instagram, Threads, Discord, dll"
             />
           </div>
 
@@ -463,7 +697,7 @@ export default function SocialLinksManagement() {
           <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
             <button
               type="button"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isUploadingLogo}
               onClick={() => setIsModalOpen(false)}
               className="px-4 py-2 rounded-lg border border-slate-300 text-xs font-bold text-slate-600 hover:bg-slate-100 transition cursor-pointer"
             >
@@ -471,10 +705,19 @@ export default function SocialLinksManagement() {
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="px-4 py-2 rounded-lg bg-[#10367D] text-white text-xs font-bold hover:bg-[#0c2b64] active:scale-95 transition disabled:opacity-50 cursor-pointer"
+              disabled={isSubmitting || isUploadingLogo}
+              className="px-4 py-2 rounded-lg bg-[#10367D] text-white text-xs font-bold hover:bg-[#0c2b64] active:scale-95 transition disabled:opacity-50 cursor-pointer flex items-center gap-2"
             >
-              {isSubmitting ? 'Menyimpan...' : editingItem ? 'Simpan Perubahan' : 'Tambah Link'}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Menyimpan...</span>
+                </>
+              ) : editingItem ? (
+                'Simpan Perubahan'
+              ) : (
+                'Tambah Link'
+              )}
             </button>
           </div>
         </form>

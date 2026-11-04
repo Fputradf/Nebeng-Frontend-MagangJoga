@@ -1,9 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import FleetCourierPage from './ArmadaPage';
 import KurirPage from './KurirPage';
 
-export default function ArmadaKurirTabs() {
-  const [subTab, setSubTab] = useState('armada');
+export default function ArmadaKurirTabs({ defaultTab = 'armada' }) {
+  const [subTab, setSubTab] = useState(defaultTab);
+
+  useEffect(() => {
+    setSubTab(defaultTab);
+  }, [defaultTab]);
 
   return (
     <div className="font-['Inter']">
@@ -28,7 +32,7 @@ export default function ArmadaKurirTabs() {
               : 'bg-white text-neutral-600 border border-neutral-200 hover:bg-[#74B4D9]/15'
           }`}
         >
-          Data Operator
+          Data Mitra Pos
         </button>
 
       </div>
