@@ -1,4 +1,4 @@
-﻿import { BASE_URL } from '../../../config/env';
+import { BASE_URL } from '../../../config/env';
 import { useState, useRef, useEffect } from 'react';
 import {
   Settings,
@@ -9,11 +9,24 @@ import {
   Eye,
   EyeOff,
   ShieldCheck,
+  ShieldAlert,
+  CheckCircle2,
   MonitorSmartphone,
   Camera,
+  Car,
+  Bike,
+  Plus,
+  Trash2,
+  Pencil,
+  FileText,
+  Send,
+  Link as LinkIcon,
+  Upload,
+  ExternalLink,
 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
+import { useConfirm } from '../../../context/ConfirmContext';
 import BaseModal from '../../../components/ui/BaseModal';
 import ToggleSwitch from '../../../components/ui/ToggleSwitch';
 import apiClient from '../../../services/apiClient';
@@ -46,6 +59,7 @@ const getFullFileUrl = (path) => {
 
 export default function MitraAccountSettings() {
   const toast = useToast();
+  const confirm = useConfirm();
   const { sessionPersisted, updateMitraProfile } = useAuth();
 
   const [liveUser, setLiveUser] = useState(null);
@@ -62,12 +76,28 @@ export default function MitraAccountSettings() {
   });
 
   const [existingVehicle, setExistingVehicle] = useState(null);
+  const [vehiclesList, setVehiclesList] = useState([]);
+  const [editingVehicleId, setEditingVehicleId] = useState(null);
+  const [showAddVehicleModal, setShowAddVehicleModal] = useState(false);
+  const [isSubmittingVehicle, setIsSubmittingVehicle] = useState(false);
+  const [newVehicleForm, setNewVehicleForm] = useState({
+    type: 'motor',
+    model: '',
+    plateNumber: '',
+    color: '',
+    capacitySeats: 1,
+    maxWeightCapacityKg: 15,
+  });
 
   // Fase 10: Riwayat Sanksi & Banding
   const [sanctionSummary, setSanctionSummary] = useState({ currentScore: 100, baseScore: 100, isSuspended: false, suspendedUntil: null, sanctions: [] });
   const [appealModalTarget, setAppealModalTarget] = useState(null);
   const [appealReason, setAppealReason] = useState('');
   const [appealEvidenceUrl, setAppealEvidenceUrl] = useState('');
+  const [appealFile, setAppealFile] = useState(null);
+  const [appealFilePreview, setAppealFilePreview] = useState(null);
+  const [isUploadingAppealFile, setIsUploadingAppealFile] = useState(false);
+  const appealFileInputRef = useRef(null);
   const [isSubmittingAppeal, setIsSubmittingAppeal] = useState(false);
 
   const [avatarPreview, setAvatarPreview] = useState(null);
@@ -88,6 +118,13 @@ export default function MitraAccountSettings() {
     confirm: false,
   });
 
+  const [pinForm, setPinForm] = useState({
+    pin: '',
+    confirmPin: '',
+  });
+  const [showPin, setShowPin] = useState(false);
+  const [isSubmittingPin, setIsSubmittingPin] = useState(false);
+
   const [notifPrefs, setNotifPrefs] = useState({
     tripUpdates: true,
     walletActivity: true,
@@ -99,6 +136,17 @@ export default function MitraAccountSettings() {
   const [show2FAModal, setShow2FAModal] = useState(false);
   const [showDeactivateModal, setShowDeactivateModal] = useState(false);
   const [showLogoutSessionsModal, setShowLogoutSessionsModal] = useState(false);
+
+  useEffect(() => {
+    if (window.location.hash === '#sanksi') {
+      setTimeout(() => {
+        const el = document.getElementById('sanksi');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 300);
+    }
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -137,20 +185,27 @@ export default function MitraAccountSettings() {
     const fetchVehicleData = async () => {
       try {
         const res = await apiClient.get('/vehicles/me');
-        const vehicles = Array.isArray(res.data) ? res.data : [];
+        const list = Array.isArray(res.data)
+          ? res.data
+          : Array.isArray(res.data?.data)
+          ? res.data.data
+          : [];
 
-        if (isMounted && vehicles.length > 0) {
-          const v = vehicles[0];
+        if (isMounted) {
+          setVehiclesList(list);
 
-          setExistingVehicle(v);
+          if (list.length > 0) {
+            const v = list[0];
+            setExistingVehicle(v);
 
-          setProfileDraft((prev) => ({
-            ...prev,
-            vehicleType: v.type || 'motor',
-            plateNumber: v.plateNumber || '',
-            vehicleModel: v.model || '',
-            vehicleColor: v.color || '',
-          }));
+            setProfileDraft((prev) => ({
+              ...prev,
+              vehicleType: v.type || 'motor',
+              plateNumber: v.plateNumber || '',
+              vehicleModel: v.model || '',
+              vehicleColor: v.color || '',
+            }));
+          }
         }
       } catch (err) {
         console.error('Gagal mengambil data kendaraan mitra:', err);
@@ -164,6 +219,108 @@ export default function MitraAccountSettings() {
       isMounted = false;
     };
   }, []);
+
+  const handleOpenAddVehicle = () => {
+    setEditingVehicleId(null);
+    setNewVehicleForm({
+      type: 'motor',
+      model: '',
+      plateNumber: '',
+      color: '',
+      capacitySeats: 1,
+      maxWeightCapacityKg: 15,
+    });
+    setShowAddVehicleModal(true);
+  };
+
+  const handleOpenEditVehicle = (veh) => {
+    setEditingVehicleId(veh.id);
+    const isMotor = (veh.type || '').toLowerCase() === 'motor';
+    setNewVehicleForm({
+      type: isMotor ? 'motor' : 'mobil',
+      model: veh.model || '',
+      plateNumber: veh.plateNumber || '',
+      color: veh.color || '',
+      capacitySeats: veh.capacitySeats || (isMotor ? 1 : 4),
+      maxWeightCapacityKg: veh.maxWeightCapacityKg || (isMotor ? 15 : 50),
+    });
+    setShowAddVehicleModal(true);
+  };
+
+  const handleSaveVehicle = async (e) => {
+    e.preventDefault();
+    if (!newVehicleForm.model.trim() || !newVehicleForm.plateNumber.trim() || !newVehicleForm.color.trim()) {
+      toast.warning('Model, plat nomor, dan warna kendaraan wajib diisi.', { title: 'Data Belum Lengkap' });
+      return;
+    }
+
+    setIsSubmittingVehicle(true);
+    try {
+      const payload = {
+        type: newVehicleForm.type,
+        model: newVehicleForm.model.trim(),
+        plateNumber: newVehicleForm.plateNumber.trim().toUpperCase(),
+        color: newVehicleForm.color.trim(),
+        capacitySeats: Number(newVehicleForm.capacitySeats) || (newVehicleForm.type === 'mobil' ? 4 : 1),
+        maxWeightCapacityKg: Number(newVehicleForm.maxWeightCapacityKg) || (newVehicleForm.type === 'mobil' ? 50 : 15),
+      };
+
+      if (editingVehicleId) {
+        await apiClient.patch(`/vehicles/${editingVehicleId}`, payload);
+        toast.success('Data kendaraan berhasil diperbarui!', { title: 'Sukses' });
+      } else {
+        await apiClient.post('/vehicles', payload);
+        toast.success('Kendaraan baru berhasil didaftarkan!', { title: 'Sukses' });
+      }
+
+      setShowAddVehicleModal(false);
+      setEditingVehicleId(null);
+      setNewVehicleForm({
+        type: 'motor',
+        model: '',
+        plateNumber: '',
+        color: '',
+        capacitySeats: 1,
+        maxWeightCapacityKg: 15,
+      });
+
+      // Refresh list kendaraan
+      const freshRes = await apiClient.get('/vehicles/me');
+      const updatedList = Array.isArray(freshRes.data) ? freshRes.data : (Array.isArray(freshRes.data?.data) ? freshRes.data.data : []);
+      setVehiclesList(updatedList);
+      if (updatedList.length > 0) {
+        setExistingVehicle(updatedList[0]);
+      }
+      if (updatedList.length > 0) {
+        setExistingVehicle(updatedList[0]);
+      }
+    } catch (err) {
+      console.error('Gagal menyimpan kendaraan:', err);
+      toast.error(err.response?.data?.message || 'Gagal menyimpan kendaraan.', { title: 'Gagal' });
+    } finally {
+      setIsSubmittingVehicle(false);
+    }
+  };
+
+  const handleDeleteVehicle = async (vehicleId) => {
+    const isConfirmed = await confirm({
+      title: 'Hapus Kendaraan',
+      message: 'Apakah Anda yakin ingin menghapus kendaraan ini? Tindakan ini tidak dapat dibatalkan.',
+      confirmText: 'Hapus Kendaraan',
+      cancelText: 'Batal',
+      variant: 'danger',
+    });
+    if (!isConfirmed) return;
+    try {
+      await apiClient.delete(`/vehicles/${vehicleId}`);
+      toast.success('Kendaraan berhasil dihapus.', { title: 'Sukses' });
+      const freshRes = await apiClient.get('/vehicles/me');
+      const updatedList = Array.isArray(freshRes.data) ? freshRes.data : (freshRes.data?.data || []);
+      setVehiclesList(updatedList);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Gagal menghapus kendaraan. Pastikan kendaraan tidak sedang terikat perjalanan aktif.', { title: 'Gagal' });
+    }
+  };
 
   const handleProfileFieldChange = (field, value) => {
     setProfileDraft((prev) => ({
@@ -359,12 +516,73 @@ export default function MitraAccountSettings() {
     setAppealModalTarget(sanction);
     setAppealReason('');
     setAppealEvidenceUrl('');
+    setAppealFile(null);
+    setAppealFilePreview(null);
+    setIsUploadingAppealFile(false);
+  };
+
+  const handleAppealFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.warning('Hanya file foto/gambar (JPG, PNG, WEBP) yang diperbolehkan.', { title: 'Format Tidak Sesuai' });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.warning('Ukuran foto maksimal 5MB.', { title: 'Ukuran Terlalu Besar' });
+      return;
+    }
+
+    setAppealFile(file);
+    const localUrl = URL.createObjectURL(file);
+    setAppealFilePreview(localUrl);
+
+    setIsUploadingAppealFile(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      let res;
+      try {
+        res = await apiClient.post('/uploads/appeals', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+      } catch {
+        res = await apiClient.post('/uploads/file', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+      }
+      const uploadedPath = res.data?.filePath || res.data?.data?.filePath;
+      if (uploadedPath) {
+        setAppealEvidenceUrl(uploadedPath);
+        toast.success('Foto bukti berhasil diunggah.', { title: 'Unggah Berhasil' });
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Gagal mengunggah foto bukti.', { title: 'Gagal Unggah' });
+      setAppealFile(null);
+      setAppealFilePreview(null);
+    } finally {
+      setIsUploadingAppealFile(false);
+      if (e.target) e.target.value = '';
+    }
+  };
+
+  const handleRemoveAppealFile = () => {
+    setAppealFile(null);
+    setAppealFilePreview(null);
+    setAppealEvidenceUrl('');
   };
 
   const handleSubmitAppeal = async (e) => {
     e.preventDefault();
     if (!appealModalTarget || !appealReason.trim()) {
       toast.warning('Alasan banding wajib diisi.', { title: 'Peringatan' });
+      return;
+    }
+
+    if (isUploadingAppealFile) {
+      toast.warning('Foto bukti sedang diunggah. Mohon tunggu sebentar.', { title: 'Sedang Mengunggah' });
       return;
     }
 
@@ -376,6 +594,8 @@ export default function MitraAccountSettings() {
       });
       toast.success(res.data?.message || 'Banding berhasil diajukan.', { title: 'Sukses' });
       setAppealModalTarget(null);
+      setAppealFile(null);
+      setAppealFilePreview(null);
 
       // Refresh sanctions
       const freshSanctions = await apiClient.get('/users/me/sanctions').catch(() => ({ data: null }));
@@ -443,6 +663,42 @@ export default function MitraAccountSettings() {
     }
   };
 
+  const handleSavePin = async (e) => {
+    e.preventDefault();
+
+    if (pinForm.pin.length !== 6 || !/^\d+$/.test(pinForm.pin)) {
+      toast.warning('PIN keamanan harus tepat 6 digit angka.', {
+        title: 'PIN Tidak Valid',
+      });
+      return;
+    }
+
+    if (pinForm.pin !== pinForm.confirmPin) {
+      toast.warning('Konfirmasi PIN baru tidak cocok.', {
+        title: 'PIN Tidak Cocok',
+      });
+      return;
+    }
+
+    setIsSubmittingPin(true);
+
+    try {
+      await apiClient.post('/users/me/pin', { pin: pinForm.pin });
+      setPinForm({ pin: '', confirmPin: '' });
+      setLiveUser((prev) => (prev ? { ...prev, hasPin: true } : prev));
+      toast.success('PIN transaksi berhasil diperbarui.', {
+        title: 'PIN Disimpan',
+      });
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || 'Gagal memperbarui PIN transaksi.',
+        { title: 'Error' }
+      );
+    } finally {
+      setIsSubmittingPin(false);
+    }
+  };
+
   const handleToggle2FA = (nextValue) => {
     if (nextValue) {
       setShow2FAModal(true);
@@ -507,33 +763,46 @@ export default function MitraAccountSettings() {
 
   return (
     <div className="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
-      <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-neutral-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span
-              className="w-2 h-2 rounded-full animate-pulse"
-              style={{ backgroundColor: PRIMARY_COLOR }}
-            />
-
-            <span
-              className="text-[12px] font-bold uppercase tracking-widest flex items-center gap-1"
-              style={{ color: PRIMARY_COLOR }}
-            >
-              <Settings className="w-3 h-3" />
-              AKUN & KEAMANAN
-            </span>
+      {/* ── BANNER GRADIENT ── */}
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] p-6 text-white shadow-card sm:p-8">
+        <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10" />
+        <div className="absolute bottom-0 right-32 h-28 w-28 rounded-full bg-accent/20" />
+        <div className="relative flex flex-col gap-4 pb-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-accent flex items-center gap-1.5">
+                <Settings className="w-3.5 h-3.5" /> AKUN & KEAMANAN
+              </span>
+            </div>
+            <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
+              Pengaturan Akun
+            </h1>
+            <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
+              Ubah data profil & kendaraan, keamanan login, preferensi notifikasi, dan sesi aktif akun mitra Anda.
+            </p>
           </div>
 
-          <h1 className="text-[21px] sm:text-[23px] font-bold text-neutral-800">
-            Pengaturan Akun
-          </h1>
-
-          <p className="text-[13px] sm:text-[14px] text-neutral-400 mt-0.5">
-            Ubah data profil & kendaraan, keamanan login, preferensi
-            notifikasi, dan sesi aktif akun mitra Anda.
-          </p>
+          <div className="flex items-center gap-3 self-start sm:self-auto">
+            {/* Skor Kepatuhan Mitra Pill */}
+            <div className="px-4 py-2 rounded-2xl bg-white/15 backdrop-blur border border-white/25 flex items-center gap-2.5 shadow-xs">
+              <div className="w-8 h-8 rounded-xl bg-accent text-brand-900 flex items-center justify-center font-black shrink-0 shadow-xs">
+                <ShieldCheck className="w-4 h-4 text-brand-900" />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-blue-100 uppercase tracking-wider block">
+                  Skor Kepatuhan
+                </span>
+                <span className="text-xs font-bold text-white">
+                  {sanctionSummary.currentScore}/100 Poin
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+        <div className="absolute bottom-4 left-6 right-6 border-t border-dashed border-white/25 sm:left-8 sm:right-8" />
+        <span className="absolute bottom-[11px] right-6 h-2.5 w-2.5 rounded-full border-2 border-white bg-accent sm:right-8" />
+      </section>
 
       <div className="space-y-5">
         <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 space-y-4">
@@ -542,7 +811,7 @@ export default function MitraAccountSettings() {
               className="w-4 h-4"
               style={{ color: PRIMARY_COLOR }}
             />
-            Edit Profil & Kendaraan
+            Edit Profil Pribadi
           </h3>
 
           <div className="flex items-center gap-4">
@@ -639,148 +908,14 @@ export default function MitraAccountSettings() {
                 </label>
 
                 <input
-                  type="text"
+                  type="tel"
+                  maxLength={15}
                   placeholder="0812xxxxxxxx"
                   value={profileDraft.phone}
                   onChange={(e) =>
                     handleProfileFieldChange(
                       'phone',
-                      e.target.value.replace(/[^\d+]/g, '')
-                    )
-                  }
-                  className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none"
-                  onFocus={(e) =>
-                    (e.currentTarget.style.borderColor =
-                      PRIMARY_COLOR)
-                  }
-                  onBlur={(e) =>
-                    (e.currentTarget.style.borderColor = '')
-                  }
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
-                  Email
-                </label>
-
-                <input
-                  type="email"
-                  placeholder="nama@email.com"
-                  value={profileDraft.email}
-                  onChange={(e) =>
-                    handleProfileFieldChange(
-                      'email',
-                      e.target.value
-                    )
-                  }
-                  className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none"
-                  onFocus={(e) =>
-                    (e.currentTarget.style.borderColor =
-                      PRIMARY_COLOR)
-                  }
-                  onBlur={(e) =>
-                    (e.currentTarget.style.borderColor = '')
-                  }
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
-                  Jenis Kendaraan
-                </label>
-
-                <select
-                  value={profileDraft.vehicleType}
-                  onChange={(e) =>
-                    handleProfileFieldChange(
-                      'vehicleType',
-                      e.target.value
-                    )
-                  }
-                  className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none"
-                  onFocus={(e) =>
-                    (e.currentTarget.style.borderColor =
-                      PRIMARY_COLOR)
-                  }
-                  onBlur={(e) =>
-                    (e.currentTarget.style.borderColor = '')
-                  }
-                >
-                  <option value="motor">
-                    Sepeda Motor
-                  </option>
-
-                  <option value="mobil">
-                    Mobil / Minibus
-                  </option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
-                  Model Kendaraan
-                </label>
-
-                <input
-                  type="text"
-                  placeholder="mis. Honda Beat, Avanza"
-                  value={profileDraft.vehicleModel}
-                  onChange={(e) =>
-                    handleProfileFieldChange(
-                      'vehicleModel',
-                      e.target.value
-                    )
-                  }
-                  className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none"
-                  onFocus={(e) =>
-                    (e.currentTarget.style.borderColor =
-                      PRIMARY_COLOR)
-                  }
-                  onBlur={(e) =>
-                    (e.currentTarget.style.borderColor = '')
-                  }
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
-                  Warna Kendaraan
-                </label>
-
-                <input
-                  type="text"
-                  placeholder="mis. Hitam"
-                  value={profileDraft.vehicleColor}
-                  onChange={(e) =>
-                    handleProfileFieldChange(
-                      'vehicleColor',
-                      e.target.value
-                    )
-                  }
-                  className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none"
-                  onFocus={(e) =>
-                    (e.currentTarget.style.borderColor =
-                      PRIMARY_COLOR)
-                  }
-                  onBlur={(e) =>
-                    (e.currentTarget.style.borderColor = '')
-                  }
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
-                  Nomor Plat
-                </label>
-
-                <input
-                  type="text"
-                  value={profileDraft.plateNumber}
-                  onChange={(e) =>
-                    handleProfileFieldChange(
-                      'plateNumber',
-                      e.target.value
+                      e.target.value.replace(/[^\d+]/g, '').slice(0, 15)
                     )
                   }
                   className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none"
@@ -796,7 +931,20 @@ export default function MitraAccountSettings() {
 
               <div className="sm:col-span-2">
                 <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
-                  Alamat Domisili
+                  Email Akun (Tidak Dapat Diubah)
+                </label>
+
+                <input
+                  type="email"
+                  disabled
+                  value={profileDraft.email}
+                  className="w-full px-3.5 py-2.5 bg-neutral-100 border border-neutral-200 rounded-xl font-bold text-neutral-400 cursor-not-allowed select-none focus:outline-none"
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                  Alamat Domisili (KTP)
                 </label>
 
                 <textarea
@@ -820,10 +968,10 @@ export default function MitraAccountSettings() {
               </div>
             </div>
 
-            <div className="flex justify-end">
+            <div className="flex justify-end pt-1">
               <button
                 type="submit"
-                className="px-4 py-2.5 text-white rounded-xl font-bold transition shadow-sm cursor-pointer"
+                className="px-5 py-2.5 text-white rounded-xl font-bold transition shadow-sm cursor-pointer"
                 style={{
                   backgroundColor: PRIMARY_COLOR,
                 }}
@@ -836,177 +984,527 @@ export default function MitraAccountSettings() {
                     PRIMARY_COLOR)
                 }
               >
-                Simpan Perubahan
+                Simpan Perubahan Profil
               </button>
             </div>
           </form>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 space-y-5">
-          <h3 className="text-[17px] font-bold text-neutral-800 flex items-center gap-1.5">
-            <KeyRound
-              className="w-4 h-4"
-              style={{ color: PRIMARY_COLOR }}
-            />
-            Keamanan Akun
-          </h3>
-
-          <form
-            onSubmit={handleChangePassword}
-            className="space-y-3 text-[13px]"
-          >
-            <p className="text-[12px] font-bold text-neutral-500 uppercase tracking-wider">
-              Ubah Kata Sandi
-            </p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {[
-                {
-                  key: 'current',
-                  label: 'Kata Sandi Saat Ini',
-                },
-                {
-                  key: 'next',
-                  label: 'Kata Sandi Baru',
-                },
-                {
-                  key: 'confirm',
-                  label: 'Konfirmasi Kata Sandi',
-                },
-              ].map((field) => (
-                <div className="relative" key={field.key}>
-                  <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
-                    {field.label}
-                  </label>
-
-                  <input
-                    type={
-                      showPassword[field.key]
-                        ? 'text'
-                        : 'password'
-                    }
-                    value={passwordForm[field.key]}
-                    onChange={(e) =>
-                      setPasswordForm((prev) => ({
-                        ...prev,
-                        [field.key]: e.target.value,
-                      }))
-                    }
-                    className="w-full px-3 py-2.5 pr-9 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none"
-                    onFocus={(e) =>
-                      (e.currentTarget.style.borderColor =
-                        PRIMARY_COLOR)
-                    }
-                    onBlur={(e) =>
-                      (e.currentTarget.style.borderColor = '')
-                    }
-                  />
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setShowPassword((prev) => ({
-                        ...prev,
-                        [field.key]: !prev[field.key],
-                      }))
-                    }
-                    className="absolute right-2.5 bottom-2.5 text-neutral-400 cursor-pointer"
-                  >
-                    {showPassword[field.key] ? (
-                      <EyeOff size={13} />
-                    ) : (
-                      <Eye size={13} />
-                    )}
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            <p className="text-[11px] text-neutral-400">
-              Minimal 8 karakter, kombinasi huruf dan angka
-              disarankan.
-            </p>
-
-            <div className="flex justify-end">
-              <button
-                type="submit"
-                className="px-4 py-2 text-white rounded-xl font-bold transition shadow-sm cursor-pointer"
-                style={{
-                  backgroundColor: PRIMARY_COLOR,
-                }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.backgroundColor =
-                    PRIMARY_HOVER)
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.backgroundColor =
-                    PRIMARY_COLOR)
-                }
-              >
-                Perbarui Kata Sandi
-              </button>
-            </div>
-          </form>
-
-          <div className="pt-4 border-t border-neutral-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-start gap-2.5">
-              <div
-                className="p-2 rounded-xl shrink-0"
-                style={{
-                  backgroundColor: `${PRIMARY_ACCENT}22`,
-                  color: PRIMARY_COLOR,
-                }}
-              >
-                <ShieldCheck className="w-4 h-4" />
+                {/* KENDARAAN MITRA TERDAFTAR */}
+        <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-neutral-100 pb-4">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 bg-[#10367D]/10 text-[#10367D] rounded-xl shrink-0">
+                <Car className="w-5 h-5" />
               </div>
-
               <div>
-                <p className="text-[13px] font-bold text-neutral-800">
-                  Autentikasi Dua Faktor (2FA)
-                </p>
-
-                <p className="text-[11px] text-neutral-400 max-w-xs">
-                  Tambahan lapisan keamanan berupa kode OTP
-                  setiap kali login dari perangkat baru.
-                </p>
-              </div>
-            </div>
-
-            <ToggleSwitch
-              checked={is2FAEnabled}
-              onChange={handleToggle2FA}
-            />
-          </div>
-
-          <div className="pt-4 border-t border-neutral-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-start gap-2.5">
-              <div className="p-2 bg-neutral-100 text-neutral-600 rounded-xl shrink-0">
-                <MonitorSmartphone className="w-4 h-4" />
-              </div>
-
-              <div>
-                <p className="text-[13px] font-bold text-neutral-800">
-                  Sesi Login Saat Ini
-                </p>
-
-                <p className="text-[11px] text-neutral-400">
-                  {sessionPersisted
-                    ? 'Sesi diingat di perangkat ini ("Ingat Saya" aktif).'
-                    : 'Sesi sementara â€” akan berakhir saat tab ditutup.'}
+                <h3 className="text-[17px] font-bold text-neutral-800">
+                  Kendaraan Mitra Terdaftar
+                </h3>
+                <p className="text-[12px] text-neutral-400">
+                  Daftar armada kendaraan yang Anda gunakan untuk mengangkut penumpang atau barang.
                 </p>
               </div>
             </div>
 
             <button
               type="button"
-              onClick={() =>
-                setShowLogoutSessionsModal(true)
-              }
-              className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-[12px] font-bold transition cursor-pointer shrink-0"
+              onClick={handleOpenAddVehicle}
+              className="px-4 py-2 bg-[#10367D] hover:bg-[#0C2C66] text-white text-[12px] font-bold rounded-xl transition shadow-sm cursor-pointer flex items-center gap-1.5 self-start sm:self-auto"
             >
-              Keluar dari Perangkat Lain
+              <Plus className="w-4 h-4" />
+              Tambah Kendaraan Baru
             </button>
           </div>
+
+          {vehiclesList.length === 0 ? (
+            <div className="p-6 bg-neutral-50 rounded-xl text-center border border-dashed border-neutral-200">
+              <Car className="w-8 h-8 text-neutral-400 mx-auto mb-2" />
+              <p className="text-[13px] font-bold text-neutral-700">Belum Ada Kendaraan Terdaftar</p>
+              <p className="text-[11px] text-neutral-400 mt-0.5">Daftarkan kendaraan pertama Anda untuk mulai menjadwalkan perjalanan.</p>
+              <button
+                type="button"
+                onClick={handleOpenAddVehicle}
+                className="mt-3 px-4 py-1.5 bg-[#10367D] text-white rounded-xl text-xs font-bold transition shadow-xs"
+              >
+                + Daftarkan Kendaraan
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+              {vehiclesList.map((veh) => {
+                const isMotor = (veh.type || '').toLowerCase() === 'motor';
+                return (
+                  <div
+                    key={veh.id}
+                    className="p-4 rounded-xl border border-neutral-200 bg-neutral-50/70 hover:bg-neutral-50 transition space-y-3"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2.5 rounded-xl shrink-0 ${
+                          isMotor ? 'bg-amber-100 text-amber-800' : 'bg-indigo-100 text-indigo-800'
+                        }`}>
+                          {isMotor ? <Bike className="w-5 h-5" /> : <Car className="w-5 h-5" />}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-bold text-[14px] text-neutral-800">{veh.model}</h4>
+                            <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full ${
+                              isMotor ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                            }`}>
+                              {isMotor ? 'Motor' : 'Mobil'}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-neutral-400 font-mono mt-0.5">
+                            Plat: <span className="font-bold text-neutral-700">{veh.plateNumber}</span> · Warna: {veh.color}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEditVehicle(veh)}
+                          className="p-1.5 text-neutral-400 hover:text-[#10367D] hover:bg-neutral-100 rounded-lg transition cursor-pointer"
+                          title="Edit informasi kendaraan ini"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        {vehiclesList.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteVehicle(veh.id)}
+                            className="p-1.5 text-neutral-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                            title="Hapus kendaraan ini"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-neutral-200/60 flex items-center justify-between text-[11px] text-neutral-500">
+                      <span>Kapasitas Kursi: <strong className="text-neutral-700">{veh.capacitySeats || (isMotor ? 1 : 4)} Kursi</strong></span>
+                      <span>Maks. Bagasi: <strong className="text-neutral-700">{veh.maxWeightCapacityKg || (isMotor ? 15 : 50)} kg</strong></span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* REPUTASI & SANKSI POIN MITRA */}
+        <div id="sanksi" className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-neutral-100">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 bg-blue-50 text-brand-700 rounded-xl shrink-0">
+                <ShieldAlert className="w-5 h-5 text-[#10367D]" />
+              </div>
+              <div>
+                <h3 className="text-[17px] font-bold text-neutral-800">
+                  Reputasi & Skor Integritas
+                </h3>
+                <p className="text-[12px] text-neutral-400">
+                  Rekam jejak kepatuhan mitra, riwayat sanksi pembatalan, dan pengajuan banding
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 self-start sm:self-auto">
+              <div className="text-left sm:text-right">
+                <span className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider block">Skor Saat Ini</span>
+                <span className={`text-[18px] font-extrabold ${
+                  sanctionSummary.currentScore >= 80 ? 'text-emerald-600' :
+                  sanctionSummary.currentScore >= 50 ? 'text-amber-600' : 'text-rose-600'
+                }`}>
+                  {sanctionSummary.currentScore} <span className="text-xs font-normal text-neutral-400">/ {sanctionSummary.baseScore || 100}</span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Status Suspensi jika aktif */}
+          {sanctionSummary.isSuspended && (
+            <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 flex items-start gap-2.5">
+              <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-[13px] font-bold">Akun Dalam Masa Penangguhan (Suspensi)</p>
+                <p className="text-[12px] text-rose-600">
+                  Anda tidak dapat membuat atau mengoperasikan trip baru
+                  {sanctionSummary.suspendedUntil && ` sampai ${new Date(sanctionSummary.suspendedUntil).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })} WIB`}.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Daftar Riwayat Sanksi */}
+          <div className="space-y-3 pt-1">
+            <h4 className="text-[14px] font-bold text-neutral-800">Riwayat Sanksi Pelanggaran</h4>
+            {(!sanctionSummary.sanctions || sanctionSummary.sanctions.length === 0) ? (
+              <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                <span>Rekam jejak bersih. Anda belum pernah menerima sanksi atau pemotongan skor reputasi.</span>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {sanctionSummary.sanctions.map((s) => {
+                  const latestAppeal = s.appeals?.[0];
+                  const isWaived = s.status === 'WAIVED';
+
+                  return (
+                    <div key={s.id} className="p-3.5 bg-neutral-50/70 border border-neutral-200 rounded-xl space-y-2.5">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className={`px-2 py-0.5 rounded text-[11px] font-extrabold uppercase ${
+                            isWaived ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+                          }`}>
+                            {s.violationType === 'MITRA_CANCEL_EARLY' ? 'Batal Awal' :
+                             s.violationType === 'MITRA_CANCEL_LATE' ? 'Batal Mendadak' :
+                             s.violationType === 'MITRA_NO_SHOW' ? 'Tidak Hadir (No-Show)' : s.violationType}
+                          </span>
+                          <span className="text-[11px] text-neutral-400">
+                            {new Date(s.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })} WIB
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                            isWaived ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'
+                          }`}>
+                            {isWaived ? 'Sanksi Dicabut' : `-${s.scoreDeduction} Poin`}
+                          </span>
+                          {s.isSuspended && !isWaived && (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-600 text-white">
+                              Suspensi
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {s.tripDetails && (
+                        <div className="text-[12px] text-neutral-600 bg-white p-2.5 rounded-lg border border-neutral-200 flex items-center justify-between flex-wrap gap-2">
+                          <span>Trip #{s.tripDetails.id}: <strong>{s.tripDetails.from} &rarr; {s.tripDetails.to}</strong></span>
+                          <span className="text-[11px] text-neutral-400">{s.tripDetails.date ? s.tripDetails.date.split('T')[0] : ''}</span>
+                        </div>
+                      )}
+
+                      {/* Status Banding */}
+                      {isWaived ? (
+                        <div className="p-2.5 bg-emerald-50 border border-emerald-100 rounded-lg text-emerald-800 text-[12px] flex items-center gap-2">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                          <span>Sanksi telah dicabut oleh Admin Regional dan skor integritas telah dipulihkan.</span>
+                        </div>
+                      ) : latestAppeal ? (
+                        <div className="p-3 bg-white border border-neutral-200 rounded-xl space-y-2 text-[12px]">
+                          <div className="flex items-center justify-between flex-wrap gap-1">
+                            <span className="font-bold text-neutral-800">Status Banding Anda:</span>
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                              latestAppeal.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-800' :
+                              latestAppeal.status === 'REJECTED' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'
+                            }`}>
+                              {latestAppeal.status === 'APPROVED' ? 'Disetujui' :
+                               latestAppeal.status === 'REJECTED' ? 'Ditolak' : 'Menunggu Review Admin'}
+                            </span>
+                          </div>
+
+                          <p className="text-neutral-600">
+                            <strong>Alasan:</strong> &ldquo;{latestAppeal.reason}&rdquo;
+                          </p>
+
+                          {latestAppeal.evidenceUrl && (
+                            <div className="space-y-1.5 pt-1">
+                              <a
+                                href={getFullFileUrl(latestAppeal.evidenceUrl)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-blue-600 hover:underline text-[11px] inline-flex items-center gap-1 font-bold"
+                              >
+                                <ExternalLink className="w-3 h-3" />
+                                <span>Lihat Bukti Lampiran &rarr;</span>
+                              </a>
+                              {/\.(jpg|jpeg|png|webp)($|\?)/i.test(latestAppeal.evidenceUrl) && (
+                                <div className="w-24 h-24 rounded-lg overflow-hidden border border-neutral-200 bg-neutral-100">
+                                  <img
+                                    src={getFullFileUrl(latestAppeal.evidenceUrl)}
+                                    alt="Bukti Lampiran"
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {latestAppeal.adminNote && (
+                            <div className="p-2 bg-neutral-50 rounded border border-neutral-200 text-neutral-700 text-[11px]">
+                              <strong>Catatan Admin:</strong> {latestAppeal.adminNote}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="pt-1 flex items-center justify-between flex-wrap gap-2">
+                          <p className="text-[11px] text-neutral-400 italic">
+                            Belum ada pengajuan banding untuk sanksi ini.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenAppeal(s)}
+                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[12px] font-bold transition cursor-pointer shadow-xs"
+                          >
+                            Ajukan Banding
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* PIN KEAMANAN TRANSAKSI */}
+        <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <div
+                className="p-2 rounded-xl shrink-0"
+                style={{ backgroundColor: `${PRIMARY_ACCENT}22`, color: PRIMARY_COLOR }}
+              >
+                <KeyRound className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-[17px] font-bold text-neutral-800">
+                  PIN Keamanan Transaksi
+                </h3>
+                <p className="text-[12px] text-neutral-400">
+                  Digunakan untuk otorisasi penarikan saldo komisi perjalanan dan verifikasi keamanan.
+                </p>
+              </div>
+            </div>
+
+            <div>
+              {liveUser?.hasPin ? (
+                <span className="px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full text-[11px] font-bold flex items-center gap-1.5 self-start sm:self-auto">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                  PIN Aktif
+                </span>
+              ) : (
+                <span className="px-3 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-[11px] font-bold flex items-center gap-1.5 self-start sm:self-auto">
+                  <KeyRound className="w-3.5 h-3.5 text-amber-600" />
+                  Belum Diatur
+                </span>
+              )}
+            </div>
+          </div>
+
+          <form onSubmit={handleSavePin} className="space-y-3.5 text-[13px] border-t border-neutral-100 pt-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                  {liveUser?.hasPin ? 'PIN Baru (6 Digit Angka)' : 'Buat PIN (6 Digit Angka)'}
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPin ? 'text' : 'password'}
+                    maxLength={6}
+                    inputMode="numeric"
+                    placeholder="••••••"
+                    value={pinForm.pin}
+                    onChange={(e) =>
+                      setPinForm({ ...pinForm, pin: e.target.value.replace(/\D/g, '').slice(0, 6) })
+                    }
+                    className="w-full px-3.5 py-2.5 pr-9 bg-neutral-50 border border-neutral-200 rounded-xl font-mono font-bold text-neutral-800 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all text-center tracking-widest text-[16px]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPin(!showPin)}
+                    className="absolute right-3 top-3.5 text-neutral-400 hover:text-neutral-600 cursor-pointer"
+                    title={showPin ? 'Sembunyikan PIN' : 'Tampilkan PIN'}
+                  >
+                    {showPin ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                  Konfirmasi PIN {liveUser?.hasPin ? 'Baru' : ''}
+                </label>
+                <input
+                  type={showPin ? 'text' : 'password'}
+                  maxLength={6}
+                  inputMode="numeric"
+                  placeholder="••••••"
+                  value={pinForm.confirmPin}
+                  onChange={(e) =>
+                    setPinForm({ ...pinForm, confirmPin: e.target.value.replace(/\D/g, '').slice(0, 6) })
+                  }
+                  className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-mono font-bold text-neutral-800 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all text-center tracking-widest text-[16px]"
+                />
+              </div>
+            </div>
+
+            {pinForm.pin.length > 0 && pinForm.pin.length < 6 && (
+              <p className="text-[11px] text-amber-600 font-semibold">
+                PIN harus terdiri dari 6 digit angka.
+              </p>
+            )}
+
+            {pinForm.confirmPin.length > 0 && pinForm.pin !== pinForm.confirmPin && (
+              <p className="text-[11px] text-rose-600 font-semibold">
+                Konfirmasi PIN belum cocok dengan PIN di atas.
+              </p>
+            )}
+
+            <p className="text-[11px] text-neutral-400">
+              Pastikan Anda mengingat PIN ini karena diperlukan setiap kali melakukan penarikan saldo komisi perjalanan.
+            </p>
+
+            <div className="flex justify-end pt-1">
+              <button
+                type="submit"
+                disabled={pinForm.pin.length !== 6 || pinForm.pin !== pinForm.confirmPin || isSubmittingPin}
+                className={`px-5 py-2.5 rounded-xl text-[13px] font-bold transition shadow-sm ${
+                  pinForm.pin.length === 6 && pinForm.pin === pinForm.confirmPin && !isSubmittingPin
+                    ? 'text-white cursor-pointer'
+                    : 'bg-neutral-200 text-neutral-400 cursor-not-allowed'
+                }`}
+                style={
+                  pinForm.pin.length === 6 && pinForm.pin === pinForm.confirmPin && !isSubmittingPin
+                    ? { backgroundColor: PRIMARY_COLOR }
+                    : undefined
+                }
+                onMouseEnter={(e) => {
+                  if (pinForm.pin.length === 6 && pinForm.pin === pinForm.confirmPin && !isSubmittingPin) {
+                    e.currentTarget.style.backgroundColor = PRIMARY_HOVER;
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (pinForm.pin.length === 6 && pinForm.pin === pinForm.confirmPin && !isSubmittingPin) {
+                    e.currentTarget.style.backgroundColor = PRIMARY_COLOR;
+                  }
+                }}
+              >
+                {isSubmittingPin
+                  ? 'Menyimpan PIN...'
+                  : liveUser?.hasPin
+                  ? 'Perbarui PIN Transaksi'
+                  : 'Simpan PIN Transaksi'}
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* GANTI KATA SANDI */}
+        <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 space-y-4">
+          <div className="flex items-center gap-2.5">
+            <div
+              className="p-2 rounded-xl shrink-0"
+              style={{ backgroundColor: `${PRIMARY_COLOR}15`, color: PRIMARY_COLOR }}
+            >
+              <KeyRound className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-[17px] font-bold text-neutral-800">
+                Ganti Kata Sandi Akun
+              </h3>
+              <p className="text-[12px] text-neutral-400">
+                Perbarui kata sandi akun Mitra Anda secara berkala untuk menjaga keamanan.
+              </p>
+            </div>
+          </div>
+
+          <form onSubmit={handleChangePassword} className="space-y-3.5 text-[13px] border-t border-neutral-100 pt-4">
+            <div>
+              <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                Kata Sandi Saat Ini
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword.current ? 'text' : 'password'}
+                  placeholder="Masukkan kata sandi saat ini"
+                  value={passwordForm.current}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, current: e.target.value })}
+                  className="w-full px-3.5 py-2.5 pr-9 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-brand-500 transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((p) => ({ ...p, current: !p.current }))}
+                  className="absolute right-3 top-3 text-neutral-400 hover:text-neutral-600 cursor-pointer"
+                >
+                  {showPassword.current ? <EyeOff size={15} /> : <Eye size={15} />}
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                  Kata Sandi Baru (Min. 8 Karakter)
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword.next ? 'text' : 'password'}
+                    placeholder="Minimal 8 karakter"
+                    value={passwordForm.next}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, next: e.target.value })}
+                    className="w-full px-3.5 py-2.5 pr-9 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-brand-500 transition-all"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((p) => ({ ...p, next: !p.next }))}
+                    className="absolute right-3 top-3 text-neutral-400 hover:text-neutral-600 cursor-pointer"
+                  >
+                    {showPassword.next ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                  Konfirmasi Kata Sandi Baru
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword.confirm ? 'text' : 'password'}
+                    placeholder="Ulangi kata sandi baru"
+                    value={passwordForm.confirm}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
+                    className="w-full px-3.5 py-2.5 pr-9 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-brand-500 transition-all"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((p) => ({ ...p, confirm: !p.confirm }))}
+                    className="absolute right-3 top-3 text-neutral-400 hover:text-neutral-600 cursor-pointer"
+                  >
+                    {showPassword.confirm ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-1">
+              <button
+                type="submit"
+                disabled={!passwordForm.current || passwordForm.next.length < 8 || passwordForm.next !== passwordForm.confirm}
+                className="px-5 py-2.5 text-white rounded-xl font-bold transition shadow-sm cursor-pointer disabled:bg-neutral-200 disabled:text-neutral-400 disabled:cursor-not-allowed"
+                style={{ backgroundColor: PRIMARY_COLOR }}
+                onMouseEnter={(e) => {
+                  if (passwordForm.current && passwordForm.next.length >= 8 && passwordForm.next === passwordForm.confirm) {
+                    e.currentTarget.style.backgroundColor = PRIMARY_HOVER;
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (passwordForm.current && passwordForm.next.length >= 8 && passwordForm.next === passwordForm.confirm) {
+                    e.currentTarget.style.backgroundColor = PRIMARY_COLOR;
+                  }
+                }}
+              >
+                Perbarui Kata Sandi
+              </button>
+            </div>
+          </form>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 space-y-4">
@@ -1027,8 +1525,8 @@ export default function MitraAccountSettings() {
               },
               {
                 key: 'walletActivity',
-                label: 'Aktivitas Dompet & Escrow',
-                desc: 'Notifikasi saat dana escrow cair atau penarikan diproses.',
+                label: 'Aktivitas Dompet & Dana',
+                desc: 'Notifikasi saat dana perjalanan cair atau penarikan diproses.',
               },
               {
                 key: 'customerChat',
@@ -1207,64 +1705,351 @@ export default function MitraAccountSettings() {
           </div>
         </div>
       </BaseModal>
-        {/* Modal Ajukan Banding Sanksi Mitra */}
+        {/* Modal Tambah Kendaraan Baru */}
         <BaseModal
-          isOpen={Boolean(appealModalTarget)}
-          onClose={() => { if (!isSubmittingAppeal) setAppealModalTarget(null); }}
-          title="Ajukan Banding Sanksi"
-          subtitle={'Sanksi #' + (appealModalTarget ? appealModalTarget.id : '')}
+          isOpen={showAddVehicleModal}
+          onClose={() => { if (!isSubmittingVehicle) setShowAddVehicleModal(false); }}
+          title={editingVehicleId ? "Edit Informasi Kendaraan" : "Tambah Kendaraan Baru"}
+          subtitle={editingVehicleId ? "Perbarui informasi kendaraan yang terdaftar" : "Daftarkan jenis armada kendaraan baru Anda"}
           maxWidth="max-w-md"
         >
-          <form onSubmit={handleSubmitAppeal} className="space-y-3.5 text-[13px]">
-            <p className="text-neutral-600 text-[12px] leading-relaxed">
-              Jika pembatalan trip terjadi karena kendala darurat / force majeure dengan bukti sah, Admin dapat menyetujui banding untuk mencabut sanksi dan memulihkan skor reputasi Anda. Refund dan poin yang telah diterima penumpang tidak akan ditarik kembali.
-            </p>
-
+          <form onSubmit={handleSaveVehicle} className="space-y-3.5 text-[13px]">
             <div>
-              <label className="block text-[12px] font-bold text-neutral-700 mb-1">
-                Alasan & Kronologi Banding <span className="text-rose-500">*</span>
+              <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1.5">
+                Jenis Kendaraan <span className="text-rose-500">*</span>
               </label>
-              <textarea
-                required
-                rows={3}
-                value={appealReason}
-                onChange={(e) => setAppealReason(e.target.value)}
-                placeholder="Tuliskan alasan lengkap dan kronologi kendala darurat Anda..."
-                className="w-full px-3 py-2 border border-neutral-300 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-blue-600"
-              />
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setNewVehicleForm(prev => ({
+                    ...prev,
+                    type: 'motor',
+                    capacitySeats: 1,
+                    maxWeightCapacityKg: 15
+                  }))}
+                  className={`py-2.5 px-3 rounded-xl border text-left font-bold transition flex items-center gap-2 cursor-pointer ${
+                    newVehicleForm.type === 'motor'
+                      ? 'border-[#10367D] bg-blue-50/50 text-[#10367D]'
+                      : 'border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50'
+                  }`}
+                >
+                  <Bike className="w-4 h-4" />
+                  <span>Sepeda Motor</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setNewVehicleForm(prev => ({
+                    ...prev,
+                    type: 'mobil',
+                    capacitySeats: 4,
+                    maxWeightCapacityKg: 50
+                  }))}
+                  className={`py-2.5 px-3 rounded-xl border text-left font-bold transition flex items-center gap-2 cursor-pointer ${
+                    newVehicleForm.type === 'mobil'
+                      ? 'border-[#10367D] bg-blue-50/50 text-[#10367D]'
+                      : 'border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50'
+                  }`}
+                >
+                  <Car className="w-4 h-4" />
+                  <span>Mobil / Minibus</span>
+                </button>
+              </div>
             </div>
 
-            <div>
-              <label className="block text-[12px] font-bold text-neutral-700 mb-1">
-                Tautan Bukti Dokumen / Foto (Opsional)
-              </label>
-              <input
-                type="url"
-                value={appealEvidenceUrl}
-                onChange={(e) => setAppealEvidenceUrl(e.target.value)}
-                placeholder="https://contoh.com/bukti-bengkel.jpg"
-                className="w-full px-3 py-2 border border-neutral-300 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-blue-600"
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                  Model Kendaraan <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="mis. Honda Beat, Avanza"
+                  value={newVehicleForm.model}
+                  onChange={(e) => setNewVehicleForm({ ...newVehicleForm, model: e.target.value })}
+                  className="w-full px-3 py-2 border border-neutral-300 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-blue-600"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                  Nomor Plat <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  maxLength={11}
+                  placeholder="mis. AD 1234 XY"
+                  value={newVehicleForm.plateNumber}
+                  onChange={(e) => setNewVehicleForm({ ...newVehicleForm, plateNumber: e.target.value.replace(/[^a-zA-Z0-9 ]/g, '').toUpperCase().slice(0, 11) })}
+                  className="w-full px-3 py-2 border border-neutral-300 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-blue-600 font-mono uppercase"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2.5">
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                  Warna <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="mis. Hitam"
+                  value={newVehicleForm.color}
+                  onChange={(e) => setNewVehicleForm({ ...newVehicleForm, color: e.target.value })}
+                  className="w-full px-3 py-2 border border-neutral-300 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-blue-600"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                  Kursi
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="12"
+                  value={newVehicleForm.capacitySeats}
+                  onChange={(e) => setNewVehicleForm({ ...newVehicleForm, capacitySeats: e.target.value })}
+                  className="w-full px-3 py-2 border border-neutral-300 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-blue-600"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                  Bagasi (kg)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="500"
+                  value={newVehicleForm.maxWeightCapacityKg}
+                  onChange={(e) => setNewVehicleForm({ ...newVehicleForm, maxWeightCapacityKg: e.target.value })}
+                  className="w-full px-3 py-2 border border-neutral-300 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-blue-600"
+                />
+              </div>
             </div>
 
             <div className="flex gap-2 pt-2">
               <button
                 type="button"
-                disabled={isSubmittingAppeal}
-                onClick={() => setAppealModalTarget(null)}
+                disabled={isSubmittingVehicle}
+                onClick={() => setShowAddVehicleModal(false)}
                 className="flex-1 py-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-xl font-bold transition cursor-pointer"
               >
                 Batal
               </button>
               <button
                 type="submit"
+                disabled={isSubmittingVehicle}
+                className="flex-1 py-2.5 bg-[#10367D] hover:bg-[#0C2C66] text-white rounded-xl font-bold transition cursor-pointer shadow-sm flex items-center justify-center gap-1.5"
+              >
+                {isSubmittingVehicle ? (
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  editingVehicleId ? 'Simpan Perubahan' : 'Daftarkan Kendaraan'
+                )}
+              </button>
+            </div>
+          </form>
+        </BaseModal>
+        {/* Modal Ajukan Banding Sanksi Mitra */}
+        <BaseModal
+          isOpen={Boolean(appealModalTarget)}
+          onClose={() => { if (!isSubmittingAppeal) setAppealModalTarget(null); }}
+          title="Ajukan Banding Sanksi"
+          subtitle={'Sanksi #' + (appealModalTarget ? appealModalTarget.id : '')}
+          maxWidth="max-w-lg"
+        >
+          <form onSubmit={handleSubmitAppeal} className="space-y-4 pt-1">
+            {/* Header Card Bergaya Sidebar Biru */}
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#0c2353] via-[#10367D] to-[#18458f] p-4 text-white shadow-md">
+              <div className="absolute -right-6 -top-10 h-28 w-28 rounded-full bg-white/10 pointer-events-none" />
+              <div className="absolute bottom-0 right-16 h-16 w-16 rounded-full bg-cyan-400/20 pointer-events-none" />
+              <div className="relative z-10">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-300">
+                    TATA KELOLA INTEGRITAS & BANDING
+                  </span>
+                  <span className="ml-auto px-2 py-0.5 rounded-full bg-white/20 backdrop-blur text-[10px] font-mono font-bold text-white border border-white/25">
+                    ID: #{appealModalTarget?.id}
+                  </span>
+                </div>
+                <h4 className="text-[16px] font-bold text-white">
+                  Permohonan Banding Sanksi
+                </h4>
+                <p className="text-[11px] text-blue-100/90 mt-0.5 leading-relaxed">
+                  Jelaskan kendala darurat yang dialami dan lampirkan bukti pendukung untuk ditinjau oleh Admin Wilayah.
+                </p>
+              </div>
+            </div>
+
+            {/* Info Banner */}
+            <div className="p-3 bg-blue-50/80 border border-blue-200/80 rounded-xl text-blue-900 text-[12px] flex items-start gap-2.5 shadow-2xs">
+              <ShieldCheck className="w-4 h-4 text-[#10367D] shrink-0 mt-0.5" />
+              <p className="leading-relaxed">
+                Jika pembatalan trip terjadi karena <strong>force majeure / kendala darurat</strong> dengan bukti sah, Admin Wilayah dapat menyetujui banding untuk mencabut sanksi dan memulihkan skor reputasi Anda.
+              </p>
+            </div>
+
+            {/* Field: Alasan & Kronologi */}
+            <div className="space-y-1.5">
+              <label className="flex items-center justify-between text-[12px] font-bold text-neutral-700">
+                <span className="flex items-center gap-1.5">
+                  <FileText className="w-3.5 h-3.5 text-[#10367D]" />
+                  Alasan & Kronologi Banding
+                </span>
+                <span className="text-[10px] font-semibold text-rose-500 uppercase tracking-wide">Wajib Diisi</span>
+              </label>
+              <textarea
+                required
+                rows={3}
+                value={appealReason}
+                onChange={(e) => setAppealReason(e.target.value)}
+                placeholder="Tuliskan secara lengkap kronologi kendala darurat, alasan pembatalan, atau kendala kendaraan Anda..."
+                className="w-full px-3.5 py-2.5 border border-neutral-300 rounded-xl text-[13px] text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#10367D] focus:border-[#10367D] bg-white transition shadow-2xs"
+              />
+            </div>
+
+            {/* Field: Bukti Foto / Dokumen */}
+            <div className="space-y-2">
+              <label className="flex items-center justify-between text-[12px] font-bold text-neutral-700">
+                <span className="flex items-center gap-1.5">
+                  <Camera className="w-3.5 h-3.5 text-[#10367D]" />
+                  Foto Bukti Pendukung
+                </span>
+                <span className="text-[10px] font-semibold text-neutral-400">Opsional</span>
+              </label>
+
+              {/* Hidden file input */}
+              <input
+                ref={appealFileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/jpg"
+                onChange={handleAppealFileChange}
+                className="hidden"
+              />
+
+              {/* Preview or Upload Trigger Box */}
+              {appealFilePreview || appealEvidenceUrl ? (
+                <div className="relative rounded-xl border border-neutral-200 bg-neutral-50/90 p-3 flex items-center gap-3 shadow-2xs">
+                  <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-neutral-200 shrink-0 border border-neutral-300">
+                    <img
+                      src={appealFilePreview || getFullFileUrl(appealEvidenceUrl)}
+                      alt="Bukti Banding"
+                      className="w-full h-full object-cover"
+                    />
+                    {isUploadingAppealFile && (
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                        <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[12px] font-bold text-neutral-800 truncate">
+                        {appealFile?.name || 'Foto Bukti Terlampir'}
+                      </span>
+                      {isUploadingAppealFile ? (
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-700">
+                          Mengunggah...
+                        </span>
+                      ) : (
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 text-emerald-700">
+                          Terunggah
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-neutral-500 mt-0.5 truncate">
+                      {appealFile ? `${(appealFile.size / 1024).toFixed(0)} KB` : 'Tersimpan'}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={isUploadingAppealFile || isSubmittingAppeal}
+                    onClick={handleRemoveAppealFile}
+                    className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition cursor-pointer"
+                    title="Hapus Foto"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <div
+                  onClick={() => appealFileInputRef.current?.click()}
+                  className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition flex flex-col items-center justify-center gap-1.5 ${
+                    isUploadingAppealFile
+                      ? 'border-neutral-300 bg-neutral-100 cursor-not-allowed'
+                      : 'border-blue-200 bg-blue-50/40 hover:bg-blue-50/80 hover:border-blue-400'
+                  }`}
+                >
+                  <div className="w-9 h-9 rounded-full bg-blue-100 text-[#10367D] flex items-center justify-center">
+                    {isUploadingAppealFile ? (
+                      <span className="w-4 h-4 border-2 border-[#10367D] border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Upload className="w-4 h-4" />
+                    )}
+                  </div>
+                  <span className="text-[12px] font-bold text-[#10367D]">
+                    {isUploadingAppealFile ? 'Sedang mengunggah...' : 'Klik untuk Upload Foto Bukti'}
+                  </span>
+                  <p className="text-[11px] text-neutral-500">
+                    Format JPG, PNG, WEBP (Maksimal 5MB). Foto surat dokter, kuitansi bengkel, atau kondisi darurat.
+                  </p>
+                </div>
+              )}
+
+              {/* Optional external URL fallback */}
+              <div className="pt-1">
+                <details className="group">
+                  <summary className="text-[11px] text-neutral-500 hover:text-neutral-700 font-medium cursor-pointer list-none flex items-center gap-1">
+                    <LinkIcon className="w-3 h-3" />
+                    <span>Atau gunakan tautan link dokumen eksternal</span>
+                  </summary>
+                  <div className="mt-2 space-y-1">
+                    <input
+                      type="url"
+                      value={appealEvidenceUrl}
+                      onChange={(e) => {
+                        setAppealEvidenceUrl(e.target.value);
+                        setAppealFile(null);
+                        setAppealFilePreview(null);
+                      }}
+                      placeholder="https://drive.google.com/... atau link foto online"
+                      className="w-full px-3 py-2 border border-neutral-300 rounded-xl text-[12px] text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#10367D] focus:border-[#10367D] bg-white transition shadow-2xs"
+                    />
+                    <p className="text-[10px] text-neutral-400">
+                      Gunakan ini jika foto tersimpan di Google Drive atau penyimpanan daring publik.
+                    </p>
+                  </div>
+                </details>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center gap-2.5 pt-2">
+              <button
+                type="button"
                 disabled={isSubmittingAppeal}
-                className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition cursor-pointer shadow-sm flex items-center justify-center gap-1.5"
+                onClick={() => setAppealModalTarget(null)}
+                className="flex-1 py-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-xl font-bold text-[13px] transition cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmittingAppeal}
+                className="flex-1 py-2.5 bg-gradient-to-r from-[#0c2353] via-[#10367D] to-[#18458f] hover:brightness-110 text-white rounded-xl font-bold text-[13px] transition cursor-pointer shadow-md flex items-center justify-center gap-2"
               >
                 {isSubmittingAppeal ? (
                   <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
-                  'Kirim Banding'
+                  <>
+                    <Send className="w-3.5 h-3.5" />
+                    <span>Kirim Banding</span>
+                  </>
                 )}
               </button>
             </div>

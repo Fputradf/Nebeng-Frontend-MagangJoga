@@ -205,6 +205,12 @@ export default function OperatorDashboard() {
         <div className="absolute bottom-0 right-32 h-28 w-28 rounded-full bg-accent/20" />
         <div className="relative flex flex-col gap-3 pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-accent">
+                OPERASIONAL TERMINAL & POS
+              </span>
+            </div>
             <h1 className="font-display text-2xl font-bold">Dashboard Operasional Pos</h1>
             <p className="mt-1 text-sm text-blue-100">Pantau jadwal trip mitra yang masuk dan keluar di pos Anda secara realtime dari server.</p>
           </div>

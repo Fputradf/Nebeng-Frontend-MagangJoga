@@ -35,6 +35,10 @@ export default function BiometricOnboarding() {
   const [isSubmittedPending, setIsSubmittedPending] = useState(false);
   const [rejectionReason, setRejectionReason] = useState(null);
 
+  const [nikError, setNikError] = useState(null);
+  const [isCheckingNik, setIsCheckingNik] = useState(false);
+  const nikCheckTimeoutRef = useRef(null);
+
   const [formData, setFormData] = useState({
     fullName: user?.name || '',
     nik: '',
@@ -164,6 +168,91 @@ export default function BiometricOnboarding() {
 
   const isPhoneValid = PHONE_REGEX.test(formData.phone.trim());
 
+  useEffect(() => {
+    return () => {
+      if (nikCheckTimeoutRef.current) {
+        clearTimeout(nikCheckTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const validateNikOnline = useCallback(async (nikToTest) => {
+    const clean = (nikToTest || '').trim();
+    if (clean.length !== 16) {
+      setNikError(null);
+      return false;
+    }
+
+    setIsCheckingNik(true);
+    try {
+      const res = await apiClient.get(`/verifications/check-nik?nik=${clean}`);
+      const data = res.data?.data || res.data || {};
+      if (data.available === false || data.isAvailable === false) {
+        const errorMsg =
+          data.message || 'Nomor NIK / KTP sudah terdaftar oleh pengguna lain.';
+        setNikError(errorMsg);
+        return false;
+      } else {
+        setNikError(null);
+        return true;
+      }
+    } catch (err) {
+      const msg =
+        err.response?.data?.message ||
+        'Nomor NIK / KTP sudah terdaftar oleh pengguna lain.';
+      setNikError(msg);
+      return false;
+    } finally {
+      setIsCheckingNik(false);
+    }
+  }, []);
+
+  const handleNikChange = (e) => {
+    const cleanVal = e.target.value.replace(/\D/g, '').slice(0, 16);
+    setFormData((prev) => ({ ...prev, nik: cleanVal }));
+    setNikError(null);
+
+    if (nikCheckTimeoutRef.current) {
+      clearTimeout(nikCheckTimeoutRef.current);
+    }
+
+    if (cleanVal.length === 16) {
+      nikCheckTimeoutRef.current = setTimeout(() => {
+        validateNikOnline(cleanVal);
+      }, 350);
+    }
+  };
+
+  const handleNextToStep2 = async () => {
+    if (!formData.fullName.trim()) {
+      toast.error('Nama lengkap wajib diisi sesuai KTP.');
+      return;
+    }
+    if (formData.nik.length !== 16) {
+      toast.error('Nomor NIK harus terdiri dari 16 digit angka.');
+      return;
+    }
+    if (!isPhoneValid) {
+      toast.error('Nomor WhatsApp / HP tidak valid.');
+      return;
+    }
+    if (nikError) {
+      toast.error(nikError, { title: 'NIK Duplikat' });
+      return;
+    }
+
+    const isNikValid = await validateNikOnline(formData.nik);
+    if (!isNikValid) {
+      toast.error(
+        'Nomor NIK sudah terdaftar oleh pengguna lain. Anda tidak dapat melanjutkan proses berikutnya.',
+        { title: 'NIK Sudah Terdaftar' }
+      );
+      return;
+    }
+
+    setStep(2);
+  };
+
   const handleKtpUpload = (e) => {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
@@ -188,9 +277,17 @@ export default function BiometricOnboarding() {
   const startCamera = async () => {
     setIsCameraActive(true);
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user' },
-      });
+      let stream;
+      try {
+        // Coba kamera depan (jika perangkat mobile/tablet)
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+        });
+      } catch {
+        // Fallback ke kamera perangkat apapun (webcam laptop/PC/USB)
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      }
+
       setTimeout(() => {
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
@@ -201,6 +298,30 @@ export default function BiometricOnboarding() {
       toast.error('Gagal mengakses kamera perangkat untuk Face ID.', { title: 'Kamera Error' });
       setIsCameraActive(false);
     }
+  };
+
+  const handleFaceFileChange = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    if (!ALLOWED_KTP_TYPES.includes(file.type)) {
+      toast.error('Format foto wajah harus JPG, JPEG, atau PNG.');
+      return;
+    }
+
+    if (file.size > MAX_KTP_SIZE_BYTES) {
+      toast.error('Ukuran foto wajah melebihi 5MB.');
+      return;
+    }
+
+    setFaceFile(file);
+    setFacePreview((prevUrl) => {
+      if (prevUrl) URL.revokeObjectURL(prevUrl);
+      return URL.createObjectURL(file);
+    });
+    stopCameraTracks();
+    setIsCameraActive(false);
+    toast.success('Foto wajah berhasil dipilih dari perangkat.');
   };
 
   const captureFaceImage = () => {
@@ -386,7 +507,7 @@ export default function BiometricOnboarding() {
           </h1>
           <p className="text-[13px] sm:text-[14px] text-neutral-400 mt-0.5">
             Lakukan verifikasi identitas resmi untuk mengaktifkan seluruh fitur
-            transaksi aman dan escrow di aplikasi.
+            transaksi aman dan pembayaran terproteksi di aplikasi.
           </p>
         </div>
       </div>
@@ -460,28 +581,46 @@ export default function BiometricOnboarding() {
                 placeholder="Contoh: Budi Santoso"
                 value={formData.fullName}
                 onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none"
-                onFocus={(e) => (e.currentTarget.style.borderColor = PRIMARY_COLOR)}
-                onBlur={(e) => (e.currentTarget.style.borderColor = '#e5e7eb')}
+                className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all"
               />
             </div>
 
             <div>
-              <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
-                NIK (16 Digit)
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider">
+                  NIK (16 Digit)
+                </label>
+                {isCheckingNik && (
+                  <span className="text-[11px] text-brand-600 flex items-center gap-1 font-medium">
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    Memeriksa...
+                  </span>
+                )}
+                {!isCheckingNik && formData.nik.length === 16 && !nikError && (
+                  <span className="text-[11px] text-emerald-600 flex items-center gap-1 font-medium">
+                    <CheckCircle2 className="w-3 h-3" />
+                    NIK Tersedia
+                  </span>
+                )}
+              </div>
               <input
                 type="text"
                 maxLength={16}
                 value={formData.nik}
                 placeholder="16 digit nomor NIK KTP"
-                onChange={(e) =>
-                  setFormData({ ...formData, nik: e.target.value.replace(/\D/g, '') })
-                }
-                className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-mono font-bold text-neutral-800 focus:outline-none"
-                onFocus={(e) => (e.currentTarget.style.borderColor = PRIMARY_COLOR)}
-                onBlur={(e) => (e.currentTarget.style.borderColor = '#e5e7eb')}
+                onChange={handleNikChange}
+                className={`w-full px-3.5 py-2.5 bg-neutral-50 border rounded-xl font-mono font-bold text-neutral-800 focus:outline-none transition-all ${
+                  nikError
+                    ? 'border-rose-400 bg-rose-50/40 text-rose-900 focus:border-rose-500 focus:ring-2 focus:ring-rose-200'
+                    : 'border-neutral-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'
+                }`}
               />
+              {nikError && (
+                <p className="text-[12px] font-semibold text-rose-600 mt-1 flex items-center gap-1.5">
+                  <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                  <span>{nikError}</span>
+                </p>
+              )}
             </div>
 
             <div>
@@ -493,9 +632,7 @@ export default function BiometricOnboarding() {
                 placeholder="Contoh: Jl. Merdeka No. 12"
                 value={formData.addressKtp}
                 onChange={(e) => setFormData({ ...formData, addressKtp: e.target.value })}
-                className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none"
-                onFocus={(e) => (e.currentTarget.style.borderColor = PRIMARY_COLOR)}
-                onBlur={(e) => (e.currentTarget.style.borderColor = '#e5e7eb')}
+                className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all"
               />
             </div>
 
@@ -504,31 +641,41 @@ export default function BiometricOnboarding() {
                 Nomor WhatsApp/HP
               </label>
               <input
-                type="text"
+                type="tel"
+                maxLength={15}
                 value={formData.phone}
                 onChange={(e) =>
-                  setFormData({ ...formData, phone: e.target.value.replace(/[^\d+]/g, '') })
+                  setFormData({ ...formData, phone: e.target.value.replace(/[^\d+]/g, '').slice(0, 15) })
                 }
-                className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none"
-                onFocus={(e) => (e.currentTarget.style.borderColor = PRIMARY_COLOR)}
-                onBlur={(e) => (e.currentTarget.style.borderColor = '#e5e7eb')}
+                className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all"
               />
             </div>
 
             <button
-              onClick={() => setStep(2)}
-              disabled={!formData.fullName.trim() || formData.nik.length !== 16 || !isPhoneValid}
-              className="w-full py-3 text-white rounded-xl text-[13px] font-bold cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5 transition"
-              style={{ backgroundColor: PRIMARY_COLOR }}
-              onMouseEnter={(e) => {
-                if (!e.currentTarget.disabled) e.currentTarget.style.backgroundColor = PRIMARY_HOVER;
-              }}
+              onClick={handleNextToStep2}
+              disabled={
+                !formData.fullName.trim() ||
+                formData.nik.length !== 16 ||
+                !isPhoneValid ||
+                Boolean(nikError) ||
+                isCheckingNik
+              }
+              className="w-full py-3 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white rounded-xl text-[13px] font-bold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 transition shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = PRIMARY_COLOR;
               }}
             >
-              <span>Lanjut ke Upload KTP</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+              {isCheckingNik ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Memeriksa NIK...</span>
+                </>
+              ) : (
+                <>
+                  <span>Lanjut ke Upload KTP</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </>
+              )}
             </button>
           </div>
         )}
@@ -624,23 +771,38 @@ export default function BiometricOnboarding() {
                 <canvas ref={canvasRef} className="hidden" />
 
                 {!isCameraActive ? (
-                  <button
-                    onClick={startCamera}
-                    className="py-2 px-4 font-bold rounded-xl cursor-pointer flex items-center gap-1 mx-auto transition"
-                    style={{
-                      backgroundColor: `${PRIMARY_ACCENT}22`,
-                      color: PRIMARY_COLOR,
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = `${PRIMARY_ACCENT}44`;
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = `${PRIMARY_ACCENT}22`;
-                    }}
-                  >
-                    <Camera className="w-3.5 h-3.5" />
-                    Aktifkan Kamera Wajah
-                  </button>
+                  <div className="flex flex-col items-center gap-2">
+                    <button
+                      onClick={startCamera}
+                      className="py-2.5 px-4 font-bold rounded-xl cursor-pointer flex items-center gap-1.5 mx-auto transition shadow-xs"
+                      style={{
+                        backgroundColor: `${PRIMARY_ACCENT}22`,
+                        color: PRIMARY_COLOR,
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = `${PRIMARY_ACCENT}44`;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = `${PRIMARY_ACCENT}22`;
+                      }}
+                    >
+                      <Camera className="w-4 h-4" />
+                      Aktifkan Kamera Perangkat (Webcam)
+                    </button>
+
+                    <span className="text-[11px] text-neutral-400">atau</span>
+
+                    <label className="text-[12px] font-bold text-brand-600 hover:underline cursor-pointer flex items-center gap-1.5">
+                      <Upload className="w-3.5 h-3.5" />
+                      Pilih Foto Wajah dari File Perangkat
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/jpg"
+                        onChange={handleFaceFileChange}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
                 ) : (
                   <button
                     onClick={captureFaceImage}

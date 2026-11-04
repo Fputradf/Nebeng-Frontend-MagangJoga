@@ -126,23 +126,31 @@ export const NotificationProvider = ({ children }) => {
         let swRegistration;
         if ('serviceWorker' in navigator) {
           try {
-            // Cek apakah sudah ada registration
-            const existingRegistration = await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js');
+            // Cek apakah sudah ada registration (utamakan /sw.js yang menyatukan PWA & Firebase, atau fallback /firebase-messaging-sw.js)
+            const existingRegistration = await navigator.serviceWorker.getRegistration();
             if (existingRegistration) {
               swRegistration = existingRegistration;
             } else {
-              swRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+              try {
+                swRegistration = await navigator.serviceWorker.register('/sw.js');
+              } catch (swErr) {
+                console.warn('[NotificationContext] Registrasi /sw.js gagal, beralih ke /firebase-messaging-sw.js:', swErr);
+                swRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+              }
             }
 
             // Tunggu service worker aktif
             if (swRegistration.installing) {
-              await new Promise((resolve) => {
-                swRegistration.installing.addEventListener('statechange', (e) => {
-                  if (e.target.state === 'activated') {
-                    resolve();
-                  }
-                });
-              });
+              await Promise.race([
+                new Promise((resolve) => {
+                  swRegistration.installing.addEventListener('statechange', (e) => {
+                    if (e.target.state === 'activated') {
+                      resolve();
+                    }
+                  });
+                }),
+                new Promise((resolve) => setTimeout(resolve, 2000)),
+              ]);
             } else if (swRegistration.waiting) {
               await swRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
             }
@@ -393,37 +401,113 @@ export const NotificationProvider = ({ children }) => {
   }, [fetchUnreadCount]);
 
   const handleNotificationNavigation = useCallback((data) => {
-    const { type, orderId, tripId } = data;
+    let userRole = 'customer';
+    try {
+      const rawAuth = localStorage.getItem('nebeng_auth') || sessionStorage.getItem('nebeng_auth');
+      if (rawAuth) {
+        const parsed = JSON.parse(rawAuth);
+        userRole = parsed?.role || parsed?.user?.role || 'customer';
+      }
+    } catch {}
+
+    const isMitra = userRole === 'mitra';
+    const isOperator = userRole === 'operator';
+    const isRegional = userRole === 'regional';
+    const isAdmin = userRole === 'admin';
+
+    const ROLE_BASE_PATHS = {
+      admin: '/admin',
+      superadmin: '/admin',
+      regional: '/regional',
+      operator: '/operator-pos',
+      'operator-pos': '/operator-pos',
+      mitra: '/mitra',
+      driver: '/mitra',
+      customer: '/customer',
+    };
+    const basePath = ROLE_BASE_PATHS[userRole] || '/customer';
+
+    const { type, orderId, tripId, actionUrl } = data;
+
+    const navigateTo = (target) => {
+      if (!target) return;
+      if (window.location.pathname === target) {
+        return; // Sudah berada di halaman yang sama, hindari hard reload
+      }
+      window.location.href = target;
+    };
+
+    if (actionUrl) {
+      let target = actionUrl;
+      if (target === '/wallet') {
+        target = isMitra ? '/mitra/saldo' : '/customer/wallet';
+      }
+      navigateTo(target);
+      return;
+    }
+
+    if (isOperator) {
+      switch (type) {
+        case 'checkpoint_scanned':
+          navigateTo('/operator-pos/scanner');
+          break;
+        case 'trip_started':
+        case 'trip_arrived':
+        case 'trip_completed':
+          navigateTo('/operator-pos/manifest');
+          break;
+        default:
+          navigateTo('/operator-pos/dashboard');
+      }
+      return;
+    }
+
+    if (isAdmin) {
+      navigateTo('/admin/dashboard');
+      return;
+    }
+
+    if (isRegional) {
+      navigateTo('/regional/dashboard');
+      return;
+    }
+
     switch (type) {
       case 'order_created':
       case 'order_paid':
       case 'order_cancelled':
-        if (orderId) window.location.href = '/customer/tickets';
+        navigateTo(isMitra ? '/mitra/trip' : '/customer/tickets');
         break;
       case 'trip_started':
       case 'trip_arrived':
       case 'trip_completed':
       case 'checkpoint_scanned':
-        if (tripId) window.location.href = '/customer/tickets';
+      case 'mitra_arrived_origin':
+      case 'trip_arrived_destination':
+      case 'trip_departure_reminder_h30':
+      case 'trip_departure_urgency_h0':
+        navigateTo(isMitra ? '/mitra/trip' : '/customer/tickets');
         break;
       case 'chat_message':
-        window.location.href = '/customer/chat';
+        navigateTo(isMitra ? '/mitra/chat' : '/customer/chat');
         break;
       case 'payment_success':
       case 'payment_failed':
       case 'escrow_released':
-        window.location.href = '/customer/tickets';
+      case 'wallet_topup':
+      case 'wallet_withdrawal':
+        navigateTo(isMitra ? '/mitra/saldo' : '/customer/wallet');
         break;
       case 'reward_earned':
       case 'reward_redeemed':
-        window.location.href = '/customer/rewards';
+        navigateTo('/customer/rewards');
         break;
       case 'verification_approved':
       case 'verification_rejected':
-        window.location.href = '/customer/profile/pengaturan';
+        navigateTo(isMitra ? '/mitra/onboarding' : '/customer/profile/pengaturan');
         break;
       default:
-        window.location.href = '/customer/notifications';
+        navigateTo(`${basePath}/notifications`);
     }
   }, []);
 
@@ -433,30 +517,50 @@ export const NotificationProvider = ({ children }) => {
 
     const unsubscribe = onMessage(messaging, async (payload) => {
       console.log('FCM foreground message received:', payload);
+
+      // Jika socket.io sedang terhubung, socket.on('notification:new') yang memegang kendali
+      // penuh atas update state, counter unread, dan pop-up desktop untuk mencegah duplikasi banner.
+      if (socketConnectedRef.current && socketRef.current?.connected) {
+        console.log('[NotificationContext] Socket is connected, skipping duplicate FCM foreground popup');
+        return;
+      }
+
       setUnreadCount(prev => prev + 1);
 
-      // Show notification in foreground
+      // Fallback: tampilkan notifikasi jika socket.io tidak terhubung
       if (payload.notification) {
+        const notifTag = payload.data?.conversationId
+          ? `chat-${payload.data.conversationId}`
+          : payload.data?.orderId
+          ? `order-${payload.data.orderId}`
+          : payload.data?.id
+          ? `notif-${payload.data.id}`
+          : (payload.notification?.title ? `title-${payload.notification.title}` : 'nebeng-notif');
+
+        const dedupKey = payload.data?.id || notifTag;
+        if (processedNotificationIds.current.has(dedupKey)) {
+          return;
+        }
+        processedNotificationIds.current.add(dedupKey);
+
         const registration = await navigator.serviceWorker.getRegistration();
         if (registration) {
           await registration.showNotification(payload.notification.title || 'Pesan Baru', {
             body: payload.notification.body,
             data: payload.data,
+            tag: notifTag,
             icon: '/favicon.svg',
-            requireInteraction: true,
+            badge: '/favicon.svg',
+            requireInteraction: payload.data?.priority === 'high',
           });
         }
-      }
-
-      if (payload.data) {
-        handleNotificationNavigation(payload.data);
       }
     });
 
     return () => {
       if (unsubscribe) unsubscribe();
     };
-  }, [handleNotificationNavigation]);
+  }, []);
 
   // Service worker — dikelola Firebase getToken()
   useEffect(() => {
@@ -464,14 +568,17 @@ export const NotificationProvider = ({ children }) => {
 
     // Register service worker on mount (only once)
     if ('serviceWorker' in navigator) {
-      // Cek apakah sudah ada registration
-      navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js')
+      // Cek apakah sudah ada registration (utamakan unified PWA SW)
+      navigator.serviceWorker.getRegistration()
         .then((existingRegistration) => {
           if (existingRegistration) {
             console.log('Service Worker already registered:', existingRegistration);
           } else {
-            console.log('Registering new Service Worker...');
-            return navigator.serviceWorker.register('/firebase-messaging-sw.js');
+            console.log('Registering PWA Service Worker...');
+            return navigator.serviceWorker.register('/sw.js').catch((err) => {
+              console.warn('[NotificationContext] Register /sw.js gagal, fallback ke /firebase-messaging-sw.js:', err);
+              return navigator.serviceWorker.register('/firebase-messaging-sw.js');
+            });
           }
         })
         .then((registration) => {
@@ -533,22 +640,34 @@ export const NotificationProvider = ({ children }) => {
     });
 
     socket.on('notification:new', async ({ notification, unreadCount }) => {
-      // Deduplicate based on notification ID
-      if (processedNotificationIds.current.has(notification.id)) {
+      const notifTag = notification.conversationId
+        ? `chat-${notification.conversationId}`
+        : notification.data?.orderId
+        ? `order-${notification.data.orderId}`
+        : `notif-${notification.id}`;
+
+      // Deduplicate based on notification ID or tag
+      if (processedNotificationIds.current.has(notification.id) || processedNotificationIds.current.has(notifTag)) {
         return;
       }
 
       processedNotificationIds.current.add(notification.id);
+      processedNotificationIds.current.add(notifTag);
 
       // Show Desktop/System Web Notification if permission is granted
       if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
         try {
           const swReg = await navigator.serviceWorker.getRegistration();
+          const isEmergency = notification.type === 'emergency_sos' || notification.data?.type === 'emergency_sos';
+          const isUrgent = notification.data?.priority === 'high' || isEmergency;
           const notifOptions = {
             body: notification.body || '',
             icon: '/favicon.svg',
-            tag: notification.conversationId ? `chat-${notification.conversationId}` : `notif-${notification.id}`,
+            badge: '/favicon.svg',
+            tag: notifTag,
             data: notification.data || {},
+            requireInteraction: isUrgent,
+            vibrate: isEmergency ? [300, 100, 300, 100, 300] : undefined,
           };
 
           if (swReg && swReg.showNotification) {
@@ -559,6 +678,24 @@ export const NotificationProvider = ({ children }) => {
         } catch (notifErr) {
           console.warn('[Notification Socket] Could not trigger desktop popup:', notifErr);
         }
+      }
+
+      // Broadcast to other tabs so they update UI state without creating duplicate desktop popups
+      try {
+        const channel = new BroadcastChannel('notifications');
+        channel.postMessage({
+          type: 'newNotification',
+          data: {
+            notification,
+            unreadCount: {
+              total: unreadCount?.total || 1,
+              chat_message: unreadCount?.chat_message || 0,
+            },
+          },
+        });
+        channel.close();
+      } catch (bcErr) {
+        // Ignore BroadcastChannel errors if unsupported
       }
 
       // Add to notifications list

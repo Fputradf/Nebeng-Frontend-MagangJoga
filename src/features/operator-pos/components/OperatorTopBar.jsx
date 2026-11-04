@@ -20,7 +20,7 @@ export default function OperatorTopbar({ onSettingsClick }) {
           const freshName =
             dbUser.name ||
             dbUser.fullName ||
-            'Operator Pos';
+            'Mitra Pos';
 
           const freshEmail = dbUser.email || '';
           const freshPhone = dbUser.phone || '';

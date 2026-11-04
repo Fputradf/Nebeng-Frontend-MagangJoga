@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 import CustomerSidebar from './components/CustomerSidebar';
 import CustomerProfileModal from './components/CustomerProfileModal';
@@ -11,8 +11,14 @@ import { useAuth } from '../../context/AuthContext';
 const CUSTOMER_MENU_PATH = {
   'Onboarding Biometrik': 'onboarding',
   'Cari & Booking Trip': 'booking',
+  'Tiket Saya': 'tickets',
+  'Digital QR Aktif': 'qr',
+  'Digital QR': 'qr',
   'Tickets & Digital QR': 'tickets',
+  'Voucher Saya': 'vouchers',
   'Rewards & Penukaran': 'rewards',
+  'Dompet Saya': 'wallet',
+  'Pusat Bantuan & FAQ': 'bantuan',
   'Profil Saya': 'profile',
 };
 
@@ -51,6 +57,7 @@ export default function CustomerLayout() {
 
   return (
     <AppShell
+      role="customer"
       sidebar={
         <CustomerSidebar
           activeMenu={activeMenu}
@@ -62,6 +69,7 @@ export default function CustomerLayout() {
       }
       topbar={
         <AppTopbar
+          basePath="/customer"
           profile={customerProfile}
           roleLabel="Customer"
           onProfileClick={() => setShowProfileModal(true)}

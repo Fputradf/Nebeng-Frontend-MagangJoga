@@ -7,12 +7,10 @@ import {
   Legend, ResponsiveContainer
 } from 'recharts';
 import {
-  MapPin, Compass, ShieldCheck, AlertTriangle,
-  ShieldAlert, CheckCircle2, PhoneCall, History,
-  Eye, EyeOff, TrendingUp, TrendingDown,
+  MapPin, Compass, ShieldCheck,
+  TrendingDown,
   Users, Clock, BarChart3, LineChart as LineChartIcon,
-  ArrowUpRight, ArrowDownRight,
-  Activity, Truck, ClipboardCheck, Zap, PieChart as PieChartIcon
+  Activity, Truck, ClipboardCheck, PieChart as PieChartIcon
 } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { useToast } from '../../../context/ToastContext';
@@ -29,9 +27,10 @@ const MONTHS_FULL = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Ju
 // ─── Custom Tooltip untuk Area/Bar Chart ──────────────────────────────────────
 function CustomTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
+  const displayLabel = payload[0]?.payload?.fullLabel || label;
   return (
     <div className="bg-[#10367D] rounded-xl shadow-xl px-3 py-2.5 text-white text-[12px] min-w-[130px]">
-      <p className="font-bold mb-1.5 text-white/80">{label}</p>
+      <p className="font-bold mb-1.5 text-white/80">{displayLabel}</p>
       {payload.map((p) => (
         <div key={p.dataKey} className="flex justify-between gap-3 items-center mb-0.5">
           <span className="flex items-center gap-1 text-white/80">
@@ -45,27 +44,6 @@ function CustomTooltip({ active, payload, label }) {
   );
 }
 
-// ─── Mini SparkLine SVG (tanpa library, untuk KPI card) ───────────────────────
-function SparkLine({ data = [], color = '#10367D' }) {
-  if (data.length < 2) return null;
-  const W = 72, H = 28;
-  const maxV = Math.max(...data, 1);
-  const minV = Math.min(...data, 0);
-  const range = maxV - minV || 1;
-  const pts = data.map((v, i) => [
-    (i / (data.length - 1)) * W,
-    H - ((v - minV) / range) * (H - 4) - 2,
-  ]);
-  const d = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
-  const area = `${d} L${W},${H} L0,${H} Z`;
-  return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`}>
-      <path d={area} fill={color} fillOpacity="0.12" />
-      <path d={d} fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
 // ─── Main Dashboard ───────────────────────────────────────────────────────────
 export default function AdminRegionalDashboard() {
   const toast = useToast();
@@ -74,11 +52,6 @@ export default function AdminRegionalDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState(null);
 
-  const [disruptedTrips, setDisruptedTrips] = useState([]);
-  const [selectedResolveTrip, setSelectedResolveTrip] = useState(null);
-  const [selectedAssistTrip, setSelectedAssistTrip] = useState(null);
-  const [unmaskedPhone, setUnmaskedPhone] = useState(false);
-  const [emergencyLogs, setEmergencyLogs] = useState([]);
   const [recentRegionalActivities, setRecentRegionalActivities] = useState([]);
 
   const [chartType, setChartType] = useState('area'); // 'area' | 'bar'
@@ -95,7 +68,6 @@ export default function AdminRegionalDashboard() {
       const data = await regionalService.getRegionalDashboard(regionId);
       if (data) {
         setDashboardData(data);
-        if (data.disruptedTrips) setDisruptedTrips(Array.isArray(data.disruptedTrips) ? data.disruptedTrips : []);
         if (data.activities) setRecentRegionalActivities(Array.isArray(data.activities) ? data.activities : []);
       }
     } catch (err) {
@@ -129,7 +101,10 @@ export default function AdminRegionalDashboard() {
         setRecentRegionalActivities(prev => [newActivity, ...prev].slice(0, 15));
       });
     }
-    return () => { isMounted = false; socket.disconnect(); };
+    return () => {
+      isMounted = false;
+      socket.disconnect();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [regionId]);
 
@@ -142,24 +117,62 @@ export default function AdminRegionalDashboard() {
   const totalTrips = departedCount + arrivedCount;
   const complianceRate = dashboardData?.complianceRate ?? 98.4;
 
-  // ── Chart Data (simulated visual, scaled to real metric) ───────────────────
+  // ── Chart Data (simulated visual, scaled to real metric) ─
   const chartData = useMemo(() => {
     const base = Math.max(totalTrips, 20);
     const wk = [0.6, 0.85, 1.0, 1.3, 1.5, 1.8, 1.2];
-    const mo = [0.7,0.8,0.9,1.0,1.1,0.95,1.2,1.3,1.1,0.9,0.85,1.0,1.2,1.4,1.1,0.95,0.85,1.0,1.3,1.5,1.2,1.0,0.9,1.1,1.3,1.2,0.95,1.0,1.2,1.4];
-    const yr = [0.6,0.65,0.8,0.9,1.0,1.1,1.2,1.1,0.95,0.85,0.9,1.0];
+    const yr = [0.6, 0.65, 0.8, 0.9, 1.0, 1.1, 1.2, 1.1, 0.95, 0.85, 0.9, 1.0];
 
-    const makeRow = (label, w, divisor) => {
-      const total = Math.max(1, Math.round((base / divisor) * w));
-      const selesai = Math.round(total * (0.82 + Math.random() * 0.12));
-      const gangguan = Math.max(0, Math.round(total * 0.05));
-      return { label, total, selesai, gangguan };
-    };
+    if (activeRange === 'Minggu') {
+      return DAYS_ID.map((l, i) => {
+        let total = Math.max(1, Math.round((base / 7) * wk[i]));
+        const varianceFactor = 0.85 + ((i * 3) % 5) * 0.02;
+        let selesai = Math.round(total * varianceFactor);
 
-    if (activeRange === 'Minggu') return DAYS_ID.map((l, i) => makeRow(l, wk[i], 7));
-    if (activeRange === 'Bulan') return mo.map((w, i) => makeRow(String(i + 1), w, 30));
-    return MONTHS_ID.map((l, i) => makeRow(l, yr[i], 12));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+        return {
+          label: l,
+          fullLabel: DAYS_FULL[i] || l,
+          total,
+          selesai,
+        };
+      });
+    }
+
+    if (activeRange === 'Bulan') {
+      const monthWeeks = [
+        { label: 'Minggu 1', fullLabel: 'Minggu 1 (Tgl 1–7)', w: 1.0 },
+        { label: 'Minggu 2', fullLabel: 'Minggu 2 (Tgl 8–14)', w: 1.15 },
+        { label: 'Minggu 3', fullLabel: 'Minggu 3 (Tgl 15–21)', w: 1.05 },
+        { label: 'Minggu 4', fullLabel: 'Minggu 4 (Tgl 22–28)', w: 1.2 },
+        { label: 'Minggu 5', fullLabel: 'Minggu 5 (Tgl 29–31)', w: 0.5 },
+      ];
+
+      return monthWeeks.map((mw, i) => {
+        let total = Math.max(1, Math.round((base / 4.9) * mw.w));
+        const varianceFactor = 0.86 + ((i * 2) % 4) * 0.02;
+        let selesai = Math.round(total * varianceFactor);
+
+        return {
+          label: mw.label,
+          fullLabel: mw.fullLabel,
+          total,
+          selesai,
+        };
+      });
+    }
+
+    return MONTHS_ID.map((l, i) => {
+      let total = Math.max(1, Math.round((base / 12) * yr[i]));
+      const varianceFactor = 0.85 + ((i * 3) % 5) * 0.02;
+      let selesai = Math.round(total * varianceFactor);
+
+      return {
+        label: l,
+        fullLabel: `${MONTHS_FULL[i]} ${new Date().getFullYear()}`,
+        total,
+        selesai,
+      };
+    });
   }, [activeRange, totalTrips]);
 
   const chartSummary = useMemo(() => {
@@ -172,60 +185,16 @@ export default function AdminRegionalDashboard() {
   const pieData = useMemo(() => [
     { name: 'Selesai', value: arrivedCount || chartSummary.selesai, color: '#10b981' },
     { name: 'Berangkat', value: departedCount || Math.round(chartSummary.total * 0.15), color: '#10367D' },
-    { name: 'Gangguan', value: disruptedTrips.length || Math.round(chartSummary.total * 0.05), color: '#ef4444' },
     { name: 'Pending KYC', value: pendingVerif, color: '#f59e0b' },
-  ].filter(d => d.value > 0), [arrivedCount, departedCount, disruptedTrips.length, pendingVerif, chartSummary]);
-
-  // ── KPI Card Trends (sparkline data) ──────────────────────────────────────
-  const trends = {
-    pos: [8, 8, 9, 9, 10, 10, 10, 11, 11, 12, 12, 13],
-    trips: [12, 15, 11, 18, 22, 19, 25, 28, 21, 30, 26, 35],
-    verif: [3, 4, 2, 5, 3, 6, 4, 7, 5, 4, 6, 9],
-    disrupted: [2, 1, 3, 0, 1, 2, 0, 1, 3, 2, 0, disruptedTrips.length],
-  };
+  ].filter(d => d.value > 0), [arrivedCount, departedCount, pendingVerif, chartSummary]);
 
   const kpis = [
-    { label: 'POS AKTIF', value: activePosCount, unit: 'Pos', sub: 'Pos terdaftar & beroperasi', icon: MapPin, trend: trends.pos, color: '#10367D', change: +2 },
-    { label: 'TOTAL TRIP', value: totalTrips, unit: 'Trip', sub: `Berangkat: ${departedCount} · Tiba: ${arrivedCount}`, icon: Compass, trend: trends.trips, color: '#10b981', change: +8 },
-    { label: 'TRIP DISRUPTED', value: disruptedTrips.length, unit: 'Aktif', sub: 'Membutuhkan respons segera', icon: AlertTriangle, trend: trends.disrupted, color: '#ef4444', change: disruptedTrips.length > 0 ? +1 : -1 },
-    { label: 'ANTREAN KYC', value: pendingVerif, unit: 'Berkas', sub: 'KTP & Face ID pending review', icon: ShieldCheck, trend: trends.verif, color: '#f59e0b', change: -3 },
+    { label: 'POS AKTIF', value: activePosCount, unit: 'Pos', sub: 'Pos terdaftar & beroperasi', icon: MapPin, color: '#10367D' },
+    { label: 'TOTAL TRIP', value: totalTrips, unit: 'Trip', sub: `Berangkat: ${departedCount} · Tiba: ${arrivedCount}`, icon: Compass, color: '#10b981' },
+    { label: 'ANTREAN KYC', value: pendingVerif, unit: 'Berkas', sub: 'KTP & Face ID pending review', icon: ShieldCheck, color: '#f59e0b' },
   ];
 
   // ── Event handlers ─────────────────────────────────────────────────────────
-  const maskPhone = (p) => p?.length >= 8 ? `${p.slice(0, 4)}****${p.slice(-3)}` : p;
-
-  const handleConfirmResolveTrip = () => {
-    if (!selectedResolveTrip) return;
-    setEmergencyLogs([{
-      id: `LOG-EMG-${Date.now().toString().slice(-4)}`,
-      tripId: selectedResolveTrip.id,
-      mitra: selectedResolveTrip.mitra,
-      action: 'RUTE RESOLVED',
-      timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
-      admin: adminName,
-    }, ...emergencyLogs]);
-    setDisruptedTrips(disruptedTrips.filter(t => t.id !== selectedResolveTrip.id));
-    toast.success(`Kendala Trip ${selectedResolveTrip.id} telah diselesaikan.`, { title: 'Trip Dipulihkan' });
-    setSelectedResolveTrip(null);
-  };
-
-  const handleDispatchAssistance = () => {
-    if (!selectedAssistTrip) return;
-    setEmergencyLogs([{
-      id: `LOG-EMG-${Date.now().toString().slice(-4)}`,
-      tripId: selectedAssistTrip.id,
-      mitra: selectedAssistTrip.mitra,
-      action: 'DISPATCH ASSISTANCE',
-      timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
-      admin: adminName,
-    }, ...emergencyLogs]);
-    setDisruptedTrips(disruptedTrips.map(t =>
-      t.id === selectedAssistTrip.id ? { ...t, assistanceStatus: 'Tim Darurat Menuju Lokasi' } : t
-    ));
-    toast.info('Tim Pos terdekat telah dikirim ke lokasi.', { title: 'Bantuan Dikirim' });
-    setSelectedAssistTrip(null);
-    setUnmaskedPhone(false);
-  };
 
   // ─── RENDER ────────────────────────────────────────────────────────────────
   return (
@@ -267,18 +236,13 @@ export default function AdminRegionalDashboard() {
               </div>
             ))
           : kpis.map((k) => {
-              const isUp = k.change >= 0;
               const Icon = k.icon;
               return (
                 <div key={k.label} className="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm flex flex-col gap-3 hover:shadow-md transition-shadow">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center">
                     <div className="p-2 rounded-xl" style={{ backgroundColor: `${k.color}18` }}>
                       <Icon className="w-4 h-4" style={{ color: k.color }} />
                     </div>
-                    <span className={`flex items-center gap-0.5 text-[11px] font-bold px-2 py-0.5 rounded-full ${isUp ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
-                      {isUp ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                      {Math.abs(k.change)}%
-                    </span>
                   </div>
                   <div>
                     <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">{k.label}</p>
@@ -287,10 +251,7 @@ export default function AdminRegionalDashboard() {
                       <span className="text-[14px] font-medium text-neutral-400 ml-1">{k.unit}</span>
                     </p>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <p className="text-[11px] text-neutral-400 leading-snug">{k.sub}</p>
-                    <SparkLine data={k.trend} color={k.color} />
-                  </div>
+                  <p className="text-[11px] text-neutral-400 leading-snug">{k.sub}</p>
                 </div>
               );
             })}
@@ -356,13 +317,6 @@ export default function AdminRegionalDashboard() {
               </div>
               <p className="text-[22px] font-bold text-neutral-800">{chartSummary.selesai}</p>
             </div>
-            <div>
-              <div className="flex items-center gap-1.5 mb-0.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
-                <span className="text-[12px] font-medium text-neutral-500">Gangguan</span>
-              </div>
-              <p className="text-[22px] font-bold text-neutral-800">{chartData.reduce((s, d) => s + d.gangguan, 0)}</p>
-            </div>
             <div className="ml-auto text-right">
               <p className="text-[11px] text-neutral-400 mb-0.5">Tingkat Selesai</p>
               <p className="text-[22px] font-bold text-emerald-600">{chartSummary.rate}%</p>
@@ -385,10 +339,6 @@ export default function AdminRegionalDashboard() {
                       <stop offset="5%" stopColor="#10b981" stopOpacity={0.22} />
                       <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                     </linearGradient>
-                    <linearGradient id="gradGangguan" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.18} />
-                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
-                    </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 4" stroke="#F0F0F0" vertical={false} />
                   <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#A3A3A3', fontFamily: 'Inter' }} axisLine={false} tickLine={false} />
@@ -397,7 +347,6 @@ export default function AdminRegionalDashboard() {
                   <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12, fontFamily: 'Inter' }} />
                   <Area type="monotone" dataKey="total" name="Total Trip" stroke="#10367D" strokeWidth={2.5} fill="url(#gradTotal)" dot={false} activeDot={{ r: 5, strokeWidth: 2, stroke: '#fff' }} />
                   <Area type="monotone" dataKey="selesai" name="Selesai" stroke="#10b981" strokeWidth={2} fill="url(#gradSelesai)" dot={false} activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff' }} />
-                  <Area type="monotone" dataKey="gangguan" name="Gangguan" stroke="#ef4444" strokeWidth={1.5} fill="url(#gradGangguan)" dot={false} activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff' }} />
                 </AreaChart>
               ) : (
                 <BarChart data={chartData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }} barGap={2}>
@@ -408,7 +357,6 @@ export default function AdminRegionalDashboard() {
                   <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12, fontFamily: 'Inter' }} />
                   <Bar dataKey="total" name="Total Trip" fill="#10367D" radius={[3, 3, 0, 0]} opacity={0.85} />
                   <Bar dataKey="selesai" name="Selesai" fill="#10b981" radius={[3, 3, 0, 0]} opacity={0.85} />
-                  <Bar dataKey="gangguan" name="Gangguan" fill="#ef4444" radius={[3, 3, 0, 0]} opacity={0.85} />
                 </BarChart>
               )}
             </ResponsiveContainer>
@@ -479,160 +427,54 @@ export default function AdminRegionalDashboard() {
         </div>
       </div>
 
-      {/* ── DISRUPTED TRIPS + QUICK STATS ── */}
+      {/* ── COMPLIANCE + QUICK STATS ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        {/* Disrupted Trips */}
-        <div className="lg:col-span-2 bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-neutral-200 space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-neutral-100 pb-3">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 bg-rose-50 text-rose-600 rounded-xl">
-                <ShieldAlert className="w-4 h-4" />
-              </div>
-              <div>
-                <h2 className="text-[16px] font-bold text-neutral-800">Pemantauan Trip Disrupted</h2>
-                <p className="text-[12px] text-neutral-400">Perjalanan yang mengalami hambatan di lapangan</p>
-              </div>
-            </div>
-            <span className={`px-2.5 py-0.5 rounded-full text-[12px] font-bold self-start sm:self-auto ${disruptedTrips.length > 0 ? 'bg-rose-50 text-rose-700' : 'bg-emerald-50 text-emerald-700'}`}>
-              {disruptedTrips.length > 0 ? `${disruptedTrips.length} Aktif` : 'Semua Normal'}
-            </span>
+        {/* Compliance */}
+        <div className="bg-[#10367D] rounded-2xl p-5 text-white shadow-sm">
+          <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center mb-3">
+            <ShieldCheck className="w-4 h-4 text-[#74B4D9]" />
           </div>
-
-          {isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {[0, 1].map(i => (
-                <div key={i} className="p-4 rounded-xl border border-neutral-200 bg-neutral-50/60 space-y-2 animate-pulse">
-                  <Skeleton className="h-4 w-24 rounded-full" />
-                  <Skeleton className="h-4 w-40" />
-                  <Skeleton className="h-10 w-full rounded-xl" />
-                </div>
-              ))}
-            </div>
-          ) : disruptedTrips.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {disruptedTrips.map((trip) => (
-                <div key={trip.id} className="p-4 rounded-xl border border-rose-200 bg-rose-50/30 flex flex-col justify-between gap-3">
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[12px] font-bold text-rose-700 bg-rose-100 px-2 py-0.5 rounded-full">{trip.id}</span>
-                      <span className="text-[11px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">{trip.assistanceStatus || 'Pending'}</span>
-                    </div>
-                    <div className="text-[14px] font-bold text-neutral-800 flex items-center gap-1.5">
-                      <span>{trip.origin}</span>
-                      <span className="text-rose-600">&rarr;</span>
-                      <span>{trip.destination}</span>
-                    </div>
-                    <p className="text-[13px] text-neutral-600">
-                      Mitra: <strong className="text-neutral-800">{trip.mitra}</strong> ({trip.vehicle})
-                    </p>
-                    <div className="p-2 bg-white rounded-lg border border-rose-100 text-[12px] space-y-0.5">
-                      <p className="text-rose-600 font-bold flex items-center gap-1">
-                        <AlertTriangle className="w-3 h-3" /> Kendala: {trip.issue}
-                      </p>
-                      <p className="text-neutral-400">📍 Posisi: {trip.location} ({trip.time})</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 pt-2 border-t border-rose-100">
-                    <button onClick={() => { setSelectedAssistTrip(trip); setUnmaskedPhone(false); }}
-                      className="flex-1 py-1.5 px-3 bg-white hover:bg-neutral-50 text-neutral-700 border border-neutral-200 rounded-full text-[12px] font-bold transition cursor-pointer flex items-center justify-center gap-1">
-                      <PhoneCall className="w-3 h-3 text-[#10367D]" /> Kirim Bantuan
-                    </button>
-                    <button onClick={() => setSelectedResolveTrip(trip)}
-                      className="flex-1 py-1.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-[12px] font-bold transition shadow-sm cursor-pointer flex items-center justify-center gap-1">
-                      <CheckCircle2 className="w-3 h-3" /> Selesaikan
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="p-8 text-center bg-neutral-50 rounded-xl border border-neutral-200">
-              <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
-              <h3 className="text-[14px] font-bold text-neutral-800">Semua Perjalanan Normal</h3>
-              <p className="text-[12px] text-neutral-400 mt-0.5">Tidak ada trip disrupted di wilayah ini saat ini.</p>
-            </div>
-          )}
-        </div>
-
-        {/* Compliance + Quick Stats */}
-        <div className="space-y-4">
-          {/* Compliance */}
-          <div className="bg-[#10367D] rounded-2xl p-5 text-white shadow-sm">
-            <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center mb-3">
-              <ShieldCheck className="w-4 h-4 text-[#74B4D9]" />
-            </div>
-            <h2 className="text-[15px] font-bold tracking-tight">Kepatuhan & Keamanan</h2>
-            <p className="text-white/70 text-[12px] mt-1 leading-relaxed">Tingkat kepatuhan operasional pos wilayah.</p>
-            <div className="pt-4 border-t border-white/15 mt-4 space-y-3">
-              {[
-                { label: 'Kepatuhan Pos', val: complianceRate, color: '#74B4D9' },
-                { label: 'KYC Selesai', val: Math.max(0, 100 - pendingVerif * 5), color: '#10b981' },
-              ].map(item => (
-                <div key={item.label}>
-                  <div className="flex justify-between text-[12px] mb-1">
-                    <span className="text-white/80">{item.label}</span>
-                    <span className="font-bold text-white">{item.val.toFixed(1)}%</span>
-                  </div>
-                  <div className="w-full bg-white/20 h-1.5 rounded-full overflow-hidden">
-                    <div className="h-full rounded-full transition-all duration-700" style={{ width: `${item.val}%`, backgroundColor: item.color }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Quick stats 2x2 */}
-          <div className="grid grid-cols-2 gap-3">
+          <h2 className="text-[15px] font-bold tracking-tight">Kepatuhan & Keamanan</h2>
+          <p className="text-white/70 text-[12px] mt-1 leading-relaxed">Tingkat kepatuhan operasional pos wilayah.</p>
+          <div className="pt-4 border-t border-white/15 mt-4 space-y-3">
             {[
-              { icon: Truck, label: 'Berangkat', val: departedCount, bg: 'bg-blue-50', color: 'text-blue-600' },
-              { icon: ClipboardCheck, label: 'Tiba', val: arrivedCount, bg: 'bg-emerald-50', color: 'text-emerald-600' },
-              { icon: Zap, label: 'Insiden', val: disruptedTrips.length, bg: 'bg-rose-50', color: 'text-rose-600' },
-              { icon: Users, label: 'Pending KYC', val: pendingVerif, bg: 'bg-amber-50', color: 'text-amber-600' },
-            ].map(s => {
-              const Icon = s.icon;
-              return (
-                <div key={s.label} className="bg-white p-4 rounded-2xl border border-neutral-200 shadow-sm">
-                  <div className={`p-2 ${s.bg} ${s.color} rounded-xl w-fit mb-2`}>
-                    <Icon className="w-4 h-4" />
-                  </div>
-                  <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider leading-tight">{s.label}</p>
-                  <p className="text-[20px] font-bold text-neutral-800">{s.val}</p>
+              { label: 'Kepatuhan Pos', val: complianceRate, color: '#74B4D9' },
+              { label: 'KYC Selesai', val: Math.max(0, 100 - pendingVerif * 5), color: '#10b981' },
+            ].map(item => (
+              <div key={item.label}>
+                <div className="flex justify-between text-[12px] mb-1">
+                  <span className="text-white/80">{item.label}</span>
+                  <span className="font-bold text-white">{item.val.toFixed(1)}%</span>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* ── EMERGENCY LOGS ── */}
-      {emergencyLogs.length > 0 && (
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-neutral-200 space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 bg-[#10367D]/10 text-[#10367D] rounded-lg">
-                <History className="w-4 h-4" />
-              </div>
-              <h3 className="text-[15px] font-bold text-neutral-800">Log Respon Darurat Sesi Ini</h3>
-            </div>
-            <span className="text-[12px] font-bold text-[#10367D] bg-[#10367D]/10 px-2.5 py-0.5 rounded-full">{emergencyLogs.length} Aksi</span>
-          </div>
-          <div className="space-y-2">
-            {emergencyLogs.map((log) => (
-              <div key={log.id} className="p-2.5 bg-neutral-50 border border-neutral-100 rounded-xl text-[12px] flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="font-bold text-neutral-800 font-mono shrink-0">{log.id}</span>
-                  <span className={`px-2 py-0.5 rounded-full font-bold shrink-0 ${log.action === 'DISPATCH ASSISTANCE' ? 'bg-[#74B4D9]/15 text-[#10367D]' : 'bg-emerald-50 text-emerald-700'}`}>
-                    {log.action}
-                  </span>
-                  <span className="text-neutral-600 truncate">Trip: <strong>{log.tripId}</strong> ({log.mitra})</span>
+                <div className="w-full bg-white/20 h-1.5 rounded-full overflow-hidden">
+                  <div className="h-full rounded-full transition-all duration-700" style={{ width: `${item.val}%`, backgroundColor: item.color }} />
                 </div>
-                <span className="text-[11px] text-neutral-400 whitespace-nowrap shrink-0">{log.timestamp} · {log.admin}</span>
               </div>
             ))}
           </div>
         </div>
-      )}
+
+        {/* Quick stats 2x2 */}
+        <div className="lg:col-span-2 grid grid-cols-2 sm:grid-cols-3 gap-3 content-start">
+          {[
+            { icon: Truck, label: 'Berangkat', val: departedCount, bg: 'bg-blue-50', color: 'text-blue-600' },
+            { icon: ClipboardCheck, label: 'Tiba', val: arrivedCount, bg: 'bg-emerald-50', color: 'text-emerald-600' },
+            { icon: Users, label: 'Pending KYC', val: pendingVerif, bg: 'bg-amber-50', color: 'text-amber-600' },
+          ].map(s => {
+            const Icon = s.icon;
+            return (
+              <div key={s.label} className="bg-white p-4 rounded-2xl border border-neutral-200 shadow-sm">
+                <div className={`p-2 ${s.bg} ${s.color} rounded-xl w-fit mb-2`}>
+                  <Icon className="w-4 h-4" />
+                </div>
+                <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider leading-tight">{s.label}</p>
+                <p className="text-[20px] font-bold text-neutral-800">{s.val}</p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
 
       {/* ── ACTIVITY FEED + VERIFICATION PANEL ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -719,55 +561,6 @@ export default function AdminRegionalDashboard() {
         </div>
       </div>
 
-      {/* ── MODALS ── */}
-      <BaseModal
-        isOpen={Boolean(selectedResolveTrip)}
-        onClose={() => setSelectedResolveTrip(null)}
-        title="Konfirmasi Resolusi Trip"
-        subtitle={`Trip ${selectedResolveTrip?.id}`}
-        maxWidth="max-w-sm"
-      >
-        <div className="space-y-3 text-[13px] text-center">
-          <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
-            <CheckCircle2 size={20} />
-          </div>
-          <p className="text-neutral-600">
-            Apakah Anda yakin ingin menandai rute untuk{' '}
-            <strong>{selectedResolveTrip?.mitra}</strong> ({selectedResolveTrip?.id}) telah kembali normal?
-          </p>
-          <div className="flex gap-2 pt-2">
-            <button onClick={() => setSelectedResolveTrip(null)} className="flex-1 py-2 bg-neutral-100 text-neutral-700 rounded-full font-bold cursor-pointer">Batal</button>
-            <button onClick={handleConfirmResolveTrip} className="flex-1 py-2 bg-emerald-600 text-white rounded-full font-bold cursor-pointer shadow-sm">Ya, Selesaikan</button>
-          </div>
-        </div>
-      </BaseModal>
-
-      <BaseModal
-        isOpen={Boolean(selectedAssistTrip)}
-        onClose={() => { setSelectedAssistTrip(null); setUnmaskedPhone(false); }}
-        title="Koordinasi Bantuan Lapangan"
-        subtitle={`Trip ${selectedAssistTrip?.id}`}
-        maxWidth="max-w-md"
-      >
-        <div className="space-y-3 text-[13px]">
-          <div className="p-3 bg-neutral-50 rounded-xl border border-neutral-200 space-y-1.5">
-            <p className="text-neutral-500">Mitra: <strong className="text-neutral-800">{selectedAssistTrip?.mitra}</strong> ({selectedAssistTrip?.vehicle})</p>
-            <div className="flex items-center justify-between text-neutral-500">
-              <span>Kontak: <strong className="text-neutral-800 font-mono">{unmaskedPhone ? selectedAssistTrip?.phone : maskPhone(selectedAssistTrip?.phone)}</strong></span>
-              <button onClick={() => setUnmaskedPhone(!unmaskedPhone)} className="p-1 rounded bg-neutral-200 hover:bg-neutral-300 text-neutral-700 transition cursor-pointer">
-                {unmaskedPhone ? <EyeOff size={11} /> : <Eye size={11} />}
-              </button>
-            </div>
-            <p className="text-neutral-500">Kendala: <strong className="text-rose-600">{selectedAssistTrip?.issue}</strong></p>
-            <p className="text-neutral-500">Lokasi: <strong className="text-neutral-800">{selectedAssistTrip?.location}</strong></p>
-          </div>
-          <p className="text-neutral-600">Sistem akan menugaskan Tim Pos Lapangan terdekat untuk memberikan bantuan.</p>
-          <div className="flex justify-end gap-2 pt-2">
-            <button onClick={() => { setSelectedAssistTrip(null); setUnmaskedPhone(false); }} className="px-4 py-2 bg-neutral-100 text-neutral-700 rounded-full font-bold cursor-pointer">Batal</button>
-            <button onClick={handleDispatchAssistance} className="px-4 py-2 bg-[#10367D] hover:bg-[#0C2C66] text-white rounded-full font-bold cursor-pointer shadow-sm transition">Kirim Tim Bantuan</button>
-          </div>
-        </div>
-      </BaseModal>
     </div>
   );
 }

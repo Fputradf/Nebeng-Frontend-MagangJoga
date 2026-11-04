@@ -1,14 +1,14 @@
 import { X, Mail, Phone, ShieldCheck, Settings } from 'lucide-react';
 
 function getInitials(name) {
-  if (!name) return 'OP';
+  if (!name) return 'MP';
 
   const parts = name
     .trim()
     .split(/\s+/)
     .filter(Boolean);
 
-  if (parts.length === 0) return 'OP';
+  if (parts.length === 0) return 'MP';
 
   if (parts.length === 1) {
     return parts[0].slice(0, 2).toUpperCase();
@@ -32,7 +32,7 @@ export default function OperatorProfileModal({
   if (!isOpen) return null;
 
   const displayName =
-    profile?.fullName?.trim() || 'Operator Pos';
+    profile?.fullName?.trim() || 'Mitra Pos';
 
   const displayEmail =
     profile?.email?.trim() ||
@@ -100,7 +100,7 @@ export default function OperatorProfileModal({
             }}
           >
             <ShieldCheck className="w-3 h-3" style={{ color: PRIMARY_ACCENT }} />
-            Operator Pos
+            Mitra Pos
           </span>
         </div>
 

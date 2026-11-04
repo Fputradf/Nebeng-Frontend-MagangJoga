@@ -12,11 +12,11 @@ const formatTanggal = new Intl.DateTimeFormat('id-ID', {
   year: 'numeric',
 });
 
-function sapaan(jam) {
-  if (jam >= 4 && jam < 11) return 'Selamat pagi';
-  if (jam >= 11 && jam < 15) return 'Selamat siang';
-  if (jam >= 15 && jam < 19) return 'Selamat sore';
-  return 'Selamat malam';
+function getWaktu(jam) {
+  if (jam >= 4 && jam < 11) return 'pagi';
+  if (jam >= 11 && jam < 15) return 'siang';
+  if (jam >= 15 && jam < 19) return 'sore';
+  return 'malam';
 }
 
 
@@ -78,13 +78,13 @@ export default function CustomerTopbar({ profile, onProfileClick }) {
         <p className="text-[11px] font-semibold uppercase tracking-wider text-[#10367D]/70">
           {formatTanggal.format(now)}
         </p>
-        <p className="truncate font-bold text-xl leading-tight text-[#10367D]">
-          {sapaan(now.getHours())}
+        <p className="truncate font-bold text-xl leading-tight text-[#10367D] hidden sm:block">
+          <span>Selamat {getWaktu(now.getHours())}</span>
           {firstName ? `, ${firstName}` : ''}
         </p>
       </div>
       <div className="flex items-center gap-3">
-        <NotificationBell />
+        <NotificationBell basePath="/customer" />
         <button
           onClick={onProfileClick}
           className="w-10 h-10 md:w-9 md:h-9 rounded-full bg-[#10367D] flex items-center justify-center text-white hover:bg-[#0C2C66] transition font-bold text-[17px] cursor-pointer overflow-hidden"

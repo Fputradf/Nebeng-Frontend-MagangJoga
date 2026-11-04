@@ -10,6 +10,7 @@ export default function NotificationPermissionRequest() {
   const {
     permission,
     requestPermission,
+    registerToken,
     notificationSupported,
     errorMessage,
   } = useNotification();
@@ -32,6 +33,7 @@ export default function NotificationPermissionRequest() {
       const granted = await requestPermission();
       if (granted) {
         console.log('[NotificationPermissionRequest] Izin diberikan pengguna');
+        await registerToken();
       }
     } catch (error) {
       console.error('Error saat meminta izin notifikasi:', error);
@@ -107,7 +109,7 @@ export default function NotificationPermissionRequest() {
             </div>
             <div className="flex items-start gap-2">
               <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-              <span>Konfirmasi pembayaran & pelepasan dana escrow aman</span>
+              <span>Konfirmasi pembayaran & notifikasi dana cair ke saldo</span>
             </div>
           </div>
         </div>

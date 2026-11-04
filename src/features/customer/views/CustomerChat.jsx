@@ -271,13 +271,7 @@ export default function CustomerChat() {
                 placeholder="Cari mitra atau trip..."
                 value={chatSearchTerm}
                 onChange={(e) => setChatSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-3.5 py-2 bg-white border border-neutral-200 rounded-xl text-[13px] font-medium focus:outline-none"
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = PRIMARY_COLOR;
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = '';
-                }}
+                className="w-full pl-9 pr-3.5 py-2 bg-white border border-neutral-200 rounded-xl text-[13px] font-medium focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all"
               />
             </div>
           </div>
@@ -526,32 +520,15 @@ export default function CustomerChat() {
                 onChange={(e) => setMessageText(e.target.value)}
                 placeholder={cooldownSeconds > 0 ? `Tunggu ${cooldownSeconds} detik sebelum mengirim lagi...` : "Ketik pesan ke mitra..."}
                 disabled={cooldownSeconds > 0}
-                className="flex-1 px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl text-[13px] font-medium text-neutral-800 focus:outline-none disabled:bg-neutral-100 disabled:cursor-not-allowed"
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = PRIMARY_COLOR;
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = '';
-                }}
+                className="flex-1 px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl text-[13px] font-medium text-neutral-800 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 disabled:bg-neutral-100 disabled:cursor-not-allowed transition-all"
               />
 
               <button
                 type="submit"
                 disabled={!messageText.trim() || cooldownSeconds > 0}
-                className="p-2.5 text-white rounded-xl transition shadow-sm cursor-pointer flex items-center justify-center disabled:opacity-50 min-w-[38px]"
-                style={{
-                  backgroundColor: PRIMARY_COLOR,
-                }}
-                onMouseEnter={(e) => {
-                  if (!e.currentTarget.disabled) {
-                    e.currentTarget.style.backgroundColor = PRIMARY_HOVER;
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = PRIMARY_COLOR;
-                }}
+                className="min-h-[44px] min-w-[44px] p-2.5 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white rounded-xl transition shadow-sm cursor-pointer flex items-center justify-center disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
               >
-                <Send className="w-3.5 h-3.5" />
+                <Send className="w-4 h-4" />
               </button>
             </form>
           )}

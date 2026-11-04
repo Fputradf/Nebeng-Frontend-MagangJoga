@@ -23,6 +23,7 @@ import BaseModal from '../../../components/ui/BaseModal';
 import EmptyState from '../../../components/ui/EmptyState';
 import { Skeleton } from '../../../components/ui/Skeleton';
 import { useToast } from '../../../context/ToastContext';
+import { useConfirm } from '../../../context/ConfirmContext';
 
 const PRIMARY_COLOR = '#10367D';
 
@@ -41,6 +42,16 @@ const ROLE_BADGES = {
     label: 'Operator',
     bg: 'bg-indigo-50 text-indigo-700 border-indigo-200',
     dot: 'bg-indigo-500',
+  },
+  admin: {
+    label: 'Admin',
+    bg: 'bg-purple-50 text-purple-700 border-purple-200',
+    dot: 'bg-purple-500',
+  },
+  regional: {
+    label: 'Regional',
+    bg: 'bg-teal-50 text-teal-700 border-teal-200',
+    dot: 'bg-teal-500',
   },
   superadmin: {
     label: 'Superadmin',
@@ -68,6 +79,7 @@ export default function BannerManagement() {
 
   const fileInputRef = useRef(null);
   const toast = useToast();
+  const confirm = useConfirm();
 
   const [formData, setFormData] = useState({
     title: '',
@@ -128,7 +140,7 @@ export default function BannerManagement() {
         title: banner.title || '',
         imageUrl: banner.imageUrl || '',
         linkUrl: banner.linkUrl || '',
-        targetRole: banner.targetRole || '',
+        targetRole: banner.targetRole ? banner.targetRole.toLowerCase() : '',
         isActive: banner.isActive ?? true,
       });
     } else {
@@ -193,7 +205,7 @@ export default function BannerManagement() {
         title: formData.title.trim(),
         imageUrl: formData.imageUrl.trim() || null,
         linkUrl: formData.linkUrl.trim() || null,
-        targetRole: formData.targetRole ? formData.targetRole.toUpperCase() : null,
+        targetRole: formData.targetRole ? formData.targetRole.toLowerCase() : null,
         isActive: formData.isActive,
       };
 
@@ -208,14 +220,25 @@ export default function BannerManagement() {
       loadBanners();
     } catch (error) {
       console.error('Error saving banner:', error);
-      toast.error(error.response?.data?.message || 'Gagal menyimpan banner');
+      const rawMsg = error.response?.data?.message;
+      const errorMsg = Array.isArray(rawMsg)
+        ? rawMsg.join(', ')
+        : rawMsg || 'Gagal menyimpan banner';
+      toast.error(errorMsg);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleDelete = async (banner) => {
-    if (!window.confirm(`Yakin ingin menghapus banner "${banner.title}"?`)) return;
+    const isConfirmed = await confirm({
+      title: 'Hapus Banner',
+      message: `Yakin ingin menghapus banner "${banner.title}"? Tindakan ini akan menghapus banner secara permanen.`,
+      confirmText: 'Hapus',
+      cancelText: 'Batal',
+      variant: 'danger',
+    });
+    if (!isConfirmed) return;
     try {
       await bannerService.deleteBanner(banner.id);
       toast.success('Banner berhasil dihapus');
@@ -237,34 +260,37 @@ export default function BannerManagement() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto font-sans">
-      {/* Header Halaman */}
-      <div className="bg-white p-6 rounded-lg shadow-card border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="p-1.5 rounded-lg bg-slate-50 text-[#10367D]">
-              <Megaphone className="w-4 h-4" />
-            </span>
-            <span className="text-xs font-bold uppercase tracking-wider text-[#10367D]">
-              Manajemen Konten & Iklan
-            </span>
+      {/* ── BANNER GRADIENT ── */}
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] p-6 text-white shadow-card sm:p-8">
+        <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10" />
+        <div className="absolute bottom-0 right-32 h-28 w-28 rounded-full bg-accent/20" />
+        <div className="relative flex flex-col gap-4 pb-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-accent flex items-center gap-1.5">
+                <Megaphone className="w-3.5 h-3.5" /> Manajemen Konten & Iklan
+              </span>
+            </div>
+            <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
+              Manajemen Banner Promosi
+            </h1>
+            <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
+              Kelola banner promosi dan pengumuman yang tayang di aplikasi pelanggan maupun mitra.
+            </p>
           </div>
-          <h1 className="text-xl font-bold text-slate-900 tracking-tight">
-            Manajemen Banner Promosi
-          </h1>
-          <p className="text-sm text-slate-500 mt-0.5">
-            Kelola banner promosi dan pengumuman yang tayang di aplikasi pelanggan maupun mitra.
-          </p>
-        </div>
 
-        <button
-          onClick={() => handleOpenModal()}
-          className="px-4 py-2.5 text-white rounded-lg text-sm font-bold shadow-soft hover:shadow-soft-lg transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer self-start md:self-auto hover:brightness-110 active:scale-95"
-          style={{ backgroundColor: PRIMARY_COLOR }}
-        >
-          <Plus className="w-4 h-4 stroke-[2.5]" />
-          <span>Tambah Banner Baru</span>
-        </button>
-      </div>
+          <button
+            onClick={() => handleOpenModal()}
+            className="px-4 py-2.5 bg-accent hover:bg-accent/90 text-slate-900 rounded-2xl text-xs sm:text-sm font-bold shadow-sm transition flex items-center justify-center gap-2 cursor-pointer self-start sm:self-auto shrink-0"
+          >
+            <Plus className="w-4 h-4 stroke-[2.5]" />
+            <span>Tambah Banner Baru</span>
+          </button>
+        </div>
+        <div className="absolute bottom-4 left-6 right-6 border-t border-dashed border-white/25 sm:left-8 sm:right-8" />
+        <span className="absolute bottom-[11px] right-6 h-2.5 w-2.5 rounded-full border-2 border-white bg-accent sm:right-8" />
+      </section>
 
       {/* Mini Stats Bar */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -325,9 +351,11 @@ export default function BannerManagement() {
           >
             <option value="ALL">Semua Audiens</option>
             <option value="PUBLIC">Publik / Semua</option>
-            <option value="CUSTOMER">Customer</option>
-            <option value="MITRA">Mitra</option>
-            <option value="OPERATOR">Operator</option>
+            <option value="customer">Customer</option>
+            <option value="mitra">Mitra</option>
+            <option value="operator">Operator</option>
+            <option value="admin">Admin</option>
+            <option value="regional">Regional</option>
           </select>
 
           <select
@@ -645,9 +673,11 @@ export default function BannerManagement() {
                 className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-[#10367D] focus:ring-2 focus:ring-[#10367D]/20 cursor-pointer transition-all"
               >
                 <option value="">Semua (Publik)</option>
-                <option value="CUSTOMER">Customer (Penumpang)</option>
-                <option value="MITRA">Mitra (Driver)</option>
-                <option value="OPERATOR">Operator</option>
+                <option value="customer">Customer (Penumpang)</option>
+                <option value="mitra">Mitra (Driver)</option>
+                <option value="operator">Operator</option>
+                <option value="admin">Admin</option>
+                <option value="regional">Regional</option>
               </select>
             </div>
 

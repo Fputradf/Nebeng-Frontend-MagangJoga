@@ -1,4 +1,6 @@
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useAppConfig } from './context/AppConfigContext';
 
 import Login from './features/auth/Login';
 import Register from './features/auth/Register';
@@ -17,9 +19,16 @@ import UserGovernance from './features/superadmin/views/UserGovernance';
 import SuperadminAccountSettings from './features/superadmin/views/SuperadminAccountSettings';
 import MerchandiseManagement from './features/superadmin/views/MerchandiseManagement';
 import BannerManagement from './features/superadmin/views/BannerManagement';
+import VoucherManagement from './features/superadmin/views/VoucherManagement';
+import SocialLinksManagement from './features/superadmin/views/SocialLinksManagement';
+import SanctionManagement from './features/superadmin/views/SanctionManagement';
+import AppConfigManagement from './features/superadmin/views/AppConfigManagement';
+import DisbursementBankManagement from './features/superadmin/views/DisbursementBankManagement';
+import DriverManagement from './features/superadmin/views/DriverManagement';
 
 // Regional
 import RegionalLayout from './features/regional/RegionalLayout';
+import RegionalSupportChat from './features/regional/views/RegionalSupportChat';
 import AdminRegionalDashboard from './features/regional/views/AdminRegionalDashboard';
 import PosMitraManagement from './features/regional/views/PosMitraManagement';
 import OperatorPosPage from './features/regional/views/OperatorPosManagement';
@@ -27,15 +36,17 @@ import VerificationCenterPage from './features/regional/views/VerificationCenter
 import TripOrderPage from './features/regional/views/TripOrderMonitoring';
 import ArmadaKurirTabs from './features/regional/views/ArmadaKurirTabs';
 import FinancialReportPage from './features/regional/views/FinancialReportPage';
+import ReportManagement from './features/regional/views/ReportManagement';
 import RegionalAccountSettings from './features/regional/views/RegionalAccountSettings';
 
-// Operator Pos
+// Mitra Pos
 import OperatorLayout from './features/operator-pos/OperatorLayout';
 import OperatorDashboard from './features/operator-pos/views/OperatorDashboard';
+import OperatorManifest from './features/operator-pos/views/OperatorManifest';
 import OperatorInspection from './features/operator-pos/views/OperatorInspection';
 import OperatorDualScanner from './features/operator-pos/views/OperatorDualScanner';
 import OperatorHandover from './features/operator-pos/views/OperatorHandover';
-import OperatorFinancial from './features/operator-pos/views/OperatorFinancial';
+import OperatorGuide from './features/operator-pos/views/OperatorGuide';
 import OperatorAccountSettings from './features/operator-pos/components/OperatorAccountSettings';
 
 // Mitra
@@ -48,15 +59,26 @@ import MitraBalance from './features/mitra/views/MitraBalance';
 import MitraChat from './features/mitra/views/MitraChat';
 import MitraAccountSettings from './features/mitra/views/MitraAccountSettings';
 
+// Help & FAQ
+import HelpCenterView from './features/help/HelpCenterView';
+
 // Customer
 import CustomerLayout from './features/customer/CustomerLayout';
 import BiometricOnboarding from './features/customer/views/BiometricOnboarding';
 import SearchTrip from './features/customer/views/SearchTrip';
 import MyTickets from './features/customer/views/MyTickets';
+import CustomerQrDisplay from './features/customer/views/CustomerQrDisplay';
 import CustomerAccountSettings from './features/customer/views/CustomerAccountSettings';
 import CustomerRewards from './features/customer/views/CustomerRewards';
+import CustomerVouchers from './features/customer/views/CustomerVouchers';
 import CustomerChat from './features/customer/views/CustomerChat';
+import CustomerWallet from './features/customer/views/CustomerWallet';
 import { NotificationSettings, NotificationHistory, NotificationPermissionRequest } from './features/notifications';
+
+// PWA Components
+import OfflineIndicator from './components/pwa/OfflineIndicator';
+import PWAInstallPrompt from './components/pwa/PWAInstallPrompt';
+import PWAUpdateToast from './components/pwa/PWAUpdateToast';
 
 function CustomerIndexRedirect() {
   const { isCustomerVerified } = useAuth();
@@ -91,6 +113,77 @@ function GuestRoute({ children }) {
 export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { appName, setPageTitle } = useAppConfig();
+
+  // ─── JUDUL TAB BROWSER ────────────────────────────────────────────────────
+  useEffect(() => {
+    const path = location.pathname;
+    const PAGE_TITLES = {
+      '/login':                        'Masuk',
+      '/register':                     'Daftar',
+      '/forgot-password':              'Lupa Password',
+      '/admin/dashboard':              'Dashboard Superadmin',
+      '/admin/wilayah':                'Manajemen Wilayah',
+      '/admin/pos-mitra':              'Pos Mitra',
+      '/admin/admin-wilayah':          'Admin Wilayah',
+      '/admin/driver':                 'Manajemen Driver',
+      '/admin/verifikasi-kyc':         'Pusat Verifikasi KYC',
+      '/admin/tarif':                  'Manajemen Tarif',
+      '/admin/sanksi':                 'Sanksi',
+      '/admin/reports':                'Laporan',
+      '/admin/laporan-pelanggaran':    'Laporan Pelanggaran',
+      '/admin/bank-pencairan':         'Bank Pencairan',
+      '/admin/bank':                   'Bank',
+      '/admin/konfigurasi-aplikasi':   'Konfigurasi Aplikasi',
+      '/admin/konfigurasi-logo':       'Konfigurasi Logo',
+      '/admin/merchandise':            'Merchandise',
+      '/admin/banner':                 'Banner',
+      '/admin/voucher':                'Voucher',
+      '/admin/sosial-link':            'Link Sosial',
+      '/admin/audit':                  'Audit Ledger',
+      '/admin/governance':             'User Governance',
+      '/admin/notifications':          'Notifikasi',
+      '/admin/pengaturan':             'Pengaturan Akun',
+      '/regional/dashboard':           'Dashboard Regional',
+      '/regional/pos-mitra':           'Pos Mitra',
+      '/regional/operator-pos':        'Operator Pos',
+      '/regional/verifikasi':          'Pusat Verifikasi',
+      '/regional/trip-order':          'Monitor Trip Order',
+      '/regional/armada-kurir':        'Armada & Kurir',
+      '/regional/laporan':             'Laporan Keuangan',
+      '/regional/reports':             'Laporan',
+      '/regional/bantuan-chat':        'Chat Bantuan',
+      '/regional/notifications':       'Notifikasi',
+      '/regional/pengaturan':          'Pengaturan Akun',
+      '/operator-pos/dashboard':       'Dashboard',
+      '/operator-pos/manifest':        'Kehadiran',
+      '/operator-pos/scanner':         'Scan QR',
+      '/operator-pos/guide':           'Panduan',
+      '/operator-pos/pengaturan':      'Pengaturan',
+      '/operator-pos/notifications':   'Notifikasi',
+      '/mitra/dashboard':              'Dashboard Mitra',
+      '/mitra/onboarding':             'Onboarding Mitra',
+      '/mitra/trip':                   'Manajemen Trip',
+      '/mitra/qr':                     'QR Mitra',
+      '/mitra/saldo':                  'Saldo',
+      '/mitra/chat':                   'Chat',
+      '/mitra/bantuan':                'Bantuan',
+      '/mitra/notifications':          'Notifikasi',
+      '/customer/booking':             'Cari Tumpangan',
+      '/customer/tickets':             'Tiket Saya',
+      '/customer/qr':                  'QR Tiket',
+      '/customer/vouchers':            'Voucher',
+      '/customer/rewards':             'Rewards',
+      '/customer/wallet':              'Dompet',
+      '/customer/chat':                'Chat',
+      '/customer/bantuan':             'Bantuan',
+      '/customer/notifications':       'Notifikasi',
+      '/customer/onboarding':          'Onboarding',
+    };
+
+    const pageTitle = PAGE_TITLES[path];
+    setPageTitle(pageTitle || null);
+  }, [location.pathname, setPageTitle]);
 
   const handleLogin = (role) => {
     const from = location.state?.from;
@@ -101,7 +194,10 @@ export default function App() {
 
   return (
     <>
+      <OfflineIndicator />
       <NotificationPermissionRequest />
+      <PWAInstallPrompt />
+      <PWAUpdateToast />
       <Routes>
       <Route path="/" element={<Navigate to="/login" replace />} />
 
@@ -146,16 +242,32 @@ export default function App() {
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<SuperadminDashboard />} />
         <Route path="wilayah" element={<RegionsManagement />} />
+        <Route path="pos-mitra" element={<PosMitraManagement />} />
         <Route path="admin-wilayah" element={<RegionalAdminsManagement />} />
+        <Route path="armada" element={<Navigate to="/admin/driver" replace />} />
+        <Route path="armada-kurir" element={<Navigate to="/admin/driver" replace />} />
+        <Route path="driver" element={<DriverManagement />} />
+        <Route path="verifikasi-kyc" element={<VerificationCenterPage />} />
+        <Route path="verifikasi" element={<Navigate to="/admin/verifikasi-kyc" replace />} />
         <Route path="tarif" element={<PricingManagement />} />
+        <Route path="sanksi" element={<SanctionManagement />} />
+        <Route path="reports" element={<ReportManagement />} />
+        <Route path="laporan-pelanggaran" element={<ReportManagement />} />
+        <Route path="bank-pencairan" element={<DisbursementBankManagement />} />
+        <Route path="bank" element={<DisbursementBankManagement />} />
+        <Route path="konfigurasi-aplikasi" element={<AppConfigManagement />} />
+        <Route path="konfigurasi-logo" element={<AppConfigManagement />} />
         <Route path="merchandise" element={<MerchandiseManagement />} />
         <Route path="banner" element={<BannerManagement />} />
+        <Route path="voucher" element={<VoucherManagement />} />
+        <Route path="sosial-link" element={<SocialLinksManagement />} />
         <Route path="audit" element={<AuditLedger />} />
         <Route path="governance" element={<UserGovernance />} />
         <Route path="notifications" element={<NotificationHistory />} />
         <Route path="notifications/settings" element={<NotificationSettings />} />
         <Route path="profile/pengaturan" element={<SuperadminAccountSettings />} />
-        <Route path="*" element={<Navigate to="dashboard" replace />} />
+        <Route path="pengaturan" element={<SuperadminAccountSettings />} />
+        <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
       </Route>
 
       {/* Admin Regional */}
@@ -175,13 +287,16 @@ export default function App() {
         <Route path="trip-order" element={<TripOrderPage />} />
         <Route path="armada-kurir" element={<ArmadaKurirTabs />} />
         <Route path="laporan" element={<FinancialReportPage />} />
+        <Route path="reports" element={<ReportManagement />} />
+        <Route path="bantuan-chat" element={<RegionalSupportChat />} />
         <Route path="notifications" element={<NotificationHistory />} />
         <Route path="notifications/settings" element={<NotificationSettings />} />
         <Route path="profile/pengaturan" element={<RegionalAccountSettings />} />
-        <Route path="*" element={<Navigate to="dashboard" replace />} />
+        <Route path="pengaturan" element={<RegionalAccountSettings />} />
+        <Route path="*" element={<Navigate to="/regional/dashboard" replace />} />
       </Route>
 
-      {/* Operator Pos */}
+      {/* Mitra Pos */}
       <Route
         path="/operator-pos"
         element={
@@ -192,15 +307,18 @@ export default function App() {
       >
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<OperatorDashboard />} />
-        <Route path="inspection" element={<OperatorInspection />} />
+        <Route path="manifest" element={<OperatorManifest />} />
+        <Route path="inspection" element={<Navigate to="/operator-pos/scanner" replace />} />
         <Route path="scanner" element={<OperatorDualScanner />} />
-        <Route path="handover" element={<OperatorHandover />} />
-        <Route path="financial" element={<OperatorFinancial />} />
+        <Route path="handover" element={<Navigate to="/operator-pos/scanner" replace />} />
+        <Route path="financial" element={<Navigate to="/operator-pos/dashboard" replace />} />
+        <Route path="guide" element={<OperatorGuide />} />
+        <Route path="pengaturan" element={<OperatorAccountSettings />} />
         <Route path="notifications" element={<NotificationHistory />} />
         <Route path="notifications/settings" element={<NotificationSettings />} />
         <Route path="profile" element={<Navigate to="pengaturan" replace />} />
         <Route path="profile/pengaturan" element={<OperatorAccountSettings />} />
-        <Route path="*" element={<Navigate to="dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/operator-pos/dashboard" replace />} />
       </Route>
 
       {/* Mitra */}
@@ -219,10 +337,11 @@ export default function App() {
         <Route path="qr" element={<MitraQrDisplay />} />
         <Route path="saldo" element={<MitraBalance />} />
         <Route path="chat" element={<MitraChat />} />
+        <Route path="bantuan" element={<HelpCenterView userRole="mitra" />} />
         <Route path="notifications" element={<NotificationHistory />} />
         <Route path="notifications/settings" element={<NotificationSettings />} />
         <Route path="profile/pengaturan" element={<MitraAccountSettings />} />
-        <Route path="*" element={<Navigate to="dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/mitra/dashboard" replace />} />
       </Route>
 
       {/* Customer */}
@@ -238,8 +357,12 @@ export default function App() {
         <Route path="onboarding" element={<BiometricOnboarding />} />
         <Route path="booking" element={<SearchTrip />} />
         <Route path="tickets" element={<MyTickets />} />
+        <Route path="qr" element={<CustomerQrDisplay />} />
+        <Route path="vouchers" element={<CustomerVouchers />} />
         <Route path="chat" element={<CustomerChat />} />
         <Route path="rewards" element={<CustomerRewards />} />
+        <Route path="wallet" element={<CustomerWallet />} />
+        <Route path="bantuan" element={<HelpCenterView userRole="customer" />} />
         <Route path="notifications" element={<NotificationHistory />} />
         <Route path="notifications/settings" element={<NotificationSettings />} />
         <Route path="profile" element={<Navigate to="pengaturan" replace />} />
