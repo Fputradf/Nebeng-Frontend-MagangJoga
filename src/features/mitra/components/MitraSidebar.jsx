@@ -1,5 +1,5 @@
 import ConfirmModal from '../../../components/ui/ConfirmModal';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   LayoutDashboard,
   UserCheck,
@@ -18,104 +18,112 @@ import {
 } from 'lucide-react';
 import logoAsset from '../../../assets/logo.png';
 import apiClient from '../../../services/apiClient';
+import { useAppConfig } from '../../../context/AppConfigContext';
 
 export default function MitraSidebar({
   activeMenu = 'Dashboard Mitra',
   onMenuSelect,
   onLogout,
-  isVerified = false
-}) {
+  isVerified = false, isOpen: propIsOpen, onClose: propOnClose }) {
+  const { appName, appLogo } = useAppConfig();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+
+  const isControlled = typeof propIsOpen === 'boolean';
+  const isMobileOpen = isControlled ? propIsOpen : internalOpen;
+
+  const handleClose = () => {
+    if (isControlled) {
+      if (propOnClose) propOnClose();
+    } else {
+      setInternalOpen(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!isMobileOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        handleClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isMobileOpen, isControlled, propOnClose]);
 
   const MENU_GROUPS = [
     {
       label: 'Menu Utama',
       items: [
-        { name: 'Dashboard Mitra', icon: LayoutDashboard, locked: !isVerified, lockMessage: 'Fitur terkunci. Memerlukan verifikasi Admin Regional.' },
-        ...(!isVerified ? [{ name: 'Onboarding & Verifikasi', icon: UserCheck, locked: false, label: 'Onboarding & Verifikasi' }] : []),
+        { name: 'Dashboard Mitra', slug: 'dashboard', icon: LayoutDashboard, locked: !isVerified, lockMessage: 'Fitur terkunci. Memerlukan verifikasi Admin Regional.' },
+        ...(!isVerified ? [{ name: 'Onboarding & Verifikasi', slug: 'onboarding', icon: UserCheck, locked: false, label: 'Onboarding & Verifikasi' }] : []),
       ],
     },
     {
-      label: 'Manajemen Trip',
+      label: 'Operasional & Layanan',
       items: [
-        { name: 'Kelola Trip & Jadwal', icon: Calendar, locked: !isVerified, lockMessage: 'Fitur terkunci. Memerlukan verifikasi Admin Regional.' },
-        { name: 'Digital QR Trip', icon: QrCode, locked: !isVerified, lockMessage: 'Fitur terkunci. Memerlukan verifikasi Admin Regional.' },
-      ],
-    },
-    {
-      label: 'Keuangan & Komunikasi',
-      items: [
-        { name: 'Saldo & Komisi', icon: Wallet, locked: !isVerified, lockMessage: 'Fitur terkunci. Memerlukan verifikasi Admin Regional.' },
-        { name: 'Chat Pelanggan', icon: MessageSquare, locked: !isVerified, lockMessage: 'Fitur terkunci. Memerlukan verifikasi Admin Regional.' },
-        { name: 'Pusat Bantuan & FAQ', icon: HelpCircle, locked: false },
-      ],
-    },
-    {
-      label: 'Pengaturan',
-      items: [
-        { name: 'Pengaturan Akun', icon: Settings,
-locked: !isVerified, lockMessage: 'Fitur terkunci. Memerlukan verifikasi Admin Regional.' },
+        { name: 'Manajemen Trip & Pesanan', slug: 'trip', icon: Calendar, locked: !isVerified, lockMessage: 'Selesaikan verifikasi untuk menerima pesanan.' },
+        { name: 'Tampilkan QR Code', slug: 'qr', icon: QrCode, locked: !isVerified, lockMessage: 'QR Code aktif setelah verifikasi disetujui.' },
+        { name: 'Saldo & Pendapatan', slug: 'saldo', icon: Wallet, locked: !isVerified, lockMessage: 'Fitur terkunci. Memerlukan verifikasi Admin Regional.' },
+        { name: 'Chat Penumpang', slug: 'chat', icon: MessageSquare, locked: !isVerified, lockMessage: 'Fitur chat aktif untuk mitra terverifikasi.' },
+        { name: 'Pusat Bantuan', slug: 'bantuan', icon: HelpCircle, locked: false },
+        { name: 'Pengaturan Akun', slug: 'profile/pengaturan', icon: Settings, locked: !isVerified, lockMessage: 'Fitur terkunci. Memerlukan verifikasi Admin Regional.' },
       ],
     },
   ];
 
-  const handleConfirmLogout = async () => {
+  const handleConfirmLogout = () => {
     setIsLoggingOut(true);
-    try {
-      await apiClient.post('/auth/logout');
-    } catch (err) {
-      console.error('Gagal mencabut token di server:', err);
-    } finally {
-      setIsLoggingOut(false);
-      setShowLogoutModal(false);
+    setTimeout(() => {
       if (onLogout) onLogout();
-    }
+    }, 400);
   };
 
   const handleMenuSelect = (item) => {
     if (item.locked) return;
-    if (onMenuSelect) onMenuSelect(item.name);
-    setIsMobileOpen(false);
+    onMenuSelect && onMenuSelect(item.slug || item.name);
+    handleClose();
   };
 
   return (
     <>
-      <button
-        onClick={() => setIsMobileOpen(true)}
-        aria-label="Buka menu navigasi"
-        className="lg:hidden fixed top-4 left-4 z-20 w-11 h-11 rounded-xl bg-white shadow-card border border-slate-200 flex items-center justify-center text-slate-900 hover:bg-slate-50 transition-colors"
-      >
-        <Menu className="w-5 h-5" />
-      </button>
+      {!isControlled && (
+        <button
+          onClick={() => setInternalOpen(true)}
+          aria-label="Buka menu navigasi"
+          className="lg:hidden fixed top-4 left-4 z-20 w-11 h-11 rounded-2xl bg-white shadow-soft border border-slate-200 flex items-center justify-center text-[#10367D] hover:bg-slate-50 transition-colors"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+      )}
 
       {isMobileOpen && (
         <div
-          onClick={() => setIsMobileOpen(false)}
-          className="lg:hidden fixed inset-0 bg-black/50 z-30 backdrop-blur-sm"
+          onClick={handleClose}
+          className="lg:hidden fixed inset-0 bg-black/60 z-40 backdrop-blur-xs transition-opacity" aria-hidden="true"
         />
       )}
 
-      <aside className={`w-64 h-screen bg-gradient-to-b from-[#0c2353] via-[#10367D] to-[#18458f] text-white flex flex-col justify-between p-5 fixed left-0 top-0 shadow-2xl border-r border-blue-400/20 overflow-y-auto z-40 transition-transform duration-300 font-sans print:hidden select-none ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
+      <aside className={`w-64 h-screen bg-gradient-to-b from-[#0c2353] via-[#10367D] to-[#18458f] text-white flex flex-col justify-between p-5 fixed left-0 top-0 shadow-2xl border-r border-blue-400/20 overflow-y-auto z-50 transition-transform duration-300 font-sans print:hidden select-none ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
         <div>
           <div className="mb-8 px-2 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <img
-                src={logoAsset}
-                alt="Logo Nebeng"
+                src={appLogo || logoAsset}
+                alt={`Logo ${appName || 'Nebeng'}`}
                 className="h-8 w-8 object-contain shrink-0 filter brightness-0 invert"
                 onError={(e) => {
                   e.target.onerror = null;
                   e.target.src = '/logo.png';
                 }}
               />
-              <span className="font-bold text-white text-lg tracking-tight leading-none">
-                Nebeng
+              <span className="font-bold text-white text-lg tracking-tight leading-none truncate max-w-[140px]">
+                {appName || 'Nebeng'}
               </span>
             </div>
             <button
-              onClick={() => setIsMobileOpen(false)}
+              onClick={handleClose}
               aria-label="Tutup menu navigasi"
               className="lg:hidden w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-white hover:bg-white/15 transition-colors"
             >
@@ -132,37 +140,43 @@ locked: !isVerified, lockMessage: 'Fitur terkunci. Memerlukan verifikasi Admin R
                 <nav className="space-y-1">
                   {group.items.map((item) => {
                     const IconComponent = item.icon;
-                    const isActive = activeMenu === item.name;
+                    const isActive = activeMenu === item.name || activeMenu === item.slug;
                     return (
-                      <button
-                        key={item.name}
-                        disabled={item.locked}
-                        onClick={() => handleMenuSelect(item)}
-                        title={item.locked ? item.lockMessage : undefined}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition text-left ${
-                          isActive
-                            ? 'bg-white text-[#10367D] font-bold shadow-md cursor-default'
-                            : item.locked
-                            ? 'text-white/40 font-medium cursor-not-allowed opacity-60'
-                            : 'text-white/85 font-medium hover:bg-white/10 hover:text-white cursor-pointer'
-                        }`}
-                      >
-                        <IconComponent
-                          className={`w-4 h-4 ${
-                            isActive
-                              ? 'text-[#10367D]'
-                              : item.locked
-                              ? 'text-white/30'
-                              : 'text-white/80'
+                      <div key={item.name} className="relative group">
+                        <button
+                          onClick={() => handleMenuSelect(item)}
+                          disabled={item.locked}
+                          className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm transition text-left ${
+                            item.locked
+                              ? 'text-white/40 cursor-not-allowed hover:bg-white/5'
+                              : isActive
+                              ? 'bg-white text-[#10367D] font-bold shadow-md cursor-pointer'
+                              : 'text-white/85 font-medium hover:bg-white/10 hover:text-white cursor-pointer'
                           }`}
-                        />
-                        <span className="flex-1">{item.label || item.name}</span>
-                        {item.name === 'Onboarding & Verifikasi' && isVerified ? (
-                          <ShieldCheck className="w-3 h-3 text-emerald-400 shrink-0" />
-                        ) : item.locked ? (
-                          <Lock className="w-3 h-3 text-white/40 shrink-0" />
-                        ) : null}
-                      </button>
+                        >
+                          <div className="flex items-center gap-3">
+                            <IconComponent
+                              className={`w-4 h-4 ${
+                                item.locked
+                                  ? 'text-white/30'
+                                  : isActive
+                                  ? 'text-[#10367D]'
+                                  : 'text-white/80'
+                              }`}
+                            />
+                            <span>{item.name}</span>
+                          </div>
+                          {item.locked && (
+                            <Lock className="w-3.5 h-3.5 text-white/40" />
+                          )}
+                        </button>
+                        {item.locked && (
+                          <div className="hidden group-hover:block absolute left-full top-1/2 -translate-y-1/2 ml-2 z-50 w-52 p-2.5 bg-neutral-900/95 backdrop-blur-md text-white text-xs rounded-xl shadow-xl border border-neutral-700/50 pointer-events-none">
+                            <p className="font-semibold text-amber-400 mb-0.5">Akses Dibatasi</p>
+                            <p className="text-neutral-300 leading-relaxed text-[11px]">{item.lockMessage}</p>
+                          </div>
+                        )}
+                      </div>
                     );
                   })}
                 </nav>

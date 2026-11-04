@@ -1,4 +1,4 @@
-import { X, CheckCircle2, Clock, MapPin, ShieldCheck, UserCheck, AlertCircle } from 'lucide-react';
+import { X, CheckCircle2, Clock, MapPin, ShieldCheck, UserCheck, AlertCircle, Users, Star } from 'lucide-react';
 import BaseModal from '../../../components/ui/BaseModal';
 
 // const PRIMARY_COLOR = '#10367D';
@@ -12,6 +12,7 @@ export default function TicketTimelineModal({ isOpen, onClose, ticket }) {
   // Cek pencapaian tahapan perjalanan
   const isPaid = ['paid', 'checked_in_origin', 'in_transit', 'arrived_destination', 'completed'].includes(status);
   const isCheckedInOrigin = ['checked_in_origin', 'in_transit', 'arrived_destination', 'completed'].includes(status);
+  const isInTransit = ['in_transit', 'arrived_destination', 'completed'].includes(status) || ticket.tripStatus === 'in_transit';
   const isCompleted = status === 'completed';
   const isCancelled = status === 'cancelled';
   const isCancelledByMitra = status === 'cancelled_by_mitra' || ticket.status === 'Dibatalkan oleh Mitra';
@@ -41,7 +42,7 @@ export default function TicketTimelineModal({ isOpen, onClose, ticket }) {
     },
     {
       id: 'paid',
-      title: 'Pembayaran Dikonfirmasi & Dana Ditahan di Escrow',
+      title: 'Pembayaran Dikonfirmasi & Dana Aman Ditahan',
       subtitle: isNoShow ? 'Tiket hangus (penumpang tidak datang)' : 'Pembayaran aman tersimpan di sistem rekening bersama',
       time: isPaid ? (isNoShow ? 'No-Show (Hangus)' : 'Pembayaran Sukses') : 'Menunggu Pembayaran',
       isDone: isPaid,
@@ -53,10 +54,10 @@ export default function TicketTimelineModal({ isOpen, onClose, ticket }) {
       id: 'origin_scan',
       title: `Check-in Pos Asal (${ticket.from || 'Pos Asal'})`,
       subtitle: isCheckedInOrigin
-        ? `Pemeriksaan selesai & penumpang/barang check-in oleh ${originLog?.operatorName || 'Operator'} di ${originLog?.posName || ticket.from}`
+        ? `Pemeriksaan selesai & penumpang/barang check-in oleh ${originLog?.operatorName || 'Mitra Pos'} di ${originLog?.posName || ticket.from}`
         : isDriverAtOrigin
-        ? `Sopir (${ticket.mitra || 'Mitra'}) sudah sampai di pos asal (Stand-by). Silakan tunjukkan QR tiket Anda ke Operator Pos.`
-        : 'Menunggu kedatangan armada & pemeriksaan fisik oleh Operator Pos Asal',
+        ? `Sopir (${ticket.mitra || 'Mitra'}) sudah sampai di pos asal (Stand-by). Silakan tunjukkan QR tiket Anda ke Mitra Pos.`
+        : 'Menunggu kedatangan armada & pemeriksaan fisik oleh Mitra Pos Asal',
       time: originLog
         ? (originLog.isTripLog && !isCheckedInOrigin
             ? `Sopir Tiba • ${formatTime(originLog.createdAt)}`
@@ -73,9 +74,9 @@ export default function TicketTimelineModal({ isOpen, onClose, ticket }) {
       id: 'in_transit',
       title: 'Dalam Perjalanan Menuju Pos Tujuan',
       subtitle: `Armada: ${ticket.vehicle || 'Mitra'} • Sopir: ${ticket.mitra || 'Mitra'}`,
-      time: isCheckedInOrigin && !isCompleted ? 'Sedang Bergerak' : isCompleted ? 'Selesai' : '--:--',
-      isDone: isCheckedInOrigin,
-      isActive: status === 'in_transit',
+      time: isInTransit && !isCompleted ? 'Sedang Bergerak' : isCompleted ? 'Selesai' : '--:--',
+      isDone: isCompleted || status === 'arrived_destination',
+      isActive: status === 'in_transit' || ticket.tripStatus === 'in_transit',
       icon: MapPin,
       color: 'bg-blue-600',
     },
@@ -83,10 +84,8 @@ export default function TicketTimelineModal({ isOpen, onClose, ticket }) {
       id: 'dest_scan',
       title: `Tiba & Serah Terima di ${ticket.to || 'Pos Tujuan'}`,
       subtitle: destLog
-        ? `Diverifikasi dengan OTP oleh ${destLog.operatorName}. Dana Escrow berhasil dicairkan ke Mitra.`
-        : ticket.otp
-        ? `Tunjukkan Kode OTP: [ ${ticket.otp} ] kepada Operator Pos Tujuan saat pengambilan`
-        : 'Menunggu kedatangan di Pos Tujuan',
+        ? `Diverifikasi dan diserahkan oleh ${destLog.operatorName}. Dana berhasil dicairkan ke Mitra.`
+        : 'Tunjukkan QR Tiket kepada Mitra Pos Tujuan saat tiba / pengambilan barang',
       time: destLog ? formatTime(destLog.createdAt) : '--:--',
       isDone: isCompleted,
       isActive: status === 'arrived_destination',
@@ -116,6 +115,57 @@ export default function TicketTimelineModal({ isOpen, onClose, ticket }) {
           </button>
         </div>
 
+        {/* Info Mitra Driver & Rating */}
+        <div className="mt-4 p-3 bg-slate-50 border border-slate-200/80 rounded-xl flex items-center justify-between gap-3 text-xs">
+          <div className="min-w-0">
+            <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Mitra Driver & Armada</span>
+            <p className="font-bold text-slate-800 text-[13px] truncate">
+              {ticket.mitra || 'Mitra Driver'}
+            </p>
+            <p className="text-[11px] text-slate-500 truncate">
+              {ticket.vehicle || 'Armada Resmi'}
+            </p>
+          </div>
+          <div className="shrink-0 text-right">
+            {ticket.mitraRating ? (
+              <div className="inline-flex items-center gap-1 px-2 py-1 bg-amber-50 text-amber-800 text-xs font-bold rounded-lg border border-amber-200">
+                <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500" />
+                <span>{ticket.mitraRating}</span>
+                {ticket.mitraTotalReviews > 0 && (
+                  <span className="text-[10px] text-amber-600 font-normal">({ticket.mitraTotalReviews} ulasan)</span>
+                )}
+              </div>
+            ) : (
+              <div className="inline-flex items-center gap-1 px-2 py-1 bg-slate-100 text-slate-500 text-xs font-medium rounded-lg">
+                <Star className="w-3.5 h-3.5 text-slate-400" />
+                <span>Mitra Baru</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Estimasi Waktu Tempuh & Perkiraan Tiba */}
+        {(ticket.durationFormatted || ticket.estimatedArrivalTime || ticket.distanceKm) && (
+          <div className="mt-3 p-3 bg-blue-50/70 border border-blue-200/60 rounded-xl flex items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-blue-700 shrink-0" />
+              <div>
+                <span className="text-[10px] uppercase font-bold text-blue-500 block tracking-wider">Estimasi Waktu Tempuh</span>
+                <span className="font-bold text-blue-950">
+                  {ticket.durationFormatted || `${ticket.durationMinutes} menit`}
+                  {ticket.distanceKm ? ` (~${ticket.distanceKm} km)` : ''}
+                </span>
+              </div>
+            </div>
+            {ticket.estimatedArrivalTime && (
+              <div className="text-right">
+                <span className="text-[10px] uppercase font-bold text-blue-500 block tracking-wider">Perkiraan Tiba</span>
+                <span className="font-bold text-blue-950">{ticket.estimatedArrivalTime}</span>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Kondisi Batal */}
         {isCancelled && (
           <div className="my-4 p-3 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3 text-red-700">
@@ -141,6 +191,41 @@ export default function TicketTimelineModal({ isOpen, onClose, ticket }) {
               <p className="mt-0.5 text-emerald-700 leading-relaxed">
                 Armada & Sopir (<strong>{ticket.mitra || 'Mitra'}</strong>) sudah stand-by di <strong>{ticket.from || 'Pos Asal'}</strong>. Silakan menuju petugas pos dan tunjukkan QR Tiket Anda untuk verifikasi boarding.
               </p>
+            </div>
+          </div>
+        )}
+
+        {/* Manifest Rombongan Penumpang */}
+        {ticket.passengers && ticket.passengers.length > 0 && (
+          <div className="my-4 p-3.5 bg-blue-50/70 border border-blue-200 rounded-2xl text-xs space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-[#10367D] flex items-center gap-1.5 text-xs">
+                <Users className="w-4 h-4 text-blue-600" />
+                Manifest Penumpang ({ticket.passengers.length} Orang)
+              </span>
+              <span className="text-[10px] text-blue-600 font-semibold bg-white px-2 py-0.5 rounded-full border border-blue-200">
+                {ticket.detail}
+              </span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+              {ticket.passengers.map((p, idx) => (
+                <div key={idx} className="bg-white p-2 rounded-xl border border-blue-100 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-blue-100 text-[#10367D] text-[10px] font-bold flex items-center justify-center">
+                      {p.seatNumber || (idx + 1)}
+                    </span>
+                    <div>
+                      <p className="font-bold text-neutral-800 text-[11px]">{p.name}</p>
+                      <p className="text-[10px] text-neutral-400 font-mono">{p.phone}</p>
+                    </div>
+                  </div>
+                  {p.isContact && (
+                    <span className="text-[9px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded">
+                      PIC
+                    </span>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         )}

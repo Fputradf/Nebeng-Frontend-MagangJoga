@@ -71,10 +71,10 @@ export default function TermsOfServiceModal({ isOpen, onClose, onAccept }) {
           <div className="space-y-1">
             <h3 className="font-bold text-slate-900 flex items-center gap-1.5">
               <span className="w-5 h-5 rounded-full bg-slate-100 text-[11px] text-slate-700 flex items-center justify-center font-bold">2</span>
-              Sistem Escrow & Transaksi Aman
+              Sistem Pembayaran Aman & Transaksi Terlindungi
             </h3>
             <p className="pl-6 text-slate-600">
-              Semua transaksi ongkos perjalanan dan kargo wajib melalui dompet digital Nebeng yang dilindungi proteksi escrow. Dana pengemudi dicairkan hanya setelah perjalanan dikonfirmasi tiba dengan sukses.
+              Semua transaksi ongkos perjalanan dan kargo wajib melalui dompet digital Nebeng yang dilindungi sistem pembayaran aman. Dana pengemudi dicairkan hanya setelah perjalanan dikonfirmasi tiba dengan sukses.
             </p>
           </div>
 
@@ -84,7 +84,7 @@ export default function TermsOfServiceModal({ isOpen, onClose, onAccept }) {
               Peraturan Penjemputan di Pos Mitra
             </h3>
             <p className="pl-6 text-slate-600">
-              Seluruh perjalanan wajib diawali dan diakhiri pada Pos Mitra resmi yang telah terdaftar dalam sistem Nebeng. Penumpang wajib tiba minimal 15 menit sebelum waktu keberangkatan untuk proses validasi QR code oleh Operator Pos.
+              Seluruh perjalanan wajib diawali dan diakhiri pada Pos Mitra resmi yang telah terdaftar dalam sistem Nebeng. Penumpang wajib tiba minimal 15 menit sebelum waktu keberangkatan untuk proses validasi QR code oleh Mitra Pos.
             </p>
           </div>
 

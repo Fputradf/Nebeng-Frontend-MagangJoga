@@ -26,8 +26,19 @@ import {
   Car,
   Package,
   Users,
+  Share2,
   X,
+  ShieldAlert,
+  Lock,
+  Hash,
 } from 'lucide-react';
+import SosTriggerModal from '../components/SosTriggerModal';
+import ReportModal from '../../../components/common/ReportModal';
+import {
+  evaluateCustomerReportEligibility,
+  isCustomerArrivedAtOriginPos,
+  isCustomerArrivedAtDestPos,
+} from '../../../utils/reportCheckpointValidation';
 import { io } from 'socket.io-client';
 
 import { useToast } from '../../../context/ToastContext';
@@ -39,6 +50,14 @@ import StatCard from '../../../components/ui/StatCard';
 import apiClient from '../../../services/apiClient';
 import TicketTimelineModal from '../components/TicketTimelineModal';
 import PhoneCallModal from '../../../components/ui/PhoneCallModal';
+import {
+  formatTripSchedule,
+  formatTripTime,
+  formatDurationMinutes,
+  getEstimatedArrivalTime,
+  isTripPastTolerance,
+} from '../../../utils/dateUtils';
+import { parseRoutePolyline } from '../../../utils/mapRouteUtil';
 
 const PRIMARY_COLOR = '#10367D';
 const PRIMARY_ACCENT = '#74B4D9';
@@ -65,6 +84,90 @@ export default function MyTickets() {
   const [isLoadingRewards, setIsLoadingRewards] = useState(false);
 
   const [selectedTicket, setSelectedTicket] = useState(null);
+  const [reportTargetUser, setReportTargetUser] = useState(null);
+  const [availableReportTargets, setAvailableReportTargets] = useState([]);
+  const [reportContext, setReportContext] = useState({});
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+
+  const handleOpenReport = (ticket) => {
+    // Validasi audit checkpoint: Customer harus sudah check-in di Pos 1 / Pos Tujuan DAN Driver harus sudah tiba (kecuali trip dibatalkan / driver tidak datang)
+    const eligibility = evaluateCustomerReportEligibility(ticket);
+    if (!eligibility.canReport) {
+      toast.warning(eligibility.reason, {
+        title: 'Fitur Lapor Belum Aktif',
+      });
+      return;
+    }
+
+    const isCancelled =
+      ticket.status === 'Batal' ||
+      ticket.currentStatusText === 'cancelled' ||
+      ticket.currentStatusText === 'cancelled_by_mitra' ||
+      ticket.tripStatus === 'cancelled';
+
+    const driverId =
+      ticket.revieweeId ||
+      ticket.mitraId ||
+      ticket.trip?.mitraId ||
+      ticket.driverId ||
+      ticket.trip?.mitra?.id ||
+      ticket.trip?.mitra?.userId;
+
+    const targets = [
+      {
+        key: 'driver',
+        id: driverId,
+        name: ticket.mitra || 'Mitra Driver',
+        role: 'Mitra Driver',
+        subtitle: `${ticket.vehicle || 'Armada Resmi'} • ${ticket.from} → ${ticket.to}`,
+        tripId: ticket.tripId,
+        orderId: ticket.rawId || ticket.id,
+      },
+    ];
+
+    // Pos Asal (Pos 1): Hanya bisa dilaporkan jika customer sudah sampai / check-in di pos asal
+    const hasReachedOrigin = isCustomerArrivedAtOriginPos(ticket);
+    if (hasReachedOrigin && (ticket.originPoint?.id || ticket.from)) {
+      targets.push({
+        key: 'origin_pos',
+        id: ticket.originPoint?.operatorId || 1,
+        pickupPointId: ticket.originPoint?.id,
+        name: `Pos Jemput: ${ticket.originPoint?.name || ticket.from}`,
+        role: 'Mitra Pos',
+        subtitle: ticket.originPoint?.address || 'Titik Kumpul / Halte Keberangkatan',
+        tripId: ticket.tripId,
+        orderId: ticket.rawId || ticket.id,
+      });
+    }
+
+    // Pos Tujuan (Pos 2): HANYA BISA DILAPORKAN JIKA CUSTOMER SUDAH TIBA DI POS TUJUAN!
+    // Jika masih dalam perjalanan (in_transit), Pos Tujuan TIDAK BISA dilaporkan.
+    const hasReachedDestination = isCustomerArrivedAtDestPos(ticket);
+    if (hasReachedDestination && (ticket.destinationPoint?.id || ticket.to)) {
+      targets.push({
+        key: 'dest_pos',
+        id: ticket.destinationPoint?.operatorId || 1,
+        pickupPointId: ticket.destinationPoint?.id,
+        name: `Pos Tujuan: ${ticket.destinationPoint?.name || ticket.to}`,
+        role: 'Mitra Pos',
+        subtitle: ticket.destinationPoint?.address || 'Titik Kedatangan / Halte Tujuan',
+        tripId: ticket.tripId,
+        orderId: ticket.rawId || ticket.id,
+      });
+    }
+
+    setAvailableReportTargets(targets);
+    setReportTargetUser(targets[0]);
+    setReportContext({
+      orderId: ticket.rawId || ticket.id,
+      tripId: ticket.tripId,
+      initialCategory: isCancelled ? 'DISPUTE_NO_SHOW' : undefined,
+      initialDescription: isCancelled
+        ? 'Mitra driver tidak kunjung hadir di pos keberangkatan hingga perjalanan dibatalkan.'
+        : undefined,
+    });
+    setIsReportModalOpen(true);
+  };
   const [activeModalType, setActiveModalType] = useState(null);
   const [showOtpMap, setShowOtpMap] = useState({});
 
@@ -97,6 +200,52 @@ export default function MyTickets() {
   const [isTrackingModalOpen, setIsTrackingModalOpen] = useState(false);
   const [trackingTicket, setTrackingTicket] = useState(null);
   const [livePosition, setLivePosition] = useState(null);
+
+  // SOS Emergency State & 2x Press Protection
+  const [isSosModalOpen, setIsSosModalOpen] = useState(false);
+  const [selectedSosTicket, setSelectedSosTicket] = useState(null);
+  const [pendingSosTicketId, setPendingSosTicketId] = useState(null);
+  const sosPressTimerRef = useRef(null);
+
+  // Bersihkan timer konfirmasi SOS saat unmount
+  useEffect(() => {
+    return () => {
+      if (sosPressTimerRef.current) {
+        clearTimeout(sosPressTimerRef.current);
+      }
+    };
+  }, []);
+
+  const handleOpenSos = (ticket) => {
+    const ticketId = ticket?.id || 'tracking';
+    if (pendingSosTicketId === ticketId) {
+      // Penekanan ke-2 (Terkonfirmasi!)
+      if (sosPressTimerRef.current) {
+        clearTimeout(sosPressTimerRef.current);
+        sosPressTimerRef.current = null;
+      }
+      setPendingSosTicketId(null);
+      setSelectedSosTicket(ticket);
+      setIsSosModalOpen(true);
+    } else {
+      // Penekanan ke-1 (Peringatan pertama untuk mencegah tidak sengaja tertekan)
+      setPendingSosTicketId(ticketId);
+      toast.warning(
+        '⚠️ Peringatan: Tombol SOS ditekan! Tekan sekali lagi dalam 4 detik untuk membuka bantuan darurat.',
+        {
+          title: 'Peringatan Darurat (1/2)',
+          duration: 4000,
+        }
+      );
+
+      if (sosPressTimerRef.current) {
+        clearTimeout(sosPressTimerRef.current);
+      }
+      sosPressTimerRef.current = setTimeout(() => {
+        setPendingSosTicketId(null);
+      }, 4000);
+    }
+  };
   const leafletMapInstance = useRef(null);
   const movingMarkerRef = useRef(null);
   const socketRef = useRef(null);
@@ -122,11 +271,19 @@ export default function MyTickets() {
           ? `${trip.vehicle.model} (${trip.vehicle.plateNumber})`
           : 'Kendaraan Resmi';
 
+        const isPastTolerance = (
+          (order.status === 'paid' || order.status === 'pending_payment') &&
+          trip.status === 'scheduled' &&
+          isTripPastTolerance(trip.departureDate, trip.departureTime)
+        );
+
         let statusText = 'Aktif';
-        if (order.status === 'pending_payment') {
+        if (isPastTolerance) {
+          statusText = 'Batal (Kedaluwarsa)';
+        } else if (order.status === 'pending_payment') {
           statusText = 'Menunggu Pembayaran';
         } else if (order.status === 'cancelled' || order.status === 'cancelled_by_mitra') {
-          statusText = 'Batal';
+          statusText = trip.status === 'mitra_no_show' || order.noShowReason ? 'Batal (Supir Tidak Hadir)' : 'Batal';
         } else if (order.status === 'completed') {
           statusText = 'Selesai';
         } else if (order.status === 'no_show') {
@@ -138,8 +295,14 @@ export default function MyTickets() {
           rawId: order.id,
           tripId: trip.id,
           tripStatus: trip.status,
+          noShowReason: order.noShowReason || trip.mitraNoShowReason || null,
+          isExpired: isPastTolerance,
+          durationMinutes: trip.estimatedDurationMinutes ? Number(trip.estimatedDurationMinutes) : null,
+          durationFormatted: formatDurationMinutes(trip.estimatedDurationMinutes),
+          estimatedArrivalTime: getEstimatedArrivalTime(trip.departureDate, trip.departureTime, trip.estimatedDurationMinutes),
+          distanceKm: trip.distanceKm ? Number(trip.distanceKm) : null,
           customerId: order.customerId,
-          revieweeId: trip.mitraId || trip.mitra?.id || trip.mitra?.userId,
+          revieweeId: trip.mitraId || trip.mitra?.id || trip.mitra?.userId || trip.mitra_id || trip.driverId,
           type: order.type,
           title: isParcel
             ? `Nebeng Barang (${order.itemOrders?.[0]?.itemCategory || 'Paket'})`
@@ -148,8 +311,12 @@ export default function MyTickets() {
           to: destination,
           mitra: mitraName,
           mitraPhone: trip.mitra?.phone || null,
+          mitraRating: trip.mitra?.rating ?? null,
+          mitraTotalReviews: trip.mitra?.totalReviews ?? 0,
           vehicle: vehicleModel,
-          schedule: `${trip.departureDate?.split('T')[0] || 'Segera'} • Sesuai Jadwal`,
+          departureDate: trip.departureDate?.split('T')[0] || 'Segera',
+          departureTime: formatTripTime(trip.departureTime, trip.departureDate),
+          schedule: formatTripSchedule(trip.departureDate, trip.departureTime),
           totalPrice: formatRupiah(order.totalPrice),
           subtotal: order.subtotal != null ? formatRupiah(order.subtotal) : formatRupiah(order.totalPrice),
           discountAmount: Number(order.discountAmount || 0),
@@ -163,7 +330,11 @@ export default function MyTickets() {
           otp: order.otpClaim || null,
           qrCodeTicket: order.qrCodeTicket,
           createdAt: order.createdAt,
+          passengers: order.passengers || [],
           checkpointsLogs: order.checkpointsLogs || [], // Data audit log nyata dari backend
+          originPoint: trip.originPoint,
+          destinationPoint: trip.destinationPoint,
+          mapsPolyline: trip.mapsPolyline || null,
           originCoord: (trip.originPoint?.lat && trip.originPoint?.lng)
             ? { lat: trip.originPoint.lat, lng: trip.originPoint.lng }
             : { lat: -7.7956, lng: 110.3695 }, // Yogyakarta area default
@@ -222,7 +393,7 @@ export default function MyTickets() {
       }
     });
 
-    // Mendengarkan sinyal scan dari Operator Pos Asal / Tujuan
+    // Mendengarkan sinyal scan dari Mitra Pos Asal / Tujuan
     socket.on('checkpointScanned', (data) => {
       console.log('Live Checkpoint Scanned via WebSocket:', data);
 
@@ -407,44 +578,29 @@ export default function MyTickets() {
         leafletMapInstance.current = null;
       }
 
-      // If live position is available, use only that (single point)
-      // Otherwise, use only origin and destination (2 points only, no OSRM route)
-      let coords;
-      if (livePosition) {
-        coords = [[livePosition.lat, livePosition.lng]];
-        console.log('[Customer GPS] Using live position only');
-      } else {
-        coords = [
-          [trackingTicket.originCoord.lat, trackingTicket.originCoord.lng],
-          [trackingTicket.destinationCoord.lat, trackingTicket.destinationCoord.lng]
-        ];
-        console.log('[Customer GPS] Using origin and destination only (2 points)');
-      }
+      const roadRouteCoords = parseRoutePolyline(
+        trackingTicket.mapsPolyline,
+        trackingTicket.originCoord,
+        trackingTicket.destinationCoord,
+      );
 
-      console.log('[Customer GPS] Final map coordinates:', coords);
-      console.log('[Customer GPS] Live position:', livePosition);
-      console.log('[Customer GPS] Ticket originCoord:', trackingTicket.originCoord);
-      console.log('[Customer GPS] Ticket destinationCoord:', trackingTicket.destinationCoord);
+      const routeCoords = roadRouteCoords.length > 0
+        ? roadRouteCoords
+        : [
+            [trackingTicket.originCoord.lat, trackingTicket.originCoord.lng],
+            [trackingTicket.destinationCoord.lat, trackingTicket.destinationCoord.lng],
+          ];
 
-      // Log actual coordinate values
-      if (trackingTicket.originCoord) {
-        console.log('[Customer GPS] Origin lat:', trackingTicket.originCoord.lat, 'lng:', trackingTicket.originCoord.lng);
-      }
-      if (trackingTicket.destinationCoord) {
-        console.log('[Customer GPS] Destination lat:', trackingTicket.destinationCoord.lat, 'lng:', trackingTicket.destinationCoord.lng);
-      }
+      console.log('[Customer GPS] Final road route coordinates:', routeCoords);
 
-      // Use originCoord as center if no live position
       const centerPoint = livePosition
         ? [livePosition.lat, livePosition.lng]
         : [trackingTicket.originCoord.lat, trackingTicket.originCoord.lng];
 
       const map = L.map('customer-tracking-map', {
         center: centerPoint,
-        zoom: 16, // Maximum zoom in as requested
+        zoom: 14,
         zoomControl: true,
-        minZoom: 14, // Prevent zooming out too much
-        maxZoom: 18
       });
 
       leafletMapInstance.current = map;
@@ -453,9 +609,96 @@ export default function MyTickets() {
         attribution: '&copy; OpenStreetMap'
       }).addTo(map);
 
-      // Add markers based on live position or coordinates
+      // Add origin marker
+      const originIcon = L.divIcon({
+        className: 'custom-origin-marker',
+        html: `
+          <div style="
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            pointer-events:none;
+          ">
+            <div style="
+              background:linear-gradient(135deg, #10B981 0%, #059669 100%);
+              color:white;
+              padding:6px 12px;
+              border-radius:8px;
+              font-weight:600;
+              font-size:11px;
+              border:2px solid white;
+              box-shadow:0 4px 12px rgba(16, 185, 129, 0.4);
+              white-space:nowrap;
+              margin-bottom:4px;
+            ">
+              Pos Asal: ${trackingTicket.origin || 'Asal'}
+            </div>
+            <div style="
+              width:20px;
+              height:20px;
+              background:#10B981;
+              border:3px solid white;
+              border-radius:50%;
+              box-shadow:0 2px 8px rgba(0,0,0,0.3);
+            "></div>
+          </div>
+        `,
+        iconSize: [40, 40],
+        iconAnchor: [20, 40]
+      });
+
+      // Add destination marker
+      const destIcon = L.divIcon({
+        className: 'custom-dest-marker',
+        html: `
+          <div style="
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            pointer-events:none;
+          ">
+            <div style="
+              background:linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+              color:white;
+              padding:6px 12px;
+              border-radius:8px;
+              font-weight:600;
+              font-size:11px;
+              border:2px solid white;
+              box-shadow:0 4px 12px rgba(239, 68, 68, 0.4);
+              white-space:nowrap;
+              margin-bottom:4px;
+            ">
+              Pos Tujuan: ${trackingTicket.destination || 'Tujuan'}
+            </div>
+            <div style="
+              width:20px;
+              height:20px;
+              background:#EF4444;
+              border:3px solid white;
+              border-radius:50%;
+              box-shadow:0 2px 8px rgba(0,0,0,0.3);
+            "></div>
+          </div>
+        `,
+        iconSize: [40, 40],
+        iconAnchor: [20, 40]
+      });
+
+      L.marker([trackingTicket.originCoord.lat, trackingTicket.originCoord.lng], { icon: originIcon }).addTo(map);
+      L.marker([trackingTicket.destinationCoord.lat, trackingTicket.destinationCoord.lng], { icon: destIcon }).addTo(map);
+
+      // Add actual road route polyline
+      const routeLine = L.polyline(routeCoords, {
+        color: PRIMARY_COLOR,
+        weight: 5,
+        opacity: 0.85,
+        lineCap: 'round',
+        lineJoin: 'round',
+      }).addTo(map);
+
+      // Add vehicle marker if live position is available
       if (livePosition) {
-        // Only vehicle marker when live position is available
         const vehicleIcon = L.divIcon({
           className: 'custom-vehicle-marker',
           html: `
@@ -506,93 +749,10 @@ export default function MyTickets() {
         movingMarkerRef.current = L.marker([livePosition.lat, livePosition.lng], {
           icon: vehicleIcon
         }).addTo(map);
-      } else {
-        // Show origin and destination markers when no live position
-        const originIcon = L.divIcon({
-          className: 'custom-origin-marker',
-          html: `
-            <div style="
-              display:flex;
-              flex-direction:column;
-              align-items:center;
-              pointer-events:none;
-            ">
-              <div style="
-                background:linear-gradient(135deg, #10B981 0%, #059669 100%);
-                color:white;
-                padding:6px 12px;
-                border-radius:8px;
-                font-weight:600;
-                font-size:11px;
-                border:2px solid white;
-                box-shadow:0 4px 12px rgba(16, 185, 129, 0.4);
-                white-space:nowrap;
-                margin-bottom:4px;
-              ">
-                Pos Asal
-              </div>
-              <div style="
-                width:20px;
-                height:20px;
-                background:#10B981;
-                border:3px solid white;
-                border-radius:50%;
-                box-shadow:0 2px 8px rgba(0,0,0,0.3);
-              "></div>
-            </div>
-          `,
-          iconSize: [40, 40],
-          iconAnchor: [20, 40]
-        });
 
-        const destIcon = L.divIcon({
-          className: 'custom-dest-marker',
-          html: `
-            <div style="
-              display:flex;
-              flex-direction:column;
-              align-items:center;
-              pointer-events:none;
-            ">
-              <div style="
-                background:linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
-                color:white;
-                padding:6px 12px;
-                border-radius:8px;
-                font-weight:600;
-                font-size:11px;
-                border:2px solid white;
-                box-shadow:0 4px 12px rgba(239, 68, 68, 0.4);
-                white-space:nowrap;
-                margin-bottom:4px;
-              ">
-                Pos Tujuan
-              </div>
-              <div style="
-                width:20px;
-                height:20px;
-                background:#EF4444;
-                border:3px solid white;
-                border-radius:50%;
-                box-shadow:0 2px 8px rgba(0,0,0,0.3);
-              "></div>
-            </div>
-          `,
-          iconSize: [40, 40],
-          iconAnchor: [20, 40]
-        });
-
-        L.marker([coords[0][0], coords[0][1]], { icon: originIcon }).addTo(map);
-        L.marker([coords[1][0], coords[1][1]], { icon: destIcon }).addTo(map);
-
-        // Add route line
-        L.polyline(coords, {
-          color: PRIMARY_COLOR,
-          weight: 5,
-          dashArray: '10, 10',
-          opacity: 0.8,
-          lineCap: 'round'
-        }).addTo(map);
+        map.setView([livePosition.lat, livePosition.lng], 15);
+      } else if (routeCoords.length > 1) {
+        map.fitBounds(routeLine.getBounds(), { padding: [40, 40] });
       }
     };
 
@@ -714,6 +874,36 @@ export default function MyTickets() {
     setIsTrackingModalOpen(true);
   };
 
+  const handleShareTicketWhatsApp = (ticket, targetPhone) => {
+    const passengerDetails = ticket.passengers && ticket.passengers.length > 0
+      ? ticket.passengers.map((p, idx) => `  ${idx + 1}. ${p.name} (${p.phone || '-'})`).join('\n')
+      : '  1. ' + (ticket.mitra || 'Penumpang');
+
+    const message = 
+`*E-TIKET RESMI NEBENG* 🚗✨
+Halo! Tiket nebeng sudah siap. Berikut rincian perjalanan:
+
+📌 *Kode Tiket / QR:* ${ticket.qrCodeTicket || ticket.id}
+📍 *Rute:* ${ticket.from} ➔ ${ticket.to}
+📅 *Jadwal:* ${ticket.schedule}
+🚗 *Armada:* ${ticket.vehicle}
+👤 *Mitra Sopir:* ${ticket.mitra}
+👥 *Daftar Penumpang (${ticket.detail}):*
+${passengerDetails}
+
+Tunjukkan Kode Tiket / QR ini kepada Mitra Sopir atau Petugas Pos saat keberangkatan. Selamat menikmati perjalanan!`;
+
+    const encoded = encodeURIComponent(message);
+    const cleanPhone = targetPhone ? targetPhone.replace(/[^0-9]/g, '') : '';
+    let waUrl = `https://wa.me/?text=${encoded}`;
+    if (cleanPhone) {
+      const normalized = cleanPhone.startsWith('0') ? '62' + cleanPhone.slice(1) : cleanPhone;
+      waUrl = `https://wa.me/${normalized}?text=${encoded}`;
+    }
+
+    window.open(waUrl, '_blank');
+  };
+
   // 3. Auto Polling untuk Transaksi Pending Payment Xendit
   useEffect(() => {
     let interval;
@@ -801,11 +991,15 @@ export default function MyTickets() {
   };
 
   const filteredTickets = tickets.filter((ticket) => {
+    const isTicketActive =
+      (ticket.status === 'Aktif' || ticket.status === 'Menunggu Pembayaran') &&
+      !ticket.isExpired;
+
     const matchesTab =
       activeTab === 'aktif'
-        ? ticket.status === 'Aktif' || ticket.status === 'Menunggu Pembayaran'
+        ? isTicketActive
         : activeTab === 'riwayat'
-        ? ticket.status === 'Selesai' || ticket.status === 'Batal'
+        ? !isTicketActive
         : true;
 
     if (!matchesTab) return false;
@@ -979,25 +1173,37 @@ export default function MyTickets() {
             <div className="flex items-center gap-2 mb-2">
               <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
               <span className="text-[11px] font-bold uppercase tracking-widest text-accent flex items-center gap-1">
-                <Ticket className="w-3.5 h-3.5" /> TIKET & LIVE DIGITAL QR
+                <Ticket className="w-3.5 h-3.5" /> TIKET & PERJALANAN CUSTOMER
               </span>
             </div>
             <h1 className="font-display text-2xl sm:text-3xl font-bold text-white">
-              My Tickets & Live Digital QR
+              Tiket & Perjalanan Saya
             </h1>
             <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl">
-              Tunjukkan QR Code digital di Pos, pantau audit checkpoint secara live, dan chat langsung dengan Mitra.
+              Pantau jadwal keberangkatan, rute perjalanan, status audit checkpoint, dan riwayat pesanan Anda.
             </p>
           </div>
 
-          <button
-            onClick={() => refreshData()}
-            disabled={isLoadingTickets}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-white/15 hover:bg-white/25 border border-white/25 rounded-2xl text-white text-xs font-bold transition cursor-pointer self-start sm:self-auto shadow-sm disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-          >
-            <RefreshCw className={`w-4 h-4 text-accent ${isLoadingTickets ? 'animate-spin' : ''}`} />
-            <span>{isLoadingTickets ? 'Memperbarui...' : 'Segarkan Tiket'}</span>
-          </button>
+          <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+            <button
+              type="button"
+              onClick={() => navigate('/customer/qr')}
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-accent text-brand-900 hover:bg-accent/90 rounded-2xl text-xs font-bold transition cursor-pointer shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            >
+              <QrCode className="w-4 h-4 text-brand-900" />
+              <span>Digital QR Aktif</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => refreshData()}
+              disabled={isLoadingTickets}
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-white/15 hover:bg-white/25 border border-white/25 rounded-2xl text-white text-xs font-bold transition cursor-pointer shadow-sm disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            >
+              <RefreshCw className={`w-4 h-4 text-accent ${isLoadingTickets ? 'animate-spin' : ''}`} />
+              <span>{isLoadingTickets ? 'Memperbarui...' : 'Segarkan Tiket'}</span>
+            </button>
+          </div>
         </div>
         <div className="absolute bottom-4 left-6 right-6 border-t border-dashed border-white/25 sm:left-8 sm:right-8" />
         <span className="absolute bottom-[11px] right-6 h-2.5 w-2.5 rounded-full border-2 border-white bg-accent sm:right-8" />
@@ -1034,7 +1240,7 @@ export default function MyTickets() {
           }`}
           style={activeTab === 'aktif' ? { backgroundColor: PRIMARY_COLOR } : undefined}
         >
-          Tiket Aktif ({tickets.filter((t) => t.status === 'Aktif' || t.status === 'Menunggu Pembayaran').length})
+          Tiket Aktif ({tickets.filter((t) => (t.status === 'Aktif' || t.status === 'Menunggu Pembayaran') && !t.isExpired).length})
         </button>
 
         <button
@@ -1044,7 +1250,7 @@ export default function MyTickets() {
           }`}
           style={activeTab === 'riwayat' ? { backgroundColor: PRIMARY_COLOR } : undefined}
         >
-          Riwayat Perjalanan ({tickets.filter((t) => t.status !== 'Aktif').length})
+          Riwayat Perjalanan ({tickets.filter((t) => t.isExpired || (t.status !== 'Aktif' && t.status !== 'Menunggu Pembayaran')).length})
         </button>
 
         <button
@@ -1083,13 +1289,24 @@ export default function MyTickets() {
           ) : filteredTickets.length > 0 ? (
             filteredTickets.map((ticket) => {
               const isParcel = ticket.type === 'parcel' || ticket.type === 'barang';
+              const hasCheckedInOrigin =
+                ticket.checkpointsLogs?.some((l) => l.scanType === 'checkin_origin') ||
+                ticket.currentStatusText === 'checked_in_origin' ||
+                ticket.currentStatusText === 'in_transit';
+
+              const isInTransit =
+                ticket.tripStatus === 'in_transit' ||
+                ticket.currentStatusText === 'in_transit';
+
+              const canTriggerSos = hasCheckedInOrigin && isInTransit;
+
               return (
                 <div
                   key={ticket.id}
                   className="bg-white rounded-2xl p-5 shadow-xs hover:shadow-md border border-neutral-200/90 flex flex-col justify-between space-y-4 transition-all duration-200"
                 >
                   <div className="space-y-3.5">
-                    {/* Header Card: Kategori Tiket & ID */}
+                    {/* Header Card: Kategori Tiket & Aksi Atas Kanan */}
                     <div className="flex justify-between items-center gap-2">
                       <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-[#10367D] border border-blue-200/70">
                         {isParcel ? (
@@ -1099,9 +1316,57 @@ export default function MyTickets() {
                         )}
                         <span>{ticket.title}</span>
                       </div>
-                      <span className="text-[12px] font-mono font-bold text-neutral-600 bg-neutral-100/90 px-2 py-0.5 rounded-md border border-neutral-200">
-                        ID: #{ticket.id}
-                      </span>
+
+                      {/* Atas Kanan Tiket: Tombol Bantuan SOS untuk Tiket Penumpang */}
+                      {!isParcel ? (
+                        ticket.status === 'Aktif' ? (
+                          canTriggerSos ? (
+                            pendingSosTicketId === ticket.id ? (
+                              <button
+                                type="button"
+                                onClick={() => handleOpenSos(ticket)}
+                                aria-label={`Konfirmasi penekanan kedua bantuan SOS darurat untuk tiket ${ticket.id}`}
+                                className="py-1 px-2.5 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white border border-amber-600 rounded-lg text-[11px] font-black transition flex items-center justify-center gap-1 cursor-pointer shadow-md animate-bounce focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+                                title="Peringatan: Tekan sekali lagi untuk membuka bantuan SOS"
+                              >
+                                <AlertTriangle className="w-3.5 h-3.5 text-white shrink-0 animate-pulse" />
+                                <span>Yakin? Tekan 1x Lagi</span>
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => handleOpenSos(ticket)}
+                                aria-label={`Bantuan SOS Darurat untuk tiket ${ticket.id}`}
+                                className="py-1 px-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 rounded-lg text-[11px] font-bold transition flex items-center justify-center gap-1 cursor-pointer shadow-2xs animate-pulse focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+                                title="Picu sinyal darurat SOS ke Mitra Pos, Admin Wilayah & Super Admin"
+                              >
+                                <ShieldAlert className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                                <span>Bantuan SOS</span>
+                              </button>
+                            )
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                toast.info(
+                                  'Fitur SOS hanya dapat digunakan setelah Anda check-in di Pos 1 (Pos Asal) dan armada sedang dalam perjalanan.',
+                                  { title: 'Fitur SOS Belum Aktif' }
+                                )
+                              }
+                              title="Fitur SOS baru bisa ditekan setelah check-in di Pos 1 dan dalam perjalanan"
+                              aria-label="Fitur SOS terkunci sebelum check-in pos asal"
+                              className="py-1 px-2 bg-neutral-100 text-neutral-400 border border-neutral-200/80 rounded-lg text-[11px] font-medium transition flex items-center justify-center gap-1 cursor-not-allowed"
+                            >
+                              <Lock className="w-3 h-3 text-neutral-400 shrink-0" />
+                              <span>Bantuan SOS</span>
+                            </button>
+                          )
+                        ) : null
+                      ) : (
+                        <span className="text-[12px] font-mono font-bold text-neutral-600 bg-neutral-100/90 px-2 py-0.5 rounded-md border border-neutral-200">
+                          ID: #{ticket.id}
+                        </span>
+                      )}
                     </div>
 
                     {/* Rute Perjalanan Visual */}
@@ -1135,11 +1400,27 @@ export default function MyTickets() {
 
                     {/* Detail Mitra, Jadwal, & Biaya */}
                     <div className="bg-neutral-50/70 rounded-xl p-3 border border-neutral-100 space-y-2 text-[12px]">
-                      <div className="flex items-center gap-2 text-neutral-700">
-                        <Car className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
-                        <span className="truncate">
-                          <strong className="text-neutral-800 font-semibold">Mitra:</strong> {ticket.mitra} ({ticket.vehicle})
-                        </span>
+                      <div className="flex items-center justify-between gap-2 text-neutral-700">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Car className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+                          <span className="truncate">
+                            <strong className="text-neutral-800 font-semibold">Mitra:</strong> {ticket.mitra} ({ticket.vehicle})
+                          </span>
+                        </div>
+                        {ticket.mitraRating ? (
+                          <div className="shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 bg-amber-50 border border-amber-200/80 rounded-md text-[11px] font-bold text-amber-800">
+                            <Star className="w-3 h-3 fill-amber-400 text-amber-500 shrink-0" />
+                            <span>{ticket.mitraRating}</span>
+                            {ticket.mitraTotalReviews > 0 && (
+                              <span className="text-[10px] text-amber-600 font-normal">({ticket.mitraTotalReviews})</span>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 bg-slate-50 border border-slate-200 rounded-md text-[10px] font-medium text-slate-500">
+                            <Star className="w-3 h-3 text-slate-400 shrink-0" />
+                            <span>Baru</span>
+                          </div>
+                        )}
                       </div>
 
                       <div className="flex items-center gap-2 text-neutral-700">
@@ -1149,12 +1430,52 @@ export default function MyTickets() {
                         </span>
                       </div>
 
+                      {ticket.durationFormatted && (
+                        <div className="flex items-center gap-2 text-neutral-700">
+                          <Navigation className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                          <span className="truncate">
+                            <strong className="text-neutral-800 font-semibold">Estimasi:</strong> {ticket.durationFormatted}
+                            {ticket.distanceKm ? ` (${ticket.distanceKm} km)` : ''}
+                            {ticket.estimatedArrivalTime ? ` • Tiba ~${ticket.estimatedArrivalTime}` : ''}
+                          </span>
+                        </div>
+                      )}
+
                       <div className="flex items-center gap-2 text-neutral-700">
                         <Ticket className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
                         <span className="truncate">
                           <strong className="text-neutral-800 font-semibold">Detail:</strong> {ticket.detail}
                         </span>
                       </div>
+
+                      <div className="flex items-center gap-2 text-neutral-700">
+                        <Hash className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+                        <span className="truncate">
+                          <strong className="text-neutral-800 font-semibold">ID Tiket:</strong>{' '}
+                          <span className="font-mono text-neutral-600 font-semibold">#{ticket.id}</span>
+                        </span>
+                      </div>
+
+                      {!isParcel && ticket.passengers && ticket.passengers.length > 0 && (
+                        <div className="pt-2 border-t border-neutral-200/60 space-y-1">
+                          <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block">
+                            Penumpang ({ticket.passengers.length} Orang):
+                          </span>
+                          <div className="flex flex-wrap gap-1">
+                            {ticket.passengers.map((p, pIdx) => (
+                              <span
+                                key={pIdx}
+                                className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50/80 text-[#10367D] rounded-md text-[11px] font-semibold border border-blue-200/60"
+                              >
+                                <span className="w-3.5 h-3.5 rounded-full bg-blue-200/80 text-[9px] font-extrabold flex items-center justify-center">
+                                  {p.seatNumber || (pIdx + 1)}
+                                </span>
+                                {p.name}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
                       {ticket.totalPrice && (
                         ticket.discountAmount > 0 ? (
@@ -1181,151 +1502,242 @@ export default function MyTickets() {
                       )}
                     </div>
 
-                    {/* OTP Penyerahan Barang jika ada */}
-                    {ticket.otp && (
-                      <div className="p-2.5 rounded-xl flex items-center justify-between text-[12px] bg-blue-50/70 border border-blue-200/60">
-                        <span className="font-bold flex items-center gap-1.5 text-[#10367D]">
-                          <KeyRound className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                          OTP Penyerahan Barang:
-                        </span>
-                        <div className="flex items-center gap-2 bg-white px-2.5 py-1 rounded-lg border border-blue-200/80 shadow-xs">
-                          <span className="font-mono font-extrabold text-[13px] tracking-wider text-[#10367D]">
-                            {showOtpMap[ticket.id] ? ticket.otp : '••••••'}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => toggleOtpVisibility(ticket.id)}
-                            className="cursor-pointer text-neutral-400 hover:text-blue-700 transition"
-                            title={showOtpMap[ticket.id] ? 'Sembunyikan OTP' : 'Tampilkan OTP'}
-                          >
-                            {showOtpMap[ticket.id] ? <EyeOff size={13} /> : <Eye size={13} />}
-                          </button>
-                        </div>
-                      </div>
-                    )}
+
                   </div>
 
-                  {/* Bagian Bawah: Status & Aksi Tombol */}
-                  <div className="space-y-3 pt-1">
-                    <div className="flex items-center justify-between pt-2 border-t border-neutral-100 flex-wrap gap-2">
-                      {ticket.status === 'Aktif' ? (
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                            Aktif
-                          </span>
-                          {(ticket.tripStatus === 'in_origin_pos' || ticket.checkpointsLogs?.some(l => l.scanType === 'checkin_origin')) && ticket.currentStatusText === 'paid' && (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200 animate-pulse">
-                              🚗 Sopir Telah Tiba di Pos
-                            </span>
-                          )}
-                          {(ticket.tripStatus === 'in_transit' || ticket.currentStatusText === 'in_transit') && (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                              🚀 Dalam Perjalanan
-                            </span>
-                          )}
-                        </div>
-                      ) : ticket.status === 'Menunggu Pembayaran' ? (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                          <Clock className="w-3 h-3 text-amber-600" />
-                          Menunggu Pembayaran
-                        </span>
-                      ) : (
-                        <StatusBadge variant={ticket.status === 'Selesai' ? 'default' : 'rose'}>
-                          {ticket.status}
-                        </StatusBadge>
-                      )}
+                  {/* Bagian Bawah: Status & Aksi Tombol Terstruktur */}
+                  {(() => {
+                    const hasCheckedInOrigin =
+                      ticket.checkpointsLogs?.some((l) => l.scanType === 'checkin_origin') ||
+                      ticket.currentStatusText === 'checked_in_origin' ||
+                      ticket.currentStatusText === 'in_transit';
 
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        {/* Tombol Audit Checkpoint Timeline (Warna Biru) */}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedTimelineTicket(ticket);
-                            setIsTimelineModalOpen(true);
-                          }}
-                          className="px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-[#10367D] rounded-lg text-[12px] font-bold transition flex items-center gap-1 cursor-pointer border border-blue-200"
-                        >
-                          <History className="w-3 h-3 text-blue-600" />
-                          Audit Checkpoint
-                        </button>
+                    const isInTransit =
+                      ticket.tripStatus === 'in_transit' ||
+                      ticket.currentStatusText === 'in_transit';
+
+                    const canTriggerSos = hasCheckedInOrigin && isInTransit;
+
+                    return (
+                      <div className="space-y-3 pt-3 border-t border-neutral-100">
+                        {/* Baris 1: Status Perjalanan & Tombol Riwayat Checkpoint */}
+                        <div className="flex items-center justify-between flex-wrap gap-2">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            {ticket.status === 'Aktif' ? (
+                              <>
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                  Aktif
+                                </span>
+                                {canTriggerSos ? (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 animate-pulse">
+                                    🚀 Dalam Perjalanan
+                                  </span>
+                                ) : hasCheckedInOrigin ? (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                                    📍 Check-in Pos 1 Selesai
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                    ⏳ Menunggu Check-in Pos 1
+                                  </span>
+                                )}
+                              </>
+                            ) : ticket.status === 'Menunggu Pembayaran' ? (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                <Clock className="w-3 h-3 text-amber-600" />
+                                Menunggu Pembayaran
+                              </span>
+                            ) : (
+                              <StatusBadge variant={ticket.status === 'Selesai' ? 'default' : 'rose'}>
+                                {ticket.status}
+                              </StatusBadge>
+                            )}
+                          </div>
+
+                          {/* Tombol Audit Checkpoint Timeline */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedTimelineTicket(ticket);
+                              setIsTimelineModalOpen(true);
+                            }}
+                            className="text-[12px] font-semibold text-[#10367D] hover:text-[#0C2C66] bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-lg border border-blue-200/80 transition flex items-center gap-1 cursor-pointer"
+                            title="Lihat riwayat scan checkpoint perjalanan"
+                          >
+                            <History className="w-3.5 h-3.5 text-blue-600" />
+                            <span>Audit Checkpoint</span>
+                          </button>
+                        </div>
+
+                        {/* Baris 2: Tombol Aksi Tiket Aktif */}
+                        {ticket.status === 'Aktif' && (
+                          <div className="space-y-2.5">
+                            {/* Tombol Interaksi Utama: Live GPS, Chat Mitra, Bagikan Tiket */}
+                            <div className="grid grid-cols-3 gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleOpenTracking(ticket)}
+                                className="py-2 px-1.5 bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-[12px] font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs min-h-[38px]"
+                                title="Pantau lokasi armada secara real-time"
+                              >
+                                <Navigation className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                                <span className="truncate">GPS</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => openModal(ticket, 'chat')}
+                                className="py-2 px-1.5 bg-white hover:bg-sky-50 text-[#10367D] border border-sky-200 rounded-xl text-[12px] font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs min-h-[38px]"
+                                title="Buka obrolan chat dengan driver mitra"
+                              >
+                                <MessageSquare className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+                                <span className="truncate">Chat</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => handleShareTicketWhatsApp(ticket, ticket.passengers?.[0]?.phone)}
+                                className="py-2 px-1.5 bg-white hover:bg-neutral-50 text-neutral-700 border border-neutral-200 rounded-xl text-[12px] font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs min-h-[38px]"
+                                title="Bagikan rincian e-tiket ke WhatsApp keluarga / kerabat"
+                              >
+                                <Share2 className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
+                                <span className="truncate">Bagikan</span>
+                              </button>
+                            </div>
+
+                            {/* Baris Terpisah: Pusat Keamanan & Pelaporan Kendala */}
+                            <div className="pt-2 border-t border-neutral-100 flex items-center justify-between gap-2">
+                              {(() => {
+                                const reportCheck = evaluateCustomerReportEligibility(ticket);
+                                return reportCheck.canReport ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenReport(ticket)}
+                                    className="text-[11px] text-neutral-500 hover:text-rose-700 hover:underline flex items-center gap-1 cursor-pointer font-semibold py-1 transition"
+                                    title="Laporkan kendala supir atau pos halte"
+                                  >
+                                    <ShieldAlert className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                                    <span>Ada Kendala? Lapor</span>
+                                  </button>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      toast.info(reportCheck.reason, {
+                                        title: 'Fitur Lapor Terkunci',
+                                      })
+                                    }
+                                    className="text-[11px] text-neutral-400 flex items-center gap-1 cursor-not-allowed font-medium py-1 transition"
+                                    title={reportCheck.reason}
+                                  >
+                                    <Lock className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+                                    <span>Lapor (Terkunci Sebelum Check-in & Driver Datang)</span>
+                                  </button>
+                                );
+                              })()}
+                            </div>
+                          </div>
+                        )}
 
                         {/* Aksi Khusus Tiket Menunggu Pembayaran */}
                         {ticket.status === 'Menunggu Pembayaran' && (
-                          <button
-                            type="button"
-                            onClick={() => handlePayPendingTicket(ticket)}
-                            disabled={payingTicketId === ticket.rawId}
-                            className="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-[12px] font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            {payingTicketId === ticket.rawId ? (
-                              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                            ) : (
-                              <CreditCard className="w-3.5 h-3.5" />
-                            )}
-                            <span>Bayar Sekarang</span>
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handlePayPendingTicket(ticket)}
+                              disabled={payingTicketId === ticket.rawId}
+                              className="flex-1 py-2.5 px-3 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-[12px] font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-sm disabled:opacity-50 disabled:cursor-not-allowed min-h-[40px]"
+                            >
+                              {payingTicketId === ticket.rawId ? (
+                                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <CreditCard className="w-3.5 h-3.5" />
+                              )}
+                              <span>Bayar Sekarang</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => openModal(ticket, 'cancel')}
+                              className="py-2.5 px-3.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl text-[12px] font-bold transition flex items-center justify-center gap-1 cursor-pointer min-h-[40px]"
+                            >
+                              <XCircle className="w-3.5 h-3.5" />
+                              <span>Batalkan</span>
+                            </button>
+                          </div>
                         )}
 
-                        {ticket.status === 'Menunggu Pembayaran' && (
-                          <button
-                            type="button"
-                            onClick={() => openModal(ticket, 'cancel')}
-                            className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg text-[12px] font-bold transition flex items-center gap-1 cursor-pointer"
-                          >
-                            <XCircle className="w-3.5 h-3.5" />
-                            <span>Batalkan</span>
-                          </button>
-                        )}
-
-                        {/* Aksi Tiket Aktif (Lunas) */}
-                        {ticket.status === 'Aktif' && (
-                          <button
-                            type="button"
-                            onClick={() => openModal(ticket, 'chat')}
-                            className="px-2.5 py-1.5 bg-sky-50 hover:bg-sky-100 text-[#10367D] rounded-lg text-[12px] font-bold transition flex items-center gap-1 cursor-pointer border border-sky-200"
-                          >
-                            <MessageSquare className="w-3 h-3 text-sky-600" />
-                            <span>Chat Mitra</span>
-                          </button>
-                        )}
-
-                        {ticket.status === 'Aktif' && (
-                          <button
-                            type="button"
-                            onClick={() => handleOpenTracking(ticket)}
-                            className="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-[12px] font-bold transition flex items-center gap-1 cursor-pointer"
-                          >
-                            <Navigation className="w-3 h-3 text-emerald-600" />
-                            <span>Live GPS</span>
-                          </button>
-                        )}
-
-                        {ticket.status === 'Aktif' && (
-                          <button
-                            type="button"
-                            onClick={() => openModal(ticket, 'qr')}
-                            className="px-2.5 py-1.5 text-white rounded-lg text-[12px] font-bold transition flex items-center gap-1 cursor-pointer shadow-xs hover:opacity-95"
-                            style={{ backgroundColor: PRIMARY_COLOR }}
-                          >
-                            <QrCode className="w-3.5 h-3.5" />
-                            <span>QR Pos</span>
-                          </button>
-                        )}
-
+                        {/* Aksi Khusus Tiket Selesai */}
                         {ticket.status === 'Selesai' && (
-                          <button
-                            type="button"
-                            onClick={() => openModal(ticket, 'review')}
-                            className="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-lg text-[12px] font-bold transition flex items-center gap-1 cursor-pointer"
-                          >
-                            <Star className="w-3.5 h-3.5 fill-current text-amber-500" />
-                            <span>Ulasan</span>
-                          </button>
+                          <div className="flex justify-end gap-2 flex-wrap">
+                            <button
+                              type="button"
+                              onClick={() => openModal(ticket, 'review')}
+                              className="py-2 px-3.5 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-xl text-[12px] font-bold transition flex items-center gap-1.5 cursor-pointer min-h-[40px]"
+                            >
+                              <Star className="w-3.5 h-3.5 fill-current text-amber-500" />
+                              <span>Beri Ulasan Perjalanan</span>
+                            </button>
+                            {(() => {
+                              const reportCheck = evaluateCustomerReportEligibility(ticket);
+                              return reportCheck.canReport ? (
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenReport(ticket)}
+                                  className="py-2 px-3.5 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 rounded-xl text-[12px] font-bold transition flex items-center gap-1.5 cursor-pointer min-h-[40px]"
+                                  title="Laporkan driver jika terjadi pelanggaran"
+                                >
+                                  <ShieldAlert className="w-3.5 h-3.5 text-rose-600" />
+                                  <span>Laporkan Driver / Pos</span>
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    toast.info(reportCheck.reason, {
+                                      title: 'Fitur Lapor Terkunci',
+                                    })
+                                  }
+                                  className="py-2 px-3.5 bg-neutral-100 text-neutral-400 border border-neutral-200 rounded-xl text-[12px] font-medium transition flex items-center gap-1.5 cursor-not-allowed min-h-[40px]"
+                                  title={reportCheck.reason}
+                                >
+                                  <Lock className="w-3.5 h-3.5 text-neutral-400" />
+                                  <span>Lapor (Terkunci)</span>
+                                </button>
+                              );
+                            })()}
+                          </div>
+                        )}
+
+                        {/* Aksi Khusus Tiket Batal / Trip Dibatalkan */}
+                        {(ticket.status.startsWith('Batal') || ticket.currentStatusText === 'cancelled' || ticket.currentStatusText === 'cancelled_by_mitra') && (
+                          <div className="pt-2.5 border-t border-neutral-100 flex items-center justify-between gap-2 flex-wrap">
+                            <div className="flex items-center gap-1.5 text-[11px] text-rose-600 font-semibold bg-rose-50/80 border border-rose-200/60 px-2.5 py-1 rounded-lg">
+                              <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-rose-500" />
+                              <span>
+                                {ticket.tripStatus === 'mitra_no_show' || ticket.noShowReason
+                                  ? 'Supir tidak hadir (Dana di-refund 100% ke Dompet)'
+                                  : ticket.currentStatusText === 'cancelled_by_mitra'
+                                  ? 'Trip dibatalkan oleh Mitra'
+                                  : 'Perjalanan dibatalkan'}
+                              </span>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => handleOpenReport(ticket)}
+                              className="py-1.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-[12px] font-bold transition flex items-center gap-1.5 cursor-pointer min-h-[36px] shadow-sm ml-auto"
+                              title="Laporkan kendala jika mitra driver tidak datang atau mangkir"
+                            >
+                              <ShieldAlert className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                              <span>Laporkan Mitra (Tidak Datang)</span>
+                            </button>
+                          </div>
                         )}
                       </div>
-                    </div>
-                  </div>
+                    );
+                  })()}
                 </div>
               );
             })
@@ -1462,20 +1874,74 @@ export default function MyTickets() {
         maxWidth="max-w-sm"
       >
         <div className="text-center space-y-3">
-          <div className="w-40 h-40 bg-white rounded-xl mx-auto flex items-center justify-center border border-neutral-200 p-2 shadow-sm">
-            <img
-              src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=NEBENG-${selectedTicket?.qrCodeTicket || selectedTicket?.id}-${qrDynamicToken}`}
-              alt="QR Code"
-              className="w-full h-full object-contain"
-            />
-          </div>
-          <p className="text-[12px] font-mono font-bold text-neutral-600 bg-neutral-50 py-1 px-2.5 rounded-lg border border-neutral-200">
-            {selectedTicket?.qrCodeTicket || `NEBENG-${selectedTicket?.id}-${qrDynamicToken}`}
-          </p>
-          <div className="flex items-center justify-center gap-1.5 text-[11px] text-emerald-600 font-bold bg-emerald-50 py-1.5 px-3 rounded-lg border border-emerald-200">
-            <RefreshCw size={11} className="animate-spin" /> Auto-refresh QR: {qrCountdown} detik
-          </div>
-          <button onClick={() => setSelectedTicket(null)} className="w-full py-2.5 text-white rounded-xl text-[13px] font-bold transition cursor-pointer shadow-sm" style={{ backgroundColor: PRIMARY_COLOR }}>
+          {selectedTicket?.isExpired || selectedTicket?.status === 'Batal' || selectedTicket?.status === 'Batal (Kedaluwarsa)' ? (
+            <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-center space-y-2">
+              <div className="w-12 h-12 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <h3 className="text-sm font-bold text-rose-900">Tiket Tidak Aktif / Kedaluwarsa</h3>
+              <p className="text-xs text-rose-700 leading-relaxed">
+                Jadwal trip ini telah melewati batas toleransi kehadiran tanpa check-in mitra/penumpang. QR Code telah dinonaktifkan secara otomatis.
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="w-40 h-40 bg-white rounded-xl mx-auto flex items-center justify-center border border-neutral-200 p-2 shadow-sm">
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=NEBENG-${selectedTicket?.qrCodeTicket || selectedTicket?.id}-${qrDynamicToken}`}
+                  alt="QR Code"
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <p className="text-[12px] font-mono font-bold text-neutral-600 bg-neutral-50 py-1 px-2.5 rounded-lg border border-neutral-200">
+                {selectedTicket?.qrCodeTicket || `NEBENG-${selectedTicket?.id}-${qrDynamicToken}`}
+              </p>
+              <div className="flex items-center justify-center gap-1.5 text-[11px] text-emerald-600 font-bold bg-emerald-50 py-1.5 px-3 rounded-lg border border-emerald-200">
+                <RefreshCw size={11} className="animate-spin" /> Auto-refresh QR: {qrCountdown} detik
+              </div>
+            </>
+          )}
+
+          {selectedTicket?.passengers && selectedTicket.passengers.length > 0 && (
+            <div className="text-left bg-neutral-50 p-3 rounded-xl border border-neutral-200 text-xs space-y-1.5">
+              <span className="font-bold text-neutral-500 uppercase text-[10px] block">
+                Manifest Penumpang ({selectedTicket.passengers.length} Orang):
+              </span>
+              <div className="space-y-1 max-h-32 overflow-y-auto">
+                {selectedTicket.passengers.map((p, idx) => (
+                  <div key={idx} className="flex justify-between items-center text-[11px] font-medium text-neutral-700 bg-white p-1.5 rounded-lg border border-neutral-100">
+                    <span>Kursi #{p.seatNumber || (idx + 1)}: <strong>{p.name}</strong></span>
+                    <span className="text-neutral-500 font-mono text-[10px]">{p.phone}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={() => {
+              const tid = selectedTicket?.id;
+              setSelectedTicket(null);
+              navigate('/customer/qr', { state: { ticketId: tid } });
+            }}
+            className="w-full py-2.5 text-white rounded-xl text-[12px] font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-sm hover:opacity-95"
+            style={{ backgroundColor: PRIMARY_COLOR }}
+          >
+            <QrCode className="w-3.5 h-3.5" />
+            <span>Buka Layar Penuh Digital QR</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleShareTicketWhatsApp(selectedTicket, selectedTicket?.passengers?.[0]?.phone)}
+            className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[12px] font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+          >
+            <Share2 className="w-3.5 h-3.5" />
+            <span>Kirim Tiket ke WhatsApp</span>
+          </button>
+
+          <button onClick={() => setSelectedTicket(null)} className="w-full py-2.5 text-neutral-600 hover:bg-neutral-100 border border-neutral-200 rounded-xl text-[13px] font-bold transition cursor-pointer shadow-xs">
             Tutup
           </button>
         </div>
@@ -1555,6 +2021,17 @@ export default function MyTickets() {
         </form>
       </BaseModal>
 
+      <ReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        targetUser={reportTargetUser}
+        availableTargets={availableReportTargets}
+        context={reportContext}
+        onSuccess={() => {
+          toast.success('Laporan Anda berhasil dikirim ke tim investigasi.');
+        }}
+      />
+
       {/* Modal Batalkan Tiket */}
       <BaseModal
         isOpen={Boolean(selectedTicket && activeModalType === 'cancel')}
@@ -1625,10 +2102,61 @@ export default function MyTickets() {
               </div>
             </div>
 
-            <div className="pt-4 border-t border-neutral-200 flex justify-end">
+            <div className="pt-4 border-t border-neutral-200 flex items-center justify-between gap-3">
+              {(() => {
+                const hasCheckedInOrigin =
+                  trackingTicket?.checkpointsLogs?.some((l) => l.scanType === 'checkin_origin') ||
+                  trackingTicket?.currentStatusText === 'checked_in_origin' ||
+                  trackingTicket?.currentStatusText === 'in_transit';
+
+                const isInTransit =
+                  trackingTicket?.tripStatus === 'in_transit' ||
+                  trackingTicket?.currentStatusText === 'in_transit';
+
+                const canTriggerTrackingSos = hasCheckedInOrigin && isInTransit;
+
+                return canTriggerTrackingSos ? (
+                  pendingSosTicketId === (trackingTicket?.id || 'tracking') ? (
+                    <button
+                      type="button"
+                      onClick={() => handleOpenSos(trackingTicket)}
+                      className="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white text-[13px] font-black rounded-xl transition cursor-pointer shadow-md flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 animate-bounce"
+                      title="Peringatan: Tekan sekali lagi untuk membuka bantuan SOS"
+                    >
+                      <AlertTriangle className="w-4 h-4 text-white animate-pulse" />
+                      <span>Yakin? Tekan Sekali Lagi!</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleOpenSos(trackingTicket)}
+                      className="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-[13px] font-bold rounded-xl transition cursor-pointer shadow-md flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 animate-pulse"
+                    >
+                      <ShieldAlert className="w-4 h-4" />
+                      <span>Picu Bantuan SOS</span>
+                    </button>
+                  )
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      toast.info(
+                        'Fitur SOS hanya dapat digunakan setelah Anda check-in di Pos 1 (Pos Asal) dan armada sedang dalam perjalanan.',
+                        { title: 'Fitur SOS Belum Aktif' }
+                      )
+                    }
+                    className="px-4 py-2.5 bg-neutral-100 text-neutral-400 border border-neutral-200 text-[13px] font-medium rounded-xl transition flex items-center gap-1.5 cursor-not-allowed"
+                    title="SOS terkunci sebelum check-in di pos asal"
+                  >
+                    <Lock className="w-4 h-4 text-neutral-400" />
+                    <span>SOS (Terkunci Sebelum Check-in)</span>
+                  </button>
+                );
+              })()}
               <button
+                type="button"
                 onClick={handleCloseTrackingModal}
-                className="px-5 py-2.5 bg-gradient-to-r from-[#10367D] to-[#0C2C66] hover:from-[#0C2C66] hover:to-[#082044] text-white text-[13px] font-bold rounded-xl transition cursor-pointer shadow-lg"
+                className="px-5 py-2.5 bg-neutral-200 hover:bg-neutral-300 text-neutral-800 text-[13px] font-bold rounded-xl transition cursor-pointer"
               >
                 Tutup
               </button>
@@ -1636,6 +2164,13 @@ export default function MyTickets() {
           </div>
         )}
       </BaseModal>
+
+      {/* Modal Pemicu SOS Darurat Customer */}
+      <SosTriggerModal
+        isOpen={isSosModalOpen}
+        onClose={() => setIsSosModalOpen(false)}
+        ticket={selectedSosTicket}
+      />
 
       {/* Modal Kustom Panggilan Telepon / Kontak Mitra */}
       <PhoneCallModal

@@ -17,15 +17,21 @@ import {
   CheckCircle2,
   Search,
   ArrowRight,
-  Sparkles
+  Sparkles,
+  ChevronLeft,
+  ChevronRight,
+  ShieldAlert,
 } from 'lucide-react';
 import { useToast } from '../../../context/ToastContext';
 import { useGPS } from '../../../context/GPSContext';
 import EmptyState from '../../../components/ui/EmptyState';
 import StatusBadge from '../../../components/ui/StatusBadge';
 import BaseModal from '../../../components/ui/BaseModal';
+import ReportModal from '../../../components/common/ReportModal';
+import { formatDurationMinutes, getEstimatedArrivalTime } from '../../../utils/dateUtils';
+import { evaluateDriverReportCustomerEligibility } from '../../../utils/reportCheckpointValidation';
 import apiClient from '../../../services/apiClient';
-import { estimateFare } from '../../../services/mitraPricing';
+import { parseRoutePolyline } from '../../../utils/mapRouteUtil';
 
 const PRIMARY_COLOR = '#10367D';
 const PRIMARY_ACCENT = '#74B4D9';
@@ -123,10 +129,62 @@ export default function MitraTripManagement() {
   const [cancelCustomReason, setCancelCustomReason] = useState('');
   const [cancelEvidenceUrl, setCancelEvidenceUrl] = useState('');
   const [isCancellingTrip, setIsCancellingTrip] = useState(false);
-  const [isPriceManual, setIsPriceManual] = useState(false);
+  const [fareEstimate, setFareEstimate] = useState(null);
+  const [isEstimatingFare, setIsEstimatingFare] = useState(false);
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 5;
   const todayISO = new Date().toISOString().slice(0, 10);
+
+  // State untuk Fitur Lapor Customer (setelah trip selesai)
+  const [isReportCustomerModalOpen, setIsReportCustomerModalOpen] = useState(false);
+  const [reportCustomerTargets, setReportCustomerTargets] = useState([]);
+  const [reportCustomerContext, setReportCustomerContext] = useState({});
+
+  /**
+   * Buka modal lapor customer untuk trip yang sudah selesai.
+   * Mitra hanya bisa melapor customer setelah trip berstatus 'completed'.
+   */
+  const handleOpenReportCustomer = (trip) => {
+    const eligibility = evaluateDriverReportCustomerEligibility(trip);
+    if (!eligibility.canReport) {
+      toast.warning(eligibility.reason, { title: 'Fitur Lapor Customer Terkunci' });
+      return;
+    }
+
+    // Bangun daftar target customer dari orders yang ada di trip
+    const activeOrders = (trip.orders || []).filter(
+      (o) => o.status !== 'cancelled' && o.status !== 'cancelled_by_mitra',
+    );
+
+    if (activeOrders.length === 0) {
+      toast.info('Tidak ada penumpang aktif yang dapat dilaporkan pada trip ini.', {
+        title: 'Tidak Ada Penumpang',
+      });
+      return;
+    }
+
+    const targets = activeOrders.map((order, idx) => ({
+      key: `customer_${order.id || idx}`,
+      id: order.customerId || order.customer?.id,
+      customerId: order.customerId || order.customer?.id,
+      name: order.customer?.name || `Penumpang #${order.id}`,
+      role: 'Customer',
+      subtitle: order.customer?.phone || `Order #${order.id}`,
+      orderId: order.id,
+      tripId: trip.id,
+    }));
+
+    setReportCustomerTargets(targets);
+    setReportCustomerContext({ tripId: trip.id });
+    setIsReportCustomerModalOpen(true);
+  };
+
+  // Reset ke halaman 1 saat filter status atau kata kunci pencarian berubah
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterStatus, searchQuery]);
 
   const setDatePreset = (daysOffset) => {
     const target = new Date();
@@ -135,16 +193,41 @@ export default function MitraTripManagement() {
     setFormData(prev => ({ ...prev, date: iso }));
   };
 
-  const calculateSuggestedFare = (originId, destinationId, vehId, currentPoints, currentVehicles) => {
-    if (!originId || !destinationId || !vehId) return null;
-    const originPoint = currentPoints.find(p => String(p.id) === String(originId));
-    const destinationPoint = currentPoints.find(p => String(p.id) === String(destinationId));
-    const vehicle = currentVehicles.find(v => String(v.id) === String(vehId));
+  const fetchFareEstimate = async (originId, destinationId, vehId, sCategory) => {
+    if (!originId || !destinationId || originId === destinationId) {
+      setFareEstimate(null);
+      return;
+    }
+    const vehicle = vehicles.find(v => String(v.id) === String(vehId));
+    let sType = 'motor';
+    if (sCategory === 'barang') {
+      sType = 'barang';
+    } else if (vehicle?.type?.toLowerCase() === 'mobil') {
+      sType = 'mobil';
+    }
 
-    if (!originPoint || !destinationPoint || !vehicle) return null;
-
-    const vehicleLabel = vehicle.type ? vehicle.type.charAt(0).toUpperCase() + vehicle.type.slice(1).toLowerCase() : 'Motor';
-    return estimateFare(originPoint.name, destinationPoint.name, vehicleLabel);
+    setIsEstimatingFare(true);
+    try {
+      const res = await apiClient.get('/trips/estimate-fare', {
+        params: {
+          originPointId: String(originId),
+          destinationPointId: String(destinationId),
+          serviceType: sType,
+        },
+      });
+      const data = res.data?.data || res.data;
+      if (data && data.calculatedPrice) {
+        setFareEstimate(data);
+        setFormData(prev => ({
+          ...prev,
+          price: data.calculatedPrice,
+        }));
+      }
+    } catch (err) {
+      console.warn('Gagal memuat estimasi tarif jarak:', err);
+    } finally {
+      setIsEstimatingFare(false);
+    }
   };
 
   const loadMitraData = async (isMounted = true) => {
@@ -178,12 +261,6 @@ export default function MitraTripManagement() {
         const initialSeats = isMotor ? 1 : (myVehicles[0].capacitySeats || 1);
         const initialMaxWeight = Number(myVehicles[0].maxWeightCapacityKg) || 15;
 
-        let initialPrice = 175000;
-        if (!isPriceManual) {
-          const suggested = calculateSuggestedFare(initialOrigin, initialDestination, initialVehicleId, allPoints, myVehicles);
-          if (suggested) initialPrice = suggested;
-        }
-
         setFormData(prev => ({
           ...prev,
           originPointId: prev.originPointId || initialOrigin,
@@ -191,8 +268,9 @@ export default function MitraTripManagement() {
           vehicleId: prev.vehicleId || initialVehicleId,
           totalSeats: initialSeats,
           maxWeightCapacityKg: initialMaxWeight,
-          price: initialPrice,
         }));
+
+        fetchFareEstimate(initialOrigin, initialDestination, initialVehicleId, layananCategory);
       }
     } catch (err) {
       console.error('Gagal memuat data trip:', err);
@@ -219,28 +297,19 @@ export default function MitraTripManagement() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Update estimasi tarif saat pos atau kendaraan berubah
+  useEffect(() => {
+    if (formData.originPointId && formData.destinationPointId && formData.originPointId !== formData.destinationPointId) {
+      fetchFareEstimate(formData.originPointId, formData.destinationPointId, formData.vehicleId, layananCategory);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.originPointId, formData.destinationPointId, formData.vehicleId, layananCategory]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name === 'price') {
-      setIsPriceManual(true);
-    }
-
-    setFormData(prev => {
-      const updated = { ...prev, [name]: value };
-      if (!isPriceManual && (name === 'originPointId' || name === 'destinationPointId' || name === 'vehicleId')) {
-        const suggested = calculateSuggestedFare(
-          name === 'originPointId' ? value : prev.originPointId,
-          name === 'destinationPointId' ? value : prev.destinationPointId,
-          name === 'vehicleId' ? value : prev.vehicleId,
-          points,
-          vehicles
-        );
-        if (suggested) {
-          updated.price = suggested;
-        }
-      }
-      return updated;
-    });
+    // Price input is locked by system under Option A
+    if (name === 'price') return;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleVehicleSelect = (e) => {
@@ -248,19 +317,12 @@ export default function MitraTripManagement() {
     const selectedVeh = vehicles.find(v => String(v.id) === vId);
     if (selectedVeh) {
       const isMotor = selectedVeh.type?.toLowerCase() === 'motor';
-      setFormData(prev => {
-        const updated = {
-          ...prev,
-          vehicleId: vId,
-          totalSeats: isMotor ? 1 : (selectedVeh.capacitySeats || 1),
-          maxWeightCapacityKg: Number(selectedVeh.maxWeightCapacityKg) || 15,
-        };
-        if (!isPriceManual) {
-          const suggested = calculateSuggestedFare(prev.originPointId, prev.destinationPointId, vId, points, vehicles);
-          if (suggested) updated.price = suggested;
-        }
-        return updated;
-      });
+      setFormData(prev => ({
+        ...prev,
+        vehicleId: vId,
+        totalSeats: isMotor ? 1 : (selectedVeh.capacitySeats || 1),
+        maxWeightCapacityKg: Number(selectedVeh.maxWeightCapacityKg) || 15,
+      }));
     }
   };
 
@@ -272,30 +334,10 @@ export default function MitraTripManagement() {
   const isSameOriginDestination = formData.originPointId && formData.destinationPointId && formData.originPointId === formData.destinationPointId;
   const isPastDate = Boolean(formData.date) && formData.date < todayISO;
 
-  const originPointObj = points.find(p => String(p.id) === String(formData.originPointId));
-  const destPointObj = points.find(p => String(p.id) === String(formData.destinationPointId));
-  const mitraRegionId = currentUser?.regionId ? String(currentUser.regionId) : null;
-  const isOriginMatchHome = Boolean(mitraRegionId && originPointObj?.regionId && String(originPointObj.regionId) === mitraRegionId);
-  const isDestMatchHome = Boolean(mitraRegionId && destPointObj?.regionId && String(destPointObj.regionId) === mitraRegionId);
-  const isOutsideHomeBase = Boolean(
-    mitraRegionId && 
-    originPointObj && 
-    destPointObj && 
-    !isOriginMatchHome && 
-    !isDestMatchHome
-  );
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isSameOriginDestination) {
       toast.warning('Pos Asal dan Pos Tujuan tidak boleh sama.', { title: 'Rute Tidak Valid' });
-      return;
-    }
-    if (isOutsideHomeBase) {
-      toast.warning(
-        `Sesuai aturan wilayah (Home Base), salah satu pos harus berada di wilayah asal Anda (${currentUser?.region?.name || 'wilayah terdaftar'}).`,
-        { title: 'Di Luar Wilayah Operasi' }
-      );
       return;
     }
     if (isPastDate) {
@@ -330,6 +372,19 @@ export default function MitraTripManagement() {
         maxWeightCapacityKg: maxWeightCapacityKgPayload,
         serviceType: finalServiceType,
       };
+
+      if (fareEstimate?.polyline) {
+        payload.mapsPolyline = typeof fareEstimate.polyline === 'string'
+          ? fareEstimate.polyline
+          : JSON.stringify(fareEstimate.polyline);
+      }
+
+      if (fareEstimate?.durationMinutes) {
+        payload.estimatedDurationMinutes = Math.round(Number(fareEstimate.durationMinutes));
+      }
+      if (fareEstimate?.distanceKm) {
+        payload.distanceKm = Number(fareEstimate.distanceKm);
+      }
 
       // Hanya kirim totalSeats untuk trip penumpang
       if (isPenumpang) {
@@ -379,6 +434,25 @@ export default function MitraTripManagement() {
     }
     return true;
   });
+
+  // Pagination Logic (Batas 5 data per halaman jika lebih dari 5 ada next page)
+  const totalPages = Math.max(1, Math.ceil(filteredTrips.length / ITEMS_PER_PAGE));
+  const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+  const startIndex = (safeCurrentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedTrips = filteredTrips.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  const getPageNumbers = (current, total) => {
+    if (total <= 5) {
+      return Array.from({ length: total }, (_, i) => i + 1);
+    }
+    if (current <= 3) {
+      return [1, 2, 3, 4, '...', total];
+    }
+    if (current >= total - 2) {
+      return [1, '...', total - 3, total - 2, total - 1, total];
+    }
+    return [1, '...', current - 1, current, current + 1, '...', total];
+  };
 
   // Start GPS Tracking (using GPSContext)
   const handleStartGPSTracking = async (trip) => {
@@ -474,28 +548,25 @@ export default function MitraTripManagement() {
         const centerLat = currentPosition?.lat || startLat;
         const centerLng = currentPosition?.lng || startLng;
 
-        // Use only 2 points (origin and destination) or 1 point (GPS position)
-        // No OSRM route to prevent zooming out to wrong area
-        let routeCoords;
-        if (currentPosition) {
-          routeCoords = [[currentPosition.lat, currentPosition.lng]];
-          console.log('[Mitra GPS] Using GPS position only (1 point)');
-        } else {
-          routeCoords = [
-            [startLat, startLng],
-            [endLat, endLng]
-          ];
-          console.log('[Mitra GPS] Using origin and destination only (2 points)');
-        }
+        const roadRouteCoords = parseRoutePolyline(
+          activeTrackingTrip.mapsPolyline,
+          activeTrackingTrip.originPoint,
+          activeTrackingTrip.destinationPoint,
+        );
+
+        const routeCoords = roadRouteCoords.length > 0
+          ? roadRouteCoords
+          : [
+              [startLat, startLng],
+              [endLat, endLng],
+            ];
 
         console.log('[Mitra GPS] Final route coordinates:', routeCoords);
 
         const map = L.map('mitra-tracking-map', {
           center: [centerLat, centerLng],
-          zoom: 16, // Maximum zoom in as requested
+          zoom: 14,
           zoomControl: true,
-          minZoom: 14, // Prevent zooming out too much
-          maxZoom: 18
         });
 
         leafletMapInstance.current = map;
@@ -584,14 +655,18 @@ export default function MitraTripManagement() {
 
         L.marker([endLat, endLng], { icon: destIcon }).addTo(map);
 
-        // Add route line (using the routeCoords defined above)
-        L.polyline(routeCoords, {
+        // Add actual road route polyline
+        const routePolyline = L.polyline(routeCoords, {
           color: PRIMARY_COLOR,
           weight: 5,
-          dashArray: '10, 10',
-          opacity: 0.8,
-          lineCap: 'round'
+          opacity: 0.85,
+          lineCap: 'round',
+          lineJoin: 'round',
         }).addTo(map);
+
+        if (!currentPosition && routeCoords.length > 1) {
+          map.fitBounds(routePolyline.getBounds(), { padding: [40, 40] });
+        }
 
         // Add current position marker if available
         if (currentPosition) {
@@ -740,21 +815,21 @@ export default function MitraTripManagement() {
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
       {/* ── BANNER GRADIENT ── */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] p-6 text-white shadow-card sm:p-8">
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#10367D] via-[#164396] to-[#1E56B0] p-6 text-white shadow-md sm:p-8">
         <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10" />
-        <div className="absolute bottom-0 right-32 h-28 w-28 rounded-full bg-accent/20" />
+        <div className="absolute bottom-0 right-32 h-28 w-28 rounded-full bg-blue-300/20" />
         <div className="relative flex flex-col gap-4 pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-              <span className="text-[11px] font-bold uppercase tracking-widest text-accent flex items-center gap-1">
-                <Calendar className="w-3.5 h-3.5" /> MANAJEMEN JADWAL TRIP MITRA
+              <span className="w-2 h-2 rounded-full bg-blue-300 animate-pulse" />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-blue-200 flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5" /> Manajemen Jadwal Trip Mitra
               </span>
             </div>
-            <h1 className="font-display text-2xl sm:text-3xl font-bold text-white">
+            <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
               Kelola Jadwal & Trip
             </h1>
-            <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl">
+            <p className="mt-1 text-xs sm:text-sm text-blue-100/90 max-w-xl leading-relaxed">
               Buat jadwal perjalanan baru, tentukan tipe layanan (Penumpang / Barang), dan kelola trip Anda secara interaktif.
             </p>
           </div>
@@ -762,83 +837,95 @@ export default function MitraTripManagement() {
           <button
             onClick={() => loadMitraData()}
             disabled={isLoading}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-white/15 hover:bg-white/25 border border-white/25 rounded-2xl backdrop-blur text-white text-xs font-bold transition cursor-pointer self-start sm:self-auto shadow-sm"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-white/15 hover:bg-white/25 border border-white/25 rounded-2xl backdrop-blur text-white text-xs font-bold transition-all cursor-pointer self-start sm:self-auto shadow-sm active:scale-95 disabled:opacity-50"
           >
-            <Sparkles className="w-4 h-4 text-accent" />
-            <span>Segarkan Data</span>
+            <Sparkles className={`w-4 h-4 text-blue-200 ${isLoading ? 'animate-spin' : ''}`} />
+            <span>{isLoading ? 'Menyegarkan...' : 'Segarkan Data'}</span>
           </button>
         </div>
-        <div className="absolute bottom-4 left-6 right-6 border-t border-dashed border-white/25 sm:left-8 sm:right-8" />
-        <span className="absolute bottom-[11px] right-6 h-2.5 w-2.5 rounded-full border-2 border-white bg-accent sm:right-8" />
+        <div className="absolute bottom-4 left-6 right-6 border-t border-dashed border-white/20 sm:left-8 sm:right-8" />
+        <span className="absolute bottom-[11px] right-6 h-2.5 w-2.5 rounded-full border-2 border-white bg-blue-300 sm:right-8" />
       </section>
 
       {/* Interactive Quick Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div
+        <button
+          type="button"
           onClick={() => setFilterStatus('all')}
-          className={`p-4 rounded-2xl border transition cursor-pointer ${
+          className={`p-4 rounded-2xl border transition-all duration-200 text-left cursor-pointer ${
             filterStatus === 'all'
-              ? 'bg-blue-50/70 border-[#10367D] shadow-xs'
-              : 'bg-white border-slate-200/90 hover:border-slate-300'
+              ? 'bg-blue-50/80 border-[#10367D] ring-2 ring-[#10367D]/15 shadow-sm'
+              : 'bg-white border-slate-200/90 hover:border-slate-300 hover:shadow-xs'
           }`}
         >
-          <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Total Trip</span>
-            <Calendar className="w-4 h-4 text-[#10367D]" />
+          <div className="flex items-center justify-between text-slate-400 mb-2">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Total Trip</span>
+            <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center text-[#10367D]">
+              <Calendar className="w-4 h-4" />
+            </div>
           </div>
-          <div className="text-2xl font-black text-slate-900">{trips.filter(t => t.status !== 'cancelled').length}</div>
-          <span className="text-[11px] text-slate-400 font-medium">Klik untuk lihat semua</span>
-        </div>
+          <div className="text-2xl font-black text-slate-900 tracking-tight">{trips.filter(t => t.status !== 'cancelled').length}</div>
+          <span className="text-[11px] text-slate-400 font-medium mt-1 block">Klik untuk lihat semua</span>
+        </button>
 
-        <div
+        <button
+          type="button"
           onClick={() => setFilterStatus('scheduled')}
-          className={`p-4 rounded-2xl border transition cursor-pointer ${
+          className={`p-4 rounded-2xl border transition-all duration-200 text-left cursor-pointer ${
             filterStatus === 'scheduled'
-              ? 'bg-blue-50/70 border-[#10367D] shadow-xs'
-              : 'bg-white border-slate-200/90 hover:border-slate-300'
+              ? 'bg-blue-50/80 border-blue-600 ring-2 ring-blue-600/15 shadow-sm'
+              : 'bg-white border-slate-200/90 hover:border-slate-300 hover:shadow-xs'
           }`}
         >
-          <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Terjadwal</span>
-            <Clock className="w-4 h-4 text-blue-600" />
+          <div className="flex items-center justify-between text-slate-400 mb-2">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-blue-700">Terjadwal</span>
+            <div className="w-7 h-7 rounded-lg bg-blue-100/60 flex items-center justify-center text-blue-600">
+              <Clock className="w-4 h-4" />
+            </div>
           </div>
-          <div className="text-2xl font-black text-blue-600">{trips.filter(t => t.status === 'scheduled').length}</div>
-          <span className="text-[11px] text-blue-500 font-medium">Siap berangkat</span>
-        </div>
+          <div className="text-2xl font-black text-blue-600 tracking-tight">{trips.filter(t => t.status === 'scheduled').length}</div>
+          <span className="text-[11px] text-blue-500 font-medium mt-1 block">Siap berangkat</span>
+        </button>
 
-        <div
+        <button
+          type="button"
           onClick={() => setFilterStatus('in_transit')}
-          className={`p-4 rounded-2xl border transition cursor-pointer ${
+          className={`p-4 rounded-2xl border transition-all duration-200 text-left cursor-pointer ${
             filterStatus === 'in_transit'
-              ? 'bg-amber-50/70 border-amber-500 shadow-xs'
-              : 'bg-white border-slate-200/90 hover:border-slate-300'
+              ? 'bg-amber-50/80 border-amber-500 ring-2 ring-amber-500/15 shadow-sm'
+              : 'bg-white border-slate-200/90 hover:border-slate-300 hover:shadow-xs'
           }`}
         >
-          <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Berjalan</span>
-            <Radio className="w-4 h-4 text-amber-500 animate-pulse" />
+          <div className="flex items-center justify-between text-slate-400 mb-2">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-amber-700">Berjalan</span>
+            <div className="w-7 h-7 rounded-lg bg-amber-100/60 flex items-center justify-center text-amber-600">
+              <Radio className="w-4 h-4 animate-pulse" />
+            </div>
           </div>
-          <div className="text-2xl font-black text-amber-600">
+          <div className="text-2xl font-black text-amber-600 tracking-tight">
             {trips.filter(t => t.status === 'in_transit' || t.status === 'in_origin_pos' || t.status === 'arrived_dest_pos').length}
           </div>
-          <span className="text-[11px] text-amber-600 font-medium">Live GPS tracking</span>
-        </div>
+          <span className="text-[11px] text-amber-600 font-medium mt-1 block">Live GPS tracking</span>
+        </button>
 
-        <div
+        <button
+          type="button"
           onClick={() => setFilterStatus('completed')}
-          className={`p-4 rounded-2xl border transition cursor-pointer ${
+          className={`p-4 rounded-2xl border transition-all duration-200 text-left cursor-pointer ${
             filterStatus === 'completed'
-              ? 'bg-emerald-50/70 border-emerald-500 shadow-xs'
-              : 'bg-white border-slate-200/90 hover:border-slate-300'
+              ? 'bg-emerald-50/80 border-emerald-500 ring-2 ring-emerald-500/15 shadow-sm'
+              : 'bg-white border-slate-200/90 hover:border-slate-300 hover:shadow-xs'
           }`}
         >
-          <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Selesai</span>
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+          <div className="flex items-center justify-between text-slate-400 mb-2">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">Selesai</span>
+            <div className="w-7 h-7 rounded-lg bg-emerald-100/60 flex items-center justify-center text-emerald-600">
+              <CheckCircle2 className="w-4 h-4" />
+            </div>
           </div>
-          <div className="text-2xl font-black text-emerald-600">{trips.filter(t => t.status === 'completed').length}</div>
-          <span className="text-[11px] text-emerald-600 font-medium">Riwayat trip sukses</span>
-        </div>
+          <div className="text-2xl font-black text-emerald-600 tracking-tight">{trips.filter(t => t.status === 'completed').length}</div>
+          <span className="text-[11px] text-emerald-600 font-medium mt-1 block">Riwayat trip sukses</span>
+        </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
@@ -899,12 +986,15 @@ export default function MitraTripManagement() {
             </div>
 
             <div>
-              <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">Pos Asal</label>
+              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-100 shrink-0" />
+                Pos Asal
+              </label>
               <select 
                 name="originPointId" 
                 value={formData.originPointId} 
                 onChange={handleChange}
-                className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#10367D] truncate"
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 focus:outline-none focus:border-[#10367D] focus:ring-2 focus:ring-[#10367D]/15 focus:bg-white transition truncate cursor-pointer"
               >
                 {points.length === 0 ? (
                   <option value="">Belum ada pos terdaftar di sistem</option>
@@ -915,12 +1005,15 @@ export default function MitraTripManagement() {
             </div>
 
             <div>
-              <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">Pos Tujuan</label>
+              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#10367D] ring-2 ring-blue-100 shrink-0" />
+                Pos Tujuan
+              </label>
               <select 
                 name="destinationPointId" 
                 value={formData.destinationPointId} 
                 onChange={handleChange}
-                className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#10367D] truncate"
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 focus:outline-none focus:border-[#10367D] focus:ring-2 focus:ring-[#10367D]/15 focus:bg-white transition truncate cursor-pointer"
               >
                 {points.length === 0 ? (
                   <option value="">Belum ada pos terdaftar di sistem</option>
@@ -929,20 +1022,6 @@ export default function MitraTripManagement() {
                 )}
               </select>
             </div>
-
-            {isOutsideHomeBase && (
-              <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-[12px] flex items-start gap-2">
-                <AlertTriangle size={15} className="text-amber-600 shrink-0 mt-0.5" />
-                <div className="space-y-0.5">
-                  <span className="font-bold block text-[11px] uppercase tracking-wide text-amber-900">
-                    Aturan Wilayah Operasi (Home Base)
-                  </span>
-                  <span className="text-[12px] text-amber-800 leading-snug block">
-                    Salah satu pos (Asal atau Tujuan) harus berada di wilayah domisili terdaftar Anda (<strong>{currentUser?.region?.name || 'Wilayah Terdaftar'}</strong>).
-                  </span>
-                </div>
-              </div>
-            )}
 
             <div className="grid grid-cols-2 gap-2.5">
               <div>
@@ -1073,52 +1152,56 @@ export default function MitraTripManagement() {
 
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider">
-                  {layananCategory === 'penumpang' ? 'Tarif Dasar Per Kursi (Rp)' : 'Tarif Dasar Per Paket (Rp)'}
+                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                  {layananCategory === 'penumpang' ? 'Tarif Resmi Per Kursi (Rp)' : 'Tarif Resmi Per Paket (Rp)'}
                 </label>
-                {(() => {
-                  const suggested = calculateSuggestedFare(formData.originPointId, formData.destinationPointId, formData.vehicleId, points, vehicles);
-                  if (suggested && Number(formData.price) !== Number(suggested)) {
-                    return (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsPriceManual(false);
-                          setFormData(prev => ({ ...prev, price: suggested }));
-                          toast.info(`Tarif disesuaikan dengan rekomendasi: Rp ${suggested.toLocaleString('id-ID')}`);
-                        }}
-                        className="text-[10px] font-bold text-[#10367D] hover:underline cursor-pointer"
-                      >
-                        Pakai Rekomendasi (Rp {suggested.toLocaleString('id-ID')})
-                      </button>
-                    );
-                  }
-                  return null;
-                })()}
+                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                  Terkunci Sesuai Jarak Rute
+                </span>
               </div>
-              <input 
-                type="number" 
-                name="price" 
-                min={1000}
-                required
-                value={formData.price} 
-                onChange={handleChange}
-                className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#10367D] truncate"
-              />
-              <span className="text-[11px] text-neutral-400 mt-1 block">
-                Tarif otomatis diestimasi berdasarkan rute & jenis kendaraan.
-              </span>
+              <div className="relative">
+                <input 
+                  type="number" 
+                  name="price" 
+                  readOnly
+                  required
+                  value={formData.price || 0} 
+                  className="w-full px-3.5 py-2.5 bg-slate-100 border border-slate-300 rounded-xl font-bold text-slate-800 cursor-not-allowed select-none focus:outline-none truncate"
+                />
+                <div className="absolute right-3 top-2.5 text-xs font-semibold text-slate-500">
+                  Rp {(Number(formData.price) || 0).toLocaleString('id-ID')}
+                </div>
+              </div>
+
+              {fareEstimate ? (
+                <div className="mt-2 p-3 bg-blue-50/70 border border-blue-200/80 rounded-xl space-y-1.5 text-xs text-slate-700">
+                  <div className="flex items-center justify-between font-semibold text-[#10367D]">
+                    <span>📍 Jarak Rute Kendaraan (OSRM):</span>
+                    <span>{fareEstimate.distanceKm} km ({fareEstimate.durationMinutes} menit)</span>
+                  </div>
+                  <div className="flex items-center justify-between text-[11px] text-slate-600">
+                    <span>Rincian Kebijakan Tarif:</span>
+                    <span>
+                      Rp {fareEstimate.baseFare?.toLocaleString('id-ID')} + ({fareEstimate.distanceKm} km × Rp {fareEstimate.farePerKm?.toLocaleString('id-ID')})
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <span className="text-[11px] text-slate-400 mt-1 block">
+                  {isEstimatingFare ? 'Sedang menghitung tarif jarak resmi...' : 'Pilih Pos Asal dan Tujuan untuk menghitung tarif otomatis.'}
+                </span>
+              )}
             </div>
 
             <button 
               type="submit"
               disabled={isSameOriginDestination || isPastDate || isSubmitting || vehicles.length === 0}
-              className={`w-full py-3 rounded-xl text-[13px] font-bold transition shadow-sm ${
+              className={`w-full py-3 rounded-xl text-[13px] font-bold transition-all shadow-sm active:scale-[0.99] ${
                 isSameOriginDestination || isPastDate || isSubmitting || vehicles.length === 0
-                  ? 'bg-neutral-200 text-neutral-400 cursor-not-allowed'
-                  : 'text-white cursor-pointer'
+                  ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                  : 'bg-[#10367D] hover:bg-[#0c2c66] text-white cursor-pointer shadow-md'
               }`}
-              style={!(isSameOriginDestination || isPastDate || isSubmitting || vehicles.length === 0) ? { backgroundColor: PRIMARY_COLOR } : undefined}
             >
               {isSubmitting ? 'Memproses...' : 'Publikasikan Trip Jadwal'}
             </button>
@@ -1199,7 +1282,7 @@ export default function MitraTripManagement() {
                     : "Belum ada trip pada filter ini. Buat trip baru lewat form di sebelah kiri."
                 }
               />
-            ) : filteredTrips.map((trip) => {
+            ) : paginatedTrips.map((trip) => {
               const isBarang = trip.serviceType === 'barang';
               const maxCapacity = isBarang
                 ? Number(trip.maxWeightCapacityKg || 1)
@@ -1250,12 +1333,12 @@ export default function MitraTripManagement() {
                           </span>
                         )}
 
-                        {/* Service & Capacity: Bug fixed (clean dot separator, no broken bullet) */}
+                        {/* Service & Capacity: Biru modern (Nebeng Barang & Nebeng Penumpang) */}
                         {isBarang ? (
-                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-50 text-[#4B2172] border border-purple-200 flex items-center gap-1.5">
-                            <Package className="w-3 h-3 text-[#4B2172]" />
+                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-sky-50 text-sky-700 border border-sky-200 flex items-center gap-1.5">
+                            <Package className="w-3 h-3 text-sky-600" />
                             <span>Nebeng Barang</span>
-                            <span className="w-1 h-1 rounded-full bg-purple-300" />
+                            <span className="w-1 h-1 rounded-full bg-sky-400" />
                             <span>Bagasi: {trip.remainingWeightCapacityKg ?? trip.maxWeightCapacityKg} Kg</span>
                           </span>
                         ) : (
@@ -1288,6 +1371,19 @@ export default function MitraTripManagement() {
                           <Clock className="w-3.5 h-3.5 text-slate-400" />
                           <span>{formatTripTime(trip.departureTime)}</span>
                         </div>
+                        {(trip.estimatedDurationMinutes || trip.distanceKm) && (
+                          <>
+                            <span className="w-1 h-1 rounded-full bg-slate-300" />
+                            <div className="flex items-center gap-1.5 text-blue-600 font-semibold" title="Estimasi waktu tempuh & perkiraan tiba">
+                              <Navigation className="w-3.5 h-3.5" />
+                              <span>
+                                {formatDurationMinutes(trip.estimatedDurationMinutes) || `${trip.estimatedDurationMinutes} mnt`}
+                                {trip.distanceKm ? ` (${trip.distanceKm} km)` : ''}
+                                {getEstimatedArrivalTime(trip.departureDate, trip.departureTime, trip.estimatedDurationMinutes) ? ` • Tiba ~${getEstimatedArrivalTime(trip.departureDate, trip.departureTime, trip.estimatedDurationMinutes)}` : ''}
+                              </span>
+                            </div>
+                          </>
+                        )}
                         <span className="w-1 h-1 rounded-full bg-slate-300" />
                         <div className="flex items-center gap-1">
                           {trip.vehicle?.type === 'motor' ? <Bike className="w-3.5 h-3.5 text-slate-400" /> : <Car className="w-3.5 h-3.5 text-slate-400" />}
@@ -1369,6 +1465,28 @@ export default function MitraTripManagement() {
                             </button>
                           </div>
                         )}
+
+                        {/* Tombol Lapor Customer — hanya untuk trip yang sudah selesai */}
+                        {trip.status === 'completed' && !isBarang && (
+                          (() => {
+                            const eligibility = evaluateDriverReportCustomerEligibility(trip);
+                            const hasPassengers = (trip.orders || []).some(
+                              (o) => o.status !== 'cancelled' && o.status !== 'cancelled_by_mitra'
+                            );
+                            if (!hasPassengers) return null;
+                            return eligibility.canReport ? (
+                              <button
+                                type="button"
+                                onClick={() => handleOpenReportCustomer(trip)}
+                                className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-[11px] font-bold transition flex items-center gap-1.5 cursor-pointer"
+                                title="Laporkan customer jika ada insiden / pelanggaran selama perjalanan"
+                              >
+                                <ShieldAlert className="w-3.5 h-3.5 text-rose-600" />
+                                <span>Lapor Customer</span>
+                              </button>
+                            ) : null;
+                          })()
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1376,6 +1494,70 @@ export default function MitraTripManagement() {
               );
             })}
           </div>
+
+          {/* Pagination Controls - Tampil jika data trip lebih dari 5 */}
+          {filteredTrips.length > ITEMS_PER_PAGE && (
+            <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+              <div className="text-slate-500 font-medium">
+                Menampilkan <span className="font-bold text-slate-800">{startIndex + 1}</span>–
+                <span className="font-bold text-slate-800">{Math.min(startIndex + ITEMS_PER_PAGE, filteredTrips.length)}</span> dari{' '}
+                <span className="font-bold text-slate-800">{filteredTrips.length}</span> trip
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  disabled={safeCurrentPage <= 1}
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border text-xs font-semibold transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed bg-white border-slate-200 text-slate-700 hover:bg-slate-50 active:scale-95"
+                  aria-label="Halaman sebelumnya"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Sebelumnya</span>
+                </button>
+
+                <div className="flex items-center gap-1">
+                  {getPageNumbers(safeCurrentPage, totalPages).map((pageNum, idx) => {
+                    if (pageNum === '...') {
+                      return (
+                        <span key={`dots-${idx}`} className="px-1 text-slate-400">
+                          ...
+                        </span>
+                      );
+                    }
+                    const isActive = safeCurrentPage === pageNum;
+                    return (
+                      <button
+                        key={pageNum}
+                        type="button"
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`min-w-[32px] h-8 px-2 rounded-xl text-xs font-bold transition flex items-center justify-center cursor-pointer ${
+                          isActive
+                            ? 'bg-[#10367D] text-white shadow-xs'
+                            : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200'
+                        }`}
+                        aria-label={`Halaman ${pageNum}`}
+                        aria-current={isActive ? 'page' : undefined}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <button
+                  type="button"
+                  disabled={safeCurrentPage >= totalPages}
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border text-xs font-semibold transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed bg-white border-slate-200 text-slate-700 hover:bg-slate-50 active:scale-95"
+                  aria-label="Halaman berikutnya"
+                >
+                  <span className="hidden sm:inline">Berikutnya</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -1447,7 +1629,7 @@ export default function MitraTripManagement() {
                     </div>
                     <div className="bg-neutral-800/50 rounded-lg p-2.5 border border-neutral-700">
                       <div className="flex items-center gap-1.5 text-[10px] text-neutral-400 uppercase tracking-wider mb-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-sky-500"></span>
                         Longitude
                       </div>
                       <div className="font-mono text-[13px] font-bold text-white">{currentPosition.lng.toFixed(6)}</div>
@@ -1501,6 +1683,19 @@ export default function MitraTripManagement() {
           </div>
         )}
       </BaseModal>
+
+      {/* Report Customer Modal — Mitra melaporkan customer setelah trip selesai */}
+      <ReportModal
+        isOpen={isReportCustomerModalOpen}
+        onClose={() => setIsReportCustomerModalOpen(false)}
+        availableTargets={reportCustomerTargets}
+        context={reportCustomerContext}
+        onSuccess={() => {
+          toast.success('Laporan berhasil dikirim. Tim kami akan menindaklanjuti.', {
+            title: 'Laporan Terkirim',
+          });
+        }}
+      />
     </div>
   );
 }

@@ -10,18 +10,22 @@ import {
   Tag,
   Trash2,
   Calendar,
+  Clock,
   Car,
   Bike,
   Package,
-  Users
+  Users,
+  Star
 } from 'lucide-react';
 import EmptyState from '../../../components/ui/EmptyState';
 import BaseModal from '../../../components/ui/BaseModal';
 import { BannerSlider } from '../../../components/ui/BannerSlider';
+import DashboardRegionSwitcher from '../../../components/ui/DashboardRegionSwitcher';
 import { useToast } from '../../../context/ToastContext';
 import apiClient from '../../../services/apiClient';
 import { walletService } from '../../../services/walletService';
 import { voucherService } from '../../../services/voucherService';
+import { formatDurationMinutes, getEstimatedArrivalTime } from '../../../utils/dateUtils';
 
 const PHONE_REGEX = /^(\+?62|0)?8[1-9][0-9]{7,11}$/;
 const TODAY_ISO = new Date().toISOString().split('T')[0];
@@ -116,8 +120,11 @@ export default function SearchTrip() {
   const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   const [seatCount, setSeatCount] = useState(1);
-  const [passengerName, setPassengerName] = useState('');
-  const [passengerPhone, setPassengerPhone] = useState('');
+  const [bookingForOthers, setBookingForOthers] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [passengersList, setPassengersList] = useState([
+    { name: '', phone: '', isContact: true },
+  ]);
 
   const [itemCategory, setItemCategory] = useState('Elektronik');
   const [itemCount, setItemCount] = useState(1);
@@ -234,7 +241,7 @@ export default function SearchTrip() {
     return () => {
       ignore = true;
     };
-  }, [origin, destination, date, activeService]);
+  }, [origin, destination, date, activeService, refreshKey]);
 
   const isPassengerService = activeService === 'motor' || activeService === 'mobil';
 
@@ -296,8 +303,13 @@ export default function SearchTrip() {
     }
   }, [safeSeatCount, safeItemCount, itemSize, itemWeight, selectedTrip?.id, activeService, appliedVoucher]);
 
-  const isPassengerPhoneValid =
-    isPassengerService ? PHONE_REGEX.test(passengerPhone.trim()) : true;
+  const areAllPassengersValid = useMemo(() => {
+    if (!isPassengerService) return true;
+    if (!passengersList || passengersList.length !== safeSeatCount) return false;
+    return passengersList.every(
+      (p) => Boolean(p.name && p.name.trim() !== '') && PHONE_REGEX.test(p.phone?.trim() || '')
+    );
+  }, [isPassengerService, passengersList, safeSeatCount]);
 
   const isReceiverPhoneValid =
     !isPassengerService ? PHONE_REGEX.test(receiverPhone.trim()) : true;
@@ -305,8 +317,7 @@ export default function SearchTrip() {
   const isWeightValid =
     !isPassengerService ? (!isNaN(parsedItemWeight) && parsedItemWeight > 0) : true;
 
-  const isPassengerValid =
-    isPassengerService ? passengerName.trim() !== '' && isPassengerPhoneValid : true;
+  const isPassengerValid = isPassengerService ? areAllPassengersValid : true;
 
   const isBarangValid =
     !isPassengerService ? receiverName.trim() !== '' && isReceiverPhoneValid && isWeightValid : true;
@@ -323,9 +334,16 @@ export default function SearchTrip() {
       return isPassengerService ? 'Jumlah kursi melebihi kuota tersedia.' : 'Berat barang melebihi kapasitas kuota bagasi.';
     }
     if (isPassengerService) {
-      if (!passengerName.trim()) return 'Nama penumpang wajib diisi.';
-      if (!passengerPhone.trim()) return 'Nomor WhatsApp penumpang wajib diisi.';
-      if (!isPassengerPhoneValid) return 'Format nomor WhatsApp tidak valid (contoh: 08123456789).';
+      if (!areAllPassengersValid) {
+        for (let i = 0; i < passengersList.length; i++) {
+          const p = passengersList[i];
+          if (!p.name?.trim()) return `Nama penumpang kursi ke-${i + 1} wajib diisi.`;
+          if (!p.phone?.trim()) return `Nomor WhatsApp penumpang kursi ke-${i + 1} wajib diisi.`;
+          if (!PHONE_REGEX.test(p.phone.trim())) {
+            return `Format nomor WhatsApp penumpang kursi ke-${i + 1} tidak valid (contoh: 08123456789).`;
+          }
+        }
+      }
     } else {
       if (!isWeightValid) return 'Berat paket wajib diisi dengan benar (minimal 0.1 Kg).';
       if (!receiverName.trim()) return 'Nama penerima barang wajib diisi.';
@@ -342,13 +360,58 @@ export default function SearchTrip() {
 
   const handleSeatChange = (e) => {
     const val = parseInt(e.target.value, 10);
-    if (isNaN(val) || val < 1) {
-      setSeatCount(1);
-    } else if (val > maxAllowedSeats) {
-      setSeatCount(maxAllowedSeats);
-    } else {
-      setSeatCount(val);
-    }
+    const newSeats = isNaN(val) || val < 1 ? 1 : Math.min(val, maxAllowedSeats);
+    setSeatCount(newSeats);
+    setPassengersList((prev) => {
+      const updated = [...prev];
+      if (newSeats > updated.length) {
+        for (let i = updated.length; i < newSeats; i++) {
+          updated.push({ name: '', phone: '', isContact: false });
+        }
+      } else {
+        return updated.slice(0, newSeats);
+      }
+      return updated;
+    });
+  };
+
+  const handlePassengerChange = (index, field, value) => {
+    setPassengersList((prev) => {
+      const updated = [...prev];
+      if (!updated[index]) return prev;
+      if (field === 'phone') {
+        const cleaned = value.replace(/[^0-9+]/g, '');
+        if (cleaned.length <= 14) {
+          updated[index] = { ...updated[index], [field]: cleaned };
+        }
+      } else {
+        updated[index] = { ...updated[index], [field]: value };
+      }
+      return updated;
+    });
+  };
+
+  const handleToggleBookingForOthers = (checked) => {
+    setBookingForOthers(checked);
+    setPassengersList((prev) => {
+      const updated = [...prev];
+      if (checked) {
+        if (updated[0]) {
+          updated[0] = { ...updated[0], name: '', phone: '', isContact: true };
+        }
+      } else {
+        const cleanPhone = (userProfile?.phone || '').replace(/[^0-9+]/g, '');
+        if (updated[0]) {
+          updated[0] = {
+            ...updated[0],
+            name: customerName || '',
+            phone: cleanPhone || '',
+            isContact: true,
+          };
+        }
+      }
+      return updated;
+    });
   };
 
   const handlePhoneChange = (val, setter) => {
@@ -460,9 +523,11 @@ export default function SearchTrip() {
     setNewPin('');
     setConfirmPin('');
     setSeatCount(1);
-    setPassengerName(customerName || '');
+    setBookingForOthers(false);
     const cleanPhone = (userProfile?.phone || '').replace(/[^0-9+]/g, '');
-    setPassengerPhone(cleanPhone);
+    setPassengersList([
+      { name: customerName || '', phone: cleanPhone, isContact: true },
+    ]);
     setItemCategory('Elektronik');
     setItemCount(1);
     setItemWeight(7);
@@ -498,7 +563,15 @@ export default function SearchTrip() {
         type: isPassengerService ? 'passenger' : 'parcel',
         ...(appliedVoucher ? { voucherCode: appliedVoucher.code } : {}),
         ...(isPassengerService
-          ? { seatsBooked: safeSeatCount }
+          ? {
+              seatsBooked: safeSeatCount,
+              passengers: passengersList.map((p, idx) => ({
+                name: p.name.trim(),
+                phone: p.phone.trim(),
+                seatNumber: idx + 1,
+                isContact: idx === 0,
+              })),
+            }
           : {
               items: [
                 {
@@ -569,7 +642,13 @@ export default function SearchTrip() {
         <div className="relative flex flex-col gap-3 pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="font-display text-2xl font-bold">Cari & Booking Trip</h1>
-            <p className="mt-1 text-sm text-blue-100">Temukan perjalanan antar kota atau pengiriman barang dengan sistem Escrow terintegrasi.</p>
+            <p className="mt-1 text-sm text-blue-100">Temukan perjalanan antar kota atau pengiriman barang dengan pembayaran aman terproteksi.</p>
+          </div>
+          <div className="shrink-0 flex items-center">
+            <DashboardRegionSwitcher
+              variant="banner"
+              onRegionChanged={() => setRefreshKey((k) => k + 1)}
+            />
           </div>
         </div>
         <div className="absolute bottom-4 left-6 right-6 border-t border-dashed border-white/25 sm:left-8 sm:right-8" />
@@ -708,7 +787,7 @@ export default function SearchTrip() {
                         className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border transition ${
                           isPassenger
                             ? 'bg-blue-50 text-[#10367D] border-blue-200/70'
-                            : 'bg-purple-50 text-[#4B2172] border-purple-200/70'
+                            : 'bg-sky-50 text-sky-700 border-sky-200/70'
                         }`}
                       >
                         {isPassenger ? (
@@ -762,6 +841,24 @@ export default function SearchTrip() {
                       </div>
                     </div>
 
+                    {/* Estimasi Waktu & Jarak Perjalanan */}
+                    {(trip.estimatedDurationMinutes || trip.distanceKm) && (
+                      <div className="flex items-center justify-between text-xs px-3 py-2 rounded-xl bg-blue-50/70 border border-blue-100 text-blue-900 mb-3 font-semibold">
+                        <div className="flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5 text-blue-700 shrink-0" />
+                          <span>
+                            Estimasi: <strong>{formatDurationMinutes(trip.estimatedDurationMinutes) || `${trip.estimatedDurationMinutes} mnt`}</strong>
+                            {trip.distanceKm ? ` (${Number(trip.distanceKm)} km)` : ''}
+                          </span>
+                        </div>
+                        {getEstimatedArrivalTime(trip.departureDate, trip.departureTime, trip.estimatedDurationMinutes) && (
+                          <span className="text-[11px] text-blue-700/80 font-normal">
+                            Tiba ~{getEstimatedArrivalTime(trip.departureDate, trip.departureTime, trip.estimatedDurationMinutes)}
+                          </span>
+                        )}
+                      </div>
+                    )}
+
                     {/* Key Trip Meta Grid */}
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       {/* Jadwal */}
@@ -787,14 +884,30 @@ export default function SearchTrip() {
                         ) : (
                           <Car className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
                         )}
-                        <div className="min-w-0">
-                          <span className="text-[10px] uppercase font-bold text-slate-400 block">Kendaraan</span>
+                        <div className="min-w-0 flex-1">
+                          <span className="text-[10px] uppercase font-bold text-slate-400 block">Kendaraan & Mitra</span>
                           <span className="font-bold text-slate-800 truncate block">
                             {vehicleModel}
                           </span>
-                          <span className="text-[11px] text-slate-500 font-medium truncate block mt-0.5">
-                            {trip.mitra?.name ? trip.mitra.name : trip.vehicle?.plateNumber || 'Mitra Nebeng'}
-                          </span>
+                          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                            <span className="text-[11px] text-slate-600 font-medium truncate max-w-[120px]">
+                              {trip.mitra?.name ? trip.mitra.name : trip.vehicle?.plateNumber || 'Mitra Nebeng'}
+                            </span>
+                            {trip.mitra?.rating ? (
+                              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-amber-50 text-amber-800 text-[10px] font-bold rounded border border-amber-200/80">
+                                <Star className="w-2.5 h-2.5 fill-amber-400 text-amber-500 shrink-0" />
+                                <span>{trip.mitra.rating}</span>
+                                {trip.mitra.totalReviews > 0 && (
+                                  <span className="text-amber-600/70 font-normal">({trip.mitra.totalReviews})</span>
+                                )}
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-0.5 px-1 py-0.2 bg-slate-100 text-slate-500 text-[10px] font-medium rounded">
+                                <Star className="w-2.5 h-2.5 text-slate-400 shrink-0" />
+                                <span>Baru</span>
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
 
@@ -868,54 +981,139 @@ export default function SearchTrip() {
         onClose={() => setSelectedTrip(null)}
         title="Formulir Pemesanan"
         subtitle="Booking Engine"
-        maxWidth="max-w-md"
+        maxWidth="max-w-lg"
       >
-        <form onSubmit={handleCheckout} className="space-y-3 text-[13px]">
+        <form onSubmit={handleCheckout} className="space-y-3.5 text-[13px]">
+          {/* Ringkasan Mitra & Armada */}
+          {selectedTrip && (
+            <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3 flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Mitra Driver</span>
+                <p className="font-bold text-slate-800 text-[13px] truncate">
+                  {selectedTrip.mitra?.name || 'Mitra Nebeng'}
+                </p>
+                <p className="text-[11px] text-slate-500 truncate">
+                  {selectedTrip.vehicle?.model || 'Kendaraan Resmi'} {selectedTrip.vehicle?.plateNumber ? `(${selectedTrip.vehicle.plateNumber})` : ''}
+                </p>
+              </div>
+              <div className="shrink-0 text-right">
+                {selectedTrip.mitra?.rating ? (
+                  <div className="inline-flex items-center gap-1 px-2 py-1 bg-amber-50 text-amber-800 text-xs font-bold rounded-lg border border-amber-200">
+                    <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500" />
+                    <span>{selectedTrip.mitra.rating}</span>
+                    {selectedTrip.mitra.totalReviews > 0 && (
+                      <span className="text-[10px] text-amber-600 font-normal">({selectedTrip.mitra.totalReviews} ulasan)</span>
+                    )}
+                  </div>
+                ) : (
+                  <div className="inline-flex items-center gap-1 px-2 py-1 bg-slate-100 text-slate-500 text-xs font-medium rounded-lg">
+                    <Star className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Mitra Baru</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {isPassengerService ? (
-            <>
+            <div className="space-y-3">
+              {/* Kuota Kursi */}
               <div>
-                <label className="block text-[11px] font-bold text-neutral-400 uppercase mb-1">
-                  Jumlah Kursi (Maks: {maxAllowedSeats})
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-[11px] font-bold text-neutral-500 uppercase">
+                    Jumlah Kursi (Maks: {maxAllowedSeats})
+                  </label>
+                  <span className="text-[11px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
+                    Sisa Kuota: {maxAllowedSeats} Kursi
+                  </span>
+                </div>
                 <input
                   type="number"
                   min="1"
                   max={maxAllowedSeats}
                   value={seatCount}
                   onChange={handleSeatChange}
-                  className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded-xl font-bold focus:outline-none"
+                  className="w-full p-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold focus:outline-none focus:border-brand-500"
                 />
                 {seatCount > maxAllowedSeats && (
-                  <p className="text-[12px] text-rose-500 mt-0.5">Jumlah kursi melebihi sisa kuota!</p>
+                  <p className="text-[12px] text-rose-500 mt-1 font-semibold">Jumlah kursi melebihi sisa kuota!</p>
                 )}
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-[11px] font-bold text-neutral-400 uppercase mb-1">Nama Penumpang</label>
-                  <input
-                    type="text"
-                    required
-                    value={passengerName}
-                    onChange={(e) => setPassengerName(e.target.value)}
-                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded-xl font-bold focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-neutral-400 uppercase mb-1">No. WhatsApp</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="08123456789"
-                    value={passengerPhone}
-                    onChange={(e) => handlePhoneChange(e.target.value, setPassengerPhone)}
-                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded-xl font-bold focus:outline-none"
-                  />
-                  {!isPassengerPhoneValid && passengerPhone.length > 0 && (
-                    <p className="text-[12px] text-rose-500 mt-0.5">Format nomor tidak valid</p>
-                  )}
-                </div>
+
+              {/* Toggle Opsi Pemesanan (Pesan untuk Orang Lain) */}
+              <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-xl flex items-start gap-2.5">
+                <input
+                  type="checkbox"
+                  id="toggleBookingForOthers"
+                  checked={bookingForOthers}
+                  onChange={(e) => handleToggleBookingForOthers(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 text-brand-600 rounded cursor-pointer accent-brand-600"
+                />
+                <label htmlFor="toggleBookingForOthers" className="text-xs text-neutral-700 cursor-pointer select-none">
+                  <span className="font-bold text-neutral-900 block">
+                    {seatCount === 1 ? 'Saya memesankan untuk orang lain (Teman / Keluarga)' : 'Pesan rombongan untuk keluarga / teman'}
+                  </span>
+                  <span className="text-[11px] text-neutral-500 block mt-0.5">
+                    {seatCount === 1
+                      ? 'Centang jika penumpang yang berangkat bukan pemilik akun. Mitra/Driver akan menghubungi nomor kontak di bawah saat penjemputan.'
+                      : 'Data di bawah akan digunakan untuk manifest perjalanan resmi dan koordinasi penjemputan.'}
+                  </span>
+                </label>
               </div>
-            </>
+
+              {/* Daftar Penumpang Sesuai Jumlah Kursi */}
+              <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
+                {passengersList.map((passenger, idx) => (
+                  <div key={idx} className="p-3 bg-neutral-50/80 border border-neutral-200 rounded-xl space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-neutral-800 flex items-center gap-1.5">
+                        <span className="w-5 h-5 rounded-full bg-blue-100 text-[#10367D] flex items-center justify-center text-[11px] font-extrabold">
+                          {idx + 1}
+                        </span>
+                        Kursi {idx + 1}: {idx === 0 && !bookingForOthers ? 'Data Penumpang (Saya)' : `Penumpang ${idx + 1}`}
+                      </span>
+                      {idx === 0 && (
+                        <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">
+                          Kontak Utama (PIC)
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-[10px] font-bold text-neutral-400 uppercase mb-0.5">
+                          Nama Lengkap
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="Nama Penumpang"
+                          value={passenger.name}
+                          onChange={(e) => handlePassengerChange(idx, 'name', e.target.value)}
+                          className="w-full p-2 bg-white border border-neutral-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-brand-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-neutral-400 uppercase mb-0.5">
+                          No. WhatsApp
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="08123456789"
+                          value={passenger.phone}
+                          onChange={(e) => handlePassengerChange(idx, 'phone', e.target.value)}
+                          className="w-full p-2 bg-white border border-neutral-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-brand-500"
+                        />
+                        {passenger.phone.length > 0 && !PHONE_REGEX.test(passenger.phone.trim()) && (
+                          <p className="text-[10px] text-rose-500 mt-0.5">Format nomor tidak valid</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           ) : (
             <>
               <div className="grid grid-cols-2 gap-2">

@@ -90,7 +90,7 @@ export default function PrivacyPolicyModal({ isOpen, onClose }) {
               <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
                 <span className="font-bold text-slate-800">C. Data Keuangan & Transaksi Dompet:</span>
                 <p className="text-slate-600 mt-0.5">
-                  Dana transaksi disimpan aman dalam rekening bersama (Escrow). Detail nomor rekening penarikan mitra dilindungi enkripsi perbankan.
+                  Dana transaksi disimpan aman dalam rekening bersama. Detail nomor rekening penarikan mitra dilindungi enkripsi perbankan.
                 </p>
               </div>
             </div>

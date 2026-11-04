@@ -43,6 +43,16 @@ const ROLE_BADGES = {
     bg: 'bg-indigo-50 text-indigo-700 border-indigo-200',
     dot: 'bg-indigo-500',
   },
+  admin: {
+    label: 'Admin',
+    bg: 'bg-purple-50 text-purple-700 border-purple-200',
+    dot: 'bg-purple-500',
+  },
+  regional: {
+    label: 'Regional',
+    bg: 'bg-teal-50 text-teal-700 border-teal-200',
+    dot: 'bg-teal-500',
+  },
   superadmin: {
     label: 'Superadmin',
     bg: 'bg-purple-50 text-purple-700 border-purple-200',
@@ -130,7 +140,7 @@ export default function BannerManagement() {
         title: banner.title || '',
         imageUrl: banner.imageUrl || '',
         linkUrl: banner.linkUrl || '',
-        targetRole: banner.targetRole || '',
+        targetRole: banner.targetRole ? banner.targetRole.toLowerCase() : '',
         isActive: banner.isActive ?? true,
       });
     } else {
@@ -195,7 +205,7 @@ export default function BannerManagement() {
         title: formData.title.trim(),
         imageUrl: formData.imageUrl.trim() || null,
         linkUrl: formData.linkUrl.trim() || null,
-        targetRole: formData.targetRole ? formData.targetRole.toUpperCase() : null,
+        targetRole: formData.targetRole ? formData.targetRole.toLowerCase() : null,
         isActive: formData.isActive,
       };
 
@@ -210,7 +220,11 @@ export default function BannerManagement() {
       loadBanners();
     } catch (error) {
       console.error('Error saving banner:', error);
-      toast.error(error.response?.data?.message || 'Gagal menyimpan banner');
+      const rawMsg = error.response?.data?.message;
+      const errorMsg = Array.isArray(rawMsg)
+        ? rawMsg.join(', ')
+        : rawMsg || 'Gagal menyimpan banner';
+      toast.error(errorMsg);
     } finally {
       setIsSubmitting(false);
     }
@@ -337,9 +351,11 @@ export default function BannerManagement() {
           >
             <option value="ALL">Semua Audiens</option>
             <option value="PUBLIC">Publik / Semua</option>
-            <option value="CUSTOMER">Customer</option>
-            <option value="MITRA">Mitra</option>
-            <option value="OPERATOR">Operator</option>
+            <option value="customer">Customer</option>
+            <option value="mitra">Mitra</option>
+            <option value="operator">Operator</option>
+            <option value="admin">Admin</option>
+            <option value="regional">Regional</option>
           </select>
 
           <select
@@ -657,9 +673,11 @@ export default function BannerManagement() {
                 className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-[#10367D] focus:ring-2 focus:ring-[#10367D]/20 cursor-pointer transition-all"
               >
                 <option value="">Semua (Publik)</option>
-                <option value="CUSTOMER">Customer (Penumpang)</option>
-                <option value="MITRA">Mitra (Driver)</option>
-                <option value="OPERATOR">Operator</option>
+                <option value="customer">Customer (Penumpang)</option>
+                <option value="mitra">Mitra (Driver)</option>
+                <option value="operator">Operator</option>
+                <option value="admin">Admin</option>
+                <option value="regional">Regional</option>
               </select>
             </div>
 

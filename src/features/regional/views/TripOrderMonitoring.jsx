@@ -15,7 +15,10 @@ import {
   Radio,
   Clock,
   Gauge,
-  Compass
+  Compass,
+  Flag,
+  Building,
+  AlertCircle
 } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { SkeletonTableRows } from '../../../components/ui/Skeleton';
@@ -24,9 +27,13 @@ import StatCard from '../../../components/ui/StatCard';
 import StatusBadge from '../../../components/ui/StatusBadge';
 import BaseModal from '../../../components/ui/BaseModal';
 import { useAuth } from '../../../context/AuthContext';
+import { useToast } from '../../../context/ToastContext';
 import apiClient from '../../../services/apiClient';
+import reportService from '../../../services/reportService';
+import { parseRoutePolyline } from '../../../utils/mapRouteUtil';
 
 export default function RegionalTripMonitoringPage() {
+  const toast = useToast();
   const { session, adminProfile } = useAuth();
   const leafletMapInstance = useRef(null);
   const movingMarkerRef = useRef(null);
@@ -40,6 +47,7 @@ export default function RegionalTripMonitoringPage() {
   const [paginationMeta, setPaginationMeta] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('Semua');
+  const [scopeFilter, setScopeFilter] = useState('origin'); // 'origin' (Pos Lokal) | 'all' | 'destination'
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [currentTrip, setCurrentTrip] = useState(null);
   const [activeTab, setActiveTab] = useState('replay');
@@ -55,6 +63,15 @@ export default function RegionalTripMonitoringPage() {
   const [currentHeading, setCurrentHeading] = useState(0);
   const [lastLocationUpdate, setLastLocationUpdate] = useState(null);
 
+  // Modal Pelaporan Insiden Operasional Pos
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [reportTripTarget, setReportTripTarget] = useState(null);
+  const [reportCategory, setReportCategory] = useState('SERVICE_QUALITY');
+  const [reportSeverity, setReportSeverity] = useState('MEDIUM');
+  const [reportTitle, setReportTitle] = useState('');
+  const [reportDescription, setReportDescription] = useState('');
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+
   useEffect(() => {
     let isMounted = true;
 
@@ -67,6 +84,7 @@ export default function RegionalTripMonitoringPage() {
           page: currentPage,
           limit: limit,
           ...(currentRegionId ? { regionId: currentRegionId } : {}),
+          ...(scopeFilter !== 'all' ? { scope: scopeFilter } : {}),
           ...(statusFilter !== 'Semua' ? { status: statusFilter } : {}),
           ...(searchQuery.trim() !== '' ? { search: searchQuery } : {})
         };
@@ -93,16 +111,33 @@ export default function RegionalTripMonitoringPage() {
             STATUS_MAP[t.status] ||
             (t.status ? String(t.status) : 'Terjadwal');
 
+          const driverHomeRegionId = t.mitra?.homeRegionId ? String(t.mitra.homeRegionId) : (t.mitra?.regionId ? String(t.mitra.regionId) : null);
+          const isLocalDriver = Boolean(currentRegionId && driverHomeRegionId && currentRegionId === driverHomeRegionId);
+          const driverHomeRegionName = t.mitra?.homeRegionName || (isLocalDriver ? 'Wilayah Lokal' : 'Lintas Wilayah');
+          const originRegionId = t.originPoint?.regionId ? String(t.originPoint.regionId) : null;
+          const isOriginLocal = Boolean(currentRegionId && originRegionId && currentRegionId === originRegionId);
+          const originRegionName = t.originPoint?.regionName || '';
+          const destinationRegionName = t.destinationPoint?.regionName || '';
+
           return {
             id: String(t.id),
             rawStatus: t.status,
             passenger: t.customer?.name || t.passengerName || 'Pelanggan Umum',
             driver: t.mitra?.name || t.driver?.name || 'Driver Mitra',
+            driverId: t.mitra?.id ? String(t.mitra.id) : (t.mitraId ? String(t.mitraId) : null),
+            driverPhone: t.mitra?.phone || '-',
+            isLocalDriver,
+            driverHomeRegionName,
             vehicle: t.vehicle
               ? `${t.vehicle.type} (${t.vehicle.plateNumber})`
               : 'Kendaraan Standar',
             originPos: t.originPoint?.name || 'Pos Asal',
+            originPointId: t.originPoint?.id ? String(t.originPoint.id) : null,
+            isOriginLocal,
+            originRegionName,
             destinationPos: t.destinationPoint?.name || 'Pos Tujuan',
+            destinationPointId: t.destinationPoint?.id ? String(t.destinationPoint.id) : null,
+            destinationRegionName,
             status: mappedStatus,
             fare: t.price
               ? `Rp ${Number(t.price).toLocaleString('id-ID')}`
@@ -147,7 +182,7 @@ export default function RegionalTripMonitoringPage() {
     return () => {
       isMounted = false;
     };
-  }, [adminProfile?.regionId, session?.regionId, currentPage, limit, statusFilter, searchQuery]);
+  }, [adminProfile?.regionId, session?.regionId, currentPage, limit, statusFilter, scopeFilter, searchQuery]);
 
   useEffect(() => {
     if (!document.getElementById('leaflet-css')) {
@@ -209,10 +244,17 @@ export default function RegionalTripMonitoringPage() {
       }
     });
 
-    // DISABLED OSRM route fetch to prevent wrong coordinates
-    // Using direct coordinates only as requested
-    console.log('[Regional GPS] OSRM route fetch DISABLED - using direct coordinates only');
-    setRoutedCoordinates([currentTrip.originCoord, currentTrip.destinationCoord]);
+    // Gunakan rute OSRM dari mapsPolyline jika tersedia, atau fallback ke 2 titik
+    const parsedCoords = parseRoutePolyline(
+      currentTrip.mapsPolyline,
+      currentTrip.originCoord,
+      currentTrip.destinationCoord
+    );
+    if (parsedCoords.length > 0) {
+      setRoutedCoordinates(parsedCoords.map(([lat, lng]) => ({ lat, lng })));
+    } else {
+      setRoutedCoordinates([currentTrip.originCoord, currentTrip.destinationCoord]);
+    }
 
     return () => {
       isSubscribed = false;
@@ -447,6 +489,51 @@ export default function RegionalTripMonitoringPage() {
     setIsDetailOpen(true);
   };
 
+  const handleOpenReportModal = (trip) => {
+    setReportTripTarget(trip);
+    setReportTitle(`Pelanggaran Operasional di Pos: ${trip.originPos}`);
+    setReportCategory('SERVICE_QUALITY');
+    setReportSeverity('MEDIUM');
+    setReportDescription('');
+    setReportModalOpen(true);
+  };
+
+  const handleSubmitOperationalReport = async (e) => {
+    e.preventDefault();
+    if (!reportTripTarget) return;
+
+    if (!reportDescription.trim()) {
+      toast.error('Harap berikan rincian laporan insiden operasional.', { title: 'Form Belum Lengkap' });
+      return;
+    }
+
+    try {
+      setIsSubmittingReport(true);
+      await reportService.createReport({
+        reportedUserId: reportTripTarget.driverId,
+        tripId: reportTripTarget.id,
+        pickupPointId: reportTripTarget.originPointId,
+        category: reportCategory,
+        severity: reportSeverity,
+        title: reportTitle.trim() || `Laporan Operasional Pos ${reportTripTarget.originPos}`,
+        description: `[LAPORAN OPERASIONAL POS WILAYAH]\nMitra: ${reportTripTarget.driver} (Homebase: ${reportTripTarget.driverHomeRegionName})\nPos Keberangkatan: ${reportTripTarget.originPos}\nCatatan Insiden: ${reportDescription.trim()}`
+      });
+
+      toast.success('Laporan insiden operasional pos berhasil diajukan ke admin pusat & homebase mitra.', {
+        title: 'Laporan Terkirim'
+      });
+      setReportModalOpen(false);
+      setReportTripTarget(null);
+    } catch (err) {
+      console.error('Gagal mengirim laporan operasional:', err);
+      toast.error(err.response?.data?.message || 'Gagal mengirim laporan operasional pos.', {
+        title: 'Gagal Kirim Laporan'
+      });
+    } finally {
+      setIsSubmittingReport(false);
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
 
@@ -459,14 +546,14 @@ export default function RegionalTripMonitoringPage() {
             <div className="flex items-center gap-2 mb-2">
               <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
               <span className="text-[11px] font-bold uppercase tracking-widest text-accent flex items-center gap-1.5">
-                <Navigation className="w-3.5 h-3.5" /> MONITORING CERDAS WILAYAH (SERVER-SIDE & WEBSOCKET)
+                <Navigation className="w-3.5 h-3.5" /> MONITORING CERDAS OPERASIONAL & HOMEBASE MITRA
               </span>
             </div>
             <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
-              Pemantauan Trip, DMS AI & Geofencing
+              Pemantauan Trip & Operasional Pos
             </h1>
             <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
-              Pelacakan visual replay dan live tracking real-time dari database wilayah Anda.
+              Pantau trip real-time di seluruh pos wilayah Anda. Mitra bebas beroperasi di pos mana saja, dengan atribusi operasional & homebase yang transparan.
             </p>
           </div>
 
@@ -483,11 +570,62 @@ export default function RegionalTripMonitoringPage() {
         <span className="absolute bottom-[11px] right-6 h-2.5 w-2.5 rounded-full border-2 border-white bg-accent sm:right-8" />
       </section>
 
+      {/* DUAL SCOPE SUMMARY / TAB PILIH PERSPEKTIF */}
+      <div className="bg-white p-2 sm:p-3 rounded-2xl shadow-sm border border-neutral-200 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto">
+          <button
+            onClick={() => { setScopeFilter('origin'); setCurrentPage(1); }}
+            className={`px-4 py-2 rounded-xl text-[13px] font-bold transition flex items-center gap-2 cursor-pointer ${
+              scopeFilter === 'origin'
+                ? 'bg-[#10367D] text-white shadow-sm'
+                : 'bg-neutral-50 text-neutral-600 hover:bg-neutral-100'
+            }`}
+          >
+            <span>🚩 Keberangkatan Pos Wilayah</span>
+            <span className={`text-[11px] px-1.5 py-0.5 rounded-full ${
+              scopeFilter === 'origin' ? 'bg-white/20 text-white' : 'bg-neutral-200 text-neutral-700'
+            }`}>
+              Operasional & Komisi
+            </span>
+          </button>
+
+          <button
+            onClick={() => { setScopeFilter('all'); setCurrentPage(1); }}
+            className={`px-4 py-2 rounded-xl text-[13px] font-bold transition flex items-center gap-2 cursor-pointer ${
+              scopeFilter === 'all'
+                ? 'bg-[#10367D] text-white shadow-sm'
+                : 'bg-neutral-50 text-neutral-600 hover:bg-neutral-100'
+            }`}
+          >
+            <span>🌐 Semua Rute Terkait</span>
+          </button>
+
+          <button
+            onClick={() => { setScopeFilter('destination'); setCurrentPage(1); }}
+            className={`px-4 py-2 rounded-xl text-[13px] font-bold transition flex items-center gap-2 cursor-pointer ${
+              scopeFilter === 'destination'
+                ? 'bg-[#10367D] text-white shadow-sm'
+                : 'bg-neutral-50 text-neutral-600 hover:bg-neutral-100'
+            }`}
+          >
+            <span>🏁 Kedatangan Menuju Wilayah</span>
+          </button>
+        </div>
+
+        <div className="text-[12px] text-neutral-500 font-medium px-2">
+          {scopeFilter === 'origin'
+            ? '📌 Menampilkan trip yang berangkat dari pos di wilayah Anda (aset demand & komisi masuk wilayah ini).'
+            : scopeFilter === 'destination'
+            ? '📍 Menampilkan trip yang bertujuan akhir ke pos wilayah Anda.'
+            : '🌐 Menampilkan seluruh trip yang bersinggungan dengan wilayah ini.'}
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <StatCard
           title="TOTAL TRIP TERCATAT"
           value={`${paginationMeta?.total || tripList.length} Trip`}
-          subtitle="Data riil database terfilter"
+          subtitle="Sesuai filter lingkup pos"
           icon={Car}
         />
         <StatCard
@@ -516,7 +654,7 @@ export default function RegionalTripMonitoringPage() {
           <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400" />
           <input
             type="text"
-            placeholder="Cari pos asal, tujuan..."
+            placeholder="Cari pos asal, tujuan, atau mitra..."
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
@@ -564,11 +702,11 @@ export default function RegionalTripMonitoringPage() {
             <thead>
               <tr className="bg-gray-50/70 text-neutral-400 text-[12px] uppercase tracking-wider font-bold">
                 <th className="py-3 px-5">ID & Waktu</th>
-                <th className="py-3 px-5">Driver & Armada</th>
+                <th className="py-3 px-5">Driver & Homebase</th>
                 <th className="py-3 px-5">Rute (Asal &rarr; Tujuan)</th>
                 <th className="py-3 px-5">Status Trip</th>
                 <th className="py-3 px-5 text-center">Driver Score</th>
-                <th className="py-3 px-5 text-center">Aksi</th>
+                <th className="py-3 px-5 text-center">Aksi Operasional</th>
               </tr>
             </thead>
 
@@ -585,13 +723,32 @@ export default function RegionalTripMonitoringPage() {
                     <td className="py-3.5 px-5">
                       <div className="font-bold text-neutral-800">{trip.driver}</div>
                       <div className="text-[11px] text-neutral-400 font-mono">{trip.vehicle}</div>
+                      <div className="mt-1 flex items-center gap-1">
+                        {trip.isLocalDriver ? (
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                            Mitra Lokal
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-800" title="Homebase mitra di luar wilayah Anda">
+                            Lintas: {trip.driverHomeRegionName}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="py-3.5 px-5">
-                      <div className="flex items-center gap-1 font-semibold text-neutral-700">
+                      <div className="flex items-center gap-1.5 font-semibold text-neutral-700">
                         <MapPin size={11} className="text-[#10367D] shrink-0" />
-                        <span className="truncate">{trip.originPos}</span>
+                        <span className="truncate">
+                          {trip.originPos}
+                          {trip.isOriginLocal && (
+                            <span className="ml-1 text-[10px] px-1 py-0.2 rounded bg-blue-100 text-blue-700 font-bold">Pos Lokal</span>
+                          )}
+                        </span>
                         <ArrowRight size={10} className="text-[#10367D] shrink-0" />
                         <span className="truncate">{trip.destinationPos}</span>
+                      </div>
+                      <div className="text-[11px] text-neutral-400 mt-0.5">
+                        Tarif: <span className="font-semibold text-neutral-600">{trip.fare}</span>
                       </div>
                     </td>
                     <td className="py-3.5 px-5">
@@ -603,13 +760,20 @@ export default function RegionalTripMonitoringPage() {
                       <StatusBadge variant="emerald">★ {trip.driverScore}/100</StatusBadge>
                     </td>
                     <td className="py-3.5 px-5 text-center">
-                      <div className="flex items-center justify-center gap-1">
+                      <div className="flex items-center justify-center gap-1.5">
                         <button
                           onClick={() => handleOpenDetail(trip, 'replay')}
                           title="Visual Replay & Live Tracking"
                           className="p-1.5 bg-[#74B4D9]/15 hover:bg-[#74B4D9]/25 text-[#10367D] rounded-lg transition cursor-pointer"
                         >
                           <Play size={13} />
+                        </button>
+                        <button
+                          onClick={() => handleOpenReportModal(trip)}
+                          title="Laporkan Masalah Operasional Pos"
+                          className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg transition cursor-pointer"
+                        >
+                          <Flag size={13} />
                         </button>
                       </div>
                     </td>
@@ -786,6 +950,126 @@ export default function RegionalTripMonitoringPage() {
               </button>
             </div>
           </div>
+        )}
+      </BaseModal>
+
+      {/* MODAL LAPORKAN INSIDEN OPERASIONAL POS */}
+      <BaseModal
+        isOpen={reportModalOpen}
+        onClose={() => { if (!isSubmittingReport) setReportModalOpen(false); }}
+        title="Laporkan Insiden Operasional di Pos"
+        maxWidth="max-w-lg"
+      >
+        {reportTripTarget && (
+          <form onSubmit={handleSubmitOperationalReport} className="space-y-4 font-['Inter']">
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-[12px] text-amber-900 leading-relaxed">
+              <div className="font-bold flex items-center gap-1.5 mb-1 text-amber-950">
+                <AlertCircle size={14} className="text-amber-600 shrink-0" />
+                <span>Wewenang Operasional Pos (Dispute & Incident Flagging)</span>
+              </div>
+              Laporan ini ditujukan untuk mencatat pelanggaran sopan-santun, keterlambatan, atau ketidakpatuhan SOP pos oleh mitra yang mengambil order di pos wilayah Anda. Laporan akan diteruskan ke <strong>Admin Homebase Mitra</strong> dan <strong>Superadmin</strong> untuk evaluasi sanksi administratif.
+            </div>
+
+            <div className="bg-neutral-50 p-3 rounded-xl border border-neutral-200 text-[12px] space-y-1">
+              <div><span className="text-neutral-500">Trip ID:</span> <span className="font-mono font-bold text-neutral-800">#{reportTripTarget.id}</span></div>
+              <div><span className="text-neutral-500">Nama Mitra:</span> <span className="font-bold text-neutral-800">{reportTripTarget.driver}</span></div>
+              <div>
+                <span className="text-neutral-500">Homebase Mitra:</span>{' '}
+                <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                  reportTripTarget.isLocalDriver ? 'bg-emerald-100 text-emerald-800' : 'bg-indigo-100 text-indigo-800'
+                }`}>
+                  {reportTripTarget.driverHomeRegionName}
+                </span>
+              </div>
+              <div><span className="text-neutral-500">Pos Keberangkatan:</span> <span className="font-semibold text-neutral-800">{reportTripTarget.originPos}</span></div>
+            </div>
+
+            <div>
+              <label className="block text-[12px] font-bold text-neutral-700 mb-1">
+                Kategori Pelanggaran
+              </label>
+              <select
+                value={reportCategory}
+                onChange={(e) => setReportCategory(e.target.value)}
+                className="w-full bg-white border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-medium text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#10367D]"
+              >
+                <option value="SERVICE_QUALITY">Pelayanan / Ketidakpatuhan Jadwal Pos</option>
+                <option value="SAFETY_AND_HARASSMENT">Keamanan / Ketertiban di Area Pos</option>
+                <option value="FRAUD_AND_FINANCIAL">Kecurangan Transaksi / Tarif di Luar Aplikasi</option>
+                <option value="OTHER">Lainnya</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[12px] font-bold text-neutral-700 mb-1">
+                Tingkat Urgensi
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { id: 'LOW', label: 'Rendah (Teguran)' },
+                  { id: 'MEDIUM', label: 'Sedang (Peringatan)' },
+                  { id: 'HIGH', label: 'Tinggi (Tindakan Cepat)' },
+                ].map((s) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => setReportSeverity(s.id)}
+                    className={`py-2 px-2 rounded-xl text-[11px] font-bold border transition cursor-pointer text-center ${
+                      reportSeverity === s.id
+                        ? 'bg-[#10367D] text-white border-[#10367D]'
+                        : 'bg-white text-neutral-600 border-neutral-200 hover:bg-neutral-50'
+                    }`}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[12px] font-bold text-neutral-700 mb-1">
+                Judul Laporan
+              </label>
+              <input
+                type="text"
+                value={reportTitle}
+                onChange={(e) => setReportTitle(e.target.value)}
+                placeholder="Contoh: Mitra terlambat lebih dari 30 menit di Pos A"
+                className="w-full bg-white border border-neutral-200 rounded-xl px-3 py-2 text-[13px] text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#10367D]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[12px] font-bold text-neutral-700 mb-1">
+                Rincian Kronologi Kejadian di Pos
+              </label>
+              <textarea
+                rows={3}
+                value={reportDescription}
+                onChange={(e) => setReportDescription(e.target.value)}
+                placeholder="Tuliskan kronologi kejadian di pos secara objektif..."
+                className="w-full bg-white border border-neutral-200 rounded-xl p-3 text-[13px] text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#10367D]"
+              />
+            </div>
+
+            <div className="pt-2 border-t border-neutral-200 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setReportModalOpen(false)}
+                disabled={isSubmittingReport}
+                className="px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-[13px] font-bold rounded-xl transition cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmittingReport}
+                className="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white text-[13px] font-bold rounded-xl transition cursor-pointer shadow-md disabled:opacity-50"
+              >
+                {isSubmittingReport ? 'Mengirim...' : 'Kirim Laporan Insiden'}
+              </button>
+            </div>
+          </form>
         )}
       </BaseModal>
     </div>

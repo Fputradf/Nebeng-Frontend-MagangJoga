@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 import CustomerSidebar from './components/CustomerSidebar';
@@ -11,6 +11,9 @@ import { useAuth } from '../../context/AuthContext';
 const CUSTOMER_MENU_PATH = {
   'Onboarding Biometrik': 'onboarding',
   'Cari & Booking Trip': 'booking',
+  'Tiket Saya': 'tickets',
+  'Digital QR Aktif': 'qr',
+  'Digital QR': 'qr',
   'Tickets & Digital QR': 'tickets',
   'Voucher Saya': 'vouchers',
   'Rewards & Penukaran': 'rewards',
@@ -66,6 +69,7 @@ export default function CustomerLayout() {
       }
       topbar={
         <AppTopbar
+          basePath="/customer"
           profile={customerProfile}
           roleLabel="Customer"
           onProfileClick={() => setShowProfileModal(true)}

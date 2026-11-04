@@ -228,7 +228,7 @@ export default function OperatorHandover() {
         recipient: recipientName.trim(),
         ticket: cleanTicket,
         otp: cleanOtp,
-        status: 'Escrow Released & Selesai',
+        status: 'Dana Dicairkan & Selesai',
         time: 'Baru saja',
       };
 
@@ -239,7 +239,7 @@ export default function OperatorHandover() {
 
       toast.success(
         res.data?.message ||
-          'Verifikasi Handover sukses! Paket diserahkan dan dana escrow dicairkan ke Mitra.',
+          'Verifikasi Handover sukses! Paket diserahkan dan dana perjalanan dicairkan ke Mitra.',
         { title: 'Handover Selesai' }
       );
     } catch (error) {
@@ -282,7 +282,7 @@ export default function OperatorHandover() {
 
       toast.success(
         res.data?.message ||
-          'Penyelesaian tiket manual berhasil! Escrow dicairkan secara manual.',
+          'Penyelesaian tiket manual berhasil! Dana dicairkan secara manual.',
         { title: 'Bypass Berhasil' }
       );
 
@@ -321,7 +321,7 @@ export default function OperatorHandover() {
               Handover & OTP Serah Paket
             </h1>
             <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
-              Pindai tiket paket penerima dan masukkan 6-digit OTP klaim untuk serah terima & pelepasan escrow.
+              Pindai tiket paket penerima dan masukkan 6-digit OTP klaim untuk serah terima & pencairan dana.
             </p>
           </div>
 
@@ -613,7 +613,7 @@ export default function OperatorHandover() {
               <span>
                 {isForcing
                   ? 'Memproses...'
-                  : 'Lepas Dana Escrow'}
+                  : 'Cairkan Dana'}
               </span>
             </button>
           </div>

@@ -15,6 +15,7 @@ import {
   RefreshCw,
   Ticket,
   ShieldCheck,
+  Lock,
   Clock,
   ChevronLeft,
   ChevronRight,
@@ -26,21 +27,10 @@ import { useToast } from '../../../context/ToastContext';
 import BaseModal from '../../../components/ui/BaseModal';
 import apiClient from '../../../services/apiClient';
 import { walletService } from '../../../services/walletService';
+import { disbursementBankService, FALLBACK_SUPPORTED_BANKS } from '../../../services/disbursementBankService';
 
 const PRIMARY_COLOR = '#10367D';
 const MIN_WITHDRAW_AMOUNT = 10000;
-
-const SUPPORTED_BANKS = [
-  { code: 'BCA', name: 'Bank Central Asia (BCA)' },
-  { code: 'BNI', name: 'Bank Negara Indonesia (BNI)' },
-  { code: 'BRI', name: 'Bank Rakyat Indonesia (BRI)' },
-  { code: 'MANDIRI', name: 'Bank Mandiri' },
-  { code: 'PERMATA', name: 'Bank Permata' },
-  { code: 'CIMB', name: 'CIMB Niaga' },
-  { code: 'BSI', name: 'Bank Syariah Indonesia (BSI)' },
-  { code: 'DANAMON', name: 'Bank Danamon' },
-  { code: 'BTPN', name: 'Bank BTPN / Jenius' },
-];
 
 const formatRupiah = (value) => `Rp ${Math.max(0, Math.round(value || 0)).toLocaleString('id-ID')}`;
 
@@ -55,11 +45,25 @@ const formatDate = (dateString) => {
   });
 };
 
+const cleanTransactionDescription = (desc) => {
+  if (!desc) return '';
+  return desc
+    .replace(/dana ditahan escrow/gi, 'Dana ditahan')
+    .replace(/pencairan auto-escrow/gi, 'Pencairan dana otomatis')
+    .replace(/pencairan escrow/gi, 'Pencairan dana pesanan')
+    .replace(/dana escrow/gi, 'dana jaminan')
+    .replace(/\bescrow\b/gi, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+};
+
 const getTransactionMeta = (row) => {
+  const safeDesc = cleanTransactionDescription(row.description);
+
   if (row.type === 'payment') {
     return {
       label: 'Pembayaran Tiket',
-      description: row.orderId ? `Tiket Perjalanan #${row.orderId}` : (row.description || 'Pembayaran Tiket'),
+      description: row.orderId ? `Tiket Perjalanan #${row.orderId}` : (safeDesc || 'Pembayaran Tiket'),
       isPositive: false,
       badgeVariant: 'bg-rose-50 text-rose-700 border-rose-200',
       iconBg: 'bg-rose-100 text-rose-600',
@@ -69,13 +73,13 @@ const getTransactionMeta = (row) => {
   }
 
   if (row.type === 'credit') {
-    const isTopUp = row.description?.toLowerCase().includes('top up');
-    const isRefund = row.orderId || row.description?.toLowerCase().includes('refund');
+    const isTopUp = (row.description || '').toLowerCase().includes('top up');
+    const isRefund = row.orderId || (row.description || '').toLowerCase().includes('refund');
 
     if (isTopUp) {
       return {
         label: 'Top Up Saldo',
-        description: row.description || 'Top Up Saldo Dompet',
+        description: safeDesc || 'Top Up Saldo Dompet',
         isPositive: true,
         badgeVariant: 'bg-emerald-50 text-emerald-700 border-emerald-200',
         iconBg: 'bg-emerald-100 text-emerald-600',
@@ -87,7 +91,7 @@ const getTransactionMeta = (row) => {
     if (isRefund) {
       return {
         label: 'Pengembalian Dana',
-        description: row.orderId ? `Refund Order #${row.orderId}` : (row.description || 'Pengembalian Dana'),
+        description: row.orderId ? `Refund Order #${row.orderId}` : (safeDesc || 'Pengembalian Dana'),
         isPositive: true,
         badgeVariant: 'bg-blue-50 text-blue-700 border-blue-200',
         iconBg: 'bg-blue-100 text-blue-600',
@@ -98,7 +102,7 @@ const getTransactionMeta = (row) => {
 
     return {
       label: 'Pemasukan',
-      description: row.description || 'Kredit Saldo',
+      description: safeDesc || 'Kredit Saldo',
       isPositive: true,
       badgeVariant: 'bg-emerald-50 text-emerald-700 border-emerald-200',
       iconBg: 'bg-emerald-100 text-emerald-600',
@@ -110,31 +114,31 @@ const getTransactionMeta = (row) => {
   if (row.type === 'debit') {
     return {
       label: 'Penarikan Saldo',
-      description: row.description || 'Penarikan ke Rekening Bank',
+      description: safeDesc || 'Penarikan ke Rekening Bank',
       isPositive: false,
-      badgeVariant: 'bg-blue-50 text-blue-700 border-blue-200',
-      iconBg: 'bg-blue-100 text-blue-600',
-      Icon: ArrowUpRight,
+      badgeVariant: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      iconBg: 'bg-emerald-100 text-emerald-600',
+      Icon: ArrowDownToLine,
       filterCategory: 'withdraw',
     };
   }
 
   if (row.type === 'escrow_hold') {
     return {
-      label: 'Escrow Ditahan',
-      description: row.description || 'Dana ditahan untuk pesanan aktif',
+      label: 'Dana Pesanan Ditahan',
+      description: safeDesc || 'Dana ditahan hingga pesanan selesai diverifikasi',
       isPositive: false,
       badgeVariant: 'bg-amber-50 text-amber-700 border-amber-200',
       iconBg: 'bg-amber-100 text-amber-600',
-      Icon: ShieldCheck,
+      Icon: Lock,
       filterCategory: 'escrow',
     };
   }
 
   if (row.type === 'escrow_release') {
     return {
-      label: 'Pencairan Escrow',
-      description: row.description || 'Dana pesanan dicairkan ke saldo',
+      label: 'Dana Pesanan Cair',
+      description: safeDesc || 'Dana pesanan dicairkan ke saldo',
       isPositive: true,
       badgeVariant: 'bg-teal-50 text-teal-700 border-teal-200',
       iconBg: 'bg-teal-100 text-teal-600',
@@ -145,7 +149,7 @@ const getTransactionMeta = (row) => {
 
   return {
     label: row.type,
-    description: row.description || '-',
+    description: safeDesc || '-',
     isPositive: false,
     badgeVariant: 'bg-neutral-100 text-neutral-700 border-neutral-200',
     iconBg: 'bg-neutral-100 text-neutral-600',
@@ -179,11 +183,21 @@ export default function CustomerWallet() {
   const [isWithdrawing, setIsWithdrawing] = useState(false);
 
   // State Rekening Bank
+  const [availableBanks, setAvailableBanks] = useState(FALLBACK_SUPPORTED_BANKS);
   const [isEditingBank, setIsEditingBank] = useState(false);
   const [bankName, setBankName] = useState('BCA');
   const [bankAccountNumber, setBankAccountNumber] = useState('');
   const [bankAccountHolder, setBankAccountHolder] = useState('');
   const [isSavingBank, setIsSavingBank] = useState(false);
+
+  const isRegisteredBankActive = useMemo(() => {
+    if (!userProfile?.bankName) return true;
+    return availableBanks.some(
+      (b) =>
+        b.code?.toUpperCase() === userProfile.bankName.toUpperCase() ||
+        b.name?.toUpperCase() === userProfile.bankName.toUpperCase()
+    );
+  }, [userProfile?.bankName, availableBanks]);
 
   const loadData = async (shouldSync = true) => {
     setIsLoading(true);
@@ -193,15 +207,25 @@ export default function CustomerWallet() {
         await walletService.syncTopUp().catch(() => null);
       }
 
-      const [walletData, meRes] = await Promise.all([
+      const [walletData, meRes, banksData] = await Promise.all([
         walletService.getMyWallet(),
         apiClient.get('/auth/me').catch(() => ({ data: null })),
+        disbursementBankService.getActiveBanks().catch(() => FALLBACK_SUPPORTED_BANKS),
       ]);
+
+      const activeBanks = Array.isArray(banksData) && banksData.length > 0 ? banksData : FALLBACK_SUPPORTED_BANKS;
+      setAvailableBanks(activeBanks);
 
       setWallet(walletData);
       if (meRes?.data) {
         setUserProfile(meRes.data);
-        setBankName(meRes.data.bankName || 'BCA');
+        const userBank = meRes.data.bankName;
+        const isUserBankActive = activeBanks.some(
+          (b) =>
+            b.code?.toUpperCase() === userBank?.toUpperCase() ||
+            b.name?.toUpperCase() === userBank?.toUpperCase()
+        );
+        setBankName(isUserBankActive ? userBank : activeBanks[0]?.code || 'BCA');
         setBankAccountNumber(meRes.data.bankAccountNumber || '');
         setBankAccountHolder(meRes.data.bankAccountHolder || meRes.data.name || '');
       }
@@ -299,6 +323,11 @@ export default function CustomerWallet() {
       return;
     }
 
+    if (bankAccountNumber.trim().length < 8) {
+      toast.warning('Nomor rekening bank minimal 8 digit (maks. 18 digit).');
+      return;
+    }
+
     setIsSavingBank(true);
     try {
       await apiClient.put('/users/me/profile', {
@@ -343,6 +372,15 @@ export default function CustomerWallet() {
       toast.warning('Silakan lengkapi informasi rekening bank tujuan terlebih dahulu.', {
         title: 'Rekening Belum Diatur',
       });
+      setIsEditingBank(true);
+      return;
+    }
+
+    if (!isRegisteredBankActive) {
+      toast.error(
+        `Bank ${userProfile?.bankName} saat ini dinonaktifkan oleh Administrator. Harap perbarui rekening ke salah satu bank yang diizinkan.`,
+        { title: 'Bank Dinonaktifkan' }
+      );
       setIsEditingBank(true);
       return;
     }
@@ -487,30 +525,30 @@ export default function CustomerWallet() {
             <button
               onClick={handleOpenWithdrawModal}
               disabled={isLoading || !wallet || wallet.balance < MIN_WITHDRAW_AMOUNT}
-              className="px-6 py-3.5 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white font-bold text-[13px] rounded-2xl border border-white/20 shadow-md transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[13px] rounded-2xl shadow-lg shadow-emerald-950/20 transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
+              <ArrowDownToLine className="w-4 h-4 stroke-[2.5]" />
               Tarik Saldo
             </button>
           </div>
         </div>
       </div>
 
-      {/* ──────────────── KARTU ESCROW & REKENING PENCAIRAN ──────────────── */}
+      {/* ──────────────── KARTU DANA DITAHAN & REKENING PENCAIRAN ──────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {/* Kartu Saldo Escrow */}
+        {/* Kartu Dana Ditahan */}
         <div className="bg-white p-6 rounded-2xl border border-neutral-200/90 shadow-sm flex flex-col justify-between space-y-4">
           <div className="flex items-start justify-between">
             <div className="space-y-1">
               <span className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">
-                Sistem Penahanan
+                Sistem Penahanan Dana
               </span>
               <h3 className="text-[16px] font-bold text-neutral-800">
-                Saldo Escrow (Ditahan)
+                Saldo Ditahan (Pesanan Aktif)
               </h3>
             </div>
             <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl shrink-0 border border-amber-200/60">
-              <ShieldCheck className="w-5 h-5" />
+              <Lock className="w-5 h-5" />
             </div>
           </div>
 
@@ -519,7 +557,7 @@ export default function CustomerWallet() {
               {isLoading ? '...' : formatRupiah(wallet?.heldEscrowBalance || 0)}
             </div>
             <p className="text-[12px] text-neutral-500 mt-1">
-              Dana dalam proses order perjalanan atau titip barang yang sedang aktif. Dana ini otomatis dicairkan setelah trip diselesaikan.
+              Dana pesanan aktif yang ditahan aman di sistem rekening bersama (Escrow). Dana otomatis dicairkan ke mitra setelah perjalanan selesai, atau di-refund ke Saldo Tersedia jika trip dibatalkan.
             </p>
           </div>
         </div>
@@ -553,24 +591,34 @@ export default function CustomerWallet() {
 
           <div>
             {userProfile?.bankName && userProfile?.bankAccountNumber ? (
-              <div className="p-3.5 bg-neutral-50 rounded-xl border border-neutral-200/80 flex items-center justify-between">
-                <div>
-                  <p className="text-[14px] font-bold text-neutral-900">
-                    Bank {userProfile.bankName} - {userProfile.bankAccountNumber}
-                  </p>
-                  <p className="text-[12px] text-neutral-500">
-                    a.n {userProfile.bankAccountHolder || userProfile.name}
-                  </p>
+              <div className="space-y-2">
+                <div className="p-3.5 bg-neutral-50 rounded-xl border border-neutral-200/80 flex items-center justify-between">
+                  <div>
+                    <p className="text-[14px] font-bold text-neutral-900">
+                      Bank {userProfile.bankName} - {userProfile.bankAccountNumber}
+                    </p>
+                    <p className="text-[12px] text-neutral-500">
+                      a.n {userProfile.bankAccountHolder || userProfile.name}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setIsEditingBank(true);
+                      setIsWithdrawModalOpen(true);
+                    }}
+                    className="px-3 py-1.5 bg-white hover:bg-neutral-100 border border-neutral-200 text-neutral-700 text-[11px] font-bold rounded-lg transition cursor-pointer flex items-center gap-1 shadow-2xs"
+                  >
+                    <Edit3 className="w-3 h-3" /> Ubah
+                  </button>
                 </div>
-                <button
-                  onClick={() => {
-                    setIsEditingBank(true);
-                    setIsWithdrawModalOpen(true);
-                  }}
-                  className="px-3 py-1.5 bg-white hover:bg-neutral-100 border border-neutral-200 text-neutral-700 text-[11px] font-bold rounded-lg transition cursor-pointer flex items-center gap-1 shadow-2xs"
-                >
-                  <Edit3 className="w-3 h-3" /> Ubah
-                </button>
+                {!isRegisteredBankActive && (
+                  <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-xl flex items-center gap-2 text-rose-700 text-xs">
+                    <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+                    <span>
+                      Bank <strong>{userProfile.bankName}</strong> sedang dinonaktifkan oleh Administrator. Harap ubah ke bank yang tersedia.
+                    </span>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="flex items-center justify-between gap-3">
@@ -611,6 +659,7 @@ export default function CustomerWallet() {
               { id: 'topup', label: 'Top Up' },
               { id: 'payment', label: 'Pembayaran' },
               { id: 'withdraw', label: 'Penarikan' },
+              { id: 'escrow', label: 'Dana Ditahan' },
               { id: 'refund', label: 'Refund' },
             ].map((tab) => (
               <button
@@ -654,9 +703,6 @@ export default function CustomerWallet() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-[14px] font-bold text-neutral-900 truncate">
                           {meta.label}
-                        </span>
-                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${meta.badgeVariant}`}>
-                          {tx.type}
                         </span>
                       </div>
                       <p className="text-[12px] text-neutral-500 truncate mt-0.5">
@@ -867,26 +913,42 @@ export default function CustomerWallet() {
                 onChange={(e) => setBankName(e.target.value)}
                 className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xl text-[13px] font-medium text-neutral-800 focus:outline-none focus:border-blue-500"
               >
-                {SUPPORTED_BANKS.map((b) => (
-                  <option key={b.code} value={b.code}>
-                    {b.name}
+                {availableBanks.map((b) => (
+                  <option key={b.code || b.id} value={b.code}>
+                    {b.name || b.bankName}
                   </option>
                 ))}
               </select>
             </div>
 
             <div>
-              <label className="block text-[11px] font-bold text-neutral-500 uppercase mb-1">
-                Nomor Rekening
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-[11px] font-bold text-neutral-500 uppercase">
+                  Nomor Rekening
+                </label>
+                <span className="text-[10px] text-neutral-400 font-medium">
+                  {bankAccountNumber.length}/18
+                </span>
+              </div>
               <input
                 type="text"
+                inputMode="numeric"
                 required
+                maxLength={18}
                 value={bankAccountNumber}
-                onChange={(e) => setBankAccountNumber(e.target.value.replace(/\D/g, ''))}
+                onChange={(e) => setBankAccountNumber(e.target.value.replace(/\D/g, '').slice(0, 18))}
                 placeholder="Contoh: 1234567890"
                 className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xl text-[13px] font-medium text-neutral-800 focus:outline-none focus:border-blue-500 font-mono"
               />
+              {bankAccountNumber && bankAccountNumber.length < 8 ? (
+                <p className="text-[11px] text-rose-500 mt-1">
+                  Nomor rekening minimal 8 digit (maks. 18 digit).
+                </p>
+              ) : (
+                <p className="text-[11px] text-neutral-400 mt-1">
+                  Hanya angka, 8–18 digit
+                </p>
+              )}
             </div>
 
             <div>
@@ -1027,8 +1089,7 @@ export default function CustomerWallet() {
                   Number(withdrawAmount) < MIN_WITHDRAW_AMOUNT ||
                   Number(withdrawAmount) > wallet?.balance
                 }
-                className="flex-1 py-2.5 text-white text-[13px] font-bold rounded-xl transition shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-                style={{ backgroundColor: PRIMARY_COLOR }}
+                className="flex-1 py-2.5 text-white bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-[13px] font-bold rounded-xl transition shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 {isWithdrawing ? (
                   <>

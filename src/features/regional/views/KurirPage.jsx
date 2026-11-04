@@ -85,14 +85,14 @@ export default function KurirPage() {
             <div className="flex items-center gap-2 mb-2">
               <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
               <span className="text-[11px] font-bold uppercase tracking-widest text-accent flex items-center gap-1.5">
-                <UserCheck className="w-3.5 h-3.5" /> MANAJEMEN OPERATOR
+                <UserCheck className="w-3.5 h-3.5" /> MANAJEMEN MITRA POS
               </span>
             </div>
             <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
-              Daftar Operator Pos
+              Daftar Mitra Pos
             </h1>
             <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
-              Kelola dan pantau status keaktifan serta penugasan pos operator di wilayah operasional Anda.
+              Kelola dan pantau status keaktifan serta penugasan pos mitra di wilayah operasional Anda.
             </p>
           </div>
 
@@ -100,7 +100,7 @@ export default function KurirPage() {
             <div className="px-4 py-2 rounded-2xl bg-white/15 backdrop-blur border border-white/25 flex items-center gap-2 shadow-xs">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               <span className="text-xs font-bold text-white">
-                {kurirList.length} Operator Aktif
+                {kurirList.length} Mitra Pos Aktif
               </span>
             </div>
           </div>
@@ -113,7 +113,7 @@ export default function KurirPage() {
       <div className="bg-[#74B4D9]/10 border border-[#74B4D9]/30 p-4 rounded-xl flex items-start gap-3">
         <ShieldAlert size={18} className="text-[#10367D] shrink-0 mt-0.5" />
         <div className="text-[13px] text-neutral-800 space-y-1">
-          <p>Data kurir dan operator pos divalidasi langsung berdasarkan wilayah regional yang terikat pada akun Anda.</p>
+          <p>Data kurir dan mitra pos divalidasi langsung berdasarkan wilayah regional yang terikat pada akun Anda.</p>
         </div>
       </div>
 
@@ -207,7 +207,7 @@ export default function KurirPage() {
                     <EmptyState
                       icon={UserCheck}
                       title="Tidak Ada Kurir"
-                      description="Belum ada data kurir atau operator pos di database wilayah ini."
+                      description="Belum ada data kurir atau mitra pos di database wilayah ini."
                     />
                   </td>
                 </tr>

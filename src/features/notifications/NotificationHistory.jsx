@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useNotification } from '../../context/NotificationContext';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -15,8 +16,32 @@ import {
   MessageCircle,
 } from 'lucide-react';
 
+const ROLE_BASE_PATHS = {
+  admin: '/admin',
+  superadmin: '/admin',
+  regional: '/regional',
+  operator: '/operator-pos',
+  'operator-pos': '/operator-pos',
+  mitra: '/mitra',
+  driver: '/mitra',
+  customer: '/customer',
+};
+
 export default function NotificationHistory() {
-  const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { role, user } = useAuth();
+  const currentRole = role || user?.role;
+
+  const resolvedBasePath =
+    (location.pathname.startsWith('/admin') ? '/admin' : null) ||
+    (location.pathname.startsWith('/regional') ? '/regional' : null) ||
+    (location.pathname.startsWith('/operator-pos') ? '/operator-pos' : null) ||
+    (location.pathname.startsWith('/mitra') ? '/mitra' : null) ||
+    (location.pathname.startsWith('/customer') ? '/customer' : null) ||
+    ROLE_BASE_PATHS[currentRole] ||
+    '/customer';
+
   const { history, fetchHistory, loading, setUnreadCount } = useNotification();
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -66,15 +91,27 @@ export default function NotificationHistory() {
         ? JSON.parse(notification.data || '{}')
         : (notification.data || {});
       
-      const isMitra = user?.role === 'mitra';
+      const isMitra = currentRole === 'mitra' || location.pathname.startsWith('/mitra');
+      const isRegional = currentRole === 'regional' || location.pathname.startsWith('/regional');
+      const isAdmin = currentRole === 'admin' || location.pathname.startsWith('/admin');
+      const isOperator = currentRole === 'operator' || location.pathname.startsWith('/operator-pos');
       const { type, orderId, tripId, conversationId, actionUrl } = data;
+
+      const navigateTo = (target) => {
+        if (!target) return;
+        if (target.startsWith('http://') || target.startsWith('https://')) {
+          window.location.href = target;
+        } else {
+          navigate(target);
+        }
+      };
 
       if (actionUrl) {
         let target = actionUrl;
         if (target === '/wallet') {
           target = isMitra ? '/mitra/saldo' : '/customer/wallet';
         }
-        window.location.href = target;
+        navigateTo(target);
         return;
       }
       
@@ -82,7 +119,10 @@ export default function NotificationHistory() {
         case 'order_created':
         case 'order_paid':
         case 'order_cancelled':
-          window.location.href = isMitra ? '/mitra/trip' : '/customer/tickets';
+          if (isMitra) navigateTo('/mitra/trip');
+          else if (isOperator) navigateTo('/operator-pos/manifest');
+          else if (isRegional) navigateTo('/regional/trip-order');
+          else navigateTo('/customer/tickets');
           break;
         case 'trip_started':
         case 'trip_arrived':
@@ -92,35 +132,49 @@ export default function NotificationHistory() {
         case 'trip_arrived_destination':
         case 'trip_departure_reminder_h30':
         case 'trip_departure_urgency_h0':
-          window.location.href = isMitra ? '/mitra/trip' : '/customer/tickets';
+          if (isMitra) navigateTo('/mitra/trip');
+          else if (isOperator) navigateTo('/operator-pos/manifest');
+          else if (isRegional) navigateTo('/regional/trip-order');
+          else navigateTo('/customer/tickets');
           break;
         case 'chat_message':
-          window.location.href = conversationId
-            ? `${isMitra ? '/mitra' : '/customer'}/chat?conversation=${conversationId}`
-            : `${isMitra ? '/mitra' : '/customer'}/chat`;
+          if (isMitra) {
+            navigateTo(conversationId ? `/mitra/chat?conversation=${conversationId}` : '/mitra/chat');
+          } else if (isRegional) {
+            navigateTo('/regional/bantuan-chat');
+          } else if (isAdmin || isOperator) {
+            navigateTo(`${resolvedBasePath}/notifications`);
+          } else {
+            navigateTo(conversationId ? `/customer/chat?conversation=${conversationId}` : '/customer/chat');
+          }
           break;
         case 'payment_success':
         case 'payment_failed':
         case 'escrow_released':
         case 'wallet_topup':
         case 'wallet_withdrawal':
-          window.location.href = isMitra ? '/mitra/saldo' : '/customer/wallet';
+          if (isOperator) navigateTo('/operator-pos/financial');
+          else if (isRegional) navigateTo('/regional/laporan');
+          else if (isAdmin) navigateTo('/admin/bank');
+          else navigateTo(isMitra ? '/mitra/saldo' : '/customer/wallet');
           break;
         case 'reward_earned':
         case 'reward_redeemed':
-          window.location.href = '/customer/rewards';
+          navigateTo('/customer/rewards');
           break;
         case 'verification_approved':
         case 'verification_rejected':
-          window.location.href = isMitra
-            ? '/mitra/onboarding'
-            : '/customer/profile/pengaturan';
+          if (isMitra) navigateTo('/mitra/onboarding');
+          else if (isAdmin) navigateTo('/admin/pengaturan');
+          else if (isRegional) navigateTo('/regional/pengaturan');
+          else if (isOperator) navigateTo('/operator-pos/pengaturan');
+          else navigateTo('/customer/profile/pengaturan');
           break;
         case 'trip_booking_request':
-          window.location.href = '/mitra/trip';
+          navigateTo('/mitra/trip');
           break;
         default:
-          window.location.href = `${isMitra ? '/mitra' : '/customer'}/notifications`;
+          navigateTo(`${resolvedBasePath}/notifications`);
       }
     } catch (error) {
       console.error('Failed to parse notification data:', error);
@@ -265,16 +319,6 @@ export default function NotificationHistory() {
                       <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
                         {notification.type}
                       </span>
-                      {notification.status === 'sent' && (
-                        <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
-                          Terkirim
-                        </span>
-                      )}
-                      {notification.status === 'failed' && (
-                        <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
-                          Gagal
-                        </span>
-                      )}
                     </div>
                   </div>
                   <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0 mt-1" />

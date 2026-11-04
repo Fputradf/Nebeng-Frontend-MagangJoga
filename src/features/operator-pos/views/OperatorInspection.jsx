@@ -43,7 +43,7 @@ export default function OperatorInspection() {
     try {
       setIsLoadingManifest(true);
       const res = await apiClient.get('/checkpoints/manifest', {
-        params: { posId: String(targetPosId) }
+        params: { posId: String(targetPosId), scope: 'upcoming' }
       });
       if (res.data?.trips) {
         setManifestTrips(res.data.trips);

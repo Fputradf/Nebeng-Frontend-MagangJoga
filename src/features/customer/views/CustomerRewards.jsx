@@ -8,6 +8,9 @@ import {
   Building2,
   Truck,
   RotateCw,
+  Sparkles,
+  ArrowUpRight,
+  ArrowDownLeft,
 } from 'lucide-react';
 import { useToast } from '../../../context/ToastContext';
 import { Skeleton } from '../../../components/ui/Skeleton';
@@ -47,26 +50,35 @@ export default function CustomerRewards() {
   const [catalogItems, setCatalogItems] = useState([]);
   const [myRedemptions, setMyRedemptions] = useState([]);
   const [pickupPoints, setPickupPoints] = useState([]);
+  const [pointHistory, setPointHistory] = useState([]);
 
   // Inisialisasi awal loading agar tidak perlu panggil setState sinkron di useEffect
   const [isLoadingCatalog, setIsLoadingCatalog] = useState(true);
   const [isLoadingRedemptions, setIsLoadingRedemptions] = useState(false);
+  const [isLoadingPointHistory, setIsLoadingPointHistory] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const loadAllData = async () => {
     setIsRefreshing(true);
     try {
-      const [resMe, resPos, catalogData, redemptionsData] = await Promise.all([
+      const [resMe, resPos, catalogData, redemptionsData, resRewards] = await Promise.all([
         apiClient.get('/auth/me').catch(() => ({ data: null })),
         apiClient.get('/pickup-points').catch(() => ({ data: [] })),
         merchandiseService.getCatalog(false).catch(() => []),
         merchandiseService.getMyRedemptions().catch(() => []),
+        apiClient.get('/rewards/me').catch(() => ({ data: null })),
       ]);
 
       if (resMe?.data) {
-        setUserPoints(resMe.data.rewardPoints ?? 0);
+        setUserPoints(resMe.data.rewardPoints ?? resRewards?.data?.currentPoints ?? 0);
         setRecipientName(resMe.data.name || '');
         setRecipientPhone(resMe.data.phone || '');
+      } else if (resRewards?.data?.currentPoints !== undefined) {
+        setUserPoints(resRewards.data.currentPoints);
+      }
+
+      if (resRewards?.data?.history && Array.isArray(resRewards.data.history)) {
+        setPointHistory(resRewards.data.history);
       }
 
       const points = Array.isArray(resPos?.data)
@@ -86,6 +98,7 @@ export default function CustomerRewards() {
       setIsRefreshing(false);
       setIsLoadingCatalog(false);
       setIsLoadingRedemptions(false);
+      setIsLoadingPointHistory(false);
     }
   };
 
@@ -156,6 +169,36 @@ export default function CustomerRewards() {
       .catch((err) => {
         console.error('Gagal memuat riwayat:', err);
         if (!ignore) setIsLoadingRedemptions(false);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [activeTab]);
+
+  // 3. Memuat Riwayat Mutasi Poin saat tab mutasi_poin dipilih
+  useEffect(() => {
+    if (activeTab !== 'mutasi_poin') return;
+    let ignore = false;
+    setIsLoadingPointHistory(true);
+
+    apiClient
+      .get('/rewards/me')
+      .then((res) => {
+        if (!ignore && res.data) {
+          if (Array.isArray(res.data.history)) {
+            setPointHistory(res.data.history);
+          }
+          if (res.data.currentPoints !== undefined) {
+            setUserPoints(res.data.currentPoints);
+          }
+        }
+      })
+      .catch((err) => {
+        console.error('Gagal memuat riwayat poin:', err);
+      })
+      .finally(() => {
+        if (!ignore) setIsLoadingPointHistory(false);
       });
 
     return () => {
@@ -307,9 +350,29 @@ export default function CustomerRewards() {
         <span className="absolute bottom-[11px] right-6 h-2.5 w-2.5 rounded-full border-2 border-white bg-accent sm:right-8" />
       </section>
 
+      {/* Banner Informasi Welcome Bonus 100+ Poin Pengguna Baru */}
+      <div className="bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50/50 border border-amber-200/90 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold shrink-0 shadow-xs">
+            <Sparkles className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-amber-950 flex items-center gap-2">
+              Bonus Selamat Datang Pengguna Baru
+              <span className="px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 text-[10px] font-extrabold uppercase tracking-wide">
+                +100 Poin Loyalty
+              </span>
+            </h3>
+            <p className="text-xs text-amber-800/90 mt-0.5 leading-relaxed">
+              Semua pengguna baru otomatis mendapatkan <strong>+100 Poin Loyalitas</strong> awal yang dapat langsung dikumpulkan dan ditukarkan dengan berbagai merchandise eksklusif!
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Bar Pencarian & Tab Navigasi */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <button
             onClick={() => setActiveTab('katalog')}
             className={`px-4 py-2 rounded-xl text-[13px] font-bold transition cursor-pointer flex items-center gap-1.5 ${
@@ -337,6 +400,22 @@ export default function CustomerRewards() {
           >
             <Clock className="w-3.5 h-3.5" />
             Riwayat Klaim Saya ({myRedemptions.length})
+          </button>
+
+          <button
+            onClick={() => {
+              setIsLoadingPointHistory(true);
+              setActiveTab('mutasi_poin');
+            }}
+            className={`px-4 py-2 rounded-xl text-[13px] font-bold transition cursor-pointer flex items-center gap-1.5 ${
+              activeTab === 'mutasi_poin'
+                ? 'text-white shadow-sm'
+                : 'bg-white text-neutral-600 border border-neutral-200 hover:bg-neutral-50'
+            }`}
+            style={activeTab === 'mutasi_poin' ? { backgroundColor: PRIMARY_COLOR } : undefined}
+          >
+            <Award className="w-3.5 h-3.5" />
+            Riwayat Mutasi Poin ({pointHistory.length})
           </button>
         </div>
 
@@ -551,6 +630,86 @@ export default function CustomerRewards() {
                 icon={Clock}
                 title="Belum Ada Penukaran"
                 description="Anda belum pernah menukarkan poin reward dengan merchandise apapun."
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Konten Tab 3: Riwayat Mutasi Poin */}
+      {activeTab === 'mutasi_poin' && (
+        <div>
+          {isLoadingPointHistory ? (
+            <div className="space-y-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="bg-white rounded-2xl p-4 border border-neutral-200 flex justify-between items-center">
+                  <div className="space-y-2 w-1/2">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-1/2" />
+                  </div>
+                  <Skeleton className="h-5 w-16" />
+                </div>
+              ))}
+            </div>
+          ) : pointHistory.length > 0 ? (
+            <div className="space-y-3">
+              {pointHistory.map((item) => {
+                const isEarn = item.type === 'earn';
+                return (
+                  <div
+                    key={item.id}
+                    className="bg-white rounded-2xl p-4 border border-neutral-200 shadow-xs flex items-center justify-between gap-4 hover:border-blue-200 transition"
+                  >
+                    <div className="flex items-center gap-3.5">
+                      <div
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold shrink-0 ${
+                          isEarn
+                            ? 'bg-emerald-50 text-emerald-600 border border-emerald-200'
+                            : 'bg-rose-50 text-rose-600 border border-rose-200'
+                        }`}
+                      >
+                        {isEarn ? (
+                          <ArrowUpRight className="w-5 h-5" />
+                        ) : (
+                          <ArrowDownLeft className="w-5 h-5" />
+                        )}
+                      </div>
+                      <div>
+                        <h4 className="text-[13px] font-bold text-neutral-800">
+                          {item.description || (isEarn ? 'Perolehan Poin' : 'Penukaran Poin')}
+                        </h4>
+                        <span className="text-[11px] text-neutral-400">
+                          {item.createdAt
+                            ? new Date(item.createdAt).toLocaleDateString('id-ID', {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })
+                            : '-'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span
+                        className={`text-sm font-black font-mono ${
+                          isEarn ? 'text-emerald-600' : 'text-rose-600'
+                        }`}
+                      >
+                        {isEarn ? `+${item.points}` : `-${item.points}`} Poin
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="bg-white rounded-2xl border border-neutral-200 p-8">
+              <EmptyState
+                icon={Award}
+                title="Belum Ada Riwayat Poin"
+                description="Anda belum memiliki mutasi perolehan atau penukaran poin reward."
               />
             </div>
           )}

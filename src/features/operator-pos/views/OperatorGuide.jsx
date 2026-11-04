@@ -3,9 +3,6 @@ import {
   BookOpen,
   QrCode,
   ClipboardList,
-  PackageCheck,
-  UserCheck,
-  ShieldAlert,
   Coins,
   Settings,
   CheckCircle2,
@@ -27,7 +24,7 @@ export default function OperatorGuide() {
       id: 'checkpoint',
       title: 'Alur Trip & Konsep Checkpoint',
       icon: QrCode,
-      shortDesc: 'Pahami siklus hidup tiket dan aturan pencairan dana escrow antar pos.',
+      shortDesc: 'Pahami siklus hidup tiket dan aturan pencairan dana perjalanan antar pos.',
       content: (
         <div className="space-y-6">
           <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 sm:p-5 text-blue-900">
@@ -36,7 +33,7 @@ export default function OperatorGuide() {
               Prinsip Dasar Sistem Pos Nebeng
             </h4>
             <p className="text-sm leading-relaxed text-blue-800">
-              Sistem Nebeng menggunakan model <strong>Escrow Checkpoint</strong>. Dana pembayaran customer diamankan di sistem escrow dan <strong>HANYA</strong> dicairkan ke dompet Mitra ketika perjalanan/pengiriman telah diverifikasi tiba di <strong>Pos Tujuan</strong>.
+              Sistem Nebeng menggunakan model <strong>Penahanan Dana Checkpoint</strong>. Dana pembayaran customer diamankan di sistem rekening bersama dan <strong>HANYA</strong> dicairkan ke dompet Mitra ketika perjalanan/pengiriman telah diverifikasi tiba di <strong>Pos Tujuan</strong>.
             </p>
           </div>
 
@@ -47,9 +44,9 @@ export default function OperatorGuide() {
                 Pos Asal (Origin / Pemberangkatan)
               </div>
               <ul className="text-xs space-y-2 text-neutral-600 leading-relaxed list-disc list-inside">
-                <li>Operator melakukan <strong>Scan 1 Asal</strong> pada tiket.</li>
+                <li>Mitra Pos melakukan <strong>Scan 1 Asal</strong> pada tiket.</li>
                 <li>Status order berubah dari <code className="bg-neutral-100 px-1 py-0.5 rounded text-neutral-800 font-mono">paid</code> menjadi <code className="bg-blue-100 px-1.5 py-0.5 rounded text-blue-700 font-mono font-bold">in_transit</code>.</li>
-                <li>Dana escrow <strong>tetap ditahan (`held`)</strong> di sistem.</li>
+                <li>Dana <strong>tetap ditahan</strong> di sistem hingga perjalanan selesai.</li>
                 <li>Penumpang naik ke armada mitra dan <strong>melanjutkan perjalanan</strong>.</li>
               </ul>
             </div>
@@ -60,9 +57,9 @@ export default function OperatorGuide() {
                 Pos Tujuan (Destination / Kedatangan)
               </div>
               <ul className="text-xs space-y-2 text-neutral-600 leading-relaxed list-disc list-inside">
-                <li>Operator melakukan <strong>Scan 2 Tujuan</strong> atau <strong>Handover OTP</strong>.</li>
+                <li>Mitra Pos melakukan <strong>Scan 2 Tujuan</strong> pada menu Scanner QR Pos.</li>
                 <li>Status order berubah dari <code className="bg-blue-100 px-1.5 py-0.5 rounded text-blue-700 font-mono font-bold">in_transit</code> menjadi <code className="bg-emerald-100 px-1 py-0.5 rounded text-emerald-700 font-mono">completed</code>.</li>
-                <li>Dana escrow <strong>dicairkan (`released`)</strong> langsung ke saldo dompet Mitra.</li>
+                <li>Dana <strong>dicairkan</strong> langsung ke saldo dompet Mitra.</li>
                 <li>Perjalanan / pengiriman paket dinyatakan tuntas.</li>
               </ul>
             </div>
@@ -73,9 +70,9 @@ export default function OperatorGuide() {
     },
     {
       id: 'scanner',
-      title: 'Dual QR Scanner',
+      title: 'Scanner QR Checkpoint Pos (Penumpang & Barang)',
       icon: QrCode,
-      shortDesc: 'Panduan memindai QR tiket dan trip untuk check-in pos asal & tujuan.',
+      shortDesc: 'Satu fitur terpadu memindai QR tiket & armada untuk pos asal dan pos tujuan tanpa OTP.',
       content: (
         <div className="space-y-5">
           <div className="space-y-3">
@@ -127,134 +124,42 @@ export default function OperatorGuide() {
     },
     {
       id: 'manifest',
-      title: 'Manifes & Penanganan No-Show',
+      title: 'Daftar Penumpang & Kehadiran (No-Show)',
       icon: ClipboardList,
-      shortDesc: 'Cara mencatat penumpang atau mitra yang tidak hadir tanpa scan QR.',
+      shortDesc: 'Melihat jadwal perjalanan, cek kehadiran penumpang, serta catat yang tidak hadir.',
       content: (
         <div className="space-y-5">
           <p className="text-xs text-neutral-600 leading-relaxed">
-            Menu <strong>Manifes & No-Show</strong> digunakan untuk melihat jadwal seluruh trip dan penumpang yang dijadwalkan melewati pos Anda pada tanggal tertentu, serta mencatat ketidakhadiran (mangkir).
+            Menu <strong>Daftar Penumpang & Kehadiran</strong> digunakan untuk melihat seluruh jadwal perjalanan dan penumpang yang akan melalui pos Anda, baik hari ini maupun trip yang akan datang, serta mencatat ketidakhadiran (penumpang/supir tidak datang).
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="border border-rose-200 bg-rose-50/50 rounded-2xl p-4 space-y-2">
               <div className="flex items-center gap-2 text-rose-700 font-bold text-sm">
                 <AlertCircle className="w-4 h-4" />
-                Penumpang No-Show
+                Penumpang Tidak Hadir (No-Show)
               </div>
               <p className="text-xs text-neutral-600 leading-relaxed">
-                Gunakan tombol <strong>Penumpang No-Show</strong> pada baris nama penumpang jika penumpang tidak datang ke pos hingga batas waktu tunggu keberangkatan.
+                Gunakan tombol <strong>Tandai Tidak Hadir</strong> pada baris nama penumpang jika penumpang tidak datang ke pos hingga batas toleransi waktu keberangkatan habis.
               </p>
               <div className="bg-white p-2.5 rounded-xl border border-rose-200 text-[11px] text-rose-800">
-                <strong>Konsekuensi Sistem:</strong> Tiket dinyatakan hangus (tidak ada refund) karena armada mitra telah siap berangkat di pos.
+                <strong>Konsekuensi Sistem:</strong> Tiket dinyatakan hangus (tanpa refund) karena armada mitra telah siap berangkat di pos.
               </div>
             </div>
 
             <div className="border border-amber-200 bg-amber-50/50 rounded-2xl p-4 space-y-2">
               <div className="flex items-center gap-2 text-amber-700 font-bold text-sm">
                 <AlertCircle className="w-4 h-4" />
-                Mitra No-Show
+                Supir / Mitra Tidak Hadir (No-Show)
               </div>
               <p className="text-xs text-neutral-600 leading-relaxed">
-                Gunakan tombol <strong>Mitra No-Show</strong> jika pengemudi/mitra tidak hadir di pos asal padahal penumpang sudah menunggu.
+                Gunakan tombol <strong>Supir Tidak Hadir</strong> jika mitra pengemudi tidak hadir di pos asal padahal jadwal dan waktu toleransi telah terlampaui.
               </p>
               <div className="bg-white p-2.5 rounded-xl border border-amber-200 text-[11px] text-amber-800">
-                <strong>Konsekuensi Sistem:</strong> Operator memasukkan alasan, trip dibatalkan, penalti diterapkan pada akun mitra, dan dana penumpang dikembalikan atau dialihkan ke trip lain.
+                <strong>Konsekuensi Sistem:</strong> Mitra Pos memasukkan alasan, trip dibatalkan, penalti diterapkan pada akun mitra, dan dana penumpang dikembalikan atau dialihkan ke trip lain.
               </div>
             </div>
           </div>
-        </div>
-      ),
-    },
-    {
-      id: 'inspection',
-      title: 'Inspeksi & Sealing Paket',
-      icon: PackageCheck,
-      shortDesc: 'SOP pemeriksaan fisik barang, dokumentasi foto, dan penempelan segel QR.',
-      content: (
-        <div className="space-y-4">
-          <p className="text-xs text-neutral-600 leading-relaxed">
-            Khusus pesanan logistik/barang, paket yang diterima di Pos Asal wajib melalui proses inspeksi fisik demi keselamatan perjalanan dan integritas barang.
-          </p>
-
-          <div className="space-y-2.5">
-            <div className="p-3.5 bg-neutral-50 rounded-xl border border-neutral-200 text-xs space-y-1">
-              <span className="font-bold text-neutral-800 block">1. Cek Fisik Barang</span>
-              <p className="text-neutral-600">Pastikan paket tidak mengandung barang terlarang (narkoba, bahan peledak/mudah terbakar, senjata) dan kemasan aman untuk perjalanan.</p>
-            </div>
-
-            <div className="p-3.5 bg-neutral-50 rounded-xl border border-neutral-200 text-xs space-y-1">
-              <span className="font-bold text-neutral-800 block">2. Unggah Foto Kondisi Paket (Wajib)</span>
-              <p className="text-neutral-600">Ambil foto paket dari kamera HP/laptop. Sistem secara otomatis mengompresi ukuran foto sehingga hemat kuota dan cepat terkirim ke server.</p>
-            </div>
-
-            <div className="p-3.5 bg-neutral-50 rounded-xl border border-neutral-200 text-xs space-y-1">
-              <span className="font-bold text-neutral-800 block">3. Pindai Segel Keamanan (Security Seal QR)</span>
-              <p className="text-neutral-600">Pindai kode barcode/QR pada stiker segel pos fisik, atau tekan tombol <strong>Auto</strong> untuk menghasilkan nomor segel unik dari sistem.</p>
-            </div>
-
-            <div className="p-3.5 bg-neutral-50 rounded-xl border border-neutral-200 text-xs space-y-1">
-              <span className="font-bold text-neutral-800 block">4. Kunci & Check-in Asal</span>
-              <p className="text-neutral-600">Klik tombol submit untuk mengunci segel dan mengubah status paket menjadi siap jalan (<code className="font-mono bg-white px-1 border border-neutral-300 rounded">in_transit</code>).</p>
-            </div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      id: 'handover',
-      title: 'Handover & OTP Serah Terima Paket',
-      icon: UserCheck,
-      shortDesc: 'Serah terima paket kepada penerima di pos tujuan menggunakan OTP klaim.',
-      content: (
-        <div className="space-y-4">
-          <p className="text-xs text-neutral-600 leading-relaxed">
-            Ketika paket tiba di Pos Tujuan dan diambil oleh penerima, operator memverifikasi penyerahan barang pada menu <strong>Handover & OTP</strong>.
-          </p>
-
-          <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-4 text-xs space-y-2">
-            <h5 className="font-bold text-neutral-800">Data yang Diminta dari Penerima:</h5>
-            <ol className="list-decimal list-inside space-y-1 text-neutral-600">
-              <li><strong>Nama Lengkap Penerima:</strong> Catat nama penerima yang mengambil di pos.</li>
-              <li><strong>QR Tiket / Resi:</strong> Pindai dari HP penerima menggunakan kamera atau ketik kode resi.</li>
-              <li><strong>Kode OTP 6-Digit:</strong> Penerima menerima 6 angka kode OTP melalui SMS/Aplikasi Nebeng.</li>
-            </ol>
-          </div>
-
-          <div className="border border-emerald-200 bg-emerald-50 rounded-xl p-3.5 text-xs text-emerald-900 flex items-start gap-2.5">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-            <div>
-              <strong>Pencairan Otomatis:</strong> Setelah OTP diverifikasi valid, sistem secara otomatis menandai pesanan selesai dan mencairkan dana pembayaran ke dompet mitra pengantar.
-            </div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      id: 'bypass',
-      title: 'Penyelesaian Manual (Bypass Finansial)',
-      icon: ShieldAlert,
-      shortDesc: 'Bypass pencairan escrow saat perangkat penerima padam/rusak (Bukan Cancel).',
-      content: (
-        <div className="space-y-4">
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-900 space-y-2">
-            <div className="font-bold flex items-center gap-2 text-sm text-amber-800">
-              <ShieldAlert className="w-4 h-4" />
-              Penting: Fitur ini BUKAN Pembatalan (Bukan Cancel)!
-            </div>
-            <p className="leading-relaxed">
-              Fitur ini digunakan untuk <strong>MENYELESAIKAN (`completed`)</strong> transaksi dan melepaskan dana escrow ke Mitra ketika penerima di pos tujuan mengalami kendala teknis (HP mati total, rusak, atau nomor hilang).
-            </p>
-          </div>
-
-          <h5 className="font-bold text-neutral-800 text-sm">SOP Verifikasi Manual KTP:</h5>
-          <ol className="text-xs space-y-2 text-neutral-600 list-decimal list-inside">
-            <li>Minta <strong>Kartu Identitas Asli (KTP / SIM)</strong> penerima yang datang ke pos.</li>
-            <li>Cocokkan nama pada KTP dengan nama penerima yang tertera pada resi paket.</li>
-            <li>Klik tombol <strong>Penyelesaian Manual (Bypass Finansial)</strong> di pojok kanan atas menu Handover.</li>
-            <li>Masukkan kode tiket dan tuliskan catatan audit (misal: <em>HP penerima mati, identitas KTP cocok</em>).</li>
-            <li>Klik <strong>Lepas Dana Escrow</strong>. Transaksi tuntas dan mitra tetap menerima hak pembayarannya.</li>
-          </ol>
         </div>
       ),
     },
@@ -262,7 +167,7 @@ export default function OperatorGuide() {
       id: 'settings',
       title: 'Pengaturan Akun & Keamanan',
       icon: Settings,
-      shortDesc: 'Kelola informasi profil, kata sandi, dan data pos penugasan operator.',
+      shortDesc: 'Kelola informasi profil, kata sandi, dan data pos penugasan mitra pos.',
       content: (
         <div className="space-y-4 text-xs text-neutral-600">
           <p className="leading-relaxed">
@@ -295,7 +200,7 @@ export default function OperatorGuide() {
               </span>
             </div>
             <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
-              Panduan Operasional Operator Pos
+              Panduan Operasional Mitra Pos
             </h1>
             <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
               Pelajari tata cara kerja, SOP verifikasi tiket, penanganan logistik, dan pengelolaan checkpoint pos.

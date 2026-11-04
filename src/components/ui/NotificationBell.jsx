@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Bell,
   MessageCircle,
@@ -11,10 +12,32 @@ import {
 import { useNotification } from '../../context/NotificationContext';
 import { useAuth } from '../../context/AuthContext';
 
+const ROLE_BASE_PATHS = {
+  admin: '/admin',
+  superadmin: '/admin',
+  regional: '/regional',
+  operator: '/operator-pos',
+  'operator-pos': '/operator-pos',
+  mitra: '/mitra',
+  driver: '/mitra',
+  customer: '/customer',
+};
+
 export default function NotificationBell({ basePath }) {
-  const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { role, user } = useAuth();
+  const currentRole = role || user?.role;
+
   const resolvedBasePath =
-    basePath || (user?.role === 'mitra' ? '/mitra' : '/customer');
+    basePath ||
+    (location.pathname.startsWith('/admin') ? '/admin' : null) ||
+    (location.pathname.startsWith('/regional') ? '/regional' : null) ||
+    (location.pathname.startsWith('/operator-pos') ? '/operator-pos' : null) ||
+    (location.pathname.startsWith('/mitra') ? '/mitra' : null) ||
+    (location.pathname.startsWith('/customer') ? '/customer' : null) ||
+    ROLE_BASE_PATHS[currentRole] ||
+    '/customer';
 
   const {
     unreadCount,
@@ -79,8 +102,36 @@ export default function NotificationBell({ basePath }) {
     await markAsRead(notification.id);
     setIsOpen(false);
 
-    const isMitra = user?.role === 'mitra';
+    const isMitra = currentRole === 'mitra' || location.pathname.startsWith('/mitra');
+    const isRegional = currentRole === 'regional' || location.pathname.startsWith('/regional');
+    const isAdmin = currentRole === 'admin' || location.pathname.startsWith('/admin');
+    const isOperator = currentRole === 'operator' || location.pathname.startsWith('/operator-pos');
     const dataType = notification.data?.type;
+
+    const navigateTo = (target) => {
+      if (!target) return;
+      if (target.startsWith('http://') || target.startsWith('https://')) {
+        window.location.href = target;
+      } else {
+        navigate(target);
+      }
+    };
+
+    // 0. Emergency SOS alerts
+    if (notification.type === 'emergency_sos' || dataType === 'emergency_sos') {
+      if (notification.data?.actionUrl) {
+        navigateTo(notification.data.actionUrl);
+      } else if (isRegional) {
+        navigateTo('/regional/dashboard');
+      } else if (isAdmin) {
+        navigateTo('/admin/dashboard');
+      } else if (isOperator) {
+        navigateTo('/operator-pos/manifest');
+      } else {
+        navigateTo('/customer/tickets');
+      }
+      return;
+    }
 
     // 1. If explicit actionUrl provided
     if (notification.data?.actionUrl) {
@@ -88,13 +139,21 @@ export default function NotificationBell({ basePath }) {
       if (targetUrl === '/wallet') {
         targetUrl = isMitra ? '/mitra/saldo' : '/customer/wallet';
       }
-      window.location.href = targetUrl;
+      navigateTo(targetUrl);
       return;
     }
 
     // 2. Chat messages
     if (notification.type === 'chat_message' && notification.conversationId) {
-      window.location.href = `${resolvedBasePath}/chat?conversation=${notification.conversationId}`;
+      if (isMitra) {
+        navigateTo(`/mitra/chat?conversation=${notification.conversationId}`);
+      } else if (isRegional) {
+        navigateTo('/regional/bantuan-chat');
+      } else if (isOperator || isAdmin) {
+        navigateTo(`${resolvedBasePath}/notifications`);
+      } else {
+        navigateTo(`/customer/chat?conversation=${notification.conversationId}`);
+      }
       return;
     }
 
@@ -106,7 +165,15 @@ export default function NotificationBell({ basePath }) {
       dataType === 'wallet_topup' ||
       dataType === 'wallet_withdrawal'
     ) {
-      window.location.href = isMitra ? '/mitra/saldo' : '/customer/wallet';
+      if (isOperator) {
+        navigateTo('/operator-pos/financial');
+      } else if (isRegional) {
+        navigateTo('/regional/laporan');
+      } else if (isAdmin) {
+        navigateTo('/admin/bank');
+      } else {
+        navigateTo(isMitra ? '/mitra/saldo' : '/customer/wallet');
+      }
       return;
     }
 
@@ -116,7 +183,13 @@ export default function NotificationBell({ basePath }) {
       dataType === 'trip_departure_urgency_h0' ||
       dataType === 'mitra_late_sanction'
     ) {
-      window.location.href = isMitra ? '/mitra/trip' : '/customer/tickets';
+      if (isOperator) {
+        navigateTo('/operator-pos/manifest');
+      } else if (isRegional) {
+        navigateTo('/regional/trip-order');
+      } else {
+        navigateTo(isMitra ? '/mitra/trip' : '/customer/tickets');
+      }
       return;
     }
 
@@ -126,22 +199,37 @@ export default function NotificationBell({ basePath }) {
       dataType === 'mitra_arrived_origin' ||
       dataType === 'trip_arrived_destination'
     ) {
-      window.location.href = isMitra ? '/mitra/trip' : '/customer/tickets';
+      if (isOperator) {
+        navigateTo('/operator-pos/manifest');
+      } else if (isRegional) {
+        navigateTo('/regional/trip-order');
+      } else {
+        navigateTo(isMitra ? '/mitra/trip' : '/customer/tickets');
+      }
       return;
     }
 
     // 6. Generic order / trip fallback
-    if (notification.data?.orderId) {
-      window.location.href = isMitra ? '/mitra/trip' : '/customer/tickets';
-    } else if (notification.data?.tripId) {
-      window.location.href = isMitra ? '/mitra/trip' : '/customer/tickets';
+    if (notification.data?.orderId || notification.data?.tripId) {
+      if (isMitra) {
+        navigateTo('/mitra/trip');
+      } else if (isOperator) {
+        navigateTo('/operator-pos/manifest');
+      } else if (isRegional) {
+        navigateTo('/regional/trip-order');
+      } else {
+        navigateTo('/customer/tickets');
+      }
     } else {
-      window.location.href = `${resolvedBasePath}/notifications`;
+      navigateTo(`${resolvedBasePath}/notifications`);
     }
   };
 
   const getNotificationIcon = (type, data) => {
     const dataType = data?.type;
+    if (type === 'emergency_sos' || dataType === 'emergency_sos') {
+      return <AlertTriangle className="w-4 h-4 text-rose-600 animate-pulse" />;
+    }
     if (type === 'chat_message') {
       return <MessageCircle className="w-4 h-4 text-blue-500" />;
     }
@@ -312,9 +400,9 @@ export default function NotificationBell({ basePath }) {
             <button
               onClick={() => {
                 setIsOpen(false);
-                window.location.href = `${resolvedBasePath}/notifications`;
+                navigate(`${resolvedBasePath}/notifications`);
               }}
-              className="w-full text-center text-sm text-blue-600 hover:text-blue-700 font-medium"
+              className="w-full text-center text-sm text-blue-600 hover:text-blue-700 font-medium cursor-pointer"
             >
               Lihat semua notifikasi
             </button>

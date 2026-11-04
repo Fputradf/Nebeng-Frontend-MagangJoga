@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { User, Mail, Phone, Lock, ChevronDown, MapPin, Search, Car } from 'lucide-react';
+import { User, Mail, Phone, Lock, ChevronDown, MapPin, Search, Car, Gift } from 'lucide-react';
 import AuthInput from '../../components/ui/AuthInput';
 import AuthLayout from '../../components/layout/AuthLayout';
 import TermsOfServiceModal from '../../components/layout/TermsOfServiceModal';
@@ -7,11 +7,12 @@ import { useToast } from '../../context/ToastContext';
 import { registerRequest } from '../../services/authService';
 import { socialLinkService } from '../../services/socialLinkService';
 import apiClient from '../../services/apiClient';
-import logoImage from '../../assets/logo.png';
 import registerIllustration from '../../assets/Daftar.png';
+import { useAppConfig } from '../../context/AppConfigContext';
 
 export default function Register({ onSwitchToLogin }) {
   const toast = useToast();
+  const { appName, appLogo } = useAppConfig();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -157,9 +158,12 @@ export default function Register({ onSwitchToLogin }) {
 
     try {
       await registerRequest(payload);
-      toast.success(`Akun untuk ${payload.name} berhasil dibuat. Silakan masuk untuk melanjutkan.`, {
-        title: 'Pendaftaran Berhasil',
-      });
+      toast.success(
+        `Akun untuk ${payload.name} berhasil dibuat! Selamat, Anda mendapatkan bonus +100 Poin Loyalitas. Silakan masuk untuk melanjutkan.`,
+        {
+          title: 'Pendaftaran Berhasil (+100 Poin)',
+        }
+      );
       onSwitchToLogin();
     } catch (err) {
       const errorMessage = err?.response?.data?.message || 'Pendaftaran gagal. Silakan coba lagi.';
@@ -170,18 +174,20 @@ export default function Register({ onSwitchToLogin }) {
 
   return (
     <AuthLayout
-      logo={logoImage}
-      brandName="Nebeng"
+      logo={appLogo}
+      brandName={appName}
       title="Bergabung dengan Kami"
       subtitle="Mulai pengalaman perjalanan hemat, cepat, dan aman."
       illustration={registerIllustration}
-      illustrationAlt="Ilustrasi pendaftaran akun Nebeng"
+      illustrationAlt={`Ilustrasi pendaftaran akun ${appName}`}
       authMode="register"
       onSwitchMode={onSwitchToLogin}
       maxWidth="max-w-2xl"
       socialLinks={socialLinks}
     >
       <form className="space-y-2.5" onSubmit={handleSubmit} noValidate>
+        {/* Banner Bonus Pengguna Baru 100+ Poin Loyalty */}
+
         {/* 2-Column Responsive Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-x-3.5 sm:gap-y-2.5">
           {/* Kolom 1: Nama Pengguna */}
@@ -467,7 +473,7 @@ export default function Register({ onSwitchToLogin }) {
               >
                 Syarat dan Ketentuan
               </button>{' '}
-              yang berlaku di Nebeng.
+              yang berlaku di Satu Rute.
             </label>
           </div>
           {errors.terms && (

@@ -11,6 +11,12 @@ import StatusBadge from '../../../components/ui/StatusBadge';
 import EmptyState from '../../../components/ui/EmptyState';
 import apiClient from '../../../services/apiClient';
 import { useToast } from '../../../context/ToastContext';
+import {
+  formatTripSchedule,
+  formatDurationMinutes,
+  getEstimatedArrivalTime,
+  isTripPastTolerance,
+} from '../../../utils/dateUtils';
 
 const PRIMARY_COLOR = '#4FBF99';
 const PRIMARY_ACCENT = '#66CDAA';
@@ -34,9 +40,15 @@ export default function MitraQrDisplay() {
         const resMyTrips = await apiClient.get('/trips/me').catch(() => ({ data: [] }));
         const allTrips = resMyTrips.data?.data || resMyTrips.data || [];
 
-        const myActiveTrips = allTrips.filter((t) => 
-          ['scheduled', 'in_origin_pos', 'in_transit'].includes(t.status)
-        );
+        const myActiveTrips = allTrips.filter((t) => {
+          if (!['scheduled', 'in_origin_pos', 'in_transit'].includes(t.status)) {
+            return false;
+          }
+          if (t.status === 'scheduled' && isTripPastTolerance(t.departureDate, t.departureTime)) {
+            return false;
+          }
+          return true;
+        });
 
         setTrips(myActiveTrips);
 
@@ -111,7 +123,7 @@ export default function MitraQrDisplay() {
               Digital Dynamic QR Trip Display
             </h1>
             <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
-              Tunjukkan QR Code dinamis ini kepada Operator Pos saat verifikasi keberangkatan atau kedatangan di pos mitra.
+              Tunjukkan QR Code dinamis ini kepada Mitra Pos saat verifikasi keberangkatan atau kedatangan di pos mitra.
             </p>
           </div>
 
@@ -261,8 +273,15 @@ export default function MitraQrDisplay() {
                   </span>
                 </div>
                 <p className="text-[13px] text-white font-semibold">
-                  {current?.departureDate?.split('T')[0]} • Sesuai Jadwal
+                  {formatTripSchedule(current?.departureDate, current?.departureTime)}
                 </p>
+                {(current?.estimatedDurationMinutes || current?.distanceKm) && (
+                  <p className="text-[11px] text-emerald-200 font-semibold">
+                    Estimasi: {formatDurationMinutes(current.estimatedDurationMinutes) || `${current.estimatedDurationMinutes} mnt`}
+                    {current.distanceKm ? ` (${current.distanceKm} km)` : ''}
+                    {getEstimatedArrivalTime(current.departureDate, current.departureTime, current.estimatedDurationMinutes) ? ` • Tiba ~${getEstimatedArrivalTime(current.departureDate, current.departureTime, current.estimatedDurationMinutes)}` : ''}
+                  </p>
+                )}
                 <p className="text-[12px] text-neutral-300">
                   {current?.vehicle?.model} ({current?.vehicle?.plateNumber})
                 </p>

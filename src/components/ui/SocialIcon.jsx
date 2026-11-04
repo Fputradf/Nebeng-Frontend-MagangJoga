@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BASE_URL } from '../../config/env';
 import { Globe } from 'lucide-react';
 
@@ -107,17 +107,37 @@ export default function SocialIcon({
   logoUrl,
   className = 'w-5 h-5',
 }) {
-  // 1. If custom uploaded image
-  if (iconType === 'custom' && logoUrl) {
-    const fullUrl = logoUrl.startsWith('http') ? logoUrl : `${BASE_URL}${logoUrl}`;
+  const [imgError, setImgError] = useState(false);
+
+  useEffect(() => {
+    setImgError(false);
+  }, [logoUrl]);
+
+  // 1. If custom uploaded image or logoUrl is an image path/URL
+  const isCustom =
+    iconType === 'custom' ||
+    (typeof logoUrl === 'string' &&
+      (logoUrl.startsWith('/') ||
+        logoUrl.startsWith('http://') ||
+        logoUrl.startsWith('https://') ||
+        logoUrl.startsWith('blob:') ||
+        logoUrl.startsWith('data:')));
+
+  if (isCustom && logoUrl && !imgError) {
+    const fullUrl =
+      logoUrl.startsWith('http://') ||
+      logoUrl.startsWith('https://') ||
+      logoUrl.startsWith('blob:') ||
+      logoUrl.startsWith('data:')
+        ? logoUrl
+        : `${BASE_URL}${logoUrl.startsWith('/') ? logoUrl : `/${logoUrl}`}`;
+
     return (
       <img
         src={fullUrl}
         alt={platform || 'Sosial Media'}
         className={`${className} object-contain`}
-        onError={(e) => {
-          e.target.style.display = 'none';
-        }}
+        onError={() => setImgError(true)}
       />
     );
   }

@@ -7,9 +7,10 @@ import {
   verifyOtpRequest,
   resetPasswordRequest,
 } from '../../services/authService';
-import logoImage from '../../assets/LOGO.png';
+import { useAppConfig } from '../../context/AppConfigContext';
 
 export default function ForgotPassword({ onSwitchToLogin }) {
+  const { appName, appLogo } = useAppConfig();
   // Step: 1 = Email Input, 2 = OTP Verification, 3 = New Password, 4 = Success Complete
   const [step, setStep] = useState(1);
 
@@ -262,8 +263,8 @@ export default function ForgotPassword({ onSwitchToLogin }) {
 
   return (
     <AuthLayout
-      logo={logoImage}
-      brandName="Nebeng"
+      logo={appLogo}
+      brandName={appName}
       title={headerInfo.title}
       subtitle={headerInfo.subtitle}
       authMode="forgot"

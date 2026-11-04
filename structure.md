@@ -33,6 +33,7 @@
 ├── 📄 package.json
 ├── 📁 public/
 │   ├── 📄 apple-touch-icon.png
+│   ├── 📄 favicon.png
 │   ├── 📄 favicon.svg
 │   ├── 📄 firebase-messaging-sw.js
 │   ├── 📄 icons.svg
@@ -49,6 +50,8 @@
 │   │   ├── 📄 Daftar.png
 │   │   └── 📄 LOGO.png
 │   ├── 📁 components/
+│   │   ├── 📁 common/
+│   │   │   └── 📄 ReportModal.jsx
 │   │   ├── 📁 layout/
 │   │   │   ├── 📄 AppBottomNav.jsx
 │   │   │   ├── 📄 AppShell.jsx
@@ -72,6 +75,7 @@
 │   │       ├── 📄 BannerSlider.jsx
 │   │       ├── 📄 BaseModal.jsx
 │   │       ├── 📄 ConfirmModal.jsx
+│   │       ├── 📄 DashboardRegionSwitcher.jsx
 │   │       ├── 📄 EmptyState.jsx
 │   │       ├── 📄 EnterpriseTable.jsx
 │   │       ├── 📄 NotificationBell.jsx
@@ -88,6 +92,7 @@
 │   │   ├── 📄 env.js
 │   │   └── 📄 firebase.js
 │   ├── 📁 context/
+│   │   ├── 📄 AppConfigContext.jsx
 │   │   ├── 📄 AuthContext.jsx
 │   │   ├── 📄 ConfirmContext.jsx
 │   │   ├── 📄 GPSContext.jsx
@@ -108,12 +113,14 @@
 │   │   │   │   ├── 📄 CustomerProfileModal.jsx
 │   │   │   │   ├── 📄 CustomerSidebar.jsx
 │   │   │   │   ├── 📄 CustomerTopbar.jsx
+│   │   │   │   ├── 📄 SosTriggerModal.jsx
 │   │   │   │   └── 📄 TicketTimelineModal.jsx
 │   │   │   ├── 📄 CustomerLayout.jsx
 │   │   │   └── 📁 views/
 │   │   │       ├── 📄 BiometricOnboarding.jsx
 │   │   │       ├── 📄 CustomerAccountSettings.jsx
 │   │   │       ├── 📄 CustomerChat.jsx
+│   │   │       ├── 📄 CustomerQrDisplay.jsx
 │   │   │       ├── 📄 CustomerRewards.jsx
 │   │   │       ├── 📄 CustomerVouchers.jsx
 │   │   │       ├── 📄 CustomerWallet.jsx
@@ -157,6 +164,7 @@
 │   │   │       └── 📄 OperatorManifest.jsx
 │   │   ├── 📁 regional/
 │   │   │   ├── 📁 components/
+│   │   │   │   ├── 📄 EmergencySosAlertModal.jsx
 │   │   │   │   ├── 📄 RegionalSidebar.jsx
 │   │   │   │   ├── 📄 RegionalTopbar.jsx
 │   │   │   │   └── 📄 UserProfileModal.jsx
@@ -171,6 +179,7 @@
 │   │   │       ├── 📄 PosMitraManagement.jsx
 │   │   │       ├── 📄 RegionalAccountSettings.jsx
 │   │   │       ├── 📄 RegionalSupportChat.jsx
+│   │   │       ├── 📄 ReportManagement.jsx
 │   │   │       ├── 📄 TripOrderMonitoring.jsx
 │   │   │       └── 📄 VerificationCenter.jsx
 │   │   └── 📁 superadmin/
@@ -180,12 +189,16 @@
 │   │       │   └── 📄 SuperadminSidebar.jsx
 │   │       ├── 📄 SuperadminLayout.jsx
 │   │       └── 📁 views/
+│   │           ├── 📄 AppConfigManagement.jsx
 │   │           ├── 📄 AuditLedger.jsx
 │   │           ├── 📄 BannerManagement.jsx
+│   │           ├── 📄 DisbursementBankManagement.jsx
+│   │           ├── 📄 DriverManagement.jsx
 │   │           ├── 📄 MerchandiseManagement.jsx
 │   │           ├── 📄 PricingManagement.jsx
 │   │           ├── 📄 RegionalAdminsManagement.jsx
 │   │           ├── 📄 RegionsManagement.jsx
+│   │           ├── 📄 SanctionManagement.jsx
 │   │           ├── 📄 SocialLinksManagement.jsx
 │   │           ├── 📄 SuperadminAccountSettings.jsx
 │   │           ├── 📄 SuperadminDashboard.jsx
@@ -193,6 +206,7 @@
 │   │           └── 📄 VoucherManagement.jsx
 │   ├── 📁 hooks/
 │   │   ├── 📄 useActiveMenu.js
+│   │   ├── 📄 usePageTitle.js
 │   │   ├── 📄 usePushNotifications.js
 │   │   └── 📄 useSimulatedLoading.js
 │   ├── 📄 index.css
@@ -203,7 +217,8 @@
 │   │   ├── 📄 auditService.js
 │   │   ├── 📄 authService.js
 │   │   ├── 📄 bannerService.js
-│   │   ├── 📄 disruptedTripsService.js
+│   │   ├── 📄 disbursementBankService.js
+│   │   ├── 📄 emergencyService.js
 │   │   ├── 📄 merchandiseService.js
 │   │   ├── 📄 mitraPricing.js
 │   │   ├── 📄 mitraService.js
@@ -213,6 +228,8 @@
 │   │   ├── 📄 pricingService.js
 │   │   ├── 📄 regionalService.js
 │   │   ├── 📄 regionService.js
+│   │   ├── 📄 reportService.js
+│   │   ├── 📄 sanctionService.js
 │   │   ├── 📄 socialLinkService.js
 │   │   ├── 📄 supportChatService.js
 │   │   ├── 📄 userService.js
@@ -221,8 +238,12 @@
 │   │   ├── 📄 voucherService.js
 │   │   └── 📄 walletService.js
 │   └── 📁 utils/
+│       ├── 📄 alertSound.js
+│       ├── 📄 dateUtils.js
 │       ├── 📄 geoJsonUtil.js
-│       └── 📄 mitraUtils.js
+│       ├── 📄 mapRouteUtil.js
+│       ├── 📄 mitraUtils.js
+│       └── 📄 reportCheckpointValidation.js
 ├── 📄 structure.md
 ├── 📄 tailwind.config.js
 ├── 📄 VAPID_FIX_GUIDE.md

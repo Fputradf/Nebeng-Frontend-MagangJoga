@@ -35,7 +35,7 @@ const INITIAL_TICKETS = [
         sender: 'admin',
         senderName: 'Admin Wilayah Bandung',
         senderRole: 'regional_admin',
-        text: 'Halo Mas Ahmad! Ya, Pos Buah Batu buka 24 jam dengan Operator Pos standby. Pastikan hadir 15 menit sebelum armada berangkat ya.',
+        text: 'Halo Mas Ahmad! Ya, Pos Buah Batu buka 24 jam dengan Mitra Pos standby. Pastikan hadir 15 menit sebelum armada berangkat ya.',
         timestamp: new Date(Date.now() - 3600000 * 1.5).toISOString(),
       },
       {
@@ -86,11 +86,17 @@ const INITIAL_TICKETS = [
 function readTicketsFromStorage() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
+    const list = raw ? JSON.parse(raw) : INITIAL_TICKETS;
     if (!raw) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_TICKETS));
-      return INITIAL_TICKETS;
     }
-    return JSON.parse(raw);
+    if (Array.isArray(list)) {
+      return list.map((t) => ({
+        ...t,
+        region: typeof t.region === 'string' ? t.region : (t.region?.name || 'Jawa Barat (Bandung)'),
+      }));
+    }
+    return INITIAL_TICKETS;
   } catch (e) {
     console.error('Error reading support tickets:', e);
     return INITIAL_TICKETS;
@@ -124,16 +130,19 @@ export const supportChatService = {
       (t) => String(t.userId) === String(userId) && (t.status === 'open' || t.status === 'in_progress')
     );
 
+    const safeRegion = typeof region === 'string' ? region : (region?.name || 'Jawa Barat (Bandung)');
+    const safeUserName = typeof userName === 'string' ? userName : (userRole === 'mitra' ? 'Mitra Pengemudi' : 'Customer Nebeng');
+
     if (!activeTicket) {
       const newId = `TKT-${new Date().getFullYear()}-${String(tickets.length + 1).padStart(3, '0')}`;
       activeTicket = {
         id: newId,
         userId: String(userId || 'guest'),
-        userName: userName || (userRole === 'mitra' ? 'Mitra Pengemudi' : 'Customer Nebeng'),
+        userName: safeUserName,
         userRole: userRole || 'customer',
         userEmail: userEmail || '',
         userPhone: userPhone || '',
-        region: region || 'Wilayah Terdaftar',
+        region: safeRegion,
         subject: subject || 'Bantuan Layanan & Informasi',
         status: 'open',
         unreadAdmin: 1,
@@ -144,9 +153,9 @@ export const supportChatService = {
           {
             id: `msg-${Date.now()}`,
             sender: 'admin',
-            senderName: `Admin Wilayah ${region ? region.replace(/Admin\s*Wilayah/i, '').trim() : 'Pusat'}`,
+            senderName: `Admin Wilayah ${safeRegion ? safeRegion.replace(/Admin\s*Wilayah/i, '').trim() : 'Pusat'}`,
             senderRole: 'regional_admin',
-            text: `Halo ${userName || 'Pengguna'}! Selamat datang di Layanan Bantuan Admin Wilayah Nebeng. Ada kendala perjalanan, verifikasi, atau tiket yang bisa kami bantu?`,
+            text: `Halo ${safeUserName}! Selamat datang di Layanan Bantuan Admin Wilayah Nebeng. Ada kendala perjalanan, verifikasi, atau tiket yang bisa kami bantu?`,
             timestamp: new Date().toISOString(),
           },
         ],
@@ -203,6 +212,7 @@ export const supportChatService = {
     const tickets = readTicketsFromStorage();
     const index = tickets.findIndex((t) => t.id === ticketId);
     if (index === -1) return;
+    if (tickets[index].unreadAdmin === 0) return;
 
     tickets[index].unreadAdmin = 0;
     saveTicketsToStorage(tickets);
@@ -212,6 +222,7 @@ export const supportChatService = {
     const tickets = readTicketsFromStorage();
     const index = tickets.findIndex((t) => t.id === ticketId);
     if (index === -1) return;
+    if (tickets[index].unreadUser === 0) return;
 
     tickets[index].unreadUser = 0;
     saveTicketsToStorage(tickets);

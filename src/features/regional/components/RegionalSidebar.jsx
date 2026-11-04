@@ -1,5 +1,5 @@
 import ConfirmModal from '../../../components/ui/ConfirmModal';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   LayoutDashboard,
   MapPin,
@@ -13,9 +13,11 @@ import {
   X,
   Settings,
   Headset,
+  ShieldAlert,
 } from 'lucide-react';
 
 import logoImage from '../../../assets/LOGO.png';
+import { useAppConfig } from '../../../context/AppConfigContext';
 
 const MENU_GROUPS = [
   {
@@ -47,6 +49,10 @@ const MENU_GROUPS = [
         icon: Navigation,
       },
       {
+        name: 'Laporan Pelanggaran',
+        icon: ShieldAlert,
+      },
+      {
         name: 'Laporan Keuangan',
         icon: FileText,
       },
@@ -65,16 +71,37 @@ const MENU_GROUPS = [
 export default function RegionalSidebar({
   activeMenu = 'Dashboard Wilayah',
   onMenuSelect,
-  onLogout,
-}) {
+  onLogout, isOpen: propIsOpen, onClose: propOnClose }) {
+  const { appName, appLogo } = useAppConfig();
   const [showLogoutModal, setShowLogoutModal] =
     useState(false);
 
   const [isLoggingOut, setIsLoggingOut] =
     useState(false);
 
-  const [isMobileOpen, setIsMobileOpen] =
-    useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+
+  const isControlled = typeof propIsOpen === 'boolean';
+  const isMobileOpen = isControlled ? propIsOpen : internalOpen;
+
+  const handleClose = () => {
+    if (isControlled) {
+      if (propOnClose) propOnClose();
+    } else {
+      setInternalOpen(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!isMobileOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        handleClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isMobileOpen, isControlled, propOnClose]);
 
   const handleConfirmLogout = () => {
     setIsLoggingOut(true);
@@ -86,25 +113,27 @@ export default function RegionalSidebar({
 
   const handleMenuSelect = (name) => {
     onMenuSelect && onMenuSelect(name);
-    setIsMobileOpen(false);
+    handleClose();
   };
 
   return (
     <>
       {/* MOBILE MENU BUTTON */}
-      <button
-        onClick={() => setIsMobileOpen(true)}
+      {!isControlled && (
+        <button
+        onClick={() => setInternalOpen(true)}
         aria-label="Buka menu navigasi"
         className="lg:hidden fixed top-4 left-4 z-20 w-11 h-11 rounded-2xl bg-white shadow-md border border-neutral-100 flex items-center justify-center text-[#10367D]"
       >
         <Menu className="w-5 h-5" />
       </button>
+      )}
 
       {/* MOBILE OVERLAY */}
       {isMobileOpen && (
         <div
-          onClick={() => setIsMobileOpen(false)}
-          className="lg:hidden fixed inset-0 bg-black/50 z-30 backdrop-blur-sm"
+          onClick={handleClose}
+          className="lg:hidden fixed inset-0 bg-black/60 z-40 backdrop-blur-xs transition-opacity" aria-hidden="true"
         />
       )}
 
@@ -115,7 +144,7 @@ export default function RegionalSidebar({
           h-screen
           bg-gradient-to-b from-[#0c2353] via-[#10367D] to-[#18458f] border-r border-blue-400/20 shadow-2xl text-white flex flex-col justify-between p-5 fixed left-0 top-0
           overflow-y-auto print:hidden
-          z-40
+          z-50
           transition-transform
           duration-300
           font-sans
@@ -132,20 +161,24 @@ export default function RegionalSidebar({
           <div className="mb-8 px-2 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <img
-                src={logoImage}
-                alt="Logo Nebeng"
+                src={appLogo || logoImage}
+                alt={`Logo ${appName || 'Nebeng'}`}
                 className="h-8 w-8 object-contain shrink-0 filter brightness-0 invert"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = logoImage;
+                }}
               />
 
-              <span className="font-bold text-white text-lg tracking-tight leading-none">
-                Nebeng
+              <span className="font-bold text-white text-lg tracking-tight leading-none truncate max-w-[140px]">
+                {appName || 'Nebeng'}
               </span>
             </div>
 
             {/* MOBILE CLOSE */}
             <button
               onClick={() =>
-                setIsMobileOpen(false)
+                handleClose()
               }
               aria-label="Tutup menu navigasi"
               className="lg:hidden w-8 h-8 rounded-lg bg-white/10 hover:bg-white/15 flex items-center justify-center text-white transition"

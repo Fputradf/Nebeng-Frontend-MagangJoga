@@ -47,7 +47,7 @@ export const BannerSlider = ({ role }) => {
           <a
             key={banner.id}
             href={banner.linkUrl || '#'}
-            target={banner.linkUrl ? '_blank' : '_self'}
+            target={banner.linkUrl?.startsWith('http') ? '_blank' : '_self'}
             rel="noopener noreferrer"
             className={`absolute inset-0 transition-opacity duration-500 ease-in-out ${
               isActive ? 'opacity-100 z-10 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'
