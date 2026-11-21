@@ -25,6 +25,7 @@ import SanctionManagement from './features/superadmin/views/SanctionManagement';
 import AppConfigManagement from './features/superadmin/views/AppConfigManagement';
 import DisbursementBankManagement from './features/superadmin/views/DisbursementBankManagement';
 import DriverManagement from './features/superadmin/views/DriverManagement';
+import PaymentGatewayManagement from './features/superadmin/views/PaymentGatewayManagement';
 
 // Regional
 import RegionalLayout from './features/regional/RegionalLayout';
@@ -73,6 +74,7 @@ import CustomerRewards from './features/customer/views/CustomerRewards';
 import CustomerVouchers from './features/customer/views/CustomerVouchers';
 import CustomerChat from './features/customer/views/CustomerChat';
 import CustomerWallet from './features/customer/views/CustomerWallet';
+import CustomerBills from './features/customer/views/CustomerBills';
 import { NotificationSettings, NotificationHistory, NotificationPermissionRequest } from './features/notifications';
 
 // PWA Components
@@ -255,6 +257,8 @@ export default function App() {
         <Route path="laporan-pelanggaran" element={<ReportManagement />} />
         <Route path="bank-pencairan" element={<DisbursementBankManagement />} />
         <Route path="bank" element={<DisbursementBankManagement />} />
+        <Route path="pembayaran" element={<PaymentGatewayManagement />} />
+        <Route path="gateway-pembayaran" element={<PaymentGatewayManagement />} />
         <Route path="konfigurasi-aplikasi" element={<AppConfigManagement />} />
         <Route path="konfigurasi-logo" element={<AppConfigManagement />} />
         <Route path="merchandise" element={<MerchandiseManagement />} />
@@ -356,6 +360,8 @@ export default function App() {
         <Route index element={<CustomerIndexRedirect />} />
         <Route path="onboarding" element={<BiometricOnboarding />} />
         <Route path="booking" element={<SearchTrip />} />
+        <Route path="tagihan" element={<CustomerBills />} />
+        <Route path="bills" element={<CustomerBills />} />
         <Route path="tickets" element={<MyTickets />} />
         <Route path="qr" element={<CustomerQrDisplay />} />
         <Route path="vouchers" element={<CustomerVouchers />} />
@@ -370,6 +376,8 @@ export default function App() {
         <Route path="*" element={<CustomerIndexRedirect />} />
       </Route>
 
+      <Route path="/tagihan" element={<Navigate to="/customer/tagihan" replace />} />
+      <Route path="/bills" element={<Navigate to="/customer/tagihan" replace />} />
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
     </>

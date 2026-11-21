@@ -15,9 +15,11 @@ import {
   Wallet,
   Tag,
   HelpCircle,
+  Receipt,
 } from 'lucide-react';
 import logoAsset from '../../../assets/logo.png';
 import { useAppConfig } from '../../../context/AppConfigContext';
+import paymentGatewayService from '../../../services/paymentGatewayService';
 
 export default function CustomerSidebar({
   activeMenu = 'Cari & Booking Trip',
@@ -32,6 +34,28 @@ export default function CustomerSidebar({
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [internalOpen, setInternalOpen] = useState(false);
+  const [pendingBillsCount, setPendingBillsCount] = useState(0);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchPendingBills = async () => {
+      try {
+        const orders = await paymentGatewayService.getMyOrders();
+        if (isMounted && Array.isArray(orders)) {
+          const pending = orders.filter((o) => o.status === 'pending_payment');
+          setPendingBillsCount(pending.length);
+        }
+      } catch {
+        // silent background check
+      }
+    };
+    fetchPendingBills();
+    const interval = setInterval(fetchPendingBills, 8000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   const isControlled = typeof propIsOpen === 'boolean';
   const isMobileOpen = isControlled ? propIsOpen : internalOpen;
@@ -82,6 +106,12 @@ export default function CustomerSidebar({
     {
       label: 'Transaksi & Dompet',
       items: [
+        {
+          name: 'Tagihan',
+          icon: Receipt,
+          locked: !isCustomerVerified,
+          badgeCount: pendingBillsCount,
+        },
         { name: 'Dompet Saya', icon: Wallet, locked: !isCustomerVerified },
         { name: 'Voucher Saya', icon: Tag, locked: !isCustomerVerified },
         { name: 'Rewards & Penukaran', icon: Gift, locked: !isCustomerVerified },
@@ -221,6 +251,11 @@ export default function CustomerSidebar({
                           }`}
                         />
                         <span className="flex-1">{item.label || item.name}</span>
+                        {item.badgeCount > 0 && (
+                          <span className="px-2 py-0.5 rounded-full text-xs font-black bg-rose-500 text-white shadow-xs animate-pulse">
+                            {item.badgeCount}
+                          </span>
+                        )}
                         {item.locked &&
                           (isCustomerVerified ? (
                             <ShieldCheck className="w-3 h-3 text-[#74B4D9]" />

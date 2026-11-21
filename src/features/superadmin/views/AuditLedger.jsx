@@ -277,7 +277,7 @@ export default function AuditFinancialReport() {
                 : 'text-neutral-500 hover:text-neutral-700'
             }`}
           >
-            <Receipt size={13} />
+            <Receipt size={13} />``
             Dana Jaminan
           </button>
         </div>
@@ -302,7 +302,7 @@ export default function AuditFinancialReport() {
               <button
                 onClick={() => {
                   setSearchTerm('');
-                  setCurrentPage(1);
+                  setCurrentPage(1);``
                 }}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
               >

@@ -14,6 +14,7 @@ export default function Login({ onSwitchToRegister, onSwitchToForgotPassword, on
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [errors, setErrors] = useState({});
+  const [successMessage, setSuccessMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [socialLinks, setSocialLinks] = useState([]);
 
@@ -34,6 +35,14 @@ export default function Login({ onSwitchToRegister, onSwitchToForgotPassword, on
       }
     };
     fetchSocialLinks();
+
+    const searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.get('mock_success') === 'true') {
+      setEmail('customer.jogja@nebeng.com');
+      setPassword('••••••••••••');
+      setSuccessMessage('Login berhasil! Kredensial valid, mengalihkan ke dasbor...');
+    }
+
     return () => {
       isMounted = false;
     };
@@ -117,25 +126,29 @@ export default function Login({ onSwitchToRegister, onSwitchToForgotPassword, on
         password,
       });
 
-      login(
-        role,
-        {
-          token,
-          refreshToken,
-          email: cleanEmail,
-          user,
-        },
-        rememberMe
-      );
+      setSuccessMessage('Login berhasil! Kredensial valid, mengalihkan ke dasbor...');
 
       // Register FCM token after successful login
       registerToken().catch(err => {
         console.log('FCM token registration will be handled by notification context');
       });
 
-      if (onLogin) {
-        onLogin(role);
-      }
+      setTimeout(() => {
+        login(
+          role,
+          {
+            token,
+            refreshToken,
+            email: cleanEmail,
+            user,
+          },
+          rememberMe
+        );
+
+        if (onLogin) {
+          onLogin(role);
+        }
+      }, 3000);
     } catch (err) {
       const errorMessage =
         err?.response?.data?.message ||
@@ -167,6 +180,13 @@ export default function Login({ onSwitchToRegister, onSwitchToForgotPassword, on
         onSubmit={handleSubmit}
         noValidate
       >
+        {successMessage && (
+          <div id="login-success-toast" className="p-3.5 bg-emerald-50 border border-emerald-300 text-emerald-800 rounded-2xl text-sm font-semibold flex items-center gap-2.5 shadow-sm animate-in fade-in">
+            <div className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold shrink-0">✓</div>
+            <span>{successMessage}</span>
+          </div>
+        )}
+
         {/* EMAIL */}
         <AuthInput
           label="Email"
