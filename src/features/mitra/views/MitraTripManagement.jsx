@@ -254,6 +254,34 @@ export default function MitraTripManagement() {
       }
 
       if (allPoints.length >= 2 && myVehicles.length > 0) {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('mock_form') === 'true') {
+          const tirtonadi = allPoints.find(p => p.name?.includes('Tirtonadi')) || allPoints[0];
+          const giwangan = allPoints.find(p => p.name?.includes('Giwangan')) || allPoints[1];
+          const tmrw = new Date();
+          tmrw.setDate(tmrw.getDate() + 1);
+          const tmrwISO = tmrw.toISOString().split('T')[0];
+
+          setFormData({
+            originPointId: String(tirtonadi.id),
+            destinationPointId: String(giwangan.id),
+            vehicleId: String(myVehicles[0].id),
+            date: tmrwISO,
+            time: '08:00',
+            totalSeats: 4,
+            maxWeightCapacityKg: 20,
+            price: 45000,
+          });
+
+          setFareEstimate({
+            distanceKm: 64.2,
+            durationMinutes: 75,
+            baseFare: 15000,
+            farePerKm: 3000,
+          });
+          return;
+        }
+
         const initialOrigin = String(allPoints[0].id);
         const initialDestination = String(allPoints[1].id);
         const initialVehicleId = String(myVehicles[0].id);

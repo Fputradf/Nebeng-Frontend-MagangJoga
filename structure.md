@@ -37,10 +37,34 @@
 │   ├── 📄 favicon.svg
 │   ├── 📄 firebase-messaging-sw.js
 │   ├── 📄 icons.svg
+│   ├── 📄 preview.html
 │   ├── 📄 pwa-192x192.png
 │   ├── 📄 pwa-512x512.png
-│   └── 📄 pwa-maskable-512x512.png
+│   ├── 📄 pwa-maskable-512x512.png
+│   └── 📁 screenshots/
+│       ├── 📄 customer_dashboard_banner.png
+│       ├── 📄 customer_tagihan_bills.png
+│       ├── 📄 gateway_checkout_qris_detail.png
+│       ├── 📄 gateway_checkout_qris_ewallet.png
+│       ├── 📄 gateway_checkout_virtual_account.png
+│       ├── 📄 inapp_checkout_modal.png
+│       ├── 📄 superadmin_payment_gateway_active.png
+│       └── 📄 superadmin_payment_settings.png
 ├── 📄 README.md
+├── 📁 scripts/
+│   ├── 📄 capture_all.mjs
+│   ├── 📄 capture_all_sidebar_features.mjs
+│   ├── 📄 capture_auth_success.mjs
+│   ├── 📄 capture_blackbox_evidence.mjs
+│   ├── 📄 capture_blackbox_refined.mjs
+│   ├── 📄 capture_fix_auth_trk_wal.mjs
+│   ├── 📄 capture_tracking.mjs
+│   ├── 📄 capture_trip01.mjs
+│   ├── 📄 snap_auth_toast.mjs
+│   ├── 📄 take_gateway_proof.mjs
+│   ├── 📄 take_proof_screenshots.mjs
+│   ├── 📄 test_publish_trip.mjs
+│   └── 📄 test_trip_snap.mjs
 ├── 📁 src/
 │   ├── 📄 App.css
 │   ├── 📄 App.jsx
@@ -113,12 +137,15 @@
 │   │   │   │   ├── 📄 CustomerProfileModal.jsx
 │   │   │   │   ├── 📄 CustomerSidebar.jsx
 │   │   │   │   ├── 📄 CustomerTopbar.jsx
+│   │   │   │   ├── 📄 InAppCheckoutModal.jsx
+│   │   │   │   ├── 📄 PendingBillsBanner.jsx
 │   │   │   │   ├── 📄 SosTriggerModal.jsx
 │   │   │   │   └── 📄 TicketTimelineModal.jsx
 │   │   │   ├── 📄 CustomerLayout.jsx
 │   │   │   └── 📁 views/
 │   │   │       ├── 📄 BiometricOnboarding.jsx
 │   │   │       ├── 📄 CustomerAccountSettings.jsx
+│   │   │       ├── 📄 CustomerBills.jsx
 │   │   │       ├── 📄 CustomerChat.jsx
 │   │   │       ├── 📄 CustomerQrDisplay.jsx
 │   │   │       ├── 📄 CustomerRewards.jsx
@@ -195,6 +222,7 @@
 │   │           ├── 📄 DisbursementBankManagement.jsx
 │   │           ├── 📄 DriverManagement.jsx
 │   │           ├── 📄 MerchandiseManagement.jsx
+│   │           ├── 📄 PaymentGatewayManagement.jsx
 │   │           ├── 📄 PricingManagement.jsx
 │   │           ├── 📄 RegionalAdminsManagement.jsx
 │   │           ├── 📄 RegionsManagement.jsx
@@ -224,6 +252,7 @@
 │   │   ├── 📄 mitraService.js
 │   │   ├── 📄 notificationService.js
 │   │   ├── 📄 operatorService.js
+│   │   ├── 📄 paymentGatewayService.js
 │   │   ├── 📄 pricingPolicyService.js
 │   │   ├── 📄 pricingService.js
 │   │   ├── 📄 regionalService.js

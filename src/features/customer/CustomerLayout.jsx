@@ -15,9 +15,11 @@ const CUSTOMER_MENU_PATH = {
   'Digital QR Aktif': 'qr',
   'Digital QR': 'qr',
   'Tickets & Digital QR': 'tickets',
+  Tagihan: 'tagihan',
+  'Tagihan Saya': 'tagihan',
+  'Dompet Saya': 'wallet',
   'Voucher Saya': 'vouchers',
   'Rewards & Penukaran': 'rewards',
-  'Dompet Saya': 'wallet',
   'Pusat Bantuan & FAQ': 'bantuan',
   'Profil Saya': 'profile',
 };

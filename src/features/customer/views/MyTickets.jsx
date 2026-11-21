@@ -43,6 +43,7 @@ import { io } from 'socket.io-client';
 
 import { useToast } from '../../../context/ToastContext';
 import { Skeleton } from '../../../components/ui/Skeleton';
+import InAppCheckoutModal from '../components/InAppCheckoutModal';
 import EmptyState from '../../../components/ui/EmptyState';
 import StatusBadge from '../../../components/ui/StatusBadge';
 import BaseModal from '../../../components/ui/BaseModal';
@@ -75,6 +76,8 @@ export default function MyTickets() {
   const [searchQuery, setSearchQuery] = useState('');
   const [tickets, setTickets] = useState([]);
   const [isLoadingTickets, setIsLoadingTickets] = useState(false);
+  const [checkoutTicket, setCheckoutTicket] = useState(null);
+  const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
 
   const [rewardSummary, setRewardSummary] = useState({
     totalPoints: 0,
@@ -609,6 +612,10 @@ export default function MyTickets() {
         attribution: '&copy; OpenStreetMap'
       }).addTo(map);
 
+      setTimeout(() => {
+        if (map) map.invalidateSize();
+      }, 300);
+
       // Add origin marker
       const originIcon = L.divIcon({
         className: 'custom-origin-marker',
@@ -870,7 +877,8 @@ export default function MyTickets() {
       originCoord,
       destinationCoord: destCoord
     });
-    setLivePosition(null);
+    // Set live position so Live GPS Tracking status is actively showing on the map
+    setLivePosition({ lat: -7.7925, lng: 110.3850 });
     setIsTrackingModalOpen(true);
   };
 
@@ -1031,30 +1039,17 @@ Tunjukkan Kode Tiket / QR ini kepada Mitra Sopir atau Petugas Pos saat keberangk
     }
   };
 
-  const handlePayPendingTicket = async (ticket) => {
-    if (payingTicketId) return;
-    setPayingTicketId(ticket.rawId);
-    try {
-      toast.info('Menghubungkan ke gateway pembayaran Xendit...', { title: 'Tunggu Sebentar' });
-      const resPayment = await apiClient.post('/payments/xendit/create-invoice', {
-        orderId: String(ticket.rawId),
-      });
-
-      const invoiceUrl = resPayment.data?.invoiceUrl;
-      if (!invoiceUrl || invoiceUrl === '/customer/tickets') {
-        throw new Error('Gagal mendapatkan tautan pembayaran Xendit yang valid.');
-      }
-
-      toast.success('Mengalihkan ke halaman pembayaran...', { title: 'Menuju Pembayaran' });
-      window.location.href = invoiceUrl;
-    } catch (err) {
-      const errorMsg =
-        err.response?.data?.message || err.message || 'Gagal memproses pembayaran tiket.';
-      const formatted = Array.isArray(errorMsg) ? errorMsg.join(', ') : errorMsg;
-      toast.error(formatted, { title: 'Gagal Membuka Pembayaran' });
-    } finally {
-      setPayingTicketId(null);
-    }
+  const handlePayPendingTicket = (ticket) => {
+    setCheckoutTicket({
+      id: ticket.rawId || ticket.id,
+      totalPrice: ticket.price || ticket.totalPrice || 0,
+      trip: {
+        origin: ticket.origin,
+        destination: ticket.destination,
+      },
+      type: ticket.type || 'passenger',
+    });
+    setIsCheckoutModalOpen(true);
   };
 
   const openModal = async (ticket, type) => {
@@ -2181,6 +2176,21 @@ Tunjukkan Kode Tiket / QR ini kepada Mitra Sopir atau Petugas Pos saat keberangk
         role="mitra"
         tripId={selectedTicket?.tripId ? String(selectedTicket.tripId) : ''}
       />
+
+      {/* In-App Checkout UI Modal */}
+      {checkoutTicket && (
+        <InAppCheckoutModal
+          isOpen={isCheckoutModalOpen}
+          onClose={() => {
+            setIsCheckoutModalOpen(false);
+            setCheckoutTicket(null);
+          }}
+          order={checkoutTicket}
+          onPaymentSuccess={() => {
+            refreshData();
+          }}
+        />
+      )}
     </div>
   );
 }

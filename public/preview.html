@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bukti Desain In-App Payment Gateway & Superadmin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen p-6 sm:p-10">
+  <div class="max-w-6xl mx-auto space-y-10">
+    <!-- Header -->
+    <div class="border-b border-slate-800 pb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <span class="text-xs font-bold tracking-widest text-emerald-400 uppercase">Verifikasi Visual</span>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-white mt-1">Galeri Bukti Desain Payment Gateway (In-App)</h1>
+        <p class="text-sm text-slate-400 mt-1">Tampilan bersih, mobile-first, dan tanpa card gradient sesuai referensi Anda.</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <a href="http://localhost:5173/admin/pembayaran" target="_blank" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-xs font-bold transition">Buka Panel Superadmin &rarr;</a>
+        <a href="http://localhost:5173/customer/tagihan" target="_blank" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold transition">Buka Tagihan Customer &rarr;</a>
+      </div>
+    </div>
+
+    <!-- Section 1: In-App Checkout UI (Mobile-First) -->
+    <div class="space-y-4">
+      <div class="flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+        <h2 class="text-lg font-bold text-white uppercase tracking-wider">1. In-App Checkout (Sesuai Referensi Pengguna)</h2>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Card 1: QRIS & E-Wallet -->
+        <div class="bg-slate-800/80 rounded-2xl border border-slate-700 overflow-hidden flex flex-col">
+          <div class="p-4 border-b border-slate-700/60 bg-slate-800">
+            <h3 class="font-bold text-white text-sm">Tab 1: QRIS & E-Wallet</h3>
+            <p class="text-xs text-slate-400">Card gradient telah dihapus, header clean & flat.</p>
+          </div>
+          <div class="p-3 bg-slate-950 flex-1 flex items-center justify-center">
+            <a href="/screenshots/gateway_checkout_qris_ewallet.png" target="_blank" class="block group">
+              <img src="/screenshots/gateway_checkout_qris_ewallet.png" alt="QRIS & E-Wallet" class="rounded-xl shadow-lg max-h-[520px] w-auto mx-auto group-hover:opacity-90 transition" />
+            </a>
+          </div>
+          <div class="p-3 bg-slate-800/50 text-center">
+            <a href="/screenshots/gateway_checkout_qris_ewallet.png" target="_blank" class="text-xs text-blue-400 hover:underline font-bold">Buka Gambar Penuh &rarr;</a>
+          </div>
+        </div>
+
+        <!-- Card 2: Virtual Account -->
+        <div class="bg-slate-800/80 rounded-2xl border border-slate-700 overflow-hidden flex flex-col">
+          <div class="p-4 border-b border-slate-700/60 bg-slate-800">
+            <h3 class="font-bold text-white text-sm">Tab 2: Virtual Account</h3>
+            <p class="text-xs text-slate-400">Daftar bank otomatis: BCA, Mandiri, BRI, BNI, Permata.</p>
+          </div>
+          <div class="p-3 bg-slate-950 flex-1 flex items-center justify-center">
+            <a href="/screenshots/gateway_checkout_virtual_account.png" target="_blank" class="block group">
+              <img src="/screenshots/gateway_checkout_virtual_account.png" alt="Virtual Account" class="rounded-xl shadow-lg max-h-[520px] w-auto mx-auto group-hover:opacity-90 transition" />
+            </a>
+          </div>
+          <div class="p-3 bg-slate-800/50 text-center">
+            <a href="/screenshots/gateway_checkout_virtual_account.png" target="_blank" class="text-xs text-blue-400 hover:underline font-bold">Buka Gambar Penuh &rarr;</a>
+          </div>
+        </div>
+
+        <!-- Card 3: Detail QRIS Barcode SVG -->
+        <div class="bg-slate-800/80 rounded-2xl border border-slate-700 overflow-hidden flex flex-col">
+          <div class="p-4 border-b border-slate-700/60 bg-slate-800">
+            <h3 class="font-bold text-white text-sm">Detail Barcode QRIS SVG Inline</h3>
+            <p class="text-xs text-slate-400">Barcode standee lokal SVG, salin nominal & unduh.</p>
+          </div>
+          <div class="p-3 bg-slate-950 flex-1 flex items-center justify-center">
+            <a href="/screenshots/gateway_checkout_qris_detail.png" target="_blank" class="block group">
+              <img src="/screenshots/gateway_checkout_qris_detail.png" alt="Detail QRIS Barcode SVG" class="rounded-xl shadow-lg max-h-[520px] w-auto mx-auto group-hover:opacity-90 transition" />
+            </a>
+          </div>
+          <div class="p-3 bg-slate-800/50 text-center">
+            <a href="/screenshots/gateway_checkout_qris_detail.png" target="_blank" class="text-xs text-blue-400 hover:underline font-bold">Buka Gambar Penuh &rarr;</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 2: Superadmin Settings -->
+    <div class="space-y-4 pt-6 border-t border-slate-800">
+      <div class="flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+        <h2 class="text-lg font-bold text-white uppercase tracking-wider">2. Pengaturan Mode Pembayaran di Panel Superadmin</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Opsi A Aktif -->
+        <div class="bg-slate-800/80 rounded-2xl border border-slate-700 overflow-hidden flex flex-col">
+          <div class="p-4 border-b border-slate-700/60 bg-slate-800">
+            <span class="text-[11px] font-bold text-blue-400 uppercase tracking-wider">Opsi A Dipilih</span>
+            <h3 class="font-bold text-white text-sm mt-0.5">Mode Payment Gateway Otomatis Aktif</h3>
+          </div>
+          <div class="p-3 bg-slate-950 flex-1">
+            <a href="/screenshots/superadmin_payment_gateway_active.png" target="_blank">
+              <img src="/screenshots/superadmin_payment_gateway_active.png" alt="Superadmin Gateway Active" class="rounded-xl shadow-lg w-full object-cover" />
+            </a>
+          </div>
+          <div class="p-3 bg-slate-800/50 text-center">
+            <a href="/screenshots/superadmin_payment_gateway_active.png" target="_blank" class="text-xs text-blue-400 hover:underline font-bold">Buka Gambar Penuh &rarr;</a>
+          </div>
+        </div>
+
+        <!-- Opsi B Aktif -->
+        <div class="bg-slate-800/80 rounded-2xl border border-slate-700 overflow-hidden flex flex-col">
+          <div class="p-4 border-b border-slate-700/60 bg-slate-800">
+            <span class="text-[11px] font-bold text-emerald-400 uppercase tracking-wider">Opsi B (Default Aktif)</span>
+            <h3 class="font-bold text-white text-sm mt-0.5">Mode Transfer Manual & QRIS Statis Pemilik</h3>
+          </div>
+          <div class="p-3 bg-slate-950 flex-1">
+            <a href="/screenshots/superadmin_payment_settings.png" target="_blank">
+              <img src="/screenshots/superadmin_payment_settings.png" alt="Superadmin Manual Settings" class="rounded-xl shadow-lg w-full object-cover" />
+            </a>
+          </div>
+          <div class="p-3 bg-slate-800/50 text-center">
+            <a href="/screenshots/superadmin_payment_settings.png" target="_blank" class="text-xs text-blue-400 hover:underline font-bold">Buka Gambar Penuh &rarr;</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

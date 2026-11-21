@@ -26,6 +26,8 @@ import apiClient from '../../../services/apiClient';
 import { walletService } from '../../../services/walletService';
 import { voucherService } from '../../../services/voucherService';
 import { formatDurationMinutes, getEstimatedArrivalTime } from '../../../utils/dateUtils';
+import PendingBillsBanner from '../components/PendingBillsBanner';
+import InAppCheckoutModal from '../components/InAppCheckoutModal';
 
 const PHONE_REGEX = /^(\+?62|0)?8[1-9][0-9]{7,11}$/;
 const TODAY_ISO = new Date().toISOString().split('T')[0];
@@ -135,6 +137,8 @@ export default function SearchTrip() {
   const [receiverPhone, setReceiverPhone] = useState('');
 
   const [paymentMethod, setPaymentMethod] = useState('xendit');
+  const [selectedOrderForCheckout, setSelectedOrderForCheckout] = useState(null);
+  const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
   const [pin, setPin] = useState('');
   const [newPin, setNewPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
@@ -594,19 +598,13 @@ export default function SearchTrip() {
       createdOrderId = orderIdStr;
 
       if (paymentMethod === 'xendit') {
-        // 2. Request Xendit Invoice URL
-        const resPayment = await apiClient.post('/payments/xendit/create-invoice', {
-          orderId: orderIdStr,
+        // Tampilkan Custom In-App Checkout UI langsung tanpa redirect luar
+        setSelectedOrderForCheckout(createdOrder);
+        setIsCheckoutModalOpen(true);
+        setSelectedTrip(null);
+        toast.info('Silakan selesaikan pembayaran tiket Anda.', {
+          title: 'Selesaikan Tagihan',
         });
-        
-        const invoiceUrl = resPayment.data?.invoiceUrl;
-        if (!invoiceUrl || invoiceUrl === '/customer/tickets') {
-          throw new Error('Gagal mendapatkan tautan pembayaran Xendit yang valid.');
-        }
-  
-        // 3. Redirect ke Payment Gateway (Xendit)
-        toast.success('Mengalihkan ke halaman pembayaran...', { title: 'Tunggu Sebentar' });
-        window.location.href = invoiceUrl;
       } else if (paymentMethod === 'wallet') {
         // Pembayaran Saldo Dompet
         await walletService.payWithWallet(orderIdStr, pin);
@@ -637,6 +635,9 @@ export default function SearchTrip() {
 
   return (
     <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-sans">
+      {/* ── BANNER PENGINGAT TAGIHAN BELUM DIBAYAR ── */}
+      <PendingBillsBanner />
+
       {/* ── BANNER ── */}
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] p-6 text-white shadow-card sm:p-8">
         <div className="relative flex flex-col gap-3 pb-4 sm:flex-row sm:items-center sm:justify-between">
@@ -1541,6 +1542,21 @@ export default function SearchTrip() {
           </button>
         </form>
       </BaseModal>
+
+      {/* In-App Checkout UI Modal */}
+      {selectedOrderForCheckout && (
+        <InAppCheckoutModal
+          isOpen={isCheckoutModalOpen}
+          onClose={() => {
+            setIsCheckoutModalOpen(false);
+            setSelectedOrderForCheckout(null);
+          }}
+          order={selectedOrderForCheckout}
+          onPaymentSuccess={() => {
+            navigate('/customer/tickets');
+          }}
+        />
+      )}
     </div>
   );
 }

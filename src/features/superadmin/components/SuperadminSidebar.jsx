@@ -22,6 +22,7 @@ import {
   ShieldAlert,
   Car,
   FileCheck,
+  CreditCard,
 } from 'lucide-react';
 import logoImage from '../../../assets/LOGO.png';
 import { useAppConfig } from '../../../context/AppConfigContext';
@@ -42,6 +43,7 @@ const MENU_GROUPS = [
     label: 'Manajemen Lanjutan',
     items: [
       { name: 'Konfigurasi Tarif', icon: ShoppingBag },
+      { name: 'Gateway Pembayaran', icon: CreditCard },
       { name: 'Konfigurasi Sanksi', icon: AlertTriangle },
       { name: 'Bank Pencairan', icon: Landmark },
       { name: 'Laporan Pelanggaran', icon: ShieldAlert },

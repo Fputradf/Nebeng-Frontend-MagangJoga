@@ -19,6 +19,8 @@ const SUPERADMIN_MENU_PATH = {
   'Driver': 'driver',
   'Verifikasi KYC': 'verifikasi-kyc',
   'Konfigurasi Tarif': 'tarif',
+  'Gateway Pembayaran': 'pembayaran',
+  'Metode Pembayaran': 'pembayaran',
   'Konfigurasi Sanksi': 'sanksi',
   'Laporan Pelanggaran': 'reports',
   'Bank Pencairan': 'bank-pencairan',
