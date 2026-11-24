@@ -44,8 +44,8 @@ export default function HelpCenterView({ userRole = 'customer' }) {
   const { user, customerProfile, mitraProfile } = useAuth();
 
   const profile = userRole === 'mitra' ? (mitraProfile || user) : (customerProfile || user);
-  const rawName = profile?.fullName || profile?.name || (userRole === 'mitra' ? 'Mitra Nebeng' : 'Pelanggan Nebeng');
-  const userName = typeof rawName === 'string' ? rawName : 'Pelanggan Nebeng';
+  const rawName = profile?.fullName || profile?.name || (userRole === 'mitra' ? 'Mitra SatuRute' : 'Pelanggan SatuRute');
+  const userName = typeof rawName === 'string' ? rawName : 'Pelanggan SatuRute';
 
   const rawRegion =
     (typeof profile?.region === 'string' ? profile.region : profile?.region?.name) ||
@@ -440,7 +440,7 @@ export default function HelpCenterView({ userRole = 'customer' }) {
                     Pencarian & Filter Pertanyaan
                   </h2>
                   <p className="text-xs text-neutral-500 mt-0.5">
-                    Ketik kata kunci atau pilih kategori topik yang ingin Anda ketahui seputar Nebeng.
+                    Ketik kata kunci atau pilih kategori topik yang ingin Anda ketahui seputar SatuRute.
                   </p>
                 </div>
               </div>

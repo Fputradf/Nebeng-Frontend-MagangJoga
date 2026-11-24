@@ -1,4 +1,4 @@
-﻿import { BASE_URL } from '../../../config/env';
+import { BASE_URL } from '../../../config/env';
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Mail, Phone, Car, ShieldCheck, Settings, X } from 'lucide-react';
@@ -58,7 +58,7 @@ export default function MitraProfileModal({ isOpen, onClose, onSettingsClick }) 
 
   if (!isOpen) return null;
 
-  const displayName = userData?.name || 'Mitra Nebeng';
+  const displayName = userData?.name || 'Mitra SatuRute';
   const photoUrl = getFullFileUrl(userData?.avatar);
   const initials = displayName.charAt(0).toUpperCase() || 'M';
 

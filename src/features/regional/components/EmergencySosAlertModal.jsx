@@ -194,7 +194,7 @@ export default function EmergencySosAlertModal({
                   <span>Pelanggan (Korban)</span>
                 </div>
                 <div>
-                  <p className="text-sm sm:text-base font-bold text-white truncate">{customer.name || 'Pelanggan Nebeng'}</p>
+                  <p className="text-sm sm:text-base font-bold text-white truncate">{customer.name || 'Pelanggan SatuRute'}</p>
                   <p className="text-xs text-neutral-400 font-mono truncate">{customer.phone || customer.email || '-'}</p>
                 </div>
                 <div className="flex gap-2 pt-0.5">

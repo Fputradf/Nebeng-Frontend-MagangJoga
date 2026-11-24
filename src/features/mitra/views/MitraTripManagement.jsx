@@ -1365,7 +1365,7 @@ export default function MitraTripManagement() {
                         {isBarang ? (
                           <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-sky-50 text-sky-700 border border-sky-200 flex items-center gap-1.5">
                             <Package className="w-3 h-3 text-sky-600" />
-                            <span>Nebeng Barang</span>
+                            <span>SatuRute Barang</span>
                             <span className="w-1 h-1 rounded-full bg-sky-400" />
                             <span>Bagasi: {trip.remainingWeightCapacityKg ?? trip.maxWeightCapacityKg} Kg</span>
                           </span>

@@ -43,7 +43,7 @@ export default function PaymentGatewayManagement() {
   // Manual Transfer & QRIS Settings
   const [manualBankName, setManualBankName] = useState('Bank Central Asia (BCA)');
   const [manualAccountNumber, setManualAccountNumber] = useState('8830192837');
-  const [manualAccountHolder, setManualAccountHolder] = useState('PT NEBENG INDONESIA DIGITAL');
+  const [manualAccountHolder, setManualAccountHolder] = useState('PT SATURUTE INDONESIA DIGITAL');
   const [manualQrisImageUrl, setManualQrisImageUrl] = useState('');
   const [manualQrisPayload, setManualQrisPayload] = useState(
     '00020101021226680016ID.CO.NEBENG011893600999999999999902150000000000000000303UMI51440014ID.LINKAJA.WWW02150000000000000000303UMI5204549953033605802ID5919NEBENG OWNER STORE6007JAKARTA61051234062070703A016304E07B'
@@ -81,7 +81,7 @@ export default function PaymentGatewayManagement() {
         if (data.manual) {
           setManualBankName(data.manual.bankName || 'Bank Central Asia (BCA)');
           setManualAccountNumber(data.manual.accountNumber || '8830192837');
-          setManualAccountHolder(data.manual.accountHolder || 'PT NEBENG INDONESIA DIGITAL');
+          setManualAccountHolder(data.manual.accountHolder || 'PT SATURUTE INDONESIA DIGITAL');
           setManualQrisImageUrl(data.manual.qrisImageUrl || '');
           if (data.manual.qrisPayload) setManualQrisPayload(data.manual.qrisPayload);
           if (Array.isArray(data.manual.transferGuide) && data.manual.transferGuide.length > 0) {
@@ -177,7 +177,7 @@ export default function PaymentGatewayManagement() {
     setGatewayProvider('XENDIT');
     setManualBankName('Bank Central Asia (BCA)');
     setManualAccountNumber('8830192837');
-    setManualAccountHolder('PT NEBENG INDONESIA DIGITAL');
+    setManualAccountHolder('PT SATURUTE INDONESIA DIGITAL');
     setAutoVerifyManual(false);
     toast.info('Pengaturan dikembalikan ke standar bawaan.');
   };
@@ -481,7 +481,7 @@ export default function PaymentGatewayManagement() {
                   type="text"
                   value={manualAccountHolder}
                   onChange={(e) => setManualAccountHolder(e.target.value)}
-                  placeholder="Contoh: PT NEBENG INDONESIA DIGITAL"
+                  placeholder="Contoh: PT SATURUTE INDONESIA DIGITAL"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm uppercase focus:outline-hidden focus:ring-2 focus:ring-[#10367D]/20 focus:border-[#10367D]"
                 />
               </div>

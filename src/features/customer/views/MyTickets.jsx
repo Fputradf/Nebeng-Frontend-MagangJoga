@@ -308,8 +308,8 @@ export default function MyTickets() {
           revieweeId: trip.mitraId || trip.mitra?.id || trip.mitra?.userId || trip.mitra_id || trip.driverId,
           type: order.type,
           title: isParcel
-            ? `Nebeng Barang (${order.itemOrders?.[0]?.itemCategory || 'Paket'})`
-            : 'Nebeng Penumpang',
+            ? `SatuRute Barang (${order.itemOrders?.[0]?.itemCategory || 'Paket'})`
+            : 'SatuRute Penumpang',
           from: origin,
           to: destination,
           mitra: mitraName,
@@ -888,8 +888,8 @@ export default function MyTickets() {
       : '  1. ' + (ticket.mitra || 'Penumpang');
 
     const message = 
-`*E-TIKET RESMI NEBENG* 🚗✨
-Halo! Tiket nebeng sudah siap. Berikut rincian perjalanan:
+`*E-TIKET RESMI SATURUTE* 🚗✨
+Halo! Tiket perjalanan SatuRute sudah siap. Berikut rincian perjalanan:
 
 📌 *Kode Tiket / QR:* ${ticket.qrCodeTicket || ticket.id}
 📍 *Rute:* ${ticket.from} ➔ ${ticket.to}

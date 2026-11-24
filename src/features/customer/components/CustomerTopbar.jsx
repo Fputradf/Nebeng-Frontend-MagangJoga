@@ -67,11 +67,11 @@ export default function CustomerTopbar({ profile, onProfileClick }) {
       <div className="flex items-center gap-2.5 lg:hidden">
         <img
           src={logoAsset}
-          alt="Logo Nebeng"
+          alt="Logo SatuRute"
           className="h-8 w-8 object-contain shrink-0"
         />
         <span className="font-bold text-[23px] tracking-wide leading-none">
-          Nebeng
+          SatuRute
         </span>
       </div>
       <div className="min-w-0 flex-1">

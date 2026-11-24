@@ -313,7 +313,7 @@ export default function CustomerRewards() {
               Katalog Hadiah & Penukaran Poin
             </h1>
             <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
-              Tukarkan poin hasil perjalanan aman Anda dengan merchandise resmi Nebeng.
+              Tukarkan poin hasil perjalanan aman Anda dengan merchandise resmi SatuRute.
             </p>
           </div>
 
@@ -489,7 +489,7 @@ export default function CustomerRewards() {
                           {item.name}
                         </h3>
                         <p className="text-[12px] text-neutral-400 line-clamp-2 mt-0.5 leading-relaxed">
-                          {item.description || 'Merchandise resmi eksklusif Nebeng.'}
+                          {item.description || 'Merchandise resmi eksklusif SatuRute.'}
                         </p>
                       </div>
                     </div>

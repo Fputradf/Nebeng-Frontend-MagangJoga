@@ -178,7 +178,7 @@ export default function CustomerVouchers() {
               Voucher Saya
             </h1>
             <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
-              Gunakan voucher promosi resmi Nebeng untuk mendapatkan potongan tarif tiket perjalanan atau pengiriman paket.
+              Gunakan voucher promosi resmi SatuRute untuk mendapatkan potongan tarif tiket perjalanan atau pengiriman paket.
             </p>
           </div>
 
@@ -365,7 +365,7 @@ export default function CustomerVouchers() {
             title={vouchers.length === 0 ? 'Belum Ada Voucher Tersedia' : 'Voucher Tidak Ditemukan'}
             description={
               vouchers.length === 0
-                ? 'Nantikan berbagai program promosi dan voucher diskon menarik dari Nebeng segera.'
+                ? 'Nantikan berbagai program promosi dan voucher diskon menarik dari SatuRute segera.'
                 : 'Coba ubah kata kunci pencarian Anda atau matikan filter.'
             }
           />

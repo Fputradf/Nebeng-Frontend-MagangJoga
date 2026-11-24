@@ -237,7 +237,7 @@ export default function MitraQrDisplay() {
           <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 lg:col-span-2 flex flex-col items-center justify-center text-center">
             <div className="w-full max-w-xs bg-neutral-900 p-5 rounded-2xl text-white shadow-lg border-4 border-neutral-800 relative">
               <div className="flex justify-between items-center text-[11px] text-neutral-500 mb-3 px-1">
-                <span>Nebeng App Driver</span>
+                <span>SatuRute App Driver</span>
                 <span className="flex items-center gap-1" style={{ color: PRIMARY_ACCENT }}>
                   <ShieldCheck className="w-2.5 h-2.5" />
                   Secure Token

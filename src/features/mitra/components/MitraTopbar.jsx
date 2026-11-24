@@ -1,4 +1,4 @@
-﻿import { useEffect } from 'react';
+import { useEffect } from 'react';
 import apiClient from '../../../services/apiClient';
 import { BASE_URL } from '../../../config/env';
 import { useAuth } from '../../../context/AuthContext';
@@ -19,7 +19,7 @@ export default function MitraTopbar() {
           const freshName =
             dbUser.name ||
             dbUser.fullName ||
-            'Mitra Nebeng';
+            'Mitra SatuRute';
 
           const freshEmail = dbUser.email || '';
           const freshPhone = dbUser.phone || '';

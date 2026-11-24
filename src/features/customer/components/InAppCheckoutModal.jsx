@@ -214,7 +214,7 @@ export default function InAppCheckoutModal({
         manual: {
           bankName: 'Bank Central Asia (BCA)',
           accountNumber: '8830192837',
-          accountHolder: 'PT NEBENG INDONESIA DIGITAL',
+          accountHolder: 'PT SATURUTE INDONESIA DIGITAL',
           qrisPayload:
             '00020101021226680016ID.CO.NEBENG011893600999999999999902150000000000000000303UMI51440014ID.LINKAJA.WWW02150000000000000000303UMI5204549953033605802ID5919NEBENG OWNER STORE6007JAKARTA61051234062070703A016304E07B',
         },
@@ -424,7 +424,7 @@ export default function InAppCheckoutModal({
   const manualConfig = paymentConfig?.manual || {
     bankName: 'Bank Central Asia (BCA)',
     accountNumber: '8830192837',
-    accountHolder: 'PT NEBENG INDONESIA DIGITAL',
+    accountHolder: 'PT SATURUTE INDONESIA DIGITAL',
   };
 
   // Virtual Account Channel List for Gateway Mode

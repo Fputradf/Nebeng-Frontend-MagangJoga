@@ -101,11 +101,11 @@ export default function CustomerQrDisplay() {
             type: order.type,
             isParcel,
             title: isParcel
-              ? `Nebeng Barang (${order.itemOrders?.[0]?.itemCategory || 'Paket'})`
-              : 'Nebeng Penumpang',
+              ? `SatuRute Barang (${order.itemOrders?.[0]?.itemCategory || 'Paket'})`
+              : 'SatuRute Penumpang',
             origin: trip.originPoint?.name || 'Pos Asal',
             destination: trip.destinationPoint?.name || 'Pos Tujuan',
-            mitraName: trip.mitra?.name || 'Mitra Nebeng',
+            mitraName: trip.mitra?.name || 'Mitra SatuRute',
             mitraPhone: trip.mitra?.phone || null,
             vehicle: trip.vehicle
               ? `${trip.vehicle.model} (${trip.vehicle.plateNumber})`
@@ -369,7 +369,7 @@ export default function CustomerQrDisplay() {
             <div className="w-full max-w-sm bg-neutral-900 p-5 rounded-3xl text-white shadow-xl border-4 border-neutral-800 relative">
               {/* Header Mockup */}
               <div className="flex justify-between items-center text-[11px] text-neutral-400 mb-3 px-1">
-                <span className="font-semibold tracking-wide">Nebeng Customer Pass</span>
+                <span className="font-semibold tracking-wide">SatuRute Customer Pass</span>
                 <span className="flex items-center gap-1 font-bold text-accent">
                   <ShieldCheck className="w-3 h-3 text-accent" />
                   Live Dynamic QR

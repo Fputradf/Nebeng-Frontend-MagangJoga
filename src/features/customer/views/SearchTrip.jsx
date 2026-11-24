@@ -102,11 +102,14 @@ export default function SearchTrip() {
   const initialOrigin = location.state?.origin || queryParams.get('origin') || '';
   const initialDestination = location.state?.destination || queryParams.get('destination') || '';
   const initialDate = location.state?.date || queryParams.get('date') || '';
+  const initialService = location.state?.service || queryParams.get('service') || 'motor';
 
   const [origin, setOrigin] = useState(initialOrigin);
   const [destination, setDestination] = useState(initialDestination);
   const [date, setDate] = useState(initialDate);
-  const [activeService, setActiveService] = useState('motor');
+  const [activeService, setActiveService] = useState(
+    ['motor', 'mobil', 'barang'].includes(initialService) ? initialService : 'motor'
+  );
 
   const [pickupPoints, setPickupPoints] = useState([]);
   const [trips, setTrips] = useState([]);
@@ -664,40 +667,40 @@ export default function SearchTrip() {
             type="button"
             role="tab"
             aria-selected={activeService === 'motor'}
-            aria-label="Layanan Nebeng Motor"
+            aria-label="Layanan SatuRute Motor"
             className="flex flex-col items-center gap-2.5 hover:opacity-90 transition cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded-2xl p-1"
             onClick={() => setActiveService('motor')}
           >
             <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-white shadow-soft transition-all duration-200 ${activeService === 'motor' ? 'bg-[#262160] scale-105' : 'bg-slate-200 group-hover:bg-slate-300'}`}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5V14l-3-3 4-3 2 3h2"/></svg>
             </div>
-            <span className={`text-sm font-bold ${activeService === 'motor' ? 'text-[#262160]' : 'text-slate-500'}`}>Nebeng Motor</span>
+            <span className={`text-sm font-bold ${activeService === 'motor' ? 'text-[#262160]' : 'text-slate-500'}`}>SatuRute Motor</span>
           </button>
           <button
             type="button"
             role="tab"
             aria-selected={activeService === 'mobil'}
-            aria-label="Layanan Nebeng Mobil"
+            aria-label="Layanan SatuRute Mobil"
             className="flex flex-col items-center gap-2.5 hover:opacity-90 transition cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded-2xl p-1"
             onClick={() => setActiveService('mobil')}
           >
             <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-white shadow-soft transition-all duration-200 ${activeService === 'mobil' ? 'bg-[#262160] scale-105' : 'bg-slate-200 group-hover:bg-slate-300'}`}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>
             </div>
-            <span className={`text-sm font-bold ${activeService === 'mobil' ? 'text-[#262160]' : 'text-slate-500'}`}>Nebeng Mobil</span>
+            <span className={`text-sm font-bold ${activeService === 'mobil' ? 'text-[#262160]' : 'text-slate-500'}`}>SatuRute Mobil</span>
           </button>
           <button
             type="button"
             role="tab"
             aria-selected={activeService === 'barang'}
-            aria-label="Layanan Nebeng Barang"
+            aria-label="Layanan SatuRute Barang"
             className="flex flex-col items-center gap-2.5 hover:opacity-90 transition cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded-2xl p-1"
             onClick={() => setActiveService('barang')}
           >
             <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-white shadow-soft transition-all duration-200 ${activeService === 'barang' ? 'bg-[#262160] scale-105' : 'bg-slate-200 group-hover:bg-slate-300'}`}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
             </div>
-            <span className={`text-sm font-bold ${activeService === 'barang' ? 'text-[#262160]' : 'text-slate-500'}`}>Nebeng Barang</span>
+            <span className={`text-sm font-bold ${activeService === 'barang' ? 'text-[#262160]' : 'text-slate-500'}`}>SatuRute Barang</span>
           </button>
         </div>
       </div>
@@ -796,7 +799,7 @@ export default function SearchTrip() {
                         ) : (
                           <Package className="w-3.5 h-3.5 shrink-0" />
                         )}
-                        <span>{isPassenger ? 'Nebeng Penumpang' : 'Nebeng Barang'}</span>
+                        <span>{isPassenger ? 'SatuRute Penumpang' : 'SatuRute Barang'}</span>
                       </span>
 
                       <div>
@@ -892,7 +895,7 @@ export default function SearchTrip() {
                           </span>
                           <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                             <span className="text-[11px] text-slate-600 font-medium truncate max-w-[120px]">
-                              {trip.mitra?.name ? trip.mitra.name : trip.vehicle?.plateNumber || 'Mitra Nebeng'}
+                              {trip.mitra?.name ? trip.mitra.name : trip.vehicle?.plateNumber || 'Mitra SatuRute'}
                             </span>
                             {trip.mitra?.rating ? (
                               <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-amber-50 text-amber-800 text-[10px] font-bold rounded border border-amber-200/80">
@@ -991,7 +994,7 @@ export default function SearchTrip() {
               <div className="min-w-0">
                 <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Mitra Driver</span>
                 <p className="font-bold text-slate-800 text-[13px] truncate">
-                  {selectedTrip.mitra?.name || 'Mitra Nebeng'}
+                  {selectedTrip.mitra?.name || 'Mitra SatuRute'}
                 </p>
                 <p className="text-[11px] text-slate-500 truncate">
                   {selectedTrip.vehicle?.model || 'Kendaraan Resmi'} {selectedTrip.vehicle?.plateNumber ? `(${selectedTrip.vehicle.plateNumber})` : ''}

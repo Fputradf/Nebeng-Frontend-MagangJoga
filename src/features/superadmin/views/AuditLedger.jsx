@@ -469,7 +469,7 @@ export default function AuditFinancialReport() {
         rightSigner={{
           role: 'Mengetahui & Menyetujui,',
           title: 'Direktur Keuangan & Operasional',
-          name: 'Direktorat Keuangan PT Nebeng Transport Indonesia',
+          name: 'Direktorat Keuangan PT SatuRute Transport Indonesia',
           idLabel: 'Otoritas Verifikasi',
           idValue: 'DIR-FIN-001',
           locationDate: `Surakarta, ${new Date().toLocaleDateString('id-ID', {
@@ -478,7 +478,7 @@ export default function AuditFinancialReport() {
             year: 'numeric',
           })}`,
         }}
-        notes="Laporan audit ini merupakan ringkasan resmi sistem dana jaminan Nebeng Transport. Seluruh data tercatat permanen pada ledger database."
+        notes="Laporan audit ini merupakan ringkasan resmi sistem dana jaminan SatuRute Transport. Seluruh data tercatat permanen pada ledger database."
       />
     </div>
   );

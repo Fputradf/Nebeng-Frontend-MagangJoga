@@ -52,7 +52,7 @@ export default function PhoneCallModal({
       return;
     }
     const textMsg = encodeURIComponent(
-      `Halo ${targetName}, saya menghubungi terkait perjalanan Nebeng TRIP #${tripId || '-'}.`
+      `Halo ${targetName}, saya menghubungi terkait perjalanan SatuRute TRIP #${tripId || '-'}.`
     );
     window.open(`https://wa.me/${waNumber}?text=${textMsg}`, '_blank', 'noopener,noreferrer');
   };
@@ -160,7 +160,7 @@ export default function PhoneCallModal({
         <div className="flex items-start gap-2 p-3 bg-amber-50/60 rounded-xl border border-amber-200/60 text-[11px] text-amber-800 leading-relaxed">
           <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
           <span>
-            Harap gunakan kontak hanya untuk keperluan koordinasi titik penjemputan atau keamanan perjalanan Nebeng.
+            Harap gunakan kontak hanya untuk keperluan koordinasi titik penjemputan atau keamanan perjalanan SatuRute.
           </span>
         </div>
 

@@ -5,6 +5,7 @@ import { useAppConfig } from './context/AppConfigContext';
 import Login from './features/auth/Login';
 import Register from './features/auth/Register';
 import ForgotPassword from './features/auth/ForgotPassword';
+import CustomerLandingPage from './features/landing/CustomerLandingPage';
 import ProtectedRoute from './components/routing/ProtectedRoute';
 import { useAuth } from './context/AuthContext';
 
@@ -121,6 +122,8 @@ export default function App() {
   useEffect(() => {
     const path = location.pathname;
     const PAGE_TITLES = {
+      '/':                             'Beranda - Cari & Booking Trip',
+      '/landing':                      'Beranda - Cari & Booking Trip',
       '/login':                        'Masuk',
       '/register':                     'Daftar',
       '/forgot-password':              'Lupa Password',
@@ -201,7 +204,22 @@ export default function App() {
       <PWAInstallPrompt />
       <PWAUpdateToast />
       <Routes>
-      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route
+        path="/"
+        element={
+          <GuestRoute>
+            <CustomerLandingPage />
+          </GuestRoute>
+        }
+      />
+      <Route
+        path="/landing"
+        element={
+          <GuestRoute>
+            <CustomerLandingPage />
+          </GuestRoute>
+        }
+      />
 
       <Route
         path="/login"

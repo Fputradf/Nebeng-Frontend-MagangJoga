@@ -568,7 +568,7 @@ export default function OperatorFinancial() {
               year: 'numeric',
             })}`,
           }}
-          notes="Berita acara serah terima kas ini merupakan dokumen resmi operasional shift kasir Nebeng Pos Terminal. Data terekonsiliasi otomatis dengan backend."
+          notes="Berita acara serah terima kas ini merupakan dokumen resmi operasional shift kasir SatuRute Pos Terminal. Data terekonsiliasi otomatis dengan backend."
         />
       </div>
     </div>

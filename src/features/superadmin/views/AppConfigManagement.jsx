@@ -230,7 +230,7 @@ export default function AppConfigManagement() {
         />
         <StatCard
           title="Nama Aplikasi"
-          value={nameInput.trim() || 'Nebeng'}
+          value={nameInput.trim() || 'SatuRute'}
           subtitle="Tampil di sidebar & tab"
           badgeText="Resmi"
           badgeVariant="emerald"
@@ -319,7 +319,7 @@ export default function AppConfigManagement() {
                     maxLength={35}
                     value={nameInput}
                     onChange={(e) => setNameInput(e.target.value)}
-                    placeholder="Contoh: Nebeng"
+                    placeholder="Contoh: SatuRute"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#10367D]/20 focus:border-[#10367D]"
                   />
                   <span className="absolute right-3.5 top-2.5 text-xs text-slate-400 font-medium">

@@ -395,7 +395,7 @@ export default function SosTriggerModal({ isOpen, onClose, ticket }) {
                 Sinyal SOS Berhasil Dikirim
               </h2>
               <p className="text-sm text-neutral-300 leading-relaxed">
-                Peringatan darurat dan koordinat lokasi terkini Anda telah disiarkan langsung ke <span className="font-bold text-white">Mitra Pos, Admin Wilayah, dan Super Admin</span> Nebeng.
+                Peringatan darurat dan koordinat lokasi terkini Anda telah disiarkan langsung ke <span className="font-bold text-white">Mitra Pos, Admin Wilayah, dan Super Admin</span> SatuRute.
               </p>
             </div>
 

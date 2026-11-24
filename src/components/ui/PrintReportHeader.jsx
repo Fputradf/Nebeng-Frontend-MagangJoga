@@ -6,7 +6,7 @@ import logoImage from '../../assets/LOGO.png';
  */
 export default function PrintReportHeader({
   title = 'LAPORAN RESMI',
-  subtitle = 'NEBENG SMART MOBILITY SYSTEM',
+  subtitle = 'SATURUTE SMART MOBILITY SYSTEM',
   documentNumber,
   printedAt,
   printedBy,
@@ -29,18 +29,18 @@ export default function PrintReportHeader({
         <div className="flex items-center gap-3.5">
           <img
             src={logoImage}
-            alt="Nebeng Logo"
+            alt="SatuRute Logo"
             className="w-12 h-12 object-contain shrink-0"
           />
           <div>
             <h1 className="text-[17px] font-black uppercase tracking-wider text-slate-900 leading-tight">
-              PT NEBENG TRANSPORT INDONESIA
+              PT SATURUTE TRANSPORT INDONESIA
             </h1>
             <p className="text-[11px] font-bold text-[#10367D] uppercase tracking-wide">
               {subtitle}
             </p>
             <p className="text-[10px] text-slate-500">
-              Sistem Otomasi Transportasi & Logistik Terintegrasi • www.nebeng.id
+              Sistem Otomasi Transportasi & Logistik Terintegrasi • www.saturute.id
             </p>
           </div>
         </div>

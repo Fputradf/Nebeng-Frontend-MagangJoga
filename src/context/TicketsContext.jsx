@@ -17,7 +17,7 @@ const seedTickets = [
   {
     id: 'TKT-2026-001',
     type: 'penumpang',
-    title: 'Nebeng Penumpang',
+    title: 'SatuRute Penumpang',
     from: 'Pos Solo Kota',
     to: 'Pos Semarang Indah',
     mitra: 'Budi Santoso',
@@ -36,7 +36,7 @@ const seedTickets = [
   {
     id: 'TKT-2026-002',
     type: 'barang',
-    title: 'Nebeng Barang (Paket Elektronik)',
+    title: 'SatuRute Barang (Paket Elektronik)',
     from: 'Pos Solo Kota',
     to: 'Pos Yogyakarta Pusat',
     mitra: 'Siti Aminah',
@@ -55,7 +55,7 @@ const seedTickets = [
   {
     id: 'TKT-2026-003',
     type: 'penumpang',
-    title: 'Nebeng Penumpang',
+    title: 'SatuRute Penumpang',
     from: 'Pos Yogyakarta Pusat',
     to: 'Pos Solo Kota',
     mitra: 'Joko Widodo',

@@ -387,7 +387,7 @@ export default function PricingPolicyManagement() {
             <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-200/80 space-y-3">
               <div className="flex items-center gap-1.5 text-[#10367D] font-bold text-[13px]">
                 <Bike size={14} />
-                <span>NEBENG MOTOR</span>
+                <span>SATURUTE MOTOR</span>
               </div>
 
               <div className="space-y-2">
@@ -424,7 +424,7 @@ export default function PricingPolicyManagement() {
             <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-200/80 space-y-3">
               <div className="flex items-center gap-1.5 text-[#10367D] font-bold text-[13px]">
                 <Car size={14} />
-                <span>NEBENG MOBIL</span>
+                <span>SATURUTE MOBIL</span>
               </div>
 
               <div className="space-y-2">

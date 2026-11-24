@@ -34,7 +34,7 @@ export default function PrivacyPolicyModal({ isOpen, onClose }) {
             </div>
             <div>
               <h2 id="privacy-modal-title" className="text-base sm:text-lg font-bold text-white">
-                Kebijakan Privasi Nebeng
+                Kebijakan Privasi SatuRute
               </h2>
               <p className="text-xs text-blue-100">
                 Kepatuhan Standar UU Perlindungan Data Pribadi (UU PDP No. 27 Tahun 2022)
@@ -59,10 +59,10 @@ export default function PrivacyPolicyModal({ isOpen, onClose }) {
               <div className="w-6 h-6 rounded-lg bg-blue-100 text-[#10367D] flex items-center justify-center text-xs">
                 1
               </div>
-              <h3>Prinsip Utama Privasi di Platform Nebeng</h3>
+              <h3>Prinsip Utama Privasi di Platform SatuRute</h3>
             </div>
             <p className="text-slate-600 pl-8">
-              Platform Nebeng beroperasi dengan prinsip keamanan, transparansi, dan perlindungan data pribadi penuh. Kami hanya mengumpulkan informasi yang benar-benar esensial untuk memverifikasi keamanan perjalanan antarkota dan mencegah kejahatan atau penipuan tiket.
+              Platform SatuRute beroperasi dengan prinsip keamanan, transparansi, dan perlindungan data pribadi penuh. Kami hanya mengumpulkan informasi yang benar-benar esensial untuk memverifikasi keamanan perjalanan antarkota dan mencegah kejahatan atau penipuan tiket.
             </p>
           </div>
 

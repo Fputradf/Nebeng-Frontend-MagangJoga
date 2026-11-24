@@ -37,7 +37,7 @@ export default function TermsOfServiceModal({ isOpen, onClose, onAccept }) {
                 Syarat & Ketentuan Layanan
               </h2>
               <p className="text-xs text-blue-100">
-                Aturan operasional dan etika penggunaan platform Nebeng
+                Aturan operasional dan etika penggunaan platform SatuRute
               </p>
             </div>
           </div>
@@ -55,7 +55,7 @@ export default function TermsOfServiceModal({ isOpen, onClose, onAccept }) {
         <div className="p-5 sm:p-6 overflow-y-auto space-y-4 text-xs sm:text-sm text-slate-600 leading-relaxed">
           <div className="p-3 bg-blue-50/60 rounded-xl border border-blue-100/80 text-blue-900 flex items-center gap-2.5 text-xs">
             <ShieldCheck className="w-4 h-4 text-blue-600 shrink-0" />
-            <span>Harap baca dengan cermat ketentuan sebelum menggunakan platform Nebeng.</span>
+            <span>Harap baca dengan cermat ketentuan sebelum menggunakan platform SatuRute.</span>
           </div>
 
           <div className="space-y-1">
@@ -74,7 +74,7 @@ export default function TermsOfServiceModal({ isOpen, onClose, onAccept }) {
               Sistem Pembayaran Aman & Transaksi Terlindungi
             </h3>
             <p className="pl-6 text-slate-600">
-              Semua transaksi ongkos perjalanan dan kargo wajib melalui dompet digital Nebeng yang dilindungi sistem pembayaran aman. Dana pengemudi dicairkan hanya setelah perjalanan dikonfirmasi tiba dengan sukses.
+              Semua transaksi ongkos perjalanan dan kargo wajib melalui dompet digital SatuRute yang dilindungi sistem pembayaran aman. Dana pengemudi dicairkan hanya setelah perjalanan dikonfirmasi tiba dengan sukses.
             </p>
           </div>
 
@@ -84,7 +84,7 @@ export default function TermsOfServiceModal({ isOpen, onClose, onAccept }) {
               Peraturan Penjemputan di Pos Mitra
             </h3>
             <p className="pl-6 text-slate-600">
-              Seluruh perjalanan wajib diawali dan diakhiri pada Pos Mitra resmi yang telah terdaftar dalam sistem Nebeng. Penumpang wajib tiba minimal 15 menit sebelum waktu keberangkatan untuk proses validasi QR code oleh Mitra Pos.
+              Seluruh perjalanan wajib diawali dan diakhiri pada Pos Mitra resmi yang telah terdaftar dalam sistem SatuRute. Penumpang wajib tiba minimal 15 menit sebelum waktu keberangkatan untuk proses validasi QR code oleh Mitra Pos.
             </p>
           </div>
 
@@ -104,7 +104,7 @@ export default function TermsOfServiceModal({ isOpen, onClose, onAccept }) {
               Kebijakan Pembatalan & Pengembalian Dana
             </h3>
             <p className="pl-6 text-slate-600">
-              Pembatalan yang diajukan lebih dari 6 jam sebelum keberangkatan berhak mendapatkan refund 100% ke saldo Dompet Nebeng. Pembatalan 2-6 jam dikenakan potongan 15% untuk kompensasi persiapan mitra.
+              Pembatalan yang diajukan lebih dari 6 jam sebelum keberangkatan berhak mendapatkan refund 100% ke saldo Dompet SatuRute. Pembatalan 2-6 jam dikenakan potongan 15% untuk kompensasi persiapan mitra.
             </p>
           </div>
         </div>
