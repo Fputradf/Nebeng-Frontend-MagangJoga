@@ -75,7 +75,7 @@ export default function CustomerProfileModal({
     userData?.fullName ||
     profile?.name ||
     profile?.fullName ||
-    'Pelanggan Nebeng';
+    'Pelanggan SatuRute';
 
   const initial = displayName.charAt(0).toUpperCase() || 'P';
 

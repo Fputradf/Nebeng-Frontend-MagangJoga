@@ -85,12 +85,12 @@ export default function PWAInstallPrompt() {
     <div className="fixed bottom-4 inset-x-4 sm:inset-x-auto sm:right-6 sm:w-96 z-50 bg-white rounded-2xl shadow-2xl border border-purple-100 p-4 transition-all duration-300 animate-in fade-in slide-in-from-bottom-5">
       <div className="flex items-start gap-3">
         <div className="w-11 h-11 rounded-xl bg-purple-50 flex items-center justify-center shrink-0 border border-purple-100 overflow-hidden p-1.5">
-          <img src={logoImg} alt="Nebeng" className="w-full h-full object-contain" />
+          <img src={logoImg} alt="SatuRute" className="w-full h-full object-contain" />
         </div>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between">
-            <h4 className="text-sm font-semibold text-gray-900">Pasang Aplikasi Nebeng</h4>
+            <h4 className="text-sm font-semibold text-gray-900">Pasang Aplikasi SatuRute</h4>
             <button
               onClick={handleDismiss}
               className="text-gray-400 hover:text-gray-600 p-1 -mr-1 rounded-lg"

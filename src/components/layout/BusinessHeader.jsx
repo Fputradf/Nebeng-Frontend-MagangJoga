@@ -12,7 +12,7 @@ export default function BusinessHeader() {
     <header className="h-14 bg-white/85 backdrop-blur-md border-b border-neutral-100/80 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30 font-sans">
       {/* Breadcrumb Navigation */}
       <nav className="flex items-center gap-1.5 text-[14px] font-medium text-gray-500">
-        <span className="text-gray-400 capitalize">Nebeng</span>
+        <span className="text-gray-400 capitalize">SatuRute</span>
         {pathSegments.map((segment, index) => (
           <div key={index} className="flex items-center gap-1.5 capitalize">
             <ChevronRight className="w-3 h-3 text-gray-300" />

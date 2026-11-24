@@ -8,8 +8,8 @@ import { useAppConfig } from '../context/AppConfigContext';
  * @param {string} pageTitle - Judul halaman (misal: "Dashboard", "Login")
  *
  * @example
- * usePageTitle('Dashboard'); // → "Nebeng - Dashboard"
- * usePageTitle();            // → "Nebeng"
+ * usePageTitle('Dashboard'); // → "SatuRute - Dashboard"
+ * usePageTitle();            // → "SatuRute"
  */
 export function usePageTitle(pageTitle) {
   const { setPageTitle } = useAppConfig();

@@ -107,7 +107,7 @@ export default function OperatorSidebar({
             <div className="flex items-center gap-2.5">
               <img
                 src={appLogo || logoAsset}
-                alt={`Logo ${appName || 'Nebeng'}`}
+                alt={`Logo ${appName || 'SatuRute'}`}
                 className="h-8 w-8 object-contain shrink-0 filter brightness-0 invert"
                 onError={(e) => {
                   e.target.onerror = null;
@@ -115,7 +115,7 @@ export default function OperatorSidebar({
                 }}
               />
               <span className="font-bold text-white text-lg tracking-tight leading-none truncate max-w-[140px]">
-                {appName || 'Nebeng'}
+                {appName || 'SatuRute'}
               </span>
             </div>
             <button

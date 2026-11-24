@@ -457,7 +457,7 @@ export default function FinancialReportPage() {
         rightSigner={{
           role: 'Mengetahui & Menyetujui,',
           title: 'Manajer Operasional Wilayah',
-          name: 'Manajer Regional PT Nebeng Transport Indonesia',
+          name: 'Manajer Regional PT SatuRute Transport Indonesia',
           idLabel: 'Otoritas Wilayah',
           idValue: user?.regionName || 'Regional Jawa Tengah',
           locationDate: `Surakarta, ${new Date().toLocaleDateString('id-ID', {
@@ -466,7 +466,7 @@ export default function FinancialReportPage() {
             year: 'numeric',
           })}`,
         }}
-        notes="Laporan keuangan ini mencerminkan mutasi dan komisi transaksi aktual di pos-pos wilayah yang bersangkutan. Dicetak otomatis melalui sistem Nebeng."
+        notes="Laporan keuangan ini mencerminkan mutasi dan komisi transaksi aktual di pos-pos wilayah yang bersangkutan. Dicetak otomatis melalui sistem SatuRute."
       />
 
       {/* MODAL DETAIL TRANSAKSI */}

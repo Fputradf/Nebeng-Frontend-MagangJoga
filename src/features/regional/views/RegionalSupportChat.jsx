@@ -26,7 +26,7 @@ import BaseModal from '../../../components/ui/BaseModal';
 const CANNED_RESPONSES = [
   'Halo! Berkas Anda telah kami terima dan saat ini sedang kami verifikasi secara manual. Mohon ditunggu ya.',
   'Tiket digital Anda sah dan terdata di sistem. Silakan tiba di Pos Mitra 15 menit sebelum waktu keberangkatan.',
-  'Dana pembatalan tiket telah diproses kembali ke saldo Dompet Digital Nebeng Anda. Silakan cek menu Dompet.',
+  'Dana pembatalan tiket telah diproses kembali ke saldo Dompet Digital SatuRute Anda. Silakan cek menu Dompet.',
   'Pos Mitra di wilayah kami beroperasi 24 jam dengan Mitra Pos yang siap membantu validasi QR tiket.',
   'Mohon pastikan foto KTP dan foto selfie wajah Anda jelas tanpa masker/kacamata hitam agar verifikasi dapat disetujui.',
 ];

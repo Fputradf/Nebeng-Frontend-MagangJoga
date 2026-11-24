@@ -9,7 +9,7 @@ import TermsOfServiceModal from './TermsOfServiceModal';
 export default function AuthLayout({
   children,
   logo,
-  brandName = 'Nebeng',
+  brandName = 'SatuRute',
   title,
   subtitle,
   illustration = defaultIllustration,

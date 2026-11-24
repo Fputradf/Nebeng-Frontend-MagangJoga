@@ -131,7 +131,7 @@ export const supportChatService = {
     );
 
     const safeRegion = typeof region === 'string' ? region : (region?.name || 'Jawa Barat (Bandung)');
-    const safeUserName = typeof userName === 'string' ? userName : (userRole === 'mitra' ? 'Mitra Pengemudi' : 'Customer Nebeng');
+    const safeUserName = typeof userName === 'string' ? userName : (userRole === 'mitra' ? 'Mitra Pengemudi' : 'Customer SatuRute');
 
     if (!activeTicket) {
       const newId = `TKT-${new Date().getFullYear()}-${String(tickets.length + 1).padStart(3, '0')}`;
@@ -155,7 +155,7 @@ export const supportChatService = {
             sender: 'admin',
             senderName: `Admin Wilayah ${safeRegion ? safeRegion.replace(/Admin\s*Wilayah/i, '').trim() : 'Pusat'}`,
             senderRole: 'regional_admin',
-            text: `Halo ${safeUserName}! Selamat datang di Layanan Bantuan Admin Wilayah Nebeng. Ada kendala perjalanan, verifikasi, atau tiket yang bisa kami bantu?`,
+            text: `Halo ${safeUserName}! Selamat datang di Layanan Bantuan Admin Wilayah SatuRute. Ada kendala perjalanan, verifikasi, atau tiket yang bisa kami bantu?`,
             timestamp: new Date().toISOString(),
           },
         ],

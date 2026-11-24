@@ -172,7 +172,7 @@ export default function CustomerAccountSettings() {
   }, [customerProfile?.photoDataUrl]);
 
   const isVerified = liveUser?.statusVerification === 'approved';
-  const displayName = liveUser?.name || customerProfile?.fullName || 'Pelanggan Nebeng';
+  const displayName = liveUser?.name || customerProfile?.fullName || 'Pelanggan SatuRute';
   const displayPhone = liveUser?.phone || customerProfile?.phone || '-';
   const displayNik = liveUser?.nik || liveUser?.profile?.ktpNumber || customerProfile?.nik || '-';
   const memberSince = liveUser?.createdAt

@@ -441,9 +441,9 @@ export default function MitraDashboard() {
 
   const serviceCategories = [
     { id: 'all', label: 'Semua Layanan', icon: Layers, desc: 'Semua moda transportasi' },
-    { id: 'motor', label: 'Nebeng Motor', icon: Bike, desc: 'Trip roda dua & penumpang' },
-    { id: 'mobil', label: 'Nebeng Mobil', icon: Car, desc: 'Trip mobil berpenumpang' },
-    { id: 'barang', label: 'Nebeng Barang', icon: Package, desc: 'Titip barang & ekspedisi' },
+    { id: 'motor', label: 'SatuRute Motor', icon: Bike, desc: 'Trip roda dua & penumpang' },
+    { id: 'mobil', label: 'SatuRute Mobil', icon: Car, desc: 'Trip mobil berpenumpang' },
+    { id: 'barang', label: 'SatuRute Barang', icon: Package, desc: 'Titip barang & ekspedisi' },
   ];
 
   const serviceCounts = useMemo(() => {

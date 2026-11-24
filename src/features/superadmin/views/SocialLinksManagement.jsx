@@ -267,7 +267,7 @@ export default function SocialLinksManagement() {
               Manajemen Link Sosial Media
             </h1>
             <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
-              Kelola tautan sosial media resmi Nebeng yang ditampilkan pada form login.
+              Kelola tautan sosial media resmi SatuRute yang ditampilkan pada form login.
             </p>
           </div>
 

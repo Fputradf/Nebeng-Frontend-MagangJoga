@@ -6,7 +6,7 @@ const AppConfigContext = createContext(null);
 const STORAGE_KEY = 'nebeng_app_config';
 
 const DEFAULT_CONFIG = {
-  appName: 'Nebeng',
+  appName: 'SatuRute',
   appLogo: defaultLogo,
   appTagline: 'Platform Ekosistem Transportasi & Logistik Antarkota',
   isCustom: false,
@@ -18,8 +18,9 @@ export function AppConfigProvider({ children }) {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
+        const resolvedName = parsed.appName?.trim();
         return {
-          appName: parsed.appName?.trim() || DEFAULT_CONFIG.appName,
+          appName: (resolvedName && resolvedName !== 'Nebeng') ? resolvedName : DEFAULT_CONFIG.appName,
           appLogo: parsed.appLogo || DEFAULT_CONFIG.appLogo,
           appTagline: parsed.appTagline || DEFAULT_CONFIG.appTagline,
           isCustom: Boolean(parsed.isCustom),

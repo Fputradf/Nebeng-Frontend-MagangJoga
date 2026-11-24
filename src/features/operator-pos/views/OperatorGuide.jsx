@@ -30,10 +30,10 @@ export default function OperatorGuide() {
           <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 sm:p-5 text-blue-900">
             <h4 className="font-bold text-base mb-1.5 flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-blue-600" />
-              Prinsip Dasar Sistem Pos Nebeng
+              Prinsip Dasar Sistem Pos SatuRute
             </h4>
             <p className="text-sm leading-relaxed text-blue-800">
-              Sistem Nebeng menggunakan model <strong>Penahanan Dana Checkpoint</strong>. Dana pembayaran customer diamankan di sistem rekening bersama dan <strong>HANYA</strong> dicairkan ke dompet Mitra ketika perjalanan/pengiriman telah diverifikasi tiba di <strong>Pos Tujuan</strong>.
+              Sistem SatuRute menggunakan model <strong>Penahanan Dana Checkpoint</strong>. Dana pembayaran customer diamankan di sistem rekening bersama dan <strong>HANYA</strong> dicairkan ke dompet Mitra ketika perjalanan/pengiriman telah diverifikasi tiba di <strong>Pos Tujuan</strong>.
             </p>
           </div>
 

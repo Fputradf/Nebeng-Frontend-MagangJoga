@@ -1,11 +1,11 @@
 /**
- * FAQ komprehensif seputar Project Nebeng
+ * FAQ komprehensif seputar Project SatuRute
  * Ditujukan untuk Customer, Mitra Pengemudi, Admin Wilayah, dan Calon Pengguna (Guest).
  */
 
 export const FAQ_CATEGORIES = [
   { id: 'all', label: 'Semua Kategori', icon: 'Layers' },
-  { id: 'about', label: 'Tentang Nebeng', icon: 'Sparkles' },
+  { id: 'about', label: 'Tentang SatuRute', icon: 'Sparkles' },
   { id: 'booking', label: 'Pemesanan & Tiket', icon: 'Ticket' },
   { id: 'payment', label: 'Tarif & Dompet', icon: 'Wallet' },
   { id: 'pos', label: 'Pos & Titik Jemput', icon: 'MapPin' },
@@ -14,15 +14,15 @@ export const FAQ_CATEGORIES = [
 ];
 
 export const PROJECT_FAQS = [
-  // --- TENTANG NEBENG ---
+  // --- TENTANG SATURUTE ---
   {
     id: 'faq-about-1',
     category: 'about',
     targetRoles: ['all', 'customer', 'mitra', 'guest'],
-    question: 'Apa itu platform Nebeng dan apa bedanya dengan travel biasa?',
-    answer: `Nebeng adalah platform ride-sharing perjalanan antar kota dan antar wilayah berbasis pos komunitas terintegrasi.
+    question: 'Apa itu platform SatuRute dan apa bedanya dengan travel biasa?',
+    answer: `SatuRute adalah platform ride-sharing perjalanan antar kota dan antar wilayah berbasis pos komunitas terintegrasi.
     
-Perbedaan utama Nebeng dengan travel konvensional:
+Perbedaan utama SatuRute dengan travel konvensional:
 1. **Verifikasi Biometrik & Identitas Ketat**: Seluruh pengguna (Customer & Mitra) diverifikasi oleh Admin Wilayah dan sistem biometrik wajah untuk menjamin keamanan bersama.
 2. **Titik Jemput Pos Mitra Resmi**: Penumpang berkumpul di Pos Mitra resmi terdaftar, bukan sembarang pinggir jalan, sehingga waktu keberangkatan tepat waktu dan terpantau mitra pos.
 3. **Sistem Tiket Digital & QR Code**: Tiket diterbitkan secara digital dengan QR validasi ganda saat check-in di pos asal dan tiba di pos tujuan.
@@ -34,7 +34,7 @@ Perbedaan utama Nebeng dengan travel konvensional:
     category: 'about',
     targetRoles: ['all', 'customer', 'mitra', 'guest'],
     question: 'Siapa itu Admin Wilayah dan apa perannya bagi pengguna?',
-    answer: `Admin Wilayah adalah perwakilan operasional resmi Nebeng di tingkat regional (kota/kabupaten). Admin Wilayah bertugas:
+    answer: `Admin Wilayah adalah perwakilan operasional resmi SatuRute di tingkat regional (kota/kabupaten). Admin Wilayah bertugas:
 - Memverifikasi berkas KTP, SIM, STNK, dan biometrik wajah Mitra & Pengguna di wilayahnya.
 - Mengawasi operasional Pos Mitra dan Mitra Pos di wilayahnya.
 - Menangani kendala langsung (bantuan chat, pelaporan trip darurat, kendala tiket, dan sengketa perjalanan) secara cepat dan tanggap.`,
@@ -46,12 +46,12 @@ Perbedaan utama Nebeng dengan travel konvensional:
     id: 'faq-booking-1',
     category: 'booking',
     targetRoles: ['all', 'customer', 'guest'],
-    question: 'Bagaimana cara mencari dan memesan tiket perjalanan di Nebeng?',
+    question: 'Bagaimana cara mencari dan memesan tiket perjalanan di SatuRute?',
     answer: `1. Masuk ke menu **Cari & Booking Trip** di dashboard Customer.
 2. Pilih kota keberangkatan, kota tujuan, dan tanggal keberangkatan yang diinginkan.
 3. Pilih armada/mitra yang tersedia sesuai jam keberangkatan dan ketersediaan kursi.
 4. Tentukan pos keberangkatan dan pos penurunan yang paling dekat dengan lokasi Anda.
-5. Selesaikan pembayaran menggunakan Saldo Dompet Nebeng atau metode pembayaran instan.
+5. Selesaikan pembayaran menggunakan Saldo Dompet SatuRute atau metode pembayaran instan.
 6. Tiket digital otomatis tersimpan di menu **Tiket Saya**, dan QR Code dinamis dapat diakses langsung di menu **Digital QR Aktif**.`,
     helpfulCount: 185,
   },
@@ -87,7 +87,7 @@ Waktu ini diperlukan oleh Mitra Pos untuk:
     category: 'payment',
     targetRoles: ['all', 'customer', 'mitra'],
     question: 'Bagaimana cara kerja Saldo Dompet dan Rekening Bersama (Escrow)?',
-    answer: `Nebeng menerapkan sistem **Escrow Terproteksi**:
+    answer: `SatuRute menerapkan sistem **Escrow Terproteksi**:
 - Ketika penumpang memesan tiket, dana dipotong dari dompet penumpang dan disimpan aman di rekening penampung (Escrow).
 - Dana TIDAK langsung ditransfer ke mitra agar keamanan penumpang terjamin.
 - Setelah penumpang tiba di pos tujuan dan scan QR selesai divalidasi oleh Mitra Pos, dana secara otomatis dicairkan ke saldo Mitra.
@@ -125,7 +125,7 @@ Masuk ke menu Saldo & Komisi, pilih Tarik Saldo ke rekening bank terdaftar Anda.
     id: 'faq-mitra-1',
     category: 'mitra',
     targetRoles: ['all', 'mitra', 'guest'],
-    question: 'Bagaimana syarat dan cara mendaftar menjadi Mitra Pengemudi Nebeng?',
+    question: 'Bagaimana syarat dan cara mendaftar menjadi Mitra Pengemudi SatuRute?',
     answer: `Syarat menjadi Mitra:
 - Memiliki KTP & SIM yang masih aktif (SIM A untuk mobil / SIM C untuk motor).
 - Memiliki kendaraan pribadi layak jalan dengan STNK aktif dan pajak hidup.
@@ -150,8 +150,8 @@ Jika dalam 24 jam akun Anda belum diverifikasi atau ada berkas yang perlu diperb
     id: 'faq-security-1',
     category: 'security',
     targetRoles: ['all', 'customer', 'mitra', 'guest'],
-    question: 'Mengapa Nebeng mewajibkan verifikasi KTP dan Biometrik Wajah?',
-    answer: `Perjalanan nebeng antarkota mempertemukan pengemudi dan penumpang dalam satu ruang kendaraan selama beberapa jam. Untuk mencegah kejahatan, akun palsu, atau penipuan:
+    question: 'Mengapa SatuRute mewajibkan verifikasi KTP dan Biometrik Wajah?',
+    answer: `Perjalanan transportasi antarkota mempertemukan pengemudi dan penumpang dalam satu ruang kendaraan selama beberapa jam. Untuk mencegah kejahatan, akun palsu, atau penipuan:
 - Kami memastikan identitas asli setiap orang terdata dengan benar.
 - Verifikasi wajah memastikan akun tidak disalahgunakan atau dipinjamkan ke orang lain.
 - Data KTP dan biometrik disimpan dengan enkripsi tingkat tinggi (AES-256) dan diawasi ketat oleh Admin Wilayah sesuai standar perlindungan data pribadi (UU PDP).`,
@@ -162,7 +162,7 @@ Jika dalam 24 jam akun Anda belum diverifikasi atau ada berkas yang perlu diperb
     category: 'security',
     targetRoles: ['all', 'customer', 'mitra', 'guest'],
     question: 'Apakah data pribadi saya aman dan tidak disebarluaskan?',
-    answer: `Sangat aman. Nebeng berkomitmen menjaga privasi pengguna:
+    answer: `Sangat aman. SatuRute berkomitmen menjaga privasi pengguna:
 - Data KTP dan biometrik Anda HANYA digunakan oleh Admin Wilayah untuk verifikasi keamanan awal.
 - Penumpang dan mitra lain HANYA dapat melihat nama depan, foto profil terverifikasi, dan rating Anda.
 - Nomor telepon pribadi, nomor KTP, dan alamat rumah tidak pernah dipublikasikan secara terbuka.`,

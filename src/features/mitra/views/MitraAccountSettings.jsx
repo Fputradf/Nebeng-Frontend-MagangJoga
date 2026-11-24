@@ -759,7 +759,7 @@ export default function MitraAccountSettings() {
   const displayName =
     liveUser?.name ||
     profileDraft.fullName ||
-    'Mitra Nebeng';
+    'Mitra SatuRute';
 
   return (
     <div className="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
@@ -1536,7 +1536,7 @@ export default function MitraAccountSettings() {
               {
                 key: 'promoNews',
                 label: 'Promo & Info Program Mitra',
-                desc: 'Info promo, insentif, dan pengumuman dari Nebeng.',
+                desc: 'Info promo, insentif, dan pengumuman dari SatuRute.',
               },
             ].map((item) => (
               <div

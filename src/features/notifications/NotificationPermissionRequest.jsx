@@ -85,7 +85,7 @@ export default function NotificationPermissionRequest() {
           <div>
             <div className="flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-widest text-emerald-600">
               <Sparkles className="w-3 h-3" />
-              <span>Nebeng Real-Time</span>
+              <span>SatuRute Real-Time</span>
             </div>
             <h3 className="text-[19px] font-bold text-neutral-900 leading-tight">
               Aktifkan Notifikasi Web

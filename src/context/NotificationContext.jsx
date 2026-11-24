@@ -671,9 +671,9 @@ export const NotificationProvider = ({ children }) => {
           };
 
           if (swReg && swReg.showNotification) {
-            swReg.showNotification(notification.title || 'Nebeng', notifOptions);
+            swReg.showNotification(notification.title || 'SatuRute', notifOptions);
           } else {
-            new Notification(notification.title || 'Nebeng', notifOptions);
+            new Notification(notification.title || 'SatuRute', notifOptions);
           }
         } catch (notifErr) {
           console.warn('[Notification Socket] Could not trigger desktop popup:', notifErr);
@@ -711,7 +711,7 @@ export const NotificationProvider = ({ children }) => {
 
       // Update document title
       if (unreadCount.total > 0) {
-        document.title = `(${unreadCount.total}) Nebeng`;
+        document.title = `(${unreadCount.total}) SatuRute`;
       }
     });
 
@@ -721,9 +721,9 @@ export const NotificationProvider = ({ children }) => {
       setUnreadCount(unreadCount.total || 0);
 
       if (unreadCount.total > 0) {
-        document.title = `(${unreadCount.total}) Nebeng`;
+        document.title = `(${unreadCount.total}) SatuRute`;
       } else {
-        document.title = 'Nebeng';
+        document.title = 'SatuRute';
       }
     });
 

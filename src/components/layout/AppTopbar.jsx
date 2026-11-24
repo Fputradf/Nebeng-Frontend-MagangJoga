@@ -71,7 +71,7 @@ export default function AppTopbar({ profile, roleLabel, onProfileClick, onToggle
             }}
           />
           <span className="hidden font-display text-lg font-extrabold leading-none text-brand-500 min-[380px]:inline truncate max-w-[150px]">
-            {appName || 'Nebeng'}
+            {appName || 'SatuRute'}
           </span>
         </div>
 

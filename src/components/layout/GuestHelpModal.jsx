@@ -141,7 +141,7 @@ export default function GuestHelpModal({ isOpen, onClose, onNavigateLogin, onNav
             </div>
             <div>
               <h2 className="text-lg font-extrabold text-white">
-                Pusat Bantuan & FAQ Nebeng
+                Pusat Bantuan & FAQ SatuRute
               </h2>
               <p className="text-xs text-blue-200">
                 Panduan resmi perjalanan antar kota, tiket, dan pos mitra

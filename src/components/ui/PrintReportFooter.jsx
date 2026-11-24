@@ -22,7 +22,7 @@ export default function PrintReportFooter({
       year: 'numeric',
     }),
   },
-  notes = 'Laporan ini sah dan diterbitkan secara digital oleh Nebeng Core Financial Engine. Tidak memerlukan tanda tangan basah untuk keperluan pembuktian internal.',
+  notes = 'Laporan ini sah dan diterbitkan secara digital oleh SatuRute Core Financial Engine. Tidak memerlukan tanda tangan basah untuk keperluan pembuktian internal.',
 }) {
   return (
     <div className="hidden print:block pt-8 mt-8 border-t border-slate-300 break-inside-avoid page-break-inside-avoid text-slate-800">
@@ -79,7 +79,7 @@ export default function PrintReportFooter({
           {notes}
         </p>
         <div className="text-right shrink-0">
-          <p className="font-mono font-bold text-slate-700">NEBENG-CORE-SECURE // LIVE-AUDIT-TRAIL</p>
+          <p className="font-mono font-bold text-slate-700">SATURUTE-CORE-SECURE // LIVE-AUDIT-TRAIL</p>
           <p>Halaman Dokumen Resmi</p>
         </div>
       </div>
