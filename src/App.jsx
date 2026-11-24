@@ -204,22 +204,8 @@ export default function App() {
       <PWAInstallPrompt />
       <PWAUpdateToast />
       <Routes>
-      <Route
-        path="/"
-        element={
-          <GuestRoute>
-            <CustomerLandingPage />
-          </GuestRoute>
-        }
-      />
-      <Route
-        path="/landing"
-        element={
-          <GuestRoute>
-            <CustomerLandingPage />
-          </GuestRoute>
-        }
-      />
+      <Route path="/" element={<CustomerLandingPage />} />
+      <Route path="/landing" element={<CustomerLandingPage />} />
 
       <Route
         path="/login"

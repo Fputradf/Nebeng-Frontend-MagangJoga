@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { BannerSlider } from '../../components/ui/BannerSlider';
 import { useAppConfig } from '../../context/AppConfigContext';
+import { useAuth } from '../../context/AuthContext';
 import apiClient from '../../services/apiClient';
 import logoAsset from '../../assets/LOGO.png';
 
@@ -27,6 +28,7 @@ const TODAY_ISO = new Date().toISOString().split('T')[0];
 export default function CustomerLandingPage() {
   const navigate = useNavigate();
   const { appName, appLogo } = useAppConfig();
+  const { isAuthenticated } = useAuth();
 
   const [origin, setOrigin] = useState('');
   const [destination, setDestination] = useState('');
@@ -72,9 +74,13 @@ export default function CustomerLandingPage() {
     const queryString = params.toString();
     const destinationPath = queryString ? `/customer/booking?${queryString}` : '/customer/booking';
 
-    navigate('/login', {
-      state: { from: destinationPath },
-    });
+    if (isAuthenticated) {
+      navigate(destinationPath);
+    } else {
+      navigate('/login', {
+        state: { from: destinationPath },
+      });
+    }
   };
 
   return (
@@ -115,22 +121,35 @@ export default function CustomerLandingPage() {
 
           {/* Nav Actions - Button Sejajar Panjangnya */}
           <div className="flex items-center gap-2 sm:gap-3">
-            <button
-              type="button"
-              onClick={() => navigate('/login')}
-              className="w-24 sm:w-28 h-10 sm:h-11 inline-flex items-center justify-center gap-1.5 rounded-xl text-xs sm:text-sm font-bold text-brand-700 bg-brand-50 hover:bg-brand-100/80 border border-brand-200 transition active:scale-95 cursor-pointer shadow-xs"
-            >
-              <LogIn className="w-4 h-4 text-brand-600" />
-              <span>Masuk</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate('/register')}
-              className="w-24 sm:w-28 h-10 sm:h-11 inline-flex items-center justify-center gap-1.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-brand-600 hover:bg-brand-700 shadow-soft transition active:scale-95 cursor-pointer"
-            >
-              <UserPlus className="w-4 h-4 text-white" />
-              <span>Daftar</span>
-            </button>
+            {isAuthenticated ? (
+              <button
+                type="button"
+                onClick={() => navigate('/customer')}
+                className="w-28 sm:w-36 h-10 sm:h-11 inline-flex items-center justify-center gap-1.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-brand-600 hover:bg-brand-700 shadow-soft transition active:scale-95 cursor-pointer"
+              >
+                <span>Dashboard</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => navigate('/login')}
+                  className="w-24 sm:w-28 h-10 sm:h-11 inline-flex items-center justify-center gap-1.5 rounded-xl text-xs sm:text-sm font-bold text-brand-700 bg-brand-50 hover:bg-brand-100/80 border border-brand-200 transition active:scale-95 cursor-pointer shadow-xs"
+                >
+                  <LogIn className="w-4 h-4 text-brand-600" />
+                  <span>Masuk</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate('/register')}
+                  className="w-24 sm:w-28 h-10 sm:h-11 inline-flex items-center justify-center gap-1.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-brand-600 hover:bg-brand-700 shadow-soft transition active:scale-95 cursor-pointer"
+                >
+                  <UserPlus className="w-4 h-4 text-white" />
+                  <span>Daftar</span>
+                </button>
+              </>
+            )}
           </div>
         </div>
       </header>

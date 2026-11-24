@@ -88,9 +88,16 @@ apiClient.interceptors.response.use(
 
     // Jika error 401 dan bukan sedang mencoba endpoint login/refresh itu sendiri
     if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url.includes('/auth/')) {
-      // Jangan coba refresh token jika sudah di halaman login
+      // Jangan coba refresh token jika sudah di halaman publik (beranda/landing/auth)
       const currentPath = window.location.pathname;
-      if (currentPath === '/login' || currentPath === '/register' || currentPath === '/forgot-password') {
+      const isPublicPath =
+        currentPath === '/' ||
+        currentPath === '/landing' ||
+        currentPath === '/login' ||
+        currentPath === '/register' ||
+        currentPath === '/forgot-password';
+
+      if (isPublicPath) {
         sessionStorage.removeItem(AUTH_STORAGE_KEY);
         localStorage.removeItem(AUTH_STORAGE_KEY);
         return Promise.reject(error);
@@ -139,9 +146,16 @@ apiClient.interceptors.response.use(
         sessionStorage.removeItem(AUTH_STORAGE_KEY);
         localStorage.removeItem(AUTH_STORAGE_KEY);
         
-        // Cek apakah sudah di halaman login untuk mencegah infinite loop
+        // Cek apakah di halaman publik untuk mencegah redirect paksa saat berada di landing page/auth
         const currentPath = window.location.pathname;
-        if (currentPath !== '/login' && currentPath !== '/register' && currentPath !== '/forgot-password') {
+        const isPublicPath =
+          currentPath === '/' ||
+          currentPath === '/landing' ||
+          currentPath === '/login' ||
+          currentPath === '/register' ||
+          currentPath === '/forgot-password';
+
+        if (!isPublicPath) {
           window.location.href = '/login';
         }
         
