@@ -15,6 +15,7 @@ import {
 import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
 import apiClient from '../../../services/apiClient';
+import { compressImageFile } from '../../../utils/imageUpload';
 
 const PRIMARY_COLOR = '#10367D';
 const PRIMARY_HOVER = '#0C2C66';
@@ -368,15 +369,19 @@ export default function BiometricOnboarding() {
 
   const uploadFileToServer = async (fileObj) => {
     if (!fileObj) return '';
+    const compressedFile = await compressImageFile(fileObj, { maxWidth: 1400, quality: 0.8 });
     const formDataObj = new FormData();
-    formDataObj.append('file', fileObj);
+    formDataObj.append('file', compressedFile);
     formDataObj.append('destination', 'uploads/verifications');
 
     try {
-      const response = await apiClient.post('/uploads/file', formDataObj, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      return response.data.filePath || response.data.url;
+      const response = await apiClient.post('/uploads/file', formDataObj);
+      const uploadedPath =
+        response.data?.filePath || response.data?.url || response.data?.data?.filePath;
+      if (!uploadedPath) {
+        throw new Error('Path file tidak dikembalikan oleh server.');
+      }
+      return uploadedPath;
     } catch (err) {
       console.error('Gagal upload file fisik:', err);
       throw err;

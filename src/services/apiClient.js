@@ -49,6 +49,20 @@ apiClient.interceptors.request.use((config) => {
     config.url = config.url.replace('/api/', '/');
   }
 
+  // Biarkan browser/Axios menentukan boundary multipart secara otomatis untuk FormData
+  if (config.data instanceof FormData) {
+    if (config.headers) {
+      if (typeof config.headers.delete === 'function') {
+        config.headers.delete('Content-Type');
+      }
+      delete config.headers['Content-Type'];
+      delete config.headers['content-type'];
+    }
+    if (!config.timeout || config.timeout < 30000) {
+      config.timeout = 30000;
+    }
+  }
+
   const parsed = getStoredAuth();
   if (parsed) {
     const token = 

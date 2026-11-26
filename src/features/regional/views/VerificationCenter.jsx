@@ -19,6 +19,7 @@ import BaseModal from '../../../components/ui/BaseModal';
 import { useAuth } from '../../../context/AuthContext';
 import apiClient from '../../../services/apiClient';
 import { regionalService } from '../../../services/regionalService';
+import { resolveUploadUrl } from '../../../utils/imageUpload';
 
 export default function VerificationCenterPage() {
   const toast = useToast();
@@ -47,23 +48,10 @@ export default function VerificationCenterPage() {
   ];
 
   const getFullFileUrl = (path) => {
-    if (!path || typeof path !== 'string') return null;
-
-    if (
-      path.startsWith('blob:') ||
-      path.startsWith('http://') ||
-      path.startsWith('https://')
-    ) {
-      return path;
-    }
-
     const baseURL = apiClient.defaults.baseURL
       ? apiClient.defaults.baseURL.replace(/\/api\/?$/, '')
       : BASE_URL;
-
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-
-    return `${baseURL}${cleanPath}`;
+    return resolveUploadUrl(path, baseURL);
   };
 
   useEffect(() => {
@@ -94,7 +82,7 @@ export default function VerificationCenterPage() {
 
           const faceFile = rawFiles.find((f) =>
             ['face_id', 'liveness', 'face', 'avatar'].includes(
-              f.type?.toLowerCase()
+              (f.fileType || f.type)?.toLowerCase()
             )
           );
 
@@ -465,6 +453,63 @@ export default function VerificationCenterPage() {
               )}
             </tbody>
           </table>
+        </div>
+
+        <div className="sm:hidden divide-y divide-neutral-100">
+          {isLoadingVerification ? (
+            <div className="p-6 text-center text-xs text-neutral-400">Memuat antrean verifikasi...</div>
+          ) : paginatedData.length > 0 ? (
+            paginatedData.map((group) => {
+              const groupStatus = getGroupStatus(group);
+              const pendingCount = getGroupPendingCount(group);
+              return (
+                <div key={group.userId} className="p-4 space-y-2.5 text-[12px]">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="font-bold text-neutral-800 text-[13px]">{group.name}</div>
+                      <div className="text-[11px] font-bold text-[#10367D] font-mono">
+                        ID: {group.userId} • {group.role}
+                      </div>
+                    </div>
+                    <StatusBadge variant={getStatusVariant(groupStatus)}>{groupStatus}</StatusBadge>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {group.documents.map((doc) => (
+                      <span
+                        key={doc.id}
+                        className={`px-2 py-0.5 rounded-full text-[11px] font-bold border ${
+                          doc.status === 'Disetujui'
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            : doc.status === 'Ditolak'
+                              ? 'bg-rose-50 text-rose-700 border-rose-200'
+                              : 'bg-amber-50 text-amber-700 border-amber-200'
+                        }`}
+                      >
+                        {doc.type?.toUpperCase()}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-[11px] text-neutral-400">
+                      {pendingCount > 0 ? `${pendingCount} dokumen menunggu` : 'Semua dokumen ditinjau'}
+                    </span>
+                    <button
+                      onClick={() => handleOpenDetail(group)}
+                      className="px-3 py-1 bg-[#74B4D9]/15 hover:bg-[#74B4D9]/25 text-[#10367D] font-bold rounded-full transition cursor-pointer shadow-xs"
+                    >
+                      Review Berkas
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <EmptyState
+              icon={ShieldCheck}
+              title="Antrean Kosong"
+              description="Tidak ada antrean verifikasi di wilayah ini."
+            />
+          )}
         </div>
 
         {totalPages > 1 && (

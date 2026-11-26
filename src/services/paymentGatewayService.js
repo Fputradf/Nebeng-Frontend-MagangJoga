@@ -19,6 +19,14 @@ export const paymentGatewayService = {
     return res.data;
   },
 
+  // Upload foto struk bukti transfer ke server sebagai multipart file
+  uploadPaymentProof: async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await apiClient.post('/uploads/payment-proof', formData);
+    return res.data?.filePath || res.data?.url || res.data?.data?.filePath;
+  },
+
   // Customer mengunggah struk bukti transfer manual / QRIS
   submitManualPayment: async ({ orderId, proofUrl, senderName, bankName, senderAccount, notes }) => {
     const res = await apiClient.post('/payments/manual/submit', {

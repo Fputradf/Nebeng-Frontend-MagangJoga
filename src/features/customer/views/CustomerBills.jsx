@@ -18,6 +18,7 @@ import {
   ExternalLink,
   ChevronRight,
   Eye,
+  ShieldCheck,
 } from 'lucide-react';
 import paymentGatewayService from '../../../services/paymentGatewayService';
 import InAppCheckoutModal from '../components/InAppCheckoutModal';
@@ -107,27 +108,56 @@ export default function CustomerBills() {
       : cancelledOrders;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 pb-12 font-sans">
-      {/* Header Halaman */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
-            <Receipt className="w-7 h-7 text-blue-600" />
-            Pusat Riwayat Tagihan & Pembayaran
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Kelola tagihan yang menunggu pembayaran, riwayat transaksi lunas, dan pesanan yang dibatalkan.
-          </p>
-        </div>
+    <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-sans">
+      {/* ── BANNER CARD GRADIENT ── */}
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] p-6 text-white shadow-card sm:p-8">
+        <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10" />
+        <div className="absolute bottom-0 right-32 h-28 w-28 rounded-full bg-sky-300/20" />
+        <div className="relative flex flex-col gap-4 pb-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="w-2 h-2 rounded-full bg-sky-300 animate-pulse" />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-blue-200 flex items-center gap-1.5">
+                <Receipt className="w-3.5 h-3.5" /> TAGIHAN &amp; PEMBAYARAN
+              </span>
+            </div>
+            <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
+              Pusat Riwayat Tagihan &amp; Pembayaran
+            </h1>
+            <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
+              Kelola tagihan yang menunggu pembayaran, riwayat transaksi lunas, dan pesanan yang dibatalkan.
+            </p>
+          </div>
 
-        <button
-          onClick={loadOrders}
-          className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-2 self-start cursor-pointer"
-        >
-          <RotateCcw className="w-3.5 h-3.5" />
-          Muat Ulang
-        </button>
-      </div>
+          <div className="flex items-center gap-3 self-start md:self-auto">
+            <div className="px-4 py-2 rounded-2xl bg-white/15 border border-white/25 flex items-center gap-3 shadow-xs">
+              <div className="w-9 h-9 rounded-xl bg-white/20 text-white flex items-center justify-center font-black shrink-0 shadow-xs">
+                <Clock className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <div className="text-[10px] font-bold text-blue-100 uppercase tracking-wider">
+                  Menunggu Bayar
+                </div>
+                <div className="text-lg font-black text-white">
+                  {pendingOrders.length} Tagihan
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={loadOrders}
+              disabled={isLoading}
+              className="p-3 bg-white/15 hover:bg-white/25 border border-white/25 rounded-2xl text-white transition cursor-pointer shadow-xs disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              title="Muat ulang daftar tagihan"
+            >
+              <RotateCcw className={`w-4 h-4 text-white ${isLoading ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
+        </div>
+        <div className="absolute bottom-4 left-6 right-6 border-t border-dashed border-white/25 sm:left-8 sm:right-8" />
+        <span className="absolute bottom-[11px] right-6 h-2.5 w-2.5 rounded-full border-2 border-white bg-sky-300 sm:right-8" />
+      </section>
 
       {/* 3 Tab Navigasi */}
       <div className="grid grid-cols-3 gap-2 bg-slate-100 p-1.5 rounded-2xl border border-slate-200/80">
@@ -139,10 +169,10 @@ export default function CustomerBills() {
               : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          <Clock className="w-4 h-4 text-amber-500" />
+          <Clock className="w-4 h-4 text-blue-600" />
           <span>Menunggu Bayar</span>
           {pendingOrders.length > 0 && (
-            <span className="px-2 py-0.5 rounded-full text-xs font-black bg-rose-500 text-white animate-pulse">
+            <span className="px-2 py-0.5 rounded-full text-xs font-black bg-blue-600 text-white">
               {pendingOrders.length}
             </span>
           )}
@@ -222,7 +252,7 @@ export default function CustomerBills() {
                 key={order.id}
                 className={`bg-white rounded-2xl border p-5 transition shadow-xs hover:shadow-md flex flex-col justify-between gap-4 ${
                   isPending
-                    ? 'border-amber-300 ring-2 ring-amber-400/10'
+                    ? 'border-blue-200 ring-2 ring-blue-500/10'
                     : 'border-slate-200'
                 }`}
               >
@@ -235,7 +265,7 @@ export default function CustomerBills() {
                       <span
                         className={`px-2.5 py-0.5 rounded-full text-[11px] font-extrabold capitalize ${
                           isPending
-                            ? 'bg-amber-100 text-amber-800'
+                            ? 'bg-blue-100 text-blue-800'
                             : isPaid
                             ? 'bg-emerald-100 text-emerald-800'
                             : 'bg-slate-100 text-slate-500'
@@ -315,7 +345,7 @@ export default function CustomerBills() {
                 <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2.5">
                   <div className="text-[11px] text-slate-400 font-medium">
                     {isPending ? (
-                      <span className="flex items-center gap-1 text-amber-600 font-bold">
+                      <span className="flex items-center gap-1 text-blue-700 font-bold">
                         <Clock className="w-3.5 h-3.5" />
                         Harap selesaikan pembayaran sebelum batas waktu berakhir
                       </span>

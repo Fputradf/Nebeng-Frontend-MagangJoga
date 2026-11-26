@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import paymentGatewayService from '../../../services/paymentGatewayService';
 import { useToast } from '../../../context/ToastContext';
+import { compressImageFile } from '../../../utils/imageUpload';
 
 /* ========================================================================== */
 /* BRAND LOGO SVGs (Fintech Indonesia Authentic Style)                         */
@@ -172,6 +173,7 @@ export default function InAppCheckoutModal({
   const [senderAccount, setSenderAccount] = useState('');
   const [notes, setNotes] = useState('');
   const [proofImage, setProofImage] = useState(null);
+  const [proofFile, setProofFile] = useState(null);
   const [isSubmittingProof, setIsSubmittingProof] = useState(false);
   const [isProofSubmitted, setIsProofSubmitted] = useState(false);
 
@@ -194,6 +196,14 @@ export default function InAppCheckoutModal({
     setIsSuccessRedirecting(false);
     setSelectedChannel(null);
     setGatewayTab('qris_ewallet');
+    setProofFile(null);
+    setProofImage((prev) => {
+      if (prev && prev.startsWith('blob:')) URL.revokeObjectURL(prev);
+      return null;
+    });
+    setSenderName('');
+    setSenderAccount('');
+    setNotes('');
 
     loadConfig();
 
@@ -348,33 +358,50 @@ export default function InAppCheckoutModal({
     toast.success('File barcode QRIS (SVG) berhasil diunduh');
   };
 
+  const fileToDataUrl = (fileObj) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ''));
+      reader.onerror = () => reject(new Error('Gagal membaca file gambar.'));
+      reader.readAsDataURL(fileObj);
+    });
+
   // Upload Struk File Handler
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
+    const isImageMime = typeof file.type === 'string' && file.type.startsWith('image/');
+    const isImageExt = /\.(jpe?g|png|webp|gif|bmp|heic|heif)$/i.test(file.name || '');
+    if (!isImageMime && !isImageExt) {
       toast.error('Berkas bukti harus berupa gambar (JPG, PNG, atau WEBP).');
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Ukuran berkas struk maksimal 5MB.');
+    if (file.size > 15 * 1024 * 1024) {
+      toast.error('Ukuran berkas mentah maksimal 15MB.');
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      setProofImage(event.target.result);
-      toast.info('Foto struk transfer dipilih.');
-    };
-    reader.readAsDataURL(file);
+    const compressed = await compressImageFile(file, { maxWidth: 1400, quality: 0.8 });
+    if (compressed.size > 5 * 1024 * 1024) {
+      toast.error('Ukuran berkas struk setelah kompresi maksimal 5MB.');
+      return;
+    }
+
+    setProofFile(compressed);
+    setProofImage((prev) => {
+      if (prev && prev.startsWith('blob:')) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(compressed);
+    });
+    toast.info('Foto struk transfer dipilih.');
   };
 
   // Submit Manual Payment Proof
   const handleSubmitManualProof = async (e) => {
     e.preventDefault();
-    if (!proofImage) {
+    if (!proofFile && !proofImage) {
       toast.error('Silakan pilih foto struk bukti transfer terlebih dahulu.');
       return;
     }
@@ -385,9 +412,25 @@ export default function InAppCheckoutModal({
 
     setIsSubmittingProof(true);
     try {
+      let uploadedProofUrl = proofImage;
+      if (proofFile) {
+        try {
+          uploadedProofUrl = await paymentGatewayService.uploadPaymentProof(proofFile);
+        } catch (uploadErr) {
+          console.warn('Upload multipart gagal, menggunakan fallback base64 terkompresi:', uploadErr);
+          const smallProof = await compressImageFile(proofFile, { maxWidth: 900, quality: 0.72 });
+          uploadedProofUrl = await fileToDataUrl(smallProof);
+        }
+        if (!uploadedProofUrl) {
+          throw new Error('Gagal memproses file bukti pembayaran.');
+        }
+      } else if (uploadedProofUrl && uploadedProofUrl.startsWith('blob:')) {
+        throw new Error('Silakan pilih ulang foto struk bukti transfer.');
+      }
+
       const res = await paymentGatewayService.submitManualPayment({
         orderId: order.id,
-        proofUrl: proofImage,
+        proofUrl: uploadedProofUrl,
         senderName: senderName.trim(),
         bankName: `${manualTab === 'qris_static' ? 'QRIS Statis' : senderBank}`,
         senderAccount: senderAccount.trim() || undefined,
@@ -409,7 +452,8 @@ export default function InAppCheckoutModal({
       }
     } catch (err) {
       console.error('Gagal mengirim bukti transfer:', err);
-      toast.error(err.response?.data?.message || 'Gagal mengirim bukti pembayaran.');
+      const rawMsg = err.response?.data?.message || err.message || 'Gagal mengirim bukti pembayaran.';
+      toast.error(Array.isArray(rawMsg) ? rawMsg.join(', ') : rawMsg);
     } finally {
       setIsSubmittingProof(false);
     }
@@ -509,6 +553,37 @@ export default function InAppCheckoutModal({
             <div className="py-16 flex flex-col items-center justify-center gap-2">
               <div className="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin" />
               <p className="text-xs text-slate-500 font-medium">Memuat saluran pembayaran...</p>
+            </div>
+          ) : isProofSubmitted || paymentStatus === 'PENDING_VERIFICATION' ? (
+            <div className="bg-white rounded-2xl p-6 border border-blue-200 shadow-xs text-center space-y-4">
+              <div className="w-16 h-16 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mx-auto ring-8 ring-blue-50">
+                <Clock className="w-8 h-8" />
+              </div>
+
+              <div className="space-y-1">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold bg-blue-100 text-blue-800">
+                  Menunggu Verifikasi Admin
+                </span>
+                <h3 className="text-lg font-black text-slate-900 pt-1">
+                  Bukti Pembayaran Sudah Dikirim
+                </h3>
+                <p className="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed">
+                  Struk pembayaran Anda untuk pesanan <strong className="font-mono text-slate-700">{orderRefNumber}</strong> sebesar <strong className="text-slate-800">{formattedNominal}</strong> sedang ditinjau oleh admin.
+                </p>
+              </div>
+
+              <div className="p-3.5 bg-slate-50 border border-slate-200/70 rounded-xl text-left text-xs text-slate-600 space-y-1">
+                <p className="font-bold text-slate-800">Apa selanjutnya?</p>
+                <p>Status pembayaran akan otomatis berubah menjadi lunas setelah admin memverifikasi bukti transfer Anda.</p>
+              </div>
+
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm transition shadow-sm cursor-pointer"
+              >
+                Tutup &amp; Kembali
+              </button>
             </div>
           ) : activeMode === 'GATEWAY' ? (
             /* ============================================================== */
@@ -1016,7 +1091,7 @@ export default function InAppCheckoutModal({
                     <h4 className="font-bold text-slate-900 text-sm">Upload Struk Bukti Transfer</h4>
                   </div>
                   {isProofSubmitted && (
-                    <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800">
+                    <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800">
                       Sedang Diverifikasi
                     </span>
                   )}

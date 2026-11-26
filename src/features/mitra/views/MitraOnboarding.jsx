@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import StatusBadge from '../../../components/ui/StatusBadge';
 import apiClient from '../../../services/apiClient';
+import { compressImageFile } from '../../../utils/imageUpload';
 import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
 import { useNavigate } from 'react-router-dom';
@@ -435,19 +436,18 @@ export default function MitraOnboarding() {
   const uploadFileToServer = async (fileObj) => {
     if (!fileObj) return '';
 
+    const compressedFile = await compressImageFile(fileObj, { maxWidth: 1400, quality: 0.8 });
     const formDataObj = new FormData();
-    formDataObj.append('file', fileObj);
+    formDataObj.append('file', compressedFile);
     formDataObj.append('destination', 'uploads/verifications');
 
-    try {
-      const response = await apiClient.post('/uploads/file', formDataObj, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      return response.data?.filePath || response.data?.url || response.data?.data?.filePath || '';
-    } catch (err) {
-      console.error('Gagal upload berkas fisik:', err);
-      return '';
+    const response = await apiClient.post('/uploads/file', formDataObj);
+    const uploadedPath =
+      response.data?.filePath || response.data?.url || response.data?.data?.filePath;
+    if (!uploadedPath) {
+      throw new Error('Gagal mengunggah berkas verifikasi ke server.');
     }
+    return uploadedPath;
   };
 
   const targetDocs = isResubmissionMode ? rejectedDocTypes : ['ktp', 'sim', 'skck', 'stnk'];

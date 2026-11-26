@@ -20,6 +20,7 @@ import StatCard from '../../../components/ui/StatCard';
 import { useToast } from '../../../context/ToastContext';
 import { useConfirm } from '../../../context/ConfirmContext';
 import paymentGatewayService from '../../../services/paymentGatewayService';
+import { resolveUploadUrl } from '../../../utils/imageUpload';
 
 const MAX_IMAGE_SIZE = 3 * 1024 * 1024; // 3MB
 
@@ -822,7 +823,7 @@ export default function PaymentGatewayManagement() {
 
               <div className="max-h-[380px] overflow-auto rounded-xl border border-slate-200 bg-white p-2 w-full flex items-center justify-center">
                 <img
-                  src={selectedProofModal.proofUrl}
+                  src={resolveUploadUrl(selectedProofModal.proofUrl)}
                   alt="Bukti Transfer"
                   className="max-h-[360px] object-contain rounded-lg"
                 />

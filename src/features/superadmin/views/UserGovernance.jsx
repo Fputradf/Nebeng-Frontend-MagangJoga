@@ -96,6 +96,7 @@ export default function UserGovernance() {
   const [paginationMeta, setPaginationMeta] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [kycFilter, setKycFilter] = useState('All');
   const [selectedUser, setSelectedUser] = useState(null);
   const [actionModal, setActionModal] = useState(null);
   const [reason, setReason] = useState('');
@@ -240,8 +241,20 @@ export default function UserGovernance() {
       (statusFilter === 'Suspended' && user.status === 'suspended') ||
       (statusFilter === 'Blocked' && user.status === 'blocked');
 
-    return matchesSearch && matchesStatus;
+    const kycStatus = String(user.statusVerification || 'unverified').toLowerCase();
+    const matchesKyc =
+      kycFilter === 'All' || kycStatus === kycFilter.toLowerCase();
+
+    return matchesSearch && matchesStatus && matchesKyc;
   });
+
+  const getKycBadgeMeta = (statusVerification) => {
+    const val = String(statusVerification || 'unverified').toLowerCase();
+    if (val === 'approved') return { label: 'Terverifikasi', variant: 'emerald' };
+    if (val === 'pending') return { label: 'Menunggu Review', variant: 'amber' };
+    if (val === 'rejected') return { label: 'Ditolak', variant: 'rose' };
+    return { label: 'Belum KYC', variant: 'default' };
+  };
 
   const handleAddUser = async (e) => {
     e.preventDefault();
@@ -467,10 +480,10 @@ export default function UserGovernance() {
           )}
         </div>
 
-        <div className="flex items-center gap-2 self-end sm:self-auto">
+        <div className="flex flex-wrap items-center gap-2 self-end sm:self-auto">
           <span className="text-[13px] font-semibold text-neutral-500 flex items-center gap-1">
             <Filter size={12} />
-            Status:
+            Filter:
           </span>
           <select
             value={statusFilter}
@@ -481,6 +494,17 @@ export default function UserGovernance() {
             <option value="Active">Active (Aktif)</option>
             <option value="Suspended">Suspended (Ditangguhkan)</option>
             <option value="Blocked">Blocked (Diblokir)</option>
+          </select>
+          <select
+            value={kycFilter}
+            onChange={(e) => setKycFilter(e.target.value)}
+            className="bg-neutral-50 border border-neutral-200 rounded-full px-3 py-1.5 text-[13px] font-semibold text-neutral-700 focus:outline-none focus:ring-2 focus:ring-[#74B4D9] cursor-pointer"
+          >
+            <option value="All">Semua KYC</option>
+            <option value="pending">KYC Menunggu Review</option>
+            <option value="approved">KYC Terverifikasi</option>
+            <option value="rejected">KYC Ditolak</option>
+            <option value="unverified">Belum KYC</option>
           </select>
         </div>
       </div>
@@ -494,15 +518,17 @@ export default function UserGovernance() {
                 <th className="py-3 px-5">Peran (Role)</th>
                 <th className="py-3 px-5">Kontak PII (Protected)</th>
                 <th className="py-3 px-5">Status Akun</th>
+                <th className="py-3 px-5">Status KYC</th>
                 <th className="py-3 px-5 text-right">Aksi Super-Override</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 text-[12px]">
               {isLoadingUsers ? (
-                <SkeletonTableRows rows={4} columns={5} />
+                <SkeletonTableRows rows={4} columns={6} />
               ) : filteredUsers.length > 0 ? (
                 filteredUsers.map((user) => {
                   const isUnmasked = unmaskedUsers[user.id];
+                  const kycMeta = getKycBadgeMeta(user.statusVerification);
                   return (
                     <tr key={user.id} className="hover:bg-[#74B4D9]/10 transition-colors">
                       <td className="py-3.5 px-5">
@@ -536,6 +562,11 @@ export default function UserGovernance() {
                       <td className="py-3.5 px-5">
                         <StatusBadge variant={getStatusVariant(user.status)}>
                           {user.status === 'active' ? 'Aktif' : user.status === 'suspended' ? 'Disuspend' : 'Diblokir'}
+                        </StatusBadge>
+                      </td>
+                      <td className="py-3.5 px-5">
+                        <StatusBadge variant={kycMeta.variant}>
+                          {kycMeta.label}
                         </StatusBadge>
                       </td>
                       <td className="py-3.5 px-5 text-right">
@@ -583,7 +614,7 @@ export default function UserGovernance() {
                 })
               ) : (
                 <tr>
-                  <td colSpan="5">
+                  <td colSpan="6">
                     <EmptyState
                       icon={User}
                       title="Pengguna Tidak Ditemukan"
@@ -594,6 +625,39 @@ export default function UserGovernance() {
               )}
             </tbody>
           </table>
+        </div>
+
+        <div className="sm:hidden divide-y divide-neutral-100">
+          {filteredUsers.length > 0 ? (
+            filteredUsers.map((user) => {
+              const kycMeta = getKycBadgeMeta(user.statusVerification);
+              return (
+                <div key={user.id} className="p-4 space-y-2.5 text-[12px]">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="font-bold text-neutral-800 text-[13px]">{user.name}</div>
+                      <div className="text-[11px] font-mono text-[#10367D] font-bold">ID: {String(user.id)}</div>
+                    </div>
+                    <RoleBadge role={user.role} />
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <StatusBadge variant={getStatusVariant(user.status)}>
+                      {user.status === 'active' ? 'Aktif' : user.status === 'suspended' ? 'Disuspend' : 'Diblokir'}
+                    </StatusBadge>
+                    <StatusBadge variant={kycMeta.variant}>
+                      KYC: {kycMeta.label}
+                    </StatusBadge>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <EmptyState
+              icon={User}
+              title="Pengguna Tidak Ditemukan"
+              description="Tidak ada pengguna yang cocok dengan pencarian atau filter status."
+            />
+          )}
         </div>
 
         {paginationMeta && paginationMeta.totalPages > 1 && (

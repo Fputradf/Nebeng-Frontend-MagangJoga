@@ -28,7 +28,16 @@ const TODAY_ISO = new Date().toISOString().split('T')[0];
 export default function CustomerLandingPage() {
   const navigate = useNavigate();
   const { appName, appLogo } = useAppConfig();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, role } = useAuth();
+
+  const roleHomeMap = {
+    admin: '/admin/dashboard',
+    regional: '/regional/dashboard',
+    operator: '/operator-pos/dashboard',
+    mitra: '/mitra/dashboard',
+    customer: '/customer',
+  };
+  const dashboardPath = roleHomeMap[role] || '/customer';
 
   const [origin, setOrigin] = useState('');
   const [destination, setDestination] = useState('');
@@ -124,7 +133,7 @@ export default function CustomerLandingPage() {
             {isAuthenticated ? (
               <button
                 type="button"
-                onClick={() => navigate('/customer')}
+                onClick={() => navigate(dashboardPath)}
                 className="w-28 sm:w-36 h-10 sm:h-11 inline-flex items-center justify-center gap-1.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-brand-600 hover:bg-brand-700 shadow-soft transition active:scale-95 cursor-pointer"
               >
                 <span>Dashboard</span>
