@@ -55,6 +55,15 @@ export const paymentGatewayService = {
     return res.data;
   },
 
+  // Superadmin edit status pembayaran manual secara langsung
+  updateManualPaymentStatus: async (paymentId, { status, reviewNotes }) => {
+    const res = await apiClient.patch(`/payments/admin/manual-payments/${paymentId}/status`, {
+      status,
+      reviewNotes,
+    });
+    return res.data;
+  },
+
   // Auto-polling status pembayaran
   checkPaymentStatus: async (orderId) => {
     const res = await apiClient.get(`/payments/check-status/${orderId}`);

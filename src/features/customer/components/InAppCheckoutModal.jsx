@@ -991,7 +991,7 @@ export default function InAppCheckoutModal({
                       <h4 className="font-black text-slate-900 text-base">{manualConfig.bankName}</h4>
                     </div>
                     <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800">
-                      Bebas Biaya Admin
+                      {Number(order.customerFee || 0) > 0 ? 'Tanpa Biaya Transfer' : 'Bebas Biaya Admin'}
                     </span>
                   </div>
 

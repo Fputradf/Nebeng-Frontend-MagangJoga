@@ -15,6 +15,7 @@ const OPERATOR_MENU_PATH = {
   'Dashboard': 'dashboard',
   'Kehadiran': 'manifest',
   'Scan QR': 'scanner',
+  'Log Darurat SOS': 'sos-logs',
   'Panduan': 'guide',
   'Pengaturan': 'pengaturan',
 

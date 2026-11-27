@@ -8,6 +8,8 @@ import {
   Clock,
   AlertTriangle,
   MapPin,
+  FileCheck,
+  CreditCard,
 } from 'lucide-react';
 import { useNotification } from '../../context/NotificationContext';
 import { useAuth } from '../../context/AuthContext';
@@ -143,6 +145,17 @@ export default function NotificationBell({ basePath }) {
       return;
     }
 
+    // 1.5. Superadmin KYC & Manual Payment Verification
+    if (dataType === 'kyc_verification_submitted') {
+      navigateTo('/admin/verifikasi-kyc');
+      return;
+    }
+
+    if (dataType === 'manual_payment_submitted') {
+      navigateTo('/admin/pembayaran');
+      return;
+    }
+
     // 2. Chat messages
     if (notification.type === 'chat_message' && notification.conversationId) {
       if (isMitra) {
@@ -232,6 +245,12 @@ export default function NotificationBell({ basePath }) {
     }
     if (type === 'chat_message') {
       return <MessageCircle className="w-4 h-4 text-blue-500" />;
+    }
+    if (dataType === 'kyc_verification_submitted') {
+      return <FileCheck className="w-4 h-4 text-indigo-600" />;
+    }
+    if (dataType === 'manual_payment_submitted') {
+      return <CreditCard className="w-4 h-4 text-amber-600" />;
     }
     if (
       type === 'payment_success' ||

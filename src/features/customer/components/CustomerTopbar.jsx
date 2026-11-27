@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 
 import { BASE_URL } from '../../../config/env';
 import apiClient from '../../../services/apiClient';
-import logoAsset from '../../../assets/logo.png';
+import logoAsset from '../../../assets/LOGO.png';
 import NotificationBell from '../../../components/ui/NotificationBell';
+import { useAppConfig } from '../../../context/AppConfigContext';
 
 const formatTanggal = new Intl.DateTimeFormat('id-ID', {
   weekday: 'long',
@@ -22,6 +23,7 @@ function getWaktu(jam) {
 
 
 export default function CustomerTopbar({ profile, onProfileClick }) {
+  const { appName, appLogo } = useAppConfig();
   const [userData, setUserData] = useState(null);
 
   useEffect(() => {
@@ -66,12 +68,16 @@ export default function CustomerTopbar({ profile, onProfileClick }) {
     <div className="text-[#10367D] pl-4 pr-4 sm:pr-6 lg:px-8 pt-4 pb-4 flex items-center justify-between sticky top-0 z-10 font-['Inter'] bg-white/85 backdrop-blur-md border-b border-neutral-100/80">
       <div className="flex items-center gap-2.5 lg:hidden">
         <img
-          src={logoAsset}
-          alt="Logo SatuRute"
+          src={appLogo || logoAsset}
+          alt={`Logo ${appName || 'SatuRute'}`}
           className="h-8 w-8 object-contain shrink-0"
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = logoAsset;
+          }}
         />
         <span className="font-bold text-[23px] tracking-wide leading-none">
-          SatuRute
+          {appName || 'SatuRute'}
         </span>
       </div>
       <div className="min-w-0 flex-1">

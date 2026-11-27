@@ -177,30 +177,25 @@ export default function SanctionManagement() {
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
       {/* ── BANNER GRADIENT ── */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#0c2353] via-[#10367D] to-[#1e58b8] p-6 text-white shadow-card sm:p-8">
-        <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10 blur-xl pointer-events-none" />
-        <div className="absolute bottom-0 right-32 h-28 w-28 rounded-full bg-amber-400/20 blur-lg pointer-events-none" />
-        
-        <div className="relative flex flex-col gap-4 pb-2 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-              <span className="text-[11px] font-bold uppercase tracking-widest text-amber-300">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
+        <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
+        <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 mb-1 min-w-0">
+              <span className="w-2 h-2 rounded-full bg-accent animate-pulse shrink-0" />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-accent truncate">
                 SISTEM TATA KELOLA KEPATUHAN & SANKSI
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+            <h1 className="font-display text-xl sm:text-2xl font-bold text-white tracking-tight truncate">
               Konfigurasi Kebijakan Sanksi
             </h1>
-            <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
-              Atur matriks penalti skor pelanggaran mitra, toleransi waktu pembatalan, suspensi otomatis berjenjang, dan evaluasi permohonan banding.
-            </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5 shrink-0 self-start sm:self-auto">
             <button
               onClick={handleResetDefaults}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold backdrop-blur-xs transition cursor-pointer border border-white/15"
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold backdrop-blur-xs transition cursor-pointer border border-white/15 whitespace-nowrap"
             >
               <RotateCcw className="w-4 h-4" />
               Reset Bawaan
@@ -208,22 +203,22 @@ export default function SanctionManagement() {
             <button
               onClick={handleSaveSettings}
               disabled={isSaving}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-bold shadow-lg shadow-amber-400/20 transition cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-blue-50 text-[#10367D] text-xs font-bold shadow-sm transition cursor-pointer disabled:opacity-50 whitespace-nowrap"
             >
               <Save className="w-4 h-4" />
               {isSaving ? 'Menyimpan...' : 'Simpan Kebijakan'}
             </button>
           </div>
         </div>
-
-        {/* NOTIFIKASI SUKSES */}
-        {successNotice && (
-          <div className="mt-4 p-3 bg-emerald-500/20 border border-emerald-400/40 rounded-xl flex items-center gap-2.5 text-xs text-emerald-100 animate-fadeIn">
-            <CheckCircle2 className="w-4 h-4 text-emerald-300 shrink-0" />
-            <span>Perubahan parameter sanksi telah berhasil disimpan dan disinkronkan ke seluruh sistem!</span>
-          </div>
-        )}
       </section>
+
+      {/* NOTIFIKASI SUKSES */}
+      {successNotice && (
+        <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2.5 text-xs text-emerald-800 animate-fadeIn">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+          <span>Perubahan parameter sanksi telah berhasil disimpan dan disinkronkan ke seluruh sistem!</span>
+        </div>
+      )}
 
       {/* ── STATS CARDS ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -232,8 +227,9 @@ export default function SanctionManagement() {
           value={`${settings.lateToleranceMinutes || 15} Menit`}
           subtitle="Batas auto-cancel trip & tiket"
           badgeText="Otomatis"
-          badgeVariant="indigo"
+          badgeVariant="blue"
           icon={Clock}
+          iconVariant="blue"
           variant="light"
         />
         <StatCard
@@ -241,8 +237,9 @@ export default function SanctionManagement() {
           value={`${settings.baseScore || 100} Poin`}
           subtitle="Reputasi standar akun baru"
           badgeText="Standar"
-          badgeVariant="emerald"
+          badgeVariant="blue"
           icon={ShieldCheck}
+          iconVariant="blue"
           variant="light"
         />
         <StatCard
@@ -250,8 +247,9 @@ export default function SanctionManagement() {
           value={`< ${settings.warningThreshold || 80} Poin`}
           subtitle="Notifikasi teguran otomatis"
           badgeText="Atensi"
-          badgeVariant="amber"
+          badgeVariant="blue"
           icon={AlertTriangle}
+          iconVariant="blue"
           variant="light"
         />
         <StatCard
@@ -259,8 +257,9 @@ export default function SanctionManagement() {
           value={`< ${settings.suspensionThreshold || 50} Poin`}
           subtitle="Pembekuan akun otomatis"
           badgeText="Kritis"
-          badgeVariant="rose"
+          badgeVariant="blue"
           icon={UserX}
+          iconVariant="blue"
           variant="light"
         />
         <StatCard
@@ -268,9 +267,10 @@ export default function SanctionManagement() {
           value={`${pendingAppealsCount} Berkas`}
           subtitle="Perlu peninjauan Super Admin"
           badgeText={pendingAppealsCount > 0 ? 'Perlu Review' : 'Terkendali'}
-          badgeVariant={pendingAppealsCount > 0 ? 'rose' : 'emerald'}
+          badgeVariant="blue"
           icon={Gavel}
-          variant="primary"
+          iconVariant="blue"
+          variant="light"
         />
       </div>
 
@@ -330,95 +330,67 @@ export default function SanctionManagement() {
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 pt-2">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-[#10367D]" />
-                  Batas Toleransi Telat (Menit)
-                </label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    min="5"
-                    max="120"
-                    value={settings.lateToleranceMinutes || 15}
-                    onChange={(e) => handleGlobalSettingChange('lateToleranceMinutes', e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#10367D]/20 focus:border-[#10367D] font-bold text-slate-900"
-                  />
-                  <span className="absolute right-3.5 top-2.5 text-xs text-slate-400 font-medium">
-                    Menit
-                  </span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 pt-2">
+              {[
+                {
+                  key: 'lateToleranceMinutes',
+                  label: 'Batas Toleransi Telat',
+                  unit: 'Menit',
+                  min: 5,
+                  max: 120,
+                  value: settings.lateToleranceMinutes || 15,
+                  help: 'Toleransi hadir di pos asal sebelum trip & tiket otomatis dibatalkan.',
+                },
+                {
+                  key: 'earlyCancelHours',
+                  label: 'Batas Pembatalan Dini',
+                  unit: 'Jam',
+                  min: 1,
+                  max: 48,
+                  value: settings.earlyCancelHours || 4,
+                  help: 'Pembatalan di atas batas jam sebelum berangkat masuk kategori sanksi ringan.',
+                },
+                {
+                  key: 'warningThreshold',
+                  label: 'Ambang Skor Peringatan',
+                  unit: 'Poin',
+                  min: 10,
+                  max: 100,
+                  value: settings.warningThreshold || 80,
+                  help: 'Notifikasi teguran dikirim otomatis ke perangkat mitra.',
+                },
+                {
+                  key: 'suspensionThreshold',
+                  label: 'Ambang Skor Suspensi',
+                  unit: 'Poin',
+                  min: 0,
+                  max: 90,
+                  value: settings.suspensionThreshold || 50,
+                  help: 'Akun dibekukan otomatis jika skor turun di bawah batas ini.',
+                },
+              ].map((field) => (
+                <div key={field.key} className="flex flex-col">
+                  <label className="text-xs font-semibold text-slate-700 mb-1.5 min-h-[32px] flex items-end leading-snug">
+                    {field.label}
+                  </label>
+                  <div className="flex items-center rounded-xl border border-slate-200 bg-white overflow-hidden focus-within:ring-2 focus-within:ring-[#10367D]/20 focus-within:border-[#10367D]">
+                    <input
+                      type="number"
+                      min={field.min}
+                      max={field.max}
+                      value={field.value}
+                      onChange={(e) => handleGlobalSettingChange(field.key, e.target.value)}
+                      className="w-full min-w-0 px-3.5 py-2.5 text-sm font-bold text-slate-900 focus:outline-none"
+                    />
+                    <span className="px-3 py-2.5 bg-slate-50 border-l border-slate-200 text-xs text-slate-500 font-semibold whitespace-nowrap shrink-0">
+                      {field.unit}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-1.5 leading-relaxed">
+                    {field.help}
+                  </p>
                 </div>
-                <p className="text-[11px] text-slate-500 mt-1">
-                  Batas toleransi hadir di pos asal sebelum trip & tiket otomatis tercancel oleh sistem.
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  Batas Waktu Pembatalan Dini (Jam)
-                </label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    min="1"
-                    max="48"
-                    value={settings.earlyCancelHours || 4}
-                    onChange={(e) => handleGlobalSettingChange('earlyCancelHours', e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#10367D]/20 focus:border-[#10367D]"
-                  />
-                  <span className="absolute right-3.5 top-2.5 text-xs text-slate-400 font-medium">
-                    Jam Sebelum Berangkat
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-500 mt-1">
-                  Bila mitra membatalkan di atas jam ini dikategorikan pembatalan dini (sanksi ringan).
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  Ambang Skor Peringatan
-                </label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    min="10"
-                    max="100"
-                    value={settings.warningThreshold || 80}
-                    onChange={(e) => handleGlobalSettingChange('warningThreshold', e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#10367D]/20 focus:border-[#10367D]"
-                  />
-                  <span className="absolute right-3.5 top-2.5 text-xs text-slate-400 font-medium">
-                    Poin
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-500 mt-1">
-                  Pemberitahuan peringatan dikirim otomatis ke perangkat mitra.
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  Ambang Skor Suspensi Otomatis
-                </label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    min="0"
-                    max="90"
-                    value={settings.suspensionThreshold || 50}
-                    onChange={(e) => handleGlobalSettingChange('suspensionThreshold', e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#10367D]/20 focus:border-[#10367D]"
-                  />
-                  <span className="absolute right-3.5 top-2.5 text-xs text-slate-400 font-medium">
-                    Poin
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-500 mt-1">
-                  Akun dibekukan bila skor akumulasi sanksi aktif turun di bawah nilai ini.
-                </p>
-              </div>
+              ))}
             </div>
           </div>
 
@@ -428,119 +400,87 @@ export default function SanctionManagement() {
               Object.entries(settings.policies).map(([key, policy]) => (
                 <div
                   key={key}
-                  className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 space-y-4 hover:border-slate-300 transition"
+                  className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 flex flex-col justify-between gap-4 hover:border-slate-300 transition"
                 >
-                  <div className="flex items-start justify-between gap-3 pb-3 border-b border-slate-100">
-                    <div>
+                  <div className="space-y-4">
+                    <div className="pb-3 border-b border-slate-100 md:min-h-[84px]">
                       <div className="flex items-center gap-2">
-                        <ShieldAlert className="w-4 h-4 text-rose-600 shrink-0" />
+                        <ShieldAlert className="w-4 h-4 text-[#10367D] shrink-0" />
                         <h3 className="text-sm font-bold text-slate-900">{policy.label}</h3>
                       </div>
-                      <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                      <p className="text-xs text-slate-500 mt-1 leading-relaxed">
                         {policy.description}
                       </p>
                     </div>
-                  </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    {/* Tier 1 */}
-                    <div className="bg-slate-50/70 p-3.5 rounded-xl border border-slate-200/60 space-y-3">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">
-                        Tier 1 (Pelanggaran Awal)
-                      </span>
-                      <div>
-                        <label className="block text-[11px] text-slate-600 font-medium mb-1">
-                          Potongan Skor
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="number"
-                            min="0"
-                            max="100"
-                            value={policy.tier1ScoreDeduction}
-                            onChange={(e) =>
-                              handlePolicyChange(key, 'tier1ScoreDeduction', Number(e.target.value) || 0)
-                            }
-                            className="w-full px-3 py-2 text-xs bg-white rounded-lg border border-slate-200 focus:border-[#10367D] focus:outline-hidden"
-                          />
-                          <span className="absolute right-2.5 top-2 text-[11px] text-slate-400">
-                            Poin
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {[
+                        {
+                          tierLabel: 'Tier 1 (Awal)',
+                          tierColor: 'text-slate-600',
+                          scoreField: 'tier1ScoreDeduction',
+                          daysField: 'tier1SuspensionDays',
+                          maxDays: 30,
+                        },
+                        {
+                          tierLabel: 'Tier 2 (Berulang)',
+                          tierColor: 'text-[#10367D]',
+                          scoreField: 'tier2ScoreDeduction',
+                          daysField: 'tier2SuspensionDays',
+                          maxDays: 90,
+                        },
+                      ].map((tier) => (
+                        <div key={tier.scoreField} className="bg-slate-50/70 p-3.5 rounded-xl border border-slate-200/60 space-y-3">
+                          <span className={`text-[11px] font-bold uppercase tracking-wider truncate block ${tier.tierColor}`}>
+                            {tier.tierLabel}
                           </span>
-                        </div>
-                      </div>
+                          <div>
+                            <label className="block text-[11px] text-slate-600 font-medium mb-1">
+                              Potongan Skor
+                            </label>
+                            <div className="flex items-center rounded-lg border border-slate-200 bg-white overflow-hidden focus-within:border-[#10367D]">
+                              <input
+                                type="number"
+                                min="0"
+                                max="100"
+                                value={policy[tier.scoreField]}
+                                onChange={(e) =>
+                                  handlePolicyChange(key, tier.scoreField, Number(e.target.value) || 0)
+                                }
+                                className="w-full min-w-0 px-3 py-1.5 text-xs font-semibold text-slate-900 focus:outline-none"
+                              />
+                              <span className="px-2.5 py-1.5 bg-slate-50 border-l border-slate-200 text-[11px] text-slate-500 font-medium shrink-0">
+                                Poin
+                              </span>
+                            </div>
+                          </div>
 
-                      <div>
-                        <label className="block text-[11px] text-slate-600 font-medium mb-1">
-                          Suspensi Akun
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="number"
-                            min="0"
-                            max="30"
-                            value={policy.tier1SuspensionDays}
-                            onChange={(e) =>
-                              handlePolicyChange(key, 'tier1SuspensionDays', Number(e.target.value) || 0)
-                            }
-                            className="w-full px-3 py-2 text-xs bg-white rounded-lg border border-slate-200 focus:border-[#10367D] focus:outline-hidden"
-                          />
-                          <span className="absolute right-2.5 top-2 text-[11px] text-slate-400">
-                            Hari
-                          </span>
+                          <div>
+                            <label className="block text-[11px] text-slate-600 font-medium mb-1">
+                              Suspensi Akun
+                            </label>
+                            <div className="flex items-center rounded-lg border border-slate-200 bg-white overflow-hidden focus-within:border-[#10367D]">
+                              <input
+                                type="number"
+                                min="0"
+                                max={tier.maxDays}
+                                value={policy[tier.daysField]}
+                                onChange={(e) =>
+                                  handlePolicyChange(key, tier.daysField, Number(e.target.value) || 0)
+                                }
+                                className="w-full min-w-0 px-3 py-1.5 text-xs font-semibold text-slate-900 focus:outline-none"
+                              />
+                              <span className="px-2.5 py-1.5 bg-slate-50 border-l border-slate-200 text-[11px] text-slate-500 font-medium shrink-0">
+                                Hari
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
-
-                    {/* Tier 2 */}
-                    <div className="bg-slate-50/70 p-3.5 rounded-xl border border-slate-200/60 space-y-3">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-rose-600 block">
-                        Tier 2 (Pola Berulang-ulang)
-                      </span>
-                      <div>
-                        <label className="block text-[11px] text-slate-600 font-medium mb-1">
-                          Potongan Skor
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="number"
-                            min="0"
-                            max="100"
-                            value={policy.tier2ScoreDeduction}
-                            onChange={(e) =>
-                              handlePolicyChange(key, 'tier2ScoreDeduction', Number(e.target.value) || 0)
-                            }
-                            className="w-full px-3 py-2 text-xs bg-white rounded-lg border border-slate-200 focus:border-[#10367D] focus:outline-hidden"
-                          />
-                          <span className="absolute right-2.5 top-2 text-[11px] text-slate-400">
-                            Poin
-                          </span>
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-[11px] text-slate-600 font-medium mb-1">
-                          Suspensi Akun
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="number"
-                            min="0"
-                            max="90"
-                            value={policy.tier2SuspensionDays}
-                            onChange={(e) =>
-                              handlePolicyChange(key, 'tier2SuspensionDays', Number(e.target.value) || 0)
-                            }
-                            className="w-full px-3 py-2 text-xs bg-white rounded-lg border border-slate-200 focus:border-[#10367D] focus:outline-hidden"
-                          />
-                          <span className="absolute right-2.5 top-2 text-[11px] text-slate-400">
-                            Hari
-                          </span>
-                        </div>
-                      </div>
+                      ))}
                     </div>
                   </div>
 
-                  <div className="pt-2 flex items-center justify-between text-xs text-slate-600">
+                  <div className="pt-2 border-t border-slate-100 flex items-center text-xs text-slate-600">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
                         type="checkbox"

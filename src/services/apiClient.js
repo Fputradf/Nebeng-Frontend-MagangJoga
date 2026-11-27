@@ -1,6 +1,7 @@
 import { BASE_URL } from '../config/env';
 // src/services/apiClient.js
 import axios from 'axios';
+import { resizeFormDataImages } from '../utils/imageUpload';
 
 const AUTH_STORAGE_KEY = 'nebeng_auth';
 
@@ -43,14 +44,16 @@ const updateStoredToken = (newToken) => {
 };
 
 // Request Interceptor: Menyisipkan token & mencegah duplikasi prefix '/api'
-apiClient.interceptors.request.use((config) => {
+apiClient.interceptors.request.use(async (config) => {
   // Jika URL mengandung '/api/api/', bersihkan agar tidak duplikasi
   if (config.url && config.url.startsWith('/api/')) {
     config.url = config.url.replace('/api/', '/');
   }
 
   // Biarkan browser/Axios menentukan boundary multipart secara otomatis untuk FormData
+  // serta auto-resize semua file gambar sebelum diunggah
   if (config.data instanceof FormData) {
+    config.data = await resizeFormDataImages(config.data, config.url);
     if (config.headers) {
       if (typeof config.headers.delete === 'function') {
         config.headers.delete('Content-Type');
@@ -107,6 +110,8 @@ apiClient.interceptors.response.use(
       const isPublicPath =
         currentPath === '/' ||
         currentPath === '/landing' ||
+        currentPath === '/faq' ||
+        currentPath === '/syarat-ketentuan' ||
         currentPath === '/login' ||
         currentPath === '/register' ||
         currentPath === '/forgot-password';
@@ -165,6 +170,8 @@ apiClient.interceptors.response.use(
         const isPublicPath =
           currentPath === '/' ||
           currentPath === '/landing' ||
+          currentPath === '/faq' ||
+          currentPath === '/syarat-ketentuan' ||
           currentPath === '/login' ||
           currentPath === '/register' ||
           currentPath === '/forgot-password';

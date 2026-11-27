@@ -28,6 +28,7 @@ import {
 
 import { SkeletonTableRows } from '../../../components/ui/Skeleton';
 import EmptyState from '../../../components/ui/EmptyState';
+import StatCard from '../../../components/ui/StatCard';
 import StatusBadge from '../../../components/ui/StatusBadge';
 import BaseModal from '../../../components/ui/BaseModal';
 import { useAuth } from '../../../context/AuthContext';
@@ -82,7 +83,7 @@ function RoleBadge({ role }) {
   const Icon = config.icon;
 
   return (
-    <StatusBadge variant={config.variant} icon={Icon}>
+    <StatusBadge variant="default" icon={Icon}>
       {config.shortLabel}
     </StatusBadge>
   );
@@ -363,29 +364,25 @@ export default function UserGovernance() {
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
       {/* ── BANNER GRADIENT ── */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] p-6 text-white shadow-card sm:p-8">
-        <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10" />
-        <div className="absolute bottom-0 right-32 h-28 w-28 rounded-full bg-accent/20" />
-        <div className="relative flex flex-col gap-4 pb-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-              <span className="text-[11px] font-bold uppercase tracking-widest text-accent">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
+        <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
+        <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 mb-1 min-w-0">
+              <span className="w-2 h-2 rounded-full bg-accent animate-pulse shrink-0" />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-accent truncate">
                 SUPERADMIN GOVERNANCE & CONTROL
               </span>
             </div>
-            <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
+            <h1 className="font-display text-xl sm:text-2xl font-bold text-white tracking-tight truncate">
               User Governance (Super-Override)
             </h1>
-            <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
-              Kelola akses akun secara sistemik dengan proteksi PII dan pencatatan audit log otomatis.
-            </p>
           </div>
 
           <div className="flex items-center gap-2.5 shrink-0 self-start sm:self-auto flex-wrap sm:flex-nowrap">
-            <div className="hidden md:flex px-3.5 py-2 bg-white/15 border border-white/25 rounded-2xl backdrop-blur text-xs font-bold text-white items-center gap-2 shadow-sm">
+            <div className="hidden md:flex px-3.5 py-2 bg-white/15 border border-white/25 rounded-xl backdrop-blur text-xs font-bold text-white items-center gap-2 shadow-sm whitespace-nowrap">
               <ShieldCheck size={14} className="text-accent" />
-              <span>Level Akses: Super-Override (Enkripsi PII)</span>
+              <span>Level Akses: Super-Override</span>
             </div>
 
             <button
@@ -394,49 +391,45 @@ export default function UserGovernance() {
                 setIsRegionDropdownOpen(false);
                 setShowAddModal(true);
               }}
-              className="flex items-center gap-2 px-4 py-2.5 bg-accent hover:bg-accent/90 text-slate-900 rounded-2xl text-xs sm:text-sm font-bold transition cursor-pointer shadow-sm"
+              className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-blue-50 text-[#10367D] rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer shadow-sm whitespace-nowrap"
             >
               <UserPlus size={16} />
               <span>Tambah User</span>
             </button>
           </div>
         </div>
-        <div className="absolute bottom-4 left-6 right-6 border-t border-dashed border-white/25 sm:left-8 sm:right-8" />
-        <span className="absolute bottom-[11px] right-6 h-2.5 w-2.5 rounded-full border-2 border-white bg-accent sm:right-8" />
       </section>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-neutral-200 flex items-center gap-4">
-          <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl shrink-0">
-            <UserCheck size={20} />
-          </div>
-          <div>
-            <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">Akun Aktif</p>
-            <h3 className="text-[21px] font-bold text-neutral-800 mt-0.5">{userStats.active} Pengguna</h3>
-            <span className="text-[13px] font-semibold text-emerald-600">Beroperasi normal</span>
-          </div>
-        </div>
-
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-neutral-200 flex items-center gap-4">
-          <div className="p-3 bg-amber-50 text-amber-600 rounded-xl shrink-0">
-            <AlertTriangle size={20} />
-          </div>
-          <div>
-            <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">Akun Disuspend</p>
-            <h3 className="text-[21px] font-bold text-neutral-800 mt-0.5">{userStats.suspended} Pengguna</h3>
-            <span className="text-[13px] font-semibold text-amber-600">Ditangguhkan sementara</span>
-          </div>
-        </div>
-
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-neutral-200 flex items-center gap-4">
-          <div className="p-3 bg-rose-50 text-rose-600 rounded-xl shrink-0">
-            <UserX size={20} />
-          </div>
-          <div>
-            <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">Akun Diblokir</p>
-            <h3 className="text-[21px] font-bold text-neutral-800 mt-0.5">{userStats.blocked} Pengguna</h3>
-            <span className="text-[13px] font-semibold text-rose-600">Akses dicabut sistemik</span>
-          </div>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <StatCard
+          title="Akun Aktif"
+          value={`${userStats.active} Pengguna`}
+          subtitle="Beroperasi normal"
+          badgeText="Aktif"
+          badgeVariant="blue"
+          icon={UserCheck}
+          iconVariant="blue"
+          variant="light"
+        />
+        <StatCard
+          title="Akun Disuspend"
+          value={`${userStats.suspended} Pengguna`}
+          subtitle="Ditangguhkan sementara"
+          badgeText="Suspend"
+          badgeVariant="blue"
+          icon={AlertTriangle}
+          iconVariant="blue"
+          variant="light"
+        />
+        <StatCard
+          title="Akun Diblokir"
+          value={`${userStats.blocked} Pengguna`}
+          subtitle="Akses dicabut sistemik"
+          badgeText="Diblokir"
+          badgeVariant="blue"
+          icon={UserX}
+          iconVariant="blue"
+          variant="light"
+        />
       </div>
 
        {/* Banner Notifikasi Toast User-Friendly */}
@@ -565,7 +558,7 @@ export default function UserGovernance() {
                         </StatusBadge>
                       </td>
                       <td className="py-3.5 px-5">
-                        <StatusBadge variant={kycMeta.variant}>
+                        <StatusBadge variant="default">
                           {kycMeta.label}
                         </StatusBadge>
                       </td>
@@ -577,7 +570,7 @@ export default function UserGovernance() {
                                 setSelectedUser(user);
                                 setActionModal('Block');
                               }}
-                              className="px-3 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 text-[12px] font-bold rounded-full transition cursor-pointer flex items-center gap-1"
+                              className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-[12px] font-bold rounded-full transition cursor-pointer flex items-center gap-1"
                             >
                               <Lock size={12} />
                               Blokir
@@ -589,7 +582,7 @@ export default function UserGovernance() {
                                 setSelectedUser(user);
                                 setActionModal('Suspend');
                               }}
-                              className="px-3 py-1 bg-amber-50 hover:bg-amber-100 text-amber-600 text-[12px] font-bold rounded-full transition cursor-pointer flex items-center gap-1"
+                              className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-[12px] font-bold rounded-full transition cursor-pointer flex items-center gap-1"
                             >
                               <ShieldAlert size={12} />
                               Suspend
@@ -601,7 +594,7 @@ export default function UserGovernance() {
                                 setSelectedUser(user);
                                 setActionModal('Unblock');
                               }}
-                              className="px-3 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 text-[12px] font-bold rounded-full transition cursor-pointer flex items-center gap-1"
+                              className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-[12px] font-bold rounded-full transition cursor-pointer flex items-center gap-1"
                             >
                               <Unlock size={12} />
                               Pulihkan
@@ -644,7 +637,7 @@ export default function UserGovernance() {
                     <StatusBadge variant={getStatusVariant(user.status)}>
                       {user.status === 'active' ? 'Aktif' : user.status === 'suspended' ? 'Disuspend' : 'Diblokir'}
                     </StatusBadge>
-                    <StatusBadge variant={kycMeta.variant}>
+                    <StatusBadge variant="default">
                       KYC: {kycMeta.label}
                     </StatusBadge>
                   </div>

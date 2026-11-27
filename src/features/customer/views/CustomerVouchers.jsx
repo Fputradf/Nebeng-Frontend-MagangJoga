@@ -163,55 +163,48 @@ export default function CustomerVouchers() {
   return (
     <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-sans">
       {/* ── BANNER ── */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] p-6 text-white shadow-card sm:p-8">
-        <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10" />
-        <div className="absolute bottom-0 right-32 h-28 w-28 rounded-full bg-accent/20" />
-        <div className="relative flex flex-col gap-4 pb-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-              <span className="text-[11px] font-bold uppercase tracking-widest text-accent flex items-center gap-1.5">
-                <Tag className="w-3.5 h-3.5" /> PROMO & DISKON PERJALANAN
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
+        <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
+        <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 mb-1 min-w-0">
+              <span className="w-2 h-2 rounded-full bg-accent animate-pulse shrink-0" />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-accent flex items-center gap-1.5 truncate">
+                <Tag className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">PROMO &amp; DISKON PERJALANAN</span>
               </span>
             </div>
-            <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
+            <h1 className="font-display text-xl sm:text-2xl font-bold text-white tracking-tight truncate">
               Voucher Saya
             </h1>
-            <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
-              Gunakan voucher promosi resmi SatuRute untuk mendapatkan potongan tarif tiket perjalanan atau pengiriman paket.
-            </p>
           </div>
 
-          <div className="flex items-center gap-3 self-start md:self-auto">
-            {/* Stat Pill: Siap Digunakan */}
-            <div className="px-4 py-2 rounded-2xl bg-white/15 border border-white/25 flex items-center gap-3 shadow-xs">
-              <div className="w-9 h-9 rounded-xl bg-accent text-brand-900 flex items-center justify-center font-black shrink-0 shadow-xs">
+          <div className="flex items-center gap-2.5 self-start sm:self-auto shrink-0">
+            <div className="px-3.5 py-2 rounded-xl bg-white/15 border border-white/25 flex items-center gap-2.5 shadow-xs whitespace-nowrap">
+              <div className="w-8 h-8 rounded-lg bg-accent text-brand-900 flex items-center justify-center font-black shrink-0">
                 <Gift className="w-4 h-4 text-brand-900" />
               </div>
               <div>
-                <div className="text-[10px] font-bold text-blue-100 uppercase tracking-wider">
+                <div className="text-[10px] font-bold text-blue-100 uppercase tracking-wider leading-none">
                   Siap Digunakan
                 </div>
-                <div className="text-lg font-black text-white">
+                <div className="text-sm font-black text-white leading-tight mt-0.5">
                   {availableCount} Voucher
                 </div>
               </div>
             </div>
 
-            {/* Refresh Button */}
             <button
               type="button"
               onClick={handleRefresh}
               disabled={isLoading || isRefreshing}
-              className="p-3 bg-white/15 hover:bg-white/25 border border-white/25 rounded-2xl text-white transition cursor-pointer shadow-xs disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              className="p-2.5 bg-white/15 hover:bg-white/25 border border-white/25 rounded-xl text-white transition cursor-pointer shadow-xs disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
               title="Segarkan daftar voucher"
             >
               <RotateCw className={`w-4 h-4 text-white ${isRefreshing ? 'animate-spin' : ''}`} />
             </button>
           </div>
         </div>
-        <div className="absolute bottom-4 left-6 right-6 border-t border-dashed border-white/25 sm:left-8 sm:right-8" />
-        <span className="absolute bottom-[11px] right-6 h-2.5 w-2.5 rounded-full border-2 border-white bg-accent sm:right-8" />
       </section>
 
       {/* ── KLAIM KODE VOUCHER SECTION ── */}

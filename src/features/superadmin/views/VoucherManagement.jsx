@@ -394,45 +394,40 @@ export default function VoucherManagement() {
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto font-sans">
       {/* ── BANNER GRADIENT ── */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] p-6 text-white shadow-card sm:p-8">
-        <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10" />
-        <div className="absolute bottom-0 right-32 h-28 w-28 rounded-full bg-accent/20" />
-        <div className="relative flex flex-col gap-4 pb-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-              <span className="text-[11px] font-bold uppercase tracking-widest text-accent flex items-center gap-1.5">
-                <Ticket className="w-3.5 h-3.5" /> Manajemen Promosi & Diskon
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
+        <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
+        <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 mb-1 min-w-0">
+              <span className="w-2 h-2 rounded-full bg-accent animate-pulse shrink-0" />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-accent flex items-center gap-1.5 truncate">
+                <Ticket className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">Manajemen Promosi &amp; Diskon</span>
               </span>
             </div>
-            <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
+            <h1 className="font-display text-xl sm:text-2xl font-bold text-white tracking-tight truncate">
               Manajemen Voucher
             </h1>
-            <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
-              Kelola kode voucher diskon platform, alokasi kuota penggunaan, dan masa berlaku program promosi.
-            </p>
           </div>
 
           <div className="flex items-center gap-2.5 self-start sm:self-auto shrink-0">
             <button
               onClick={() => refreshVouchers()}
               disabled={isLoading || isRefreshing}
-              className="p-2.5 bg-white/15 hover:bg-white/25 border border-white/25 rounded-2xl backdrop-blur text-white transition cursor-pointer disabled:opacity-50 shadow-sm"
+              className="p-2.5 bg-white/15 hover:bg-white/25 border border-white/25 rounded-xl backdrop-blur text-white transition cursor-pointer disabled:opacity-50 shadow-sm"
               title="Segarkan data"
             >
               <RotateCw className={`w-4 h-4 text-accent ${isRefreshing ? 'animate-spin' : ''}`} />
             </button>
             <button
               onClick={handleOpenCreateModal}
-              className="px-4 py-2.5 bg-accent hover:bg-accent/90 text-slate-900 rounded-2xl text-xs sm:text-sm font-bold shadow-sm transition flex items-center justify-center gap-2 cursor-pointer"
+              className="px-4 py-2.5 bg-white hover:bg-blue-50 text-[#10367D] rounded-xl text-xs sm:text-sm font-bold shadow-sm transition flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
             >
               <Plus className="w-4 h-4 stroke-[2.5]" />
               <span>Tambah Voucher Baru</span>
             </button>
           </div>
         </div>
-        <div className="absolute bottom-4 left-6 right-6 border-t border-dashed border-white/25 sm:left-8 sm:right-8" />
-        <span className="absolute bottom-[11px] right-6 h-2.5 w-2.5 rounded-full border-2 border-white bg-accent sm:right-8" />
       </section>
 
       {/* Mini Stats Bar */}

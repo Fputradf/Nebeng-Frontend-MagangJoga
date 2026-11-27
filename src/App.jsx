@@ -6,13 +6,22 @@ import Login from './features/auth/Login';
 import Register from './features/auth/Register';
 import ForgotPassword from './features/auth/ForgotPassword';
 import CustomerLandingPage from './features/landing/CustomerLandingPage';
+import PublicFaqPage from './features/landing/PublicFaqPage';
+import PublicTermsPage from './features/landing/PublicTermsPage';
 import ProtectedRoute from './components/routing/ProtectedRoute';
 import { useAuth } from './context/AuthContext';
 
 // Superadmin
 import SuperadminLayout from './features/superadmin/SuperadminLayout';
 import SuperadminDashboard from './features/superadmin/views/SuperadminDashboard';
-import RegionsManagement from './features/superadmin/views/RegionsManagement';
+import {
+  WilayahPosHub,
+  DriverKycHub,
+  TarifPembayaranHub,
+  KepatuhanUserHub,
+  PromoKontenHub,
+  BrandingSosialHub,
+} from './features/superadmin/views/SuperadminHubs';
 import RegionalAdminsManagement from './features/superadmin/views/RegionalAdminsManagement';
 import PricingManagement from './features/superadmin/views/PricingManagement';
 import AuditLedger from './features/superadmin/views/AuditLedger';
@@ -27,6 +36,7 @@ import AppConfigManagement from './features/superadmin/views/AppConfigManagement
 import DisbursementBankManagement from './features/superadmin/views/DisbursementBankManagement';
 import DriverManagement from './features/superadmin/views/DriverManagement';
 import PaymentGatewayManagement from './features/superadmin/views/PaymentGatewayManagement';
+import SosLogsManagement from './features/superadmin/views/SosLogsManagement';
 
 // Regional
 import RegionalLayout from './features/regional/RegionalLayout';
@@ -124,6 +134,8 @@ export default function App() {
     const PAGE_TITLES = {
       '/':                             'Beranda - Cari & Booking Trip',
       '/landing':                      'Beranda - Cari & Booking Trip',
+      '/faq':                          'FAQ - Pusat Bantuan',
+      '/syarat-ketentuan':             'Syarat & Ketentuan Layanan',
       '/login':                        'Masuk',
       '/register':                     'Daftar',
       '/forgot-password':              'Lupa Password',
@@ -206,6 +218,8 @@ export default function App() {
       <Routes>
       <Route path="/" element={<CustomerLandingPage />} />
       <Route path="/landing" element={<CustomerLandingPage />} />
+      <Route path="/faq" element={<PublicFaqPage />} />
+      <Route path="/syarat-ketentuan" element={<PublicTermsPage />} />
 
       <Route
         path="/login"
@@ -247,30 +261,31 @@ export default function App() {
       >
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<SuperadminDashboard />} />
-        <Route path="wilayah" element={<RegionsManagement />} />
-        <Route path="pos-mitra" element={<PosMitraManagement />} />
-        <Route path="admin-wilayah" element={<RegionalAdminsManagement />} />
+        <Route path="wilayah" element={<WilayahPosHub defaultTab="wilayah" />} />
+        <Route path="pos-mitra" element={<WilayahPosHub defaultTab="pos-mitra" />} />
+        <Route path="admin-wilayah" element={<WilayahPosHub defaultTab="admin-wilayah" />} />
         <Route path="armada" element={<Navigate to="/admin/driver" replace />} />
         <Route path="armada-kurir" element={<Navigate to="/admin/driver" replace />} />
-        <Route path="driver" element={<DriverManagement />} />
-        <Route path="verifikasi-kyc" element={<VerificationCenterPage />} />
+        <Route path="driver" element={<DriverKycHub defaultTab="driver" />} />
+        <Route path="verifikasi-kyc" element={<DriverKycHub defaultTab="verifikasi-kyc" />} />
         <Route path="verifikasi" element={<Navigate to="/admin/verifikasi-kyc" replace />} />
-        <Route path="tarif" element={<PricingManagement />} />
-        <Route path="sanksi" element={<SanctionManagement />} />
-        <Route path="reports" element={<ReportManagement />} />
-        <Route path="laporan-pelanggaran" element={<ReportManagement />} />
-        <Route path="bank-pencairan" element={<DisbursementBankManagement />} />
-        <Route path="bank" element={<DisbursementBankManagement />} />
-        <Route path="pembayaran" element={<PaymentGatewayManagement />} />
-        <Route path="gateway-pembayaran" element={<PaymentGatewayManagement />} />
-        <Route path="konfigurasi-aplikasi" element={<AppConfigManagement />} />
-        <Route path="konfigurasi-logo" element={<AppConfigManagement />} />
-        <Route path="merchandise" element={<MerchandiseManagement />} />
-        <Route path="banner" element={<BannerManagement />} />
-        <Route path="voucher" element={<VoucherManagement />} />
-        <Route path="sosial-link" element={<SocialLinksManagement />} />
+        <Route path="tarif" element={<TarifPembayaranHub defaultTab="tarif" />} />
+        <Route path="sanksi" element={<KepatuhanUserHub defaultTab="sanksi" />} />
+        <Route path="reports" element={<KepatuhanUserHub defaultTab="reports" />} />
+        <Route path="laporan-pelanggaran" element={<KepatuhanUserHub defaultTab="reports" />} />
+        <Route path="bank-pencairan" element={<TarifPembayaranHub defaultTab="bank-pencairan" />} />
+        <Route path="bank" element={<TarifPembayaranHub defaultTab="bank-pencairan" />} />
+        <Route path="pembayaran" element={<TarifPembayaranHub defaultTab="pembayaran" />} />
+        <Route path="gateway-pembayaran" element={<TarifPembayaranHub defaultTab="pembayaran" />} />
+        <Route path="konfigurasi-aplikasi" element={<BrandingSosialHub defaultTab="konfigurasi-aplikasi" />} />
+        <Route path="konfigurasi-logo" element={<BrandingSosialHub defaultTab="konfigurasi-aplikasi" />} />
+        <Route path="merchandise" element={<PromoKontenHub defaultTab="merchandise" />} />
+        <Route path="banner" element={<PromoKontenHub defaultTab="banner" />} />
+        <Route path="voucher" element={<PromoKontenHub defaultTab="voucher" />} />
+        <Route path="sosial-link" element={<BrandingSosialHub defaultTab="sosial-link" />} />
         <Route path="audit" element={<AuditLedger />} />
-        <Route path="governance" element={<UserGovernance />} />
+        <Route path="governance" element={<KepatuhanUserHub defaultTab="governance" />} />
+        <Route path="sos-logs" element={<KepatuhanUserHub defaultTab="sos-logs" />} />
         <Route path="notifications" element={<NotificationHistory />} />
         <Route path="notifications/settings" element={<NotificationSettings />} />
         <Route path="profile/pengaturan" element={<SuperadminAccountSettings />} />
@@ -296,6 +311,7 @@ export default function App() {
         <Route path="armada-kurir" element={<ArmadaKurirTabs />} />
         <Route path="laporan" element={<FinancialReportPage />} />
         <Route path="reports" element={<ReportManagement />} />
+        <Route path="sos-logs" element={<SosLogsManagement />} />
         <Route path="bantuan-chat" element={<RegionalSupportChat />} />
         <Route path="notifications" element={<NotificationHistory />} />
         <Route path="notifications/settings" element={<NotificationSettings />} />
@@ -318,6 +334,7 @@ export default function App() {
         <Route path="manifest" element={<OperatorManifest />} />
         <Route path="inspection" element={<Navigate to="/operator-pos/scanner" replace />} />
         <Route path="scanner" element={<OperatorDualScanner />} />
+        <Route path="sos-logs" element={<SosLogsManagement />} />
         <Route path="handover" element={<Navigate to="/operator-pos/scanner" replace />} />
         <Route path="financial" element={<Navigate to="/operator-pos/dashboard" replace />} />
         <Route path="guide" element={<OperatorGuide />} />

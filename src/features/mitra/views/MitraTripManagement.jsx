@@ -843,36 +843,31 @@ export default function MitraTripManagement() {
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
       {/* ── BANNER GRADIENT ── */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#10367D] via-[#164396] to-[#1E56B0] p-6 text-white shadow-md sm:p-8">
-        <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10" />
-        <div className="absolute bottom-0 right-32 h-28 w-28 rounded-full bg-blue-300/20" />
-        <div className="relative flex flex-col gap-4 pb-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="w-2 h-2 rounded-full bg-blue-300 animate-pulse" />
-              <span className="text-[11px] font-bold uppercase tracking-widest text-blue-200 flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5" /> Manajemen Jadwal Trip Mitra
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
+        <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
+        <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 mb-1 min-w-0">
+              <span className="w-2 h-2 rounded-full bg-accent animate-pulse shrink-0" />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-accent flex items-center gap-1.5 truncate">
+                <Calendar className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">Manajemen Jadwal Trip Mitra</span>
               </span>
             </div>
-            <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
-              Kelola Jadwal & Trip
+            <h1 className="font-display text-xl sm:text-2xl font-bold text-white tracking-tight truncate">
+              Kelola Jadwal &amp; Trip
             </h1>
-            <p className="mt-1 text-xs sm:text-sm text-blue-100/90 max-w-xl leading-relaxed">
-              Buat jadwal perjalanan baru, tentukan tipe layanan (Penumpang / Barang), dan kelola trip Anda secara interaktif.
-            </p>
           </div>
 
           <button
             onClick={() => loadMitraData()}
             disabled={isLoading}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-white/15 hover:bg-white/25 border border-white/25 rounded-2xl backdrop-blur text-white text-xs font-bold transition-all cursor-pointer self-start sm:self-auto shadow-sm active:scale-95 disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-blue-50 text-[#10367D] rounded-xl text-xs font-bold transition-all cursor-pointer self-start sm:self-auto shadow-sm active:scale-95 disabled:opacity-50 shrink-0 whitespace-nowrap"
           >
-            <Sparkles className={`w-4 h-4 text-blue-200 ${isLoading ? 'animate-spin' : ''}`} />
+            <Sparkles className={`w-4 h-4 text-[#10367D] ${isLoading ? 'animate-spin' : ''}`} />
             <span>{isLoading ? 'Menyegarkan...' : 'Segarkan Data'}</span>
           </button>
         </div>
-        <div className="absolute bottom-4 left-6 right-6 border-t border-dashed border-white/20 sm:left-8 sm:right-8" />
-        <span className="absolute bottom-[11px] right-6 h-2.5 w-2.5 rounded-full border-2 border-white bg-blue-300 sm:right-8" />
       </section>
 
       {/* Interactive Quick Stats */}

@@ -118,6 +118,7 @@ export default function SearchTrip() {
 
   const [userProfile, setUserProfile] = useState(null);
   const [customerWallet, setCustomerWallet] = useState(null);
+  const [customerFees, setCustomerFees] = useState({ motor: 0, mobil: 0, barang: 0 });
   const customerName = userProfile?.name || userProfile?.fullName || 'Pelanggan';
 
   const [selectedTrip, setSelectedTrip] = useState(null);
@@ -181,12 +182,13 @@ export default function SearchTrip() {
         if (activeService === 'motor') params.serviceType = 'motor';
         if (activeService === 'mobil') params.serviceType = 'mobil';
 
-        const [resMe, resPoints, resMyOrders, resTrips, resWallet] = await Promise.all([
+        const [resMe, resPoints, resMyOrders, resTrips, resWallet, resCustomerFees] = await Promise.all([
           apiClient.get('/auth/me').catch(() => ({ data: null })),
           apiClient.get('/pickup-points', { params: { onlyActive: true } }).catch(() => ({ data: [] })),
           apiClient.get('/orders/me').catch(() => ({ data: [] })),
           apiClient.get('/trips', { params }).catch(() => ({ data: { data: [] } })),
           walletService.getMyWallet().catch(() => null),
+          apiClient.get('/orders/customer-fee').catch(() => ({ data: { motor: 0, mobil: 0, barang: 0 } })),
         ]);
 
         if (ignore) return;
@@ -197,6 +199,14 @@ export default function SearchTrip() {
 
         if (resWallet) {
           setCustomerWallet(resWallet);
+        }
+
+        if (resCustomerFees?.data) {
+          setCustomerFees({
+            motor: Number(resCustomerFees.data.motor || 0),
+            mobil: Number(resCustomerFees.data.mobil || 0),
+            barang: Number(resCustomerFees.data.barang || 0),
+          });
         }
 
         setPickupPoints(resPoints.data || []);
@@ -283,7 +293,12 @@ export default function SearchTrip() {
   const quantity = !isPassengerService ? safeItemCount : safeSeatCount;
   const basePrice = selectedTrip?.price || 0;
   const subtotalPrice = basePrice * quantity;
-  const effectiveTotalPrice = appliedVoucher ? appliedVoucher.totalPrice : subtotalPrice;
+  const currentCustomerFee = !isPassengerService
+    ? Number(customerFees.barang || 0)
+    : selectedTrip?.vehicle?.type === 'motor'
+      ? Number(customerFees.motor || 0)
+      : Number(customerFees.mobil || 0);
+  const effectiveTotalPrice = (appliedVoucher ? appliedVoucher.totalPrice : subtotalPrice) + currentCustomerFee;
 
   const walletBalance = Number(customerWallet?.balance || 0);
   const isWalletBalanceSufficient = walletBalance >= effectiveTotalPrice;
@@ -642,11 +657,19 @@ export default function SearchTrip() {
       <PendingBillsBanner />
 
       {/* ── BANNER ── */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] p-6 text-white shadow-card sm:p-8">
-        <div className="relative flex flex-col gap-3 pb-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="font-display text-2xl font-bold">Cari & Booking Trip</h1>
-            <p className="mt-1 text-sm text-blue-100">Temukan perjalanan antar kota atau pengiriman barang dengan pembayaran aman terproteksi.</p>
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
+        <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
+        <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 mb-1 min-w-0">
+              <span className="w-2 h-2 rounded-full bg-accent animate-pulse shrink-0" />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-accent truncate">
+                LAYANAN PERJALANAN &amp; PENGIRIMAN
+              </span>
+            </div>
+            <h1 className="font-display text-xl sm:text-2xl font-bold text-white tracking-tight truncate">
+              Cari &amp; Booking Trip
+            </h1>
           </div>
           <div className="shrink-0 flex items-center">
             <DashboardRegionSwitcher
@@ -655,8 +678,6 @@ export default function SearchTrip() {
             />
           </div>
         </div>
-        <div className="absolute bottom-4 left-6 right-6 border-t border-dashed border-white/25 sm:left-8 sm:right-8" />
-        <span className="absolute bottom-[11px] right-6 h-2.5 w-2.5 rounded-full border-2 border-white bg-accent sm:right-8" />
       </section>
       <BannerSlider role="customer" />
 
@@ -1500,16 +1521,24 @@ export default function SearchTrip() {
             )}
           </div>
 
-          {appliedVoucher ? (
+          {(appliedVoucher || currentCustomerFee > 0) ? (
             <div className="p-3 bg-white rounded-xl space-y-1.5 border border-slate-200 text-[13px]">
               <div className="flex justify-between text-slate-600">
                 <span>Subtotal:</span>
                 <span className="font-semibold text-slate-800">{formatRupiah(subtotalPrice)}</span>
               </div>
-              <div className="flex justify-between text-emerald-600 font-semibold">
-                <span>Diskon ({appliedVoucher.code}):</span>
-                <span>- {formatRupiah(appliedVoucher.discountAmount)}</span>
-              </div>
+              {currentCustomerFee > 0 && (
+                <div className="flex justify-between text-slate-600">
+                  <span>Biaya Layanan Aplikasi:</span>
+                  <span className="font-semibold text-slate-800">{formatRupiah(currentCustomerFee)}</span>
+                </div>
+              )}
+              {appliedVoucher && (
+                <div className="flex justify-between text-emerald-600 font-semibold">
+                  <span>Diskon ({appliedVoucher.code}):</span>
+                  <span>- {formatRupiah(appliedVoucher.discountAmount)}</span>
+                </div>
+              )}
               <div className="flex justify-between font-bold text-slate-800 pt-1.5 border-t border-slate-200">
                 <span className="text-slate-700">Total Bayar:</span>
                 <span style={{ color: PRIMARY_COLOR }}>{formatRupiah(effectiveTotalPrice)}</span>

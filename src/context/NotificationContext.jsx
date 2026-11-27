@@ -592,8 +592,20 @@ export const NotificationProvider = ({ children }) => {
     }
   }, []);
 
-  // Socket.io connection for realtime notifications
-  useEffect(() => {
+  const disconnectSocket = useCallback(() => {
+    if (socketRef.current) {
+      socketRef.current.off('connect');
+      socketRef.current.off('notification:new');
+      socketRef.current.off('notification:unread-count');
+      socketRef.current.off('disconnect');
+      socketRef.current.off('connect_error');
+      socketRef.current.disconnect();
+      socketRef.current = null;
+      socketConnectedRef.current = false;
+    }
+  }, []);
+
+  const connectSocket = useCallback(() => {
     if (!ENABLE_NOTIFICATIONS) return;
 
     // Guard: prevent multiple socket connections
@@ -734,20 +746,15 @@ export const NotificationProvider = ({ children }) => {
     socket.on('connect_error', (error) => {
       console.error('[Notification Socket] Connection error:', error);
     });
-
-    return () => {
-      if (socketRef.current) {
-        socketRef.current.off('connect');
-        socketRef.current.off('notification:new');
-        socketRef.current.off('notification:unread-count');
-        socketRef.current.off('disconnect');
-        socketRef.current.off('connect_error');
-        socketRef.current.disconnect();
-        socketRef.current = null;
-        socketConnectedRef.current = false;
-      }
-    };
   }, [fetchUnreadCount]);
+
+  // Socket.io connection for realtime notifications
+  useEffect(() => {
+    connectSocket();
+    return () => {
+      disconnectSocket();
+    };
+  }, [connectSocket, disconnectSocket]);
 
   // BroadcastChannel for cross-tab sync
   useEffect(() => {
@@ -815,6 +822,8 @@ export const NotificationProvider = ({ children }) => {
     markAllAsRead,
     markConversationAsRead,
     setUnreadCount,
+    connectSocket,
+    disconnectSocket,
   };
 
   return (

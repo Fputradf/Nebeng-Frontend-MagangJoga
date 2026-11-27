@@ -1,43 +1,91 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Search,
   ArrowRight,
   ShieldCheck,
   MapPin,
   Calendar,
-  Users,
   Package,
   Car,
   Bike,
-  Sparkles,
-  LogIn,
-  UserPlus,
-  HelpCircle,
   Clock,
   CheckCircle2,
+  Users,
+  Sparkles,
+  Mail,
+  Phone,
 } from 'lucide-react';
 import { BannerSlider } from '../../components/ui/BannerSlider';
+import SocialIcon from '../../components/ui/SocialIcon';
 import { useAppConfig } from '../../context/AppConfigContext';
 import { useAuth } from '../../context/AuthContext';
 import apiClient from '../../services/apiClient';
+import { socialLinkService } from '../../services/socialLinkService';
 import logoAsset from '../../assets/LOGO.png';
+import heroBg from '../../assets/hero-transport.jpg';
+import LandingNavbar from './components/LandingNavbar';
 
 const TODAY_ISO = new Date().toISOString().split('T')[0];
 
+const DEFAULT_SOCIAL_LINKS = [
+  { id: 'ig', platform: 'instagram', label: 'Instagram', url: 'https://instagram.com' },
+  { id: 'tt', platform: 'tiktok', label: 'TikTok', url: 'https://tiktok.com' },
+  { id: 'fb', platform: 'facebook', label: 'Facebook', url: 'https://facebook.com' },
+];
+
+const SERVICES = [
+  {
+    id: 'motor',
+    label: 'SatuRute Motor',
+    desc: 'Perjalanan cepat & fleksibel untuk 1 penumpang',
+    icon: Bike,
+  },
+  {
+    id: 'mobil',
+    label: 'SatuRute Mobil',
+    desc: 'Perjalanan nyaman antar pos untuk hingga 4–6 penumpang',
+    icon: Car,
+  },
+  {
+    id: 'barang',
+    label: 'SatuRute Barang',
+    desc: 'Pengiriman paket kilat antar pos resmi terverifikasi',
+    icon: Package,
+  },
+];
+
+const FEATURES = [
+  {
+    id: 'verified',
+    badge: '100% Resmi',
+    icon: ShieldCheck,
+    title: 'Driver & Pos Terverifikasi',
+    desc: 'Semua mitra lolos verifikasi KTP, SIM, dan biometrik di pos resmi.',
+  },
+  {
+    id: 'escrow',
+    badge: 'Dana Terlindungi',
+    icon: CheckCircle2,
+    title: 'Pembayaran Escrow Aman',
+    desc: 'Dana ditahan aman di sistem dan baru cair setelah scan QR di pos tujuan.',
+  },
+  {
+    id: 'pricing',
+    badge: 'Harga Jelas',
+    icon: Clock,
+    title: 'Tarif Pasti & Terjangkau',
+    desc: 'Harga sudah pasti sejak awal tanpa biaya tambahan di perjalanan.',
+  },
+];
+
 export default function CustomerLandingPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { appName, appLogo } = useAppConfig();
-  const { isAuthenticated, role } = useAuth();
+  const { isAuthenticated } = useAuth();
 
-  const roleHomeMap = {
-    admin: '/admin/dashboard',
-    regional: '/regional/dashboard',
-    operator: '/operator-pos/dashboard',
-    mitra: '/mitra/dashboard',
-    customer: '/customer',
-  };
-  const dashboardPath = roleHomeMap[role] || '/customer';
+  const brandName = appName || 'SatuRute';
 
   const [origin, setOrigin] = useState('');
   const [destination, setDestination] = useState('');
@@ -46,6 +94,39 @@ export default function CustomerLandingPage() {
 
   const [pickupPoints, setPickupPoints] = useState([]);
   const [isLoadingPoints, setIsLoadingPoints] = useState(false);
+  const [socialLinks, setSocialLinks] = useState([]);
+
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isLightSection, setIsLightSection] = useState(false);
+  const [activeFeatureId, setActiveFeatureId] = useState(FEATURES[0].id);
+
+  useEffect(() => {
+    const targetSection = location.state?.scrollTo;
+    if (targetSection) {
+      const timer = setTimeout(() => {
+        const el = document.getElementById(targetSection);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 60);
+      return () => clearTimeout(timer);
+    }
+  }, [location.state]);
+
+  useEffect(() => {
+    const onScroll = () => {
+      setIsScrolled(window.scrollY > 24);
+      const layananEl = document.getElementById('layanan');
+      if (layananEl) {
+        setIsLightSection(layananEl.getBoundingClientRect().top <= 84);
+      }
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+    };
+  }, []);
 
   useEffect(() => {
     let ignore = false;
@@ -66,10 +147,27 @@ export default function CustomerLandingPage() {
     };
 
     fetchPickupPoints();
+    socialLinkService
+      .getPublicSocialLinks()
+      .then((data) => {
+        if (!ignore && Array.isArray(data)) {
+          setSocialLinks(data.slice(0, 5));
+        }
+      })
+      .catch((err) => {
+        console.warn('Gagal memuat link sosial media:', err);
+      });
     return () => {
       ignore = true;
     };
   }, []);
+
+  const scrollToSection = (id) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   const handleSearch = (e) => {
     if (e) e.preventDefault();
@@ -92,386 +190,414 @@ export default function CustomerLandingPage() {
     }
   };
 
-  return (
-    <div className="relative isolate min-h-screen bg-canvas font-sans text-slate-900 selection:bg-brand-500 selection:text-white flex flex-col">
-      {/* Background glow ambiance */}
+  const defaultAdBanner = (
+    <div className="relative w-full h-[140px] sm:h-[180px] md:h-[200px] lg:h-[220px] rounded-2xl overflow-hidden bg-gradient-to-r from-brand-700 via-brand-600 to-brand-500 text-white shadow-card flex items-center justify-between px-5 sm:px-10 lg:px-14">
       <div
         aria-hidden="true"
-        className="pointer-events-none fixed inset-0 -z-10"
-        style={{
-          backgroundImage:
-            'radial-gradient(50rem 28rem at 85% -8%, rgba(116,180,217,0.30), transparent), radial-gradient(42rem 30rem at 5% 105%, rgba(16,54,125,0.12), transparent)',
-        }}
+        className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/10 blur-2xl"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute right-24 -bottom-20 h-56 w-56 rounded-full bg-accent/20 blur-2xl"
       />
 
-      {/* ── TOPBAR NAVIGATION ── */}
-      <header className="sticky top-0 z-30 border-b border-brand-500/20 bg-white/85 backdrop-blur-md transition-all shadow-xs">
-        <div className="mx-auto flex h-16 sm:h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          {/* Logo & Brand */}
-          <div className="flex items-center gap-3">
-            <img
-              src={appLogo || logoAsset}
-              alt={appName || 'SatuRute'}
-              className="h-9 w-9 sm:h-10 sm:w-10 object-contain drop-shadow-xs"
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = logoAsset;
-              }}
-            />
-            <div className="flex flex-col">
-              <span className="font-display text-xl sm:text-2xl font-extrabold leading-none text-brand-700 tracking-tight">
-                {appName || 'SatuRute'}
-              </span>
-              <span className="hidden sm:inline text-[11px] font-semibold text-slate-500">
-                Layanan Tumpangan & Logistik Antarkota
-              </span>
-            </div>
-          </div>
+      <div className="relative z-10 max-w-2xl space-y-1.5 sm:space-y-2">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 border border-white/20 px-3 py-0.5 text-[11px] font-bold text-sky-100">
+          <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+          <span>Promo Spesial {brandName}</span>
+        </span>
+        <h3 className="font-display text-base sm:text-xl md:text-2xl font-extrabold tracking-tight leading-snug">
+          Perjalanan Antarkota Lebih Hemat &amp; Terjadwal Setiap Hari
+        </h3>
+        <p className="hidden md:block text-xs sm:text-sm text-blue-100 max-w-xl">
+          Tarif pasti antar pos resmi dengan mitra driver terverifikasi dan pembayaran escrow.
+        </p>
+      </div>
 
-          {/* Nav Actions - Button Sejajar Panjangnya */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            {isAuthenticated ? (
-              <button
-                type="button"
-                onClick={() => navigate(dashboardPath)}
-                className="w-28 sm:w-36 h-10 sm:h-11 inline-flex items-center justify-center gap-1.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-brand-600 hover:bg-brand-700 shadow-soft transition active:scale-95 cursor-pointer"
-              >
-                <span>Dashboard</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            ) : (
-              <>
-                <button
-                  type="button"
-                  onClick={() => navigate('/login')}
-                  className="w-24 sm:w-28 h-10 sm:h-11 inline-flex items-center justify-center gap-1.5 rounded-xl text-xs sm:text-sm font-bold text-brand-700 bg-brand-50 hover:bg-brand-100/80 border border-brand-200 transition active:scale-95 cursor-pointer shadow-xs"
-                >
-                  <LogIn className="w-4 h-4 text-brand-600" />
-                  <span>Masuk</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => navigate('/register')}
-                  className="w-24 sm:w-28 h-10 sm:h-11 inline-flex items-center justify-center gap-1.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-brand-600 hover:bg-brand-700 shadow-soft transition active:scale-95 cursor-pointer"
-                >
-                  <UserPlus className="w-4 h-4 text-white" />
-                  <span>Daftar</span>
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      </header>
+      <div className="relative z-10 shrink-0 hidden sm:flex items-center">
+        <button
+          type="button"
+          onClick={() => (isAuthenticated ? navigate('/customer/booking') : navigate('/register'))}
+          className="inline-flex items-center gap-2 rounded-xl bg-white hover:bg-brand-50 px-5 sm:px-6 py-3 text-xs sm:text-sm font-bold text-brand-700 shadow-lg transition active:scale-95 cursor-pointer"
+        >
+          <span>{isAuthenticated ? 'Booking Sekarang' : 'Daftar & Klaim Promo'}</span>
+          <ArrowRight className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  );
 
-      {/* ── MAIN CONTENT (Mirrors Customer Dashboard) ── */}
-      <main className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-        {/* ── HERO BANNER ── */}
-        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] p-6 text-white shadow-card sm:p-8">
-          <div className="relative z-10 flex flex-col gap-3 pb-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 text-sky-100 text-xs font-semibold backdrop-blur-xs mb-2">
-                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                <span>Selamat Datang di Platform {appName || 'SatuRute'}</span>
-              </div>
-              <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight">
-                Cari & Booking Trip
-              </h1>
-              <p className="mt-1 text-sm text-blue-100 max-w-xl">
-                Temukan perjalanan antar kota atau pengiriman barang dengan pembayaran aman terproteksi.
-              </p>
-            </div>
-            <div className="shrink-0 flex items-center">
-              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/10 border border-white/20 text-xs text-white font-medium backdrop-blur-xs">
-                <MapPin className="w-4 h-4 text-sky-300" />
-                <span>Pos Resmi Terintegrasi</span>
-              </span>
-            </div>
-          </div>
-          <div className="absolute bottom-4 left-6 right-6 border-t border-dashed border-white/25 sm:left-8 sm:right-8" />
-          <span className="absolute bottom-[11px] right-6 h-2.5 w-2.5 rounded-full border-2 border-white bg-accent sm:right-8" />
-        </section>
+  return (
+    <div className="min-h-screen overflow-x-clip bg-brand-950 font-sans text-slate-900 selection:bg-brand-500 selection:text-white flex flex-col">
+      <LandingNavbar
+        isLight={isLightSection}
+        isScrolled={isScrolled}
+        fixed={true}
+        onSectionClick={scrollToSection}
+      />
 
-        {/* ── BANNER SLIDER PROMO ── */}
-        <BannerSlider role="customer" />
+      {/* ── FULL-BLEED DEEP NAVY HERO SECTION ── */}
+      <section className="relative min-h-[100svh] flex items-center justify-center overflow-hidden px-4 sm:px-6 lg:px-8 pt-16 bg-brand-950">
+        <img
+          src={heroBg}
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 h-full w-full object-cover object-center"
+        />
+        <div aria-hidden="true" className="absolute inset-0 bg-brand-950/25" />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-gradient-to-b from-brand-950/55 via-transparent to-brand-950"
+        />
 
-        {/* ── LAYANAN KAMI (TABS) ── */}
-        <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-card border border-slate-200">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wider">
-              Layanan Kami
-            </h2>
-            <span className="text-xs text-slate-400 font-medium hidden sm:inline">
-              Pilih moda transportasi atau kirim paket
-            </span>
-          </div>
-          <div role="tablist" aria-label="Pilih Jenis Layanan" className="grid grid-cols-3 gap-2 sm:gap-4 max-w-xl mx-auto">
-            {/* SatuRute Motor */}
+        <div className="relative z-10 max-w-4xl mx-auto text-center space-y-6">
+          <h1 className="font-display text-4xl sm:text-5xl md:text-6xl font-extrabold text-white tracking-tight leading-[1.15] drop-shadow-[0_2px_12px_rgba(0,0,0,0.65)]">
+            Layanan Transportasi
+            <br />
+            Nyaman ke Tujuan Anda
+          </h1>
+
+          <p className="text-base sm:text-lg text-blue-100/95 max-w-2xl mx-auto leading-relaxed font-normal drop-shadow-xs">
+            Pesan tumpangan motor, mobil, atau kirim barang bersama mitra driver terverifikasi
+            dari pos resmi dengan praktis, aman, dan nyaman.
+          </p>
+
+          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3.5">
             <button
               type="button"
-              role="tab"
-              aria-selected={activeService === 'motor'}
-              aria-label="Layanan SatuRute Motor"
-              className="flex flex-col items-center gap-2.5 hover:opacity-90 transition cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded-2xl p-2"
-              onClick={() => setActiveService('motor')}
+              onClick={() => scrollToSection('layanan')}
+              className="w-full sm:w-auto min-w-[180px] px-7 py-3.5 rounded-lg bg-brand-500 hover:bg-brand-auth-bright text-white font-semibold text-sm sm:text-base shadow-lg shadow-brand-950/50 border border-white/15 transition active:scale-95 cursor-pointer"
             >
-              <div
-                className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center text-white shadow-soft transition-all duration-200 ${
-                  activeService === 'motor'
-                    ? 'bg-[#262160] scale-105 ring-4 ring-[#262160]/20'
-                    : 'bg-slate-200 group-hover:bg-slate-300 text-slate-600'
-                }`}
-              >
-                <Bike className="w-6 h-6 sm:w-7 sm:h-7" />
-              </div>
-              <span
-                className={`text-xs sm:text-sm font-bold text-center ${
-                  activeService === 'motor' ? 'text-[#262160]' : 'text-slate-600'
-                }`}
-              >
-                SatuRute Motor
-              </span>
-            </button>
-
-            {/* SatuRute Mobil */}
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeService === 'mobil'}
-              aria-label="Layanan SatuRute Mobil"
-              className="flex flex-col items-center gap-2.5 hover:opacity-90 transition cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded-2xl p-2"
-              onClick={() => setActiveService('mobil')}
-            >
-              <div
-                className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center text-white shadow-soft transition-all duration-200 ${
-                  activeService === 'mobil'
-                    ? 'bg-[#262160] scale-105 ring-4 ring-[#262160]/20'
-                    : 'bg-slate-200 group-hover:bg-slate-300 text-slate-600'
-                }`}
-              >
-                <Car className="w-6 h-6 sm:w-7 sm:h-7" />
-              </div>
-              <span
-                className={`text-xs sm:text-sm font-bold text-center ${
-                  activeService === 'mobil' ? 'text-[#262160]' : 'text-slate-600'
-                }`}
-              >
-                SatuRute Mobil
-              </span>
-            </button>
-
-            {/* SatuRute Barang */}
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeService === 'barang'}
-              aria-label="Layanan SatuRute Barang"
-              className="flex flex-col items-center gap-2.5 hover:opacity-90 transition cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded-2xl p-2"
-              onClick={() => setActiveService('barang')}
-            >
-              <div
-                className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center text-white shadow-soft transition-all duration-200 ${
-                  activeService === 'barang'
-                    ? 'bg-[#262160] scale-105 ring-4 ring-[#262160]/20'
-                    : 'bg-slate-200 group-hover:bg-slate-300 text-slate-600'
-                }`}
-              >
-                <Package className="w-6 h-6 sm:w-7 sm:h-7" />
-              </div>
-              <span
-                className={`text-xs sm:text-sm font-bold text-center ${
-                  activeService === 'barang' ? 'text-[#262160]' : 'text-slate-600'
-                }`}
-              >
-                SatuRute Barang
-              </span>
-            </button>
-          </div>
-        </div>
-
-        {/* ── FORM PENCARIAN RUTE PERJALANAN ── */}
-        <div className="bg-white rounded-2xl shadow-card border border-slate-200 p-5 sm:p-6 space-y-5">
-          <form onSubmit={handleSearch} className="space-y-5">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-              {/* Pos Asal */}
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-2 flex items-center gap-1.5">
-                  <MapPin className="w-3.5 h-3.5 text-brand-600" />
-                  <span>Pos Asal</span>
-                </label>
-                <select
-                  value={origin}
-                  onChange={(e) => setOrigin(e.target.value)}
-                  className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl font-medium text-slate-800 focus:outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-500/20 transition-all truncate"
-                >
-                  <option value="">Semua Pos Asal</option>
-                  {pickupPoints.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name} {p.cityName ? `(${p.cityName})` : ''}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Pos Tujuan */}
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-2 flex items-center gap-1.5">
-                  <MapPin className="w-3.5 h-3.5 text-amber-500" />
-                  <span>Pos Tujuan</span>
-                </label>
-                <select
-                  value={destination}
-                  onChange={(e) => setDestination(e.target.value)}
-                  className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl font-medium text-slate-800 focus:outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-500/20 transition-all truncate"
-                >
-                  <option value="">Semua Pos Tujuan</option>
-                  {pickupPoints.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name} {p.cityName ? `(${p.cityName})` : ''}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Tanggal */}
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-2 flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5 text-brand-600" />
-                  <span>Tanggal Keberangkatan</span>
-                </label>
-                <input
-                  type="date"
-                  min={TODAY_ISO}
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl font-medium text-slate-800 focus:outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-500/20 transition-all"
-                />
-              </div>
-            </div>
-
-            {/* Tombol Utama Cari - Full width sejajar dengan form card */}
-            <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row items-center gap-3">
-              <button
-                type="submit"
-                className="w-full h-12 inline-flex items-center justify-center gap-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm shadow-soft transition-all active:scale-98 cursor-pointer"
-              >
-                <Search className="w-4 h-4" />
-                <span>Cari Jadwal Perjalanan</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-          </form>
-        </div>
-
-        {/* ── PREVIEW SECTION (TIDAK MENAMPILKAN DATA JADWAL RUTE) ── */}
-        <div className="space-y-4">
-          <div className="bg-white rounded-2xl border border-slate-200/90 p-6 sm:p-8 shadow-card text-center space-y-4">
-            <div className="w-16 h-16 rounded-2xl bg-brand-50 text-brand-600 mx-auto flex items-center justify-center shadow-2xs border border-brand-100">
-              <Search className="w-8 h-8" />
-            </div>
-
-            <div className="max-w-xl mx-auto space-y-1.5">
-              <h3 className="font-display text-lg sm:text-xl font-black text-slate-900">
-                Temukan Rute & Jadwal Tumpangan Anda
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                Tersedia berbagai pilihan rute keberangkatan antar pos setiap harinya. Silakan klik tombol{' '}
-                <strong className="text-brand-700">Cari Jadwal Perjalanan</strong> di atas atau masuk ke akun Anda
-                untuk melihat jadwal lengkap, ketersediaan kursi, dan memesan tiket langsung.
-              </p>
-            </div>
-
-            {/* Tombol CTA Sejajar Panjangnya (Equal Width: w-full sm:w-64) */}
-            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3 max-w-lg mx-auto">
-              <button
-                type="button"
-                onClick={handleSearch}
-                className="w-full sm:w-64 h-11 inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm shadow-soft transition active:scale-95 cursor-pointer"
-              >
-                <LogIn className="w-4 h-4" />
-                <span>Masuk untuk Lihat Jadwal</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate('/register')}
-                className="w-full sm:w-64 h-11 inline-flex items-center justify-center gap-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm transition active:scale-95 cursor-pointer border border-slate-200/70"
-              >
-                <UserPlus className="w-4 h-4 text-slate-600" />
-                <span>Daftar Akun Baru</span>
-              </button>
-            </div>
-          </div>
-
-          {/* ── FITUR & KEUNGGULAN (TRUST BADGES) ── */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-            <div className="rounded-2xl bg-white border border-slate-200 p-5 shadow-2xs space-y-2">
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100">
-                <ShieldCheck className="w-5 h-5" />
-              </div>
-              <h4 className="font-display text-sm font-bold text-slate-900">
-                Driver & Pos Resmi Terverifikasi
-              </h4>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Semua mitra diverifikasi ketat melalui KTP, SIM, dan verifikasi biometrik di pos resmi.
-              </p>
-            </div>
-
-            <div className="rounded-2xl bg-white border border-slate-200 p-5 shadow-2xs space-y-2">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100">
-                <CheckCircle2 className="w-5 h-5" />
-              </div>
-              <h4 className="font-display text-sm font-bold text-slate-900">
-                Sistem Escrow Terlindungi
-              </h4>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Pembayaran Anda disimpan aman di sistem dan baru diteruskan setelah konfirmasi scan QR di pos tujuan.
-              </p>
-            </div>
-
-            <div className="rounded-2xl bg-white border border-slate-200 p-5 shadow-2xs space-y-2">
-              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-100">
-                <Clock className="w-5 h-5" />
-              </div>
-              <h4 className="font-display text-sm font-bold text-slate-900">
-                Tarif Pasti & Terjangkau
-              </h4>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Harga terstandarisasi antar pos tanpa lonjakan biaya tersembunyi selama perjalanan.
-              </p>
-            </div>
-          </div>
-        </div>
-      </main>
-
-      {/* ── FOOTER ── */}
-      <footer className="border-t border-slate-200/80 bg-white/70 backdrop-blur-xs py-6 mt-12">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <div className="flex items-center gap-2">
-            <img src={appLogo || logoAsset} alt="" className="h-5 w-5 object-contain" />
-            <span className="font-bold text-slate-700">{appName || 'SatuRute'}</span>
-            <span>&copy; {new Date().getFullYear()} Hak Cipta Dilindungi.</span>
-          </div>
-          <div className="flex items-center gap-4 font-semibold text-slate-600">
-            <button
-              type="button"
-              onClick={() => navigate('/login')}
-              className="hover:text-brand-600 transition cursor-pointer"
-            >
-              Masuk
+              Pesan Sekarang
             </button>
             <button
               type="button"
               onClick={() => navigate('/register')}
-              className="hover:text-brand-600 transition cursor-pointer"
+              className="w-full sm:w-auto min-w-[180px] px-7 py-3.5 rounded-lg bg-white/10 hover:bg-white/20 text-white font-semibold text-sm sm:text-base border border-white/20 backdrop-blur-md transition active:scale-95 cursor-pointer"
             >
-              Daftar
+              Daftar Jadi Mitra
             </button>
-            <button
-              type="button"
-              onClick={() => navigate('/login')}
-              className="hover:text-brand-600 transition cursor-pointer"
-            >
-              Pusat Bantuan
-            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ── MAIN CONTENT ── */}
+      <main className="flex-1">
+        {/* ── TENTANG & KEUNGGULAN (DARK NAVY + GLASSMORPHISM CARDS) ── */}
+        <section id="tentang" className="scroll-mt-20 py-16 sm:py-20 bg-brand-950">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-10">
+            <div className="text-center max-w-2xl mx-auto space-y-2.5">
+              <span className="text-xs font-bold uppercase tracking-widest text-blue-300">
+                Tentang {brandName}
+              </span>
+              <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                Perjalanan Antarkota yang Lebih Aman &amp; Praktis
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              {FEATURES.map((feat) => {
+                const Icon = feat.icon;
+                const isActive = feat.id === activeFeatureId;
+                return (
+                  <button
+                    key={feat.id}
+                    type="button"
+                    onClick={() => {
+                      setActiveFeatureId(feat.id);
+                      scrollToSection('layanan');
+                    }}
+                    className={`group relative overflow-hidden text-left rounded-2xl p-6 bg-gradient-to-b from-white/[0.06] to-white/[0.02] backdrop-blur-md text-white border transition-all duration-300 cursor-pointer flex flex-col gap-4 hover:-translate-y-1 hover:from-white/[0.09] hover:to-white/[0.03] hover:border-white/25 ${
+                      isActive ? 'border-brand-500/60 shadow-[0_8px_28px_rgba(16,54,125,0.25)]' : 'border-white/10'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="w-11 h-11 rounded-xl flex items-center justify-center bg-brand-500/20 border border-brand-400/30 text-blue-200 transition-transform duration-300 group-hover:scale-105">
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <span className="rounded-full px-3 py-1 text-[11px] font-semibold bg-white/5 text-blue-200 border border-white/10">
+                        {feat.badge}
+                      </span>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <h3 className="font-display text-lg font-bold text-white">
+                        {feat.title}
+                      </h3>
+                      <p className="text-sm leading-relaxed text-slate-300 font-normal">
+                        {feat.desc}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* ── BANNER IKLAN & LAYANAN (BG ABU-ABU) ── */}
+        <section id="layanan" className="scroll-mt-20 pt-12 sm:pt-16 pb-6 sm:pb-8 bg-slate-100">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-12">
+            {/* Banner Iklan Memanjang Kiri-Kanan */}
+            <BannerSlider
+              role="customer"
+              containerClassName="w-full h-[140px] sm:h-[180px] md:h-[200px] lg:h-[220px]"
+              fallback={defaultAdBanner}
+            />
+
+            {/* Pencarian Rute & Layanan */}
+            <div className="w-full">
+              {/* Unified Service Tabs & Search Route Card */}
+              <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-7 shadow-card space-y-6">
+                <div className="text-center max-w-2xl mx-auto space-y-1.5">
+                  <span className="text-xs font-extrabold uppercase tracking-widest text-brand-600">
+                    Layanan Kami
+                  </span>
+                  <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                    Cari &amp; Booking Perjalanan Anda
+                  </h2>
+                </div>
+                {/* Service Tabs */}
+                <div
+                  role="tablist"
+                  aria-label="Pilih Jenis Layanan"
+                  className="grid grid-cols-1 sm:grid-cols-3 gap-3 pb-6 border-b border-slate-100"
+                >
+                  {SERVICES.map((svc) => {
+                    const Icon = svc.icon;
+                    const isSelected = activeService === svc.id;
+                    return (
+                      <button
+                        key={svc.id}
+                        type="button"
+                        role="tab"
+                        aria-selected={isSelected}
+                        onClick={() => setActiveService(svc.id)}
+                        className={`flex items-center gap-3.5 p-4 rounded-xl border text-left transition cursor-pointer ${
+                          isSelected
+                            ? 'bg-brand-600 border-brand-600 text-white shadow-sm'
+                            : 'bg-slate-50/80 border-slate-200 text-slate-700 hover:border-brand-500/40 hover:bg-slate-50'
+                        }`}
+                      >
+                        <div
+                          className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition ${
+                            isSelected
+                              ? 'bg-white/15 text-white'
+                              : 'bg-brand-50 text-brand-600'
+                          }`}
+                        >
+                          <Icon className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <div className={`text-sm font-bold ${isSelected ? 'text-white' : 'text-slate-900'}`}>
+                            {svc.label}
+                          </div>
+                          <div className={`text-xs mt-0.5 leading-snug ${isSelected ? 'text-blue-100' : 'text-slate-500'}`}>
+                            {svc.desc}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Search Route Form */}
+                <form onSubmit={handleSearch} className="space-y-5">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    {/* Pos Asal */}
+                    <div className="min-w-0">
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                        <MapPin className="w-3.5 h-3.5 text-brand-600" />
+                        <span>Pos Asal</span>
+                      </label>
+                      <select
+                        value={origin}
+                        onChange={(e) => setOrigin(e.target.value)}
+                        disabled={isLoadingPoints}
+                        className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl font-medium text-slate-800 focus:outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-500/20 transition-all truncate"
+                      >
+                        <option value="">Semua Pos Asal</option>
+                        {pickupPoints.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.name} {p.cityName ? `(${p.cityName})` : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Pos Tujuan */}
+                    <div className="min-w-0">
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                        <MapPin className="w-3.5 h-3.5 text-amber-500" />
+                        <span>Pos Tujuan</span>
+                      </label>
+                      <select
+                        value={destination}
+                        onChange={(e) => setDestination(e.target.value)}
+                        disabled={isLoadingPoints}
+                        className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl font-medium text-slate-800 focus:outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-500/20 transition-all truncate"
+                      >
+                        <option value="">Semua Pos Tujuan</option>
+                        {pickupPoints.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.name} {p.cityName ? `(${p.cityName})` : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Tanggal */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                        <Calendar className="w-3.5 h-3.5 text-brand-600" />
+                        <span>Tanggal Keberangkatan</span>
+                      </label>
+                      <input
+                        type="date"
+                        min={TODAY_ISO}
+                        value={date}
+                        onChange={(e) => setDate(e.target.value)}
+                        className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl font-medium text-slate-800 focus:outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-500/20 transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-100">
+                    <button
+                      type="submit"
+                      className="w-full h-12 inline-flex items-center justify-center gap-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm sm:text-base shadow-soft transition-all active:scale-[0.99] cursor-pointer"
+                    >
+                      <Search className="w-4 h-4" />
+                      <span>Cari Jadwal Perjalanan</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── MITRA DRIVER SECTION (RINGKAS & BG ABU-ABU) ── */}
+        <section id="mitra" className="scroll-mt-20 pt-2 pb-12 sm:pt-4 sm:pb-16 bg-slate-100">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="rounded-2xl bg-gradient-to-r from-brand-700 via-brand-600 to-brand-500 text-white p-6 sm:p-8 shadow-card flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
+              <div className="space-y-1.5 max-w-xl">
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-sky-200">
+                  <Users className="w-3.5 h-3.5" />
+                  <span>Mitra Driver {brandName}</span>
+                </span>
+                <h2 className="font-display text-xl sm:text-2xl font-extrabold text-white tracking-tight">
+                  Bergabung Menjadi Mitra Pengemudi Resmi
+                </h2>
+                <p className="text-xs sm:text-sm text-blue-100 leading-relaxed">
+                  Jadwal fleksibel, penumpang terverifikasi dari pos resmi, dan pencairan dana transparan.
+                </p>
+              </div>
+
+              <div className="shrink-0 w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={() => navigate('/register')}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-white hover:bg-brand-50 px-5 py-3 text-sm font-bold text-brand-700 shadow-soft transition active:scale-95 cursor-pointer"
+                >
+                  <span>Daftar Jadi Mitra</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      {/* ── FOOTER (KONTAK & SOSIAL LINK) ── */}
+      <footer className="border-t border-slate-200 bg-white pt-12 pb-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 pb-8 border-b border-slate-200/80">
+            {/* Brand Info */}
+            <div className="md:col-span-5 space-y-3">
+              <div className="flex items-center gap-2.5">
+                <img
+                  src={appLogo || logoAsset}
+                  alt={brandName}
+                  className="h-8 w-8 object-contain"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = logoAsset;
+                  }}
+                />
+                <span className="font-display text-lg font-extrabold text-brand-700">
+                  {brandName}
+                </span>
+              </div>
+              <p className="text-sm text-slate-600 leading-relaxed max-w-sm">
+                Platform transportasi dan pengiriman barang antarkota berbasis pos resmi terverifikasi dengan perlindungan pembayaran escrow.
+              </p>
+            </div>
+
+            {/* Kontak Kami */}
+            <div className="md:col-span-4 space-y-3">
+              <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-900">
+                Kontak Kami
+              </h3>
+              <div className="space-y-2.5 text-sm text-slate-600">
+                <a
+                  href="mailto:cs@saturute.id"
+                  className="flex items-center gap-2.5 hover:text-brand-600 transition w-fit"
+                >
+                  <Mail className="w-4 h-4 text-brand-600 shrink-0" />
+                  <span>cs@saturute.id</span>
+                </a>
+                <a
+                  href="tel:+6281122334455"
+                  className="flex items-center gap-2.5 hover:text-brand-600 transition w-fit"
+                >
+                  <Phone className="w-4 h-4 text-brand-600 shrink-0" />
+                  <span>0811-2233-4455</span>
+                </a>
+                <div className="flex items-center gap-2.5 text-slate-500">
+                  <Clock className="w-4 h-4 text-brand-600 shrink-0" />
+                  <span>Senin – Minggu, 06.00 – 22.00 WIB</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Sosial Media */}
+            <div className="md:col-span-3 space-y-3">
+              <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-900">
+                Ikuti Kami
+              </h3>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Dapatkan info promo dan rute terbaru melalui kanal resmi kami.
+              </p>
+              <div className="flex flex-wrap items-center gap-2.5 pt-1">
+                {(socialLinks.length > 0 ? socialLinks : DEFAULT_SOCIAL_LINKS).map((item) => (
+                  <a
+                    key={item.id || item.platform}
+                    href={item.url || '#'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={item.label || item.platform || 'Sosial Media'}
+                    className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-brand-50 border border-slate-200 hover:border-brand-300 text-slate-600 hover:text-brand-600 flex items-center justify-center transition"
+                  >
+                    <SocialIcon
+                      platform={item.platform}
+                      logoUrl={item.logoUrl || item.platform}
+                      iconType={item.iconType}
+                      className="w-4 h-4"
+                    />
+                  </a>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Bar */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+            <span>
+              &copy; {new Date().getFullYear()} <strong className="font-bold text-slate-700">{brandName}</strong>. Hak Cipta Dilindungi.
+            </span>
+            <span>Layanan Tumpangan &amp; Logistik Antarkota Resmi</span>
           </div>
         </div>
       </footer>

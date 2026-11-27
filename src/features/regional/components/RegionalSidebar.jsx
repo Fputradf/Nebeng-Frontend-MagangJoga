@@ -14,9 +14,10 @@ import {
   Settings,
   Headset,
   ShieldAlert,
+  Siren,
 } from 'lucide-react';
 
-import logoImage from '../../../assets/LOGO.png';
+import logoImage from '../../../assets/LOGO-dark.png';
 import { useAppConfig } from '../../../context/AppConfigContext';
 
 const MENU_GROUPS = [
@@ -53,6 +54,10 @@ const MENU_GROUPS = [
         icon: ShieldAlert,
       },
       {
+        name: 'Log Darurat SOS',
+        icon: Siren,
+      },
+      {
         name: 'Laporan Keuangan',
         icon: FileText,
       },
@@ -72,7 +77,7 @@ export default function RegionalSidebar({
   activeMenu = 'Dashboard Wilayah',
   onMenuSelect,
   onLogout, isOpen: propIsOpen, onClose: propOnClose }) {
-  const { appName, appLogo } = useAppConfig();
+  const { appName, appLogoDark } = useAppConfig();
   const [showLogoutModal, setShowLogoutModal] =
     useState(false);
 
@@ -161,9 +166,9 @@ export default function RegionalSidebar({
           <div className="mb-8 px-2 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <img
-                src={appLogo || logoImage}
+                src={appLogoDark || logoImage}
                 alt={`Logo ${appName || 'SatuRute'}`}
-                className="h-8 w-8 object-contain shrink-0 filter brightness-0 invert"
+                className="h-8 w-8 object-contain shrink-0"
                 onError={(e) => {
                   e.target.onerror = null;
                   e.target.src = logoImage;

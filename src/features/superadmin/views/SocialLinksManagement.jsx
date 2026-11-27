@@ -251,29 +251,25 @@ export default function SocialLinksManagement() {
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto font-sans">
       {/* ── HEADER BANNER ── */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#10367D] p-6 text-white shadow-card sm:p-8">
-        <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10 pointer-events-none" />
-        <div className="absolute bottom-0 right-32 h-28 w-28 rounded-full bg-accent/20 pointer-events-none" />
-
-        <div className="relative flex flex-col gap-4 pb-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-              <span className="text-[11px] font-bold uppercase tracking-widest text-accent flex items-center gap-1.5">
-                <Share2 className="w-3.5 h-3.5" /> Media & Saluran Resmi
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
+        <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
+        <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 mb-1 min-w-0">
+              <span className="w-2 h-2 rounded-full bg-accent animate-pulse shrink-0" />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-accent flex items-center gap-1.5 truncate">
+                <Share2 className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">Media &amp; Saluran Resmi</span>
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+            <h1 className="font-display text-xl sm:text-2xl font-bold text-white tracking-tight truncate">
               Manajemen Link Sosial Media
             </h1>
-            <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
-              Kelola tautan sosial media resmi SatuRute yang ditampilkan pada form login.
-            </p>
           </div>
 
-          <div className="flex items-center gap-3 self-start sm:self-auto shrink-0">
+          <div className="flex items-center gap-2.5 self-start sm:self-auto shrink-0">
             {/* Slot Info Badge */}
-            <div className="px-3.5 py-2 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center gap-2 text-xs">
+            <div className="px-3.5 py-2 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center gap-2 text-xs whitespace-nowrap">
               <span className="text-blue-100 font-medium">Slot Login:</span>
               <span className="font-bold text-accent">{activeCount} / 5 Aktif</span>
             </div>
@@ -281,15 +277,13 @@ export default function SocialLinksManagement() {
             {/* Tambah Button */}
             <button
               onClick={handleOpenCreateModal}
-              className="px-4 py-2 bg-accent hover:bg-accent/90 text-slate-900 rounded-xl text-xs sm:text-sm font-bold shadow-sm transition flex items-center justify-center gap-2 cursor-pointer shrink-0 active:scale-95"
+              className="px-4 py-2 bg-white hover:bg-blue-50 text-[#10367D] rounded-xl text-xs sm:text-sm font-bold shadow-sm transition flex items-center justify-center gap-2 cursor-pointer shrink-0 active:scale-95 whitespace-nowrap"
             >
               <Plus className="w-4 h-4 stroke-[2.5]" />
               <span>Tambah Link Sosmed</span>
             </button>
           </div>
         </div>
-        <div className="absolute bottom-4 left-6 right-6 border-t border-dashed border-white/25 sm:left-8 sm:right-8" />
-        <span className="absolute bottom-[11px] right-6 h-2.5 w-2.5 rounded-full border-2 border-white bg-accent sm:right-8" />
       </section>
 
       {/* ── LIST / TABLE DATA ── */}

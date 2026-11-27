@@ -202,35 +202,29 @@ export default function AuditFinancialReport() {
       </div>
 
       {/* ── BANNER GRADIENT ── */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] p-6 text-white shadow-card sm:p-8 print:hidden">
-        <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10" />
-        <div className="absolute bottom-0 right-32 h-28 w-28 rounded-full bg-accent/20" />
-        <div className="relative flex flex-col gap-4 pb-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-              <span className="text-[11px] font-bold uppercase tracking-widest text-accent">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card print:hidden">
+        <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
+        <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 mb-1 min-w-0">
+              <span className="w-2 h-2 rounded-full bg-accent animate-pulse shrink-0" />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-accent truncate">
                 AUDIT & FINANCIAL REPORTING
               </span>
             </div>
-            <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
+            <h1 className="font-display text-xl sm:text-2xl font-bold text-white tracking-tight truncate">
               Audit Keuangan & Dana Jaminan
             </h1>
-            <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
-              Pantau Pendapatan Dana Jaminan Perjalanan secara langsung dari database sistem.
-            </p>
           </div>
 
           <button
             onClick={() => window.print()}
-            className="flex items-center gap-2 px-4 py-2.5 bg-accent hover:bg-accent/90 text-slate-900 rounded-2xl text-xs sm:text-sm font-bold transition cursor-pointer shadow-sm shrink-0 self-start sm:self-auto"
+            className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-blue-50 text-[#10367D] rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer shadow-sm shrink-0 whitespace-nowrap self-start sm:self-auto"
           >
             <Printer size={16} />
             <span>Cetak Laporan PDF</span>
           </button>
         </div>
-        <div className="absolute bottom-4 left-6 right-6 border-t border-dashed border-white/25 sm:left-8 sm:right-8" />
-        <span className="absolute bottom-[11px] right-6 h-2.5 w-2.5 rounded-full border-2 border-white bg-accent sm:right-8" />
       </section>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 print:hidden">
@@ -241,7 +235,8 @@ export default function AuditFinancialReport() {
           ).toLocaleString('id-ID')}`}
           subtitle="Menunggu penyelesaian trip"
           icon={Lock}
-          iconVariant="amber"
+          iconVariant="blue"
+          variant="light"
         />
         <StatCard
           title="PENCAIRAN / PENARIKAN DANA"
@@ -250,10 +245,12 @@ export default function AuditFinancialReport() {
           ).toLocaleString('id-ID')}`}
           subtitle="Berhasil ditransfer ke mitra"
           icon={ArrowDownToLine}
-          iconVariant="emerald"
+          iconVariant="blue"
+          variant="light"
         />
         <StatCard
-          variant="primary"
+          variant="light"
+          iconVariant="blue"
           title="TOTAL VOLUME LEDGER"
           value={`Rp ${Number(
             financialStats.totalTransactions

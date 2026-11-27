@@ -73,6 +73,8 @@
 │   │   ├── 📄 auth-illustration.png
 │   │   ├── 📄 AuthIllustration.png
 │   │   ├── 📄 Daftar.png
+│   │   ├── 📄 hero-transport.jpg
+│   │   ├── 📄 LOGO-dark.png
 │   │   └── 📄 LOGO.png
 │   ├── 📁 components/
 │   │   ├── 📁 common/
@@ -157,7 +159,11 @@
 │   │   ├── 📁 help/
 │   │   │   └── 📄 HelpCenterView.jsx
 │   │   ├── 📁 landing/
-│   │   │   └── 📄 CustomerLandingPage.jsx
+│   │   │   ├── 📁 components/
+│   │   │   │   └── 📄 LandingNavbar.jsx
+│   │   │   ├── 📄 CustomerLandingPage.jsx
+│   │   │   ├── 📄 PublicFaqPage.jsx
+│   │   │   └── 📄 PublicTermsPage.jsx
 │   │   ├── 📁 mitra/
 │   │   │   ├── 📁 components/
 │   │   │   │   ├── 📄 MitraProfileModal.jsx
@@ -216,7 +222,8 @@
 │   │       ├── 📁 components/
 │   │       │   ├── 📄 SuperadminHeader.jsx
 │   │       │   ├── 📄 SuperadminProfileModal.jsx
-│   │       │   └── 📄 SuperadminSidebar.jsx
+│   │       │   ├── 📄 SuperadminSidebar.jsx
+│   │       │   └── 📄 SuperadminTabbedHub.jsx
 │   │       ├── 📄 SuperadminLayout.jsx
 │   │       └── 📁 views/
 │   │           ├── 📄 AppConfigManagement.jsx
@@ -231,8 +238,10 @@
 │   │           ├── 📄 RegionsManagement.jsx
 │   │           ├── 📄 SanctionManagement.jsx
 │   │           ├── 📄 SocialLinksManagement.jsx
+│   │           ├── 📄 SosLogsManagement.jsx
 │   │           ├── 📄 SuperadminAccountSettings.jsx
 │   │           ├── 📄 SuperadminDashboard.jsx
+│   │           ├── 📄 SuperadminHubs.jsx
 │   │           ├── 📄 UserGovernance.jsx
 │   │           └── 📄 VoucherManagement.jsx
 │   ├── 📁 hooks/

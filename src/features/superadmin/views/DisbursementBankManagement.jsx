@@ -229,57 +229,50 @@ export default function DisbursementBankManagement() {
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
       {/* ── BANNER GRADIENT HEADER ── */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#0c2353] via-[#10367D] to-[#1e58b8] p-6 text-white shadow-card sm:p-8">
-        <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10 blur-xl pointer-events-none" />
-        <div className="absolute bottom-0 right-32 h-28 w-28 rounded-full bg-amber-400/20 blur-lg pointer-events-none" />
-
-        <div className="relative flex flex-col gap-4 pb-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-              <span className="text-[11px] font-bold uppercase tracking-widest text-amber-300 flex items-center gap-1.5">
-                <Landmark className="w-3.5 h-3.5" /> SENTRALISASI KEBIJAKAN PENCAIRAN SALDO
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
+        <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
+        <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 mb-1 min-w-0">
+              <span className="w-2 h-2 rounded-full bg-accent animate-pulse shrink-0" />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-accent flex items-center gap-1.5 truncate">
+                <Landmark className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">SENTRALISASI KEBIJAKAN PENCAIRAN SALDO</span>
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+            <h1 className="font-display text-xl sm:text-2xl font-bold text-white tracking-tight truncate">
               Konfigurasi Bank Pencairan
             </h1>
-            <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
-              Atur dan batasi rekening bank resmi yang diizinkan untuk penarikan saldo (disbursement) oleh Customer dan Mitra. Pengguna hanya dapat memilih bank yang berstatus aktif.
-            </p>
           </div>
 
-          <div className="flex items-center gap-3 self-start sm:self-auto shrink-0">
+          <div className="flex items-center gap-2.5 self-start sm:self-auto shrink-0">
             <button
               onClick={loadBanks}
               disabled={isLoading}
               className="p-2.5 bg-white/15 hover:bg-white/25 border border-white/20 rounded-xl backdrop-blur text-white transition cursor-pointer disabled:opacity-50 shadow-sm"
               title="Segarkan Data"
             >
-              <RefreshCw className={`w-4 h-4 text-amber-300 ${isLoading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-4 h-4 text-accent ${isLoading ? 'animate-spin' : ''}`} />
             </button>
 
             <button
               onClick={handleOpenCreateModal}
-              className="px-4 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-xl text-xs sm:text-sm font-bold shadow-lg shadow-amber-400/20 transition flex items-center justify-center gap-2 cursor-pointer shrink-0 active:scale-95"
+              className="px-4 py-2.5 bg-white hover:bg-blue-50 text-[#10367D] rounded-xl text-xs sm:text-sm font-bold shadow-sm transition flex items-center justify-center gap-2 cursor-pointer shrink-0 active:scale-95 whitespace-nowrap"
             >
               <Plus className="w-4 h-4 stroke-[2.5]" />
               <span>Tambah Bank Baru</span>
             </button>
           </div>
         </div>
-
-        {/* NOTIFIKASI SUKSES DISIMPAN */}
-        {successNotice && (
-          <div className="mt-2 p-3 bg-emerald-500/20 border border-emerald-400/40 rounded-xl flex items-center gap-2.5 text-xs text-emerald-100">
-            <CheckCircle2 className="w-4 h-4 text-emerald-300 shrink-0" />
-            <span>Perubahan konfigurasi bank pencairan telah berhasil disimpan dan disinkronkan ke seluruh sistem!</span>
-          </div>
-        )}
-
-        <div className="absolute bottom-4 left-6 right-6 border-t border-dashed border-white/25 sm:left-8 sm:right-8" />
-        <span className="absolute bottom-[11px] right-6 h-2.5 w-2.5 rounded-full border-2 border-white bg-amber-400 sm:right-8" />
       </section>
+
+      {/* NOTIFIKASI SUKSES DISIMPAN */}
+      {successNotice && (
+        <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2.5 text-xs text-emerald-800">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+          <span>Perubahan konfigurasi bank pencairan telah berhasil disimpan dan disinkronkan ke seluruh sistem!</span>
+        </div>
+      )}
 
       {/* ── STATS CARDS ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -288,6 +281,7 @@ export default function DisbursementBankManagement() {
           value={isLoading ? '...' : totalCount}
           subtitle="Semua opsi kliring sistem"
           icon={Landmark}
+          iconVariant="blue"
           badgeText="Sistem"
           badgeVariant="blue"
         />
@@ -296,22 +290,25 @@ export default function DisbursementBankManagement() {
           value={isLoading ? '...' : activeCount}
           subtitle="Tampil di Customer & Mitra"
           icon={CheckCircle2}
+          iconVariant="blue"
           badgeText="Bisa Dipilih"
-          badgeVariant="emerald"
+          badgeVariant="blue"
         />
         <StatCard
           title="Bank Dinonaktifkan"
           value={isLoading ? '...' : inactiveCount}
           subtitle="Ditutup sementara oleh Admin"
           icon={AlertTriangle}
+          iconVariant="blue"
           badgeText={inactiveCount > 0 ? 'Dibatasi' : 'Nihil'}
-          badgeVariant={inactiveCount > 0 ? 'rose' : 'neutral'}
+          badgeVariant="blue"
         />
         <StatCard
           title="Kecepatan Kliring"
           value="BI FAST / 24 Jam"
           subtitle="SLA otomatis Xendit Disbursement"
           icon={CreditCard}
+          iconVariant="blue"
           badgeText="Instan"
           badgeVariant="blue"
         />

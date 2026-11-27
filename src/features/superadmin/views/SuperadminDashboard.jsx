@@ -325,21 +325,25 @@ export default function SuperadminDashboard() {
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-sans">
 
       {/* ── BANNER ── */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] p-6 text-white shadow-card sm:p-8">
-        <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10" />
-        <div className="absolute bottom-0 right-32 h-28 w-28 rounded-full bg-accent/20" />
-        <div className="relative flex flex-col gap-3 pb-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="font-display text-2xl font-bold">Performa platform hari ini</h1>
-            <p className="mt-1 text-sm text-blue-100">Ringkasan global dan real-time seluruh wilayah.</p>
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
+        <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
+        <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 mb-1 min-w-0">
+              <span className="w-2 h-2 rounded-full bg-accent animate-pulse shrink-0" />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-accent truncate">
+                RINGKASAN PLATFORM GLOBAL
+              </span>
+            </div>
+            <h1 className="font-display text-xl sm:text-2xl font-bold text-white tracking-tight truncate">
+              Performa Platform Hari Ini
+            </h1>
           </div>
-          <span className="flex items-center gap-2 self-start rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold backdrop-blur sm:self-auto">
+          <span className="flex items-center gap-2 self-start rounded-full bg-white/15 px-3.5 py-1.5 text-xs font-semibold backdrop-blur sm:self-auto shrink-0 whitespace-nowrap">
             <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
             Live
           </span>
         </div>
-        <div className="absolute bottom-4 left-6 right-6 border-t border-dashed border-white/25 sm:left-8 sm:right-8" />
-        <span className="absolute bottom-[11px] right-6 h-2.5 w-2.5 rounded-full border-2 border-white bg-accent sm:right-8" />
       </section>
 
       {/* ── KPI CARDS ── */}

@@ -3,28 +3,18 @@ import ConfirmModal from '../../../components/ui/ConfirmModal';
 import {
   LayoutDashboard,
   ShieldCheck,
-  MapPin,
-  Users,
-  UserCheck,
-  ShoppingBag,
-  Gift,
   Receipt,
   LogOut,
-  AlertTriangle,
   Menu,
   X,
   Image as ImageIcon,
-  Ticket,
   Settings,
-  Share2,
   SlidersHorizontal,
-  Landmark,
   ShieldAlert,
   Car,
-  FileCheck,
   CreditCard,
 } from 'lucide-react';
-import logoImage from '../../../assets/LOGO.png';
+import logoImage from '../../../assets/LOGO-dark.png';
 import { useAppConfig } from '../../../context/AppConfigContext';
 
 const MENU_GROUPS = [
@@ -32,35 +22,30 @@ const MENU_GROUPS = [
     label: 'Menu Utama',
     items: [
       { name: 'Dashboard', icon: LayoutDashboard },
-      { name: 'Manajemen Wilayah', icon: ShieldCheck },
-      { name: 'Admin Wilayah', icon: UserCheck },
-      { name: 'Pos Mitra', icon: MapPin },
-      { name: 'Driver', icon: Car },
-      { name: 'Verifikasi KYC', icon: FileCheck },
+      { name: 'Wilayah & Pos', icon: ShieldCheck },
+      { name: 'Driver & KYC', icon: Car },
     ],
   },
   {
-    label: 'Manajemen Lanjutan',
+    label: 'Keuangan & Kepatuhan',
     items: [
-      { name: 'Konfigurasi Tarif', icon: ShoppingBag },
-      { name: 'Gateway Pembayaran', icon: CreditCard },
-      { name: 'Konfigurasi Sanksi', icon: AlertTriangle },
-      { name: 'Bank Pencairan', icon: Landmark },
-      { name: 'Laporan Pelanggaran', icon: ShieldAlert },
-      { name: 'Konfigurasi Logo & Nama', icon: SlidersHorizontal },
-      { name: 'Manajemen Merchandise', icon: Gift },
-      { name: 'Manajemen Banner', icon: ImageIcon },
-      { name: 'Voucher', icon: Ticket },
-      { name: 'Sosial Link', icon: Share2 },
+      { name: 'Tarif & Pembayaran', icon: CreditCard },
       { name: 'Audit & Keuangan', icon: Receipt },
-      { name: 'User Governance', icon: Users },
+      { name: 'Kepatuhan & User', icon: ShieldAlert },
+    ],
+  },
+  {
+    label: 'Pemasaran & Sistem',
+    items: [
+      { name: 'Promo & Konten', icon: ImageIcon },
+      { name: 'Branding & Sosial', icon: SlidersHorizontal },
       { name: 'Pengaturan Akun', icon: Settings },
     ],
   },
 ];
 
 export default function SuperadminSidebar({ activeMenu = 'Dashboard', onMenuSelect, onLogout, isOpen: propIsOpen, onClose: propOnClose }) {
-  const { appName, appLogo } = useAppConfig();
+  const { appName, appLogoDark } = useAppConfig();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [internalOpen, setInternalOpen] = useState(false);
@@ -128,9 +113,9 @@ export default function SuperadminSidebar({ activeMenu = 'Dashboard', onMenuSele
               title="Klik untuk konfigurasi logo dan nama aplikasi"
             >
               <img
-                src={appLogo || logoImage}
+                src={appLogoDark || logoImage}
                 alt={`Logo ${appName || 'SatuRute'}`}
-                className="h-8 w-8 object-contain shrink-0 filter brightness-0 invert transition-transform group-hover:scale-105"
+                className="h-8 w-8 object-contain shrink-0 transition-transform group-hover:scale-105"
                 onError={(e) => {
                   e.target.onerror = null;
                   e.target.src = logoImage;

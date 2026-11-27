@@ -5,6 +5,7 @@ import SocialIcon from '../ui/SocialIcon';
 import GuestHelpModal from './GuestHelpModal';
 import PrivacyPolicyModal from './PrivacyPolicyModal';
 import TermsOfServiceModal from './TermsOfServiceModal';
+import { useAppConfig } from '../../context/AppConfigContext';
 
 export default function AuthLayout({
   children,
@@ -19,6 +20,7 @@ export default function AuthLayout({
   maxWidth = 'max-w-xl',
   socialLinks = [],
 }) {
+  const { appLogo, appLogoDark } = useAppConfig();
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
@@ -152,13 +154,22 @@ export default function AuthLayout({
 
           {/* Logo */}
           <div className="flex items-center gap-2">
-            {logo && (
+            {(appLogoDark || logo) && (
               <img
-                src={logo}
+                src={appLogoDark || logo}
                 alt={brandName}
                 width={32}
                 height={32}
-                className="w-8 h-8 object-contain"
+                className="w-8 h-8 object-contain lg:hidden"
+              />
+            )}
+            {(logo || appLogo) && (
+              <img
+                src={logo || appLogo}
+                alt={brandName}
+                width={32}
+                height={32}
+                className="hidden lg:block w-8 h-8 object-contain"
               />
             )}
             <span className="font-display text-xl sm:text-2xl font-black tracking-tight text-white lg:text-[#10367D]">

@@ -17,6 +17,7 @@ const REGIONAL_MENU_PATH = {
   'Verifikasi ID & Face': 'verifikasi',
   'Pemantauan Trip': 'trip-order',
   'Laporan Pelanggaran': 'reports',
+  'Log Darurat SOS': 'sos-logs',
   'Laporan Keuangan': 'laporan',
   'Bantuan Chat Wilayah': 'bantuan-chat',
   'Pengaturan Akun': 'profile/pengaturan',

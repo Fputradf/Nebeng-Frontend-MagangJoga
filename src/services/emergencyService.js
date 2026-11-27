@@ -19,6 +19,15 @@ export const emergencyService = {
   },
 
   /**
+   * Mengambil riwayat lengkap log darurat SOS dengan filter & paginasi
+   * @param {{ status?: string, search?: string, page?: number, limit?: number }} params
+   */
+  async getSosLogs(params = {}) {
+    const response = await apiClient.get('/emergency/sos/logs', { params });
+    return response.data;
+  },
+
+  /**
    * Menyelesaikan / menutup laporan SOS oleh Admin Regional
    * @param {string|number} sosId
    * @param {{ status: 'RESOLVED'|'FALSE_ALARM', notes?: string }} payload

@@ -21,7 +21,9 @@ export default function PricingPolicyManagement() {
 
   const [platformFee, setPlatformFee] = useState({
     rideFeePercent: 15,
-    parcelFeePercent: 12
+    parcelFeePercent: 12,
+    rideCustomerFee: 0,
+    parcelCustomerFee: 0
   });
 
   const [parcelMatrix, setParcelMatrix] = useState([
@@ -64,6 +66,7 @@ export default function PricingPolicyManagement() {
             setPlatformFee(prev => ({
               ...prev,
               rideFeePercent: Number(motorData.adminFeePercentage) || 15,
+              rideCustomerFee: Number(motorData.customerServiceFee) || 0,
             }));
           }
 
@@ -80,6 +83,8 @@ export default function PricingPolicyManagement() {
               ...prev,
               parcelFeePercent:
                 Number(barangList[0].adminFeePercentage) || 12,
+              parcelCustomerFee:
+                Number(barangList[0].customerServiceFee) || 0,
             }));
 
             setParcelMatrix(prevMatrix =>
@@ -153,13 +158,12 @@ export default function PricingPolicyManagement() {
 
     if (Number.isNaN(num)) return;
 
+    const isPercentField = field === 'rideFeePercent' || field === 'parcelFeePercent';
     setPlatformFee(prev => ({
       ...prev,
-      [field]: clamp(
-        num,
-        MIN_FEE_PERCENT,
-        MAX_FEE_PERCENT
-      )
+      [field]: isPercentField
+        ? clamp(num, MIN_FEE_PERCENT, MAX_FEE_PERCENT)
+        : clamp(num, MIN_FARE, MAX_FARE)
     }));
   };
 
@@ -213,20 +217,32 @@ export default function PricingPolicyManagement() {
       }
     );
 
-    Object.entries(platformFee).forEach(
-      ([key, value]) => {
-        if (
-          value === '' ||
-          Number.isNaN(Number(value)) ||
-          Number(value) < MIN_FEE_PERCENT ||
-          Number(value) > MAX_FEE_PERCENT
-        ) {
-          errors.push(
-            `Komisi "${key}" harus di antara ${MIN_FEE_PERCENT}% - ${MAX_FEE_PERCENT}%.`
-          );
-        }
+    ['rideFeePercent', 'parcelFeePercent'].forEach((key) => {
+      const value = platformFee[key];
+      if (
+        value === '' ||
+        Number.isNaN(Number(value)) ||
+        Number(value) < MIN_FEE_PERCENT ||
+        Number(value) > MAX_FEE_PERCENT
+      ) {
+        errors.push(
+          `Komisi "${key}" harus di antara ${MIN_FEE_PERCENT}% - ${MAX_FEE_PERCENT}%.`
+        );
       }
-    );
+    });
+
+    ['rideCustomerFee', 'parcelCustomerFee'].forEach((key) => {
+      const value = platformFee[key];
+      if (
+        value === '' ||
+        Number.isNaN(Number(value)) ||
+        Number(value) < MIN_FARE
+      ) {
+        errors.push(
+          `Biaya layanan customer "${key}" tidak valid.`
+        );
+      }
+    });
 
     if (errors.length > 0) {
       setFormErrors(errors);
@@ -256,6 +272,12 @@ export default function PricingPolicyManagement() {
         ),
         parcelFeePercent: Number(
           platformFee.parcelFeePercent
+        ),
+        rideCustomerFee: Number(
+          platformFee.rideCustomerFee || 0
+        ),
+        parcelCustomerFee: Number(
+          platformFee.parcelCustomerFee || 0
         ),
         parcelMatrix: parcelMatrix.map(item => ({
           size: item.size,
@@ -291,30 +313,26 @@ export default function PricingPolicyManagement() {
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
 
       {/* ── BANNER GRADIENT ── */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] p-6 text-white shadow-card sm:p-8">
-        <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10" />
-        <div className="absolute bottom-0 right-32 h-28 w-28 rounded-full bg-accent/20" />
-        <div className="relative flex flex-col gap-4 pb-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-              <span className="text-[11px] font-bold uppercase tracking-widest text-accent">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
+        <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
+        <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 mb-1 min-w-0">
+              <span className="w-2 h-2 rounded-full bg-accent animate-pulse shrink-0" />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-accent truncate">
                 GLOBAL PRICING POLICY & COMMISSION SETTINGS
               </span>
             </div>
-            <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
+            <h1 className="font-display text-xl sm:text-2xl font-bold text-white tracking-tight truncate">
               Konfigurasi Tarif Global & Komisi
             </h1>
-            <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
-              Atur tarif dasar perjalanan, matriks logistik paket berdasarkan batas berat, serta potongan komisi.
-            </p>
           </div>
 
           <button
             type="button"
             onClick={handleSaveAll}
             disabled={isSubmitting}
-            className="flex items-center gap-2 px-4 py-2.5 bg-accent hover:bg-accent/90 text-slate-900 rounded-2xl text-xs sm:text-sm font-bold transition cursor-pointer shadow-sm shrink-0 self-start sm:self-auto disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-blue-50 text-[#10367D] rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer shadow-sm shrink-0 whitespace-nowrap self-start sm:self-auto disabled:opacity-50"
           >
             <Save size={16} />
             <span>
@@ -324,8 +342,6 @@ export default function PricingPolicyManagement() {
             </span>
           </button>
         </div>
-        <div className="absolute bottom-4 left-6 right-6 border-t border-dashed border-white/25 sm:left-8 sm:right-8" />
-        <span className="absolute bottom-[11px] right-6 h-2.5 w-2.5 rounded-full border-2 border-white bg-accent sm:right-8" />
       </section>
 
       {notification && (
@@ -577,6 +593,34 @@ export default function PricingPolicyManagement() {
                 min={0}
                 value={platformFee.parcelFeePercent}
                 onChange={handleFeeChange('parcelFeePercent')}
+                className="w-full bg-white border border-neutral-200 rounded-xl px-3 py-1.5 text-[13px] font-bold text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#74B4D9]"
+              />
+            </div>
+
+            <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-200/80 space-y-2">
+              <label className="block text-[12px] font-bold uppercase text-neutral-500">
+                Biaya Layanan Customer - Transportasi (Rp)
+              </label>
+
+              <input
+                type="number"
+                min={0}
+                value={platformFee.rideCustomerFee}
+                onChange={handleFeeChange('rideCustomerFee')}
+                className="w-full bg-white border border-neutral-200 rounded-xl px-3 py-1.5 text-[13px] font-bold text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#74B4D9]"
+              />
+            </div>
+
+            <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-200/80 space-y-2">
+              <label className="block text-[12px] font-bold uppercase text-neutral-500">
+                Biaya Layanan Customer - Paket (Rp)
+              </label>
+
+              <input
+                type="number"
+                min={0}
+                value={platformFee.parcelCustomerFee}
+                onChange={handleFeeChange('parcelCustomerFee')}
                 className="w-full bg-white border border-neutral-200 rounded-xl px-3 py-1.5 text-[13px] font-bold text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#74B4D9]"
               />
             </div>

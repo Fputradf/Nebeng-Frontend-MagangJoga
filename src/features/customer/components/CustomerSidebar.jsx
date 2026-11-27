@@ -17,7 +17,7 @@ import {
   HelpCircle,
   Receipt,
 } from 'lucide-react';
-import logoAsset from '../../../assets/logo.png';
+import logoAsset from '../../../assets/LOGO-dark.png';
 import { useAppConfig } from '../../../context/AppConfigContext';
 import paymentGatewayService from '../../../services/paymentGatewayService';
 
@@ -30,7 +30,7 @@ export default function CustomerSidebar({
   isOpen: propIsOpen,
   onClose: propOnClose,
 }) {
-  const { appName, appLogo } = useAppConfig();
+  const { appName, appLogoDark } = useAppConfig();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [internalOpen, setInternalOpen] = useState(false);
@@ -169,12 +169,12 @@ export default function CustomerSidebar({
           <div className="mb-8 px-2 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <img
-                src={appLogo || logoAsset}
+                src={appLogoDark || logoAsset}
                 alt={`Logo ${appName || 'SatuRute'}`}
-                className="h-8 w-8 object-contain shrink-0 filter brightness-0 invert"
+                className="h-8 w-8 object-contain shrink-0"
                 onError={(e) => {
                   e.target.onerror = null;
-                  e.target.src = '/logo.png';
+                  e.target.src = logoAsset;
                 }}
               />
               <span className="font-bold text-white text-lg tracking-tight leading-none truncate max-w-[140px]">

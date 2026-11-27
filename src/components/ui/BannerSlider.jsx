@@ -1,8 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { bannerService } from '../../services/bannerService';
 import { ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
 
-export const BannerSlider = ({ role }) => {
+export const BannerSlider = ({
+  role,
+  containerClassName = 'h-48 md:h-64 mb-6',
+  fallback = null,
+}) => {
   const [banners, setBanners] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -37,10 +41,11 @@ export const BannerSlider = ({ role }) => {
     setCurrentIndex((prev) => (prev === 0 ? banners.length - 1 : prev - 1));
   };
 
-  if (loading || banners.length === 0) return null;
+  if (loading) return null;
+  if (banners.length === 0) return fallback;
 
   return (
-    <div className="relative w-full h-48 md:h-64 rounded-2xl overflow-hidden mb-6 group bg-slate-900 shadow-card">
+    <div className={`relative w-full rounded-2xl overflow-hidden group bg-slate-900 shadow-card ${containerClassName}`}>
       {banners.map((banner, index) => {
         const isActive = index === currentIndex;
         return (

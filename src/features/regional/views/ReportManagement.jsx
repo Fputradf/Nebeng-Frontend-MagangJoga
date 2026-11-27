@@ -26,6 +26,7 @@ import BaseModal from '../../../components/ui/BaseModal';
 import { SkeletonTableRows } from '../../../components/ui/Skeleton';
 import EmptyState from '../../../components/ui/EmptyState';
 import StatusBadge from '../../../components/ui/StatusBadge';
+import StatCard from '../../../components/ui/StatCard';
 
 const STATUS_CONFIG = {
   PENDING: { label: 'Menunggu', variant: 'amber', icon: Clock },
@@ -170,28 +171,24 @@ export default function ReportManagement() {
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
       {/* ── BANNER GRADIENT ── */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] p-6 text-white shadow-card sm:p-8">
-        <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10 blur-xl pointer-events-none" />
-        <div className="absolute bottom-0 right-32 h-28 w-28 rounded-full bg-accent/20 blur-lg pointer-events-none" />
-
-        <div className="relative flex flex-col gap-4 pb-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-              <span className="text-[11px] font-bold uppercase tracking-widest text-accent flex items-center gap-1.5">
-                <ShieldAlert className="w-3.5 h-3.5" /> PUSAT INVESTIGASI & LAPORAN PELANGGARAN
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
+        <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
+        <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 mb-1 min-w-0">
+              <span className="w-2 h-2 rounded-full bg-accent animate-pulse shrink-0" />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-accent flex items-center gap-1.5 truncate">
+                <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">PUSAT INVESTIGASI & LAPORAN PELANGGARAN</span>
               </span>
             </div>
-            <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
+            <h1 className="font-display text-xl sm:text-2xl font-bold text-white tracking-tight truncate">
               Laporan Pelanggaran
             </h1>
-            <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
-              Audit dan tindak lanjut aduan 3 arah antar Customer, Mitra Driver, dan Pos Checkpoint secara objektif & transparan.
-            </p>
           </div>
 
-          <div className="flex items-center gap-2.5 self-start sm:self-auto flex-wrap">
-            <div className="flex items-center gap-2 px-3.5 py-2 bg-white/15 border border-white/25 rounded-full backdrop-blur-xs text-xs font-semibold text-white shadow-xs">
+          <div className="flex items-center gap-2.5 self-start sm:self-auto shrink-0 flex-wrap">
+            <div className="flex items-center gap-2 px-3.5 py-2 bg-white/15 border border-white/25 rounded-xl backdrop-blur-xs text-xs font-semibold text-white shadow-xs whitespace-nowrap">
               <MapPin className="w-3.5 h-3.5 text-accent shrink-0" />
               <span>{isSuperAdmin ? 'Cakupan: Seluruh Wilayah (Pusat)' : `Wilayah: ${regionName}`}</span>
             </div>
@@ -200,97 +197,57 @@ export default function ReportManagement() {
               onClick={loadReports}
               disabled={isLoading}
               title="Segarkan data laporan"
-              className="flex items-center gap-2 px-4 py-2 bg-white/15 hover:bg-white/25 text-white rounded-full text-xs font-bold transition cursor-pointer backdrop-blur-xs border border-white/20 shadow-xs disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-blue-50 text-[#10367D] rounded-xl text-xs font-bold transition cursor-pointer shadow-sm disabled:opacity-50 whitespace-nowrap"
             >
               <RotateCcw size={14} className={isLoading ? 'animate-spin' : ''} />
               <span>Segarkan Data</span>
             </button>
           </div>
         </div>
-
-        <div className="absolute bottom-4 left-6 right-6 border-t border-dashed border-white/25 sm:left-8 sm:right-8" />
-        <span className="absolute bottom-[11px] right-6 h-2.5 w-2.5 rounded-full border-2 border-white bg-accent sm:right-8" />
       </section>
 
-      {/* ── CARD GRADIENT (STATISTIK LAPORAN) ── */}
+      {/* ── STATS CARDS ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Card 1: Total Tiket */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0c2353] via-[#10367D] to-[#1e58b8] p-5 text-white shadow-sm transition hover:shadow-md">
-          <div className="absolute -right-6 -bottom-6 w-28 h-28 rounded-full bg-white/10 blur-xl pointer-events-none" />
-          <div className="relative flex items-center justify-between">
-            <div className="space-y-1">
-              <span className="text-[11px] font-bold text-blue-200 uppercase tracking-wider block">
-                Total Aduan Masuk
-              </span>
-              <div className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-                {totalCount}
-              </div>
-              <p className="text-[11px] text-blue-200/80">Akumulasi laporan tercatat</p>
-            </div>
-            <div className="p-3 bg-white/15 backdrop-blur-md rounded-2xl text-white shrink-0 border border-white/15">
-              <FileText className="w-5 h-5" />
-            </div>
-          </div>
-        </div>
-
-        {/* Card 2: Menunggu Investigasi */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 via-amber-600 to-orange-600 p-5 text-white shadow-sm transition hover:shadow-md">
-          <div className="absolute -right-6 -bottom-6 w-28 h-28 rounded-full bg-white/15 blur-xl pointer-events-none" />
-          <div className="relative flex items-center justify-between">
-            <div className="space-y-1">
-              <span className="text-[11px] font-bold text-amber-100 uppercase tracking-wider block">
-                Menunggu Investigasi
-              </span>
-              <div className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-                {pendingCount}
-              </div>
-              <p className="text-[11px] text-amber-100/90 font-medium">
-                {pendingCount > 0 ? 'Perlu respon segera' : 'Semua aduan ditanggapi'}
-              </p>
-            </div>
-            <div className="p-3 bg-white/20 backdrop-blur-md rounded-2xl text-white shrink-0 border border-white/20">
-              <Clock className="w-5 h-5" />
-            </div>
-          </div>
-        </div>
-
-        {/* Card 3: Dalam Investigasi */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-blue-700 p-5 text-white shadow-sm transition hover:shadow-md">
-          <div className="absolute -right-6 -bottom-6 w-28 h-28 rounded-full bg-white/15 blur-xl pointer-events-none" />
-          <div className="relative flex items-center justify-between">
-            <div className="space-y-1">
-              <span className="text-[11px] font-bold text-blue-100 uppercase tracking-wider block">
-                Sedang Diinvestigasi
-              </span>
-              <div className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-                {investigatingCount}
-              </div>
-              <p className="text-[11px] text-blue-100/80">Klarifikasi & verifikasi bukti</p>
-            </div>
-            <div className="p-3 bg-white/20 backdrop-blur-md rounded-2xl text-white shrink-0 border border-white/20">
-              <AlertTriangle className="w-5 h-5" />
-            </div>
-          </div>
-        </div>
-
-        {/* Card 4: Terbukti Valid & Disanksi */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-700 p-5 text-white shadow-sm transition hover:shadow-md">
-          <div className="absolute -right-6 -bottom-6 w-28 h-28 rounded-full bg-white/15 blur-xl pointer-events-none" />
-          <div className="relative flex items-center justify-between">
-            <div className="space-y-1">
-              <span className="text-[11px] font-bold text-emerald-100 uppercase tracking-wider block">
-                Terbukti & Disanksi
-              </span>
-              <div className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-                {resolvedValidCount}
-              </div>
-              <p className="text-[11px] text-emerald-100/80">Sanksi & penalti dieksekusi</p>
-            </div>
-            <div className="p-3 bg-white/20 backdrop-blur-md rounded-2xl text-white shrink-0 border border-white/20">
-              <CheckCircle className="w-5 h-5" />
-            </div>
-          </div>
-        </div>
+        <StatCard
+          title="Total Aduan Masuk"
+          value={String(totalCount)}
+          subtitle="Akumulasi laporan tercatat"
+          badgeText="Tercatat"
+          badgeVariant="blue"
+          icon={FileText}
+          iconVariant="blue"
+          variant="light"
+        />
+        <StatCard
+          title="Menunggu Investigasi"
+          value={String(pendingCount)}
+          subtitle={pendingCount > 0 ? 'Perlu respon segera' : 'Semua aduan ditanggapi'}
+          badgeText={pendingCount > 0 ? 'Antrean' : 'Aman'}
+          badgeVariant="blue"
+          icon={Clock}
+          iconVariant="blue"
+          variant="light"
+        />
+        <StatCard
+          title="Sedang Diinvestigasi"
+          value={String(investigatingCount)}
+          subtitle="Klarifikasi & verifikasi bukti"
+          badgeText="Proses"
+          badgeVariant="blue"
+          icon={AlertTriangle}
+          iconVariant="blue"
+          variant="light"
+        />
+        <StatCard
+          title="Terbukti & Disanksi"
+          value={String(resolvedValidCount)}
+          subtitle="Sanksi & penalti dieksekusi"
+          badgeText="Selesai"
+          badgeVariant="blue"
+          icon={CheckCircle}
+          iconVariant="blue"
+          variant="light"
+        />
       </div>
 
       {/* ── FILTER & PENCARIAN ── */}

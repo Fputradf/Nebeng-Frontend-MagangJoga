@@ -355,32 +355,29 @@ export default function OperatorDualScanner() {
       />
 
       {/* ── BANNER GRADIENT ── */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] p-6 text-white shadow-card sm:p-8">
-        <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10" />
-        <div className="absolute bottom-0 right-32 h-28 w-28 rounded-full bg-accent/20" />
-        <div className="relative flex flex-col gap-4 pb-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-2 flex-wrap">
-              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-              <span className="text-[11px] font-bold uppercase tracking-widest text-accent flex items-center gap-1.5">
-                <QrCode className="w-3.5 h-3.5" /> Sistem Keamanan Pos Checkpoint
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
+        <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
+        <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 mb-1 min-w-0">
+              <span className="w-2 h-2 rounded-full bg-accent animate-pulse shrink-0" />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-accent flex items-center gap-1.5 truncate">
+                <QrCode className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">Sistem Keamanan Pos Checkpoint</span>
               </span>
             </div>
-            <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight break-words">
+            <h1 className="font-display text-xl sm:text-2xl font-bold text-white tracking-tight truncate">
               Scanner QR Checkpoint Pos
             </h1>
-            <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
-              Pusat scan tunggal untuk Penumpang & Paket Barang: validasi check-in keberangkatan pos asal & penyelesaian tujuan instan tanpa OTP.
-            </p>
           </div>
 
-          <div className="flex bg-black/20 p-1 rounded-2xl gap-1 shrink-0 backdrop-blur border border-white/10 self-start sm:self-auto">
+          <div className="flex bg-black/20 p-1 rounded-xl gap-1 shrink-0 backdrop-blur border border-white/10 self-start sm:self-auto">
             <button
               type="button"
               onClick={() => setScanMode('origin')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition cursor-pointer whitespace-nowrap ${
                 scanMode === 'origin'
-                  ? 'bg-accent text-slate-900 shadow-sm'
+                  ? 'bg-white text-[#10367D] shadow-sm'
                   : 'text-white/80 hover:text-white hover:bg-white/10'
               }`}
             >
@@ -390,9 +387,9 @@ export default function OperatorDualScanner() {
             <button
               type="button"
               onClick={() => setScanMode('destination')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition cursor-pointer whitespace-nowrap ${
                 scanMode === 'destination'
-                  ? 'bg-accent text-slate-900 shadow-sm'
+                  ? 'bg-white text-[#10367D] shadow-sm'
                   : 'text-white/80 hover:text-white hover:bg-white/10'
               }`}
             >
@@ -400,8 +397,6 @@ export default function OperatorDualScanner() {
             </button>
           </div>
         </div>
-        <div className="absolute bottom-4 left-6 right-6 border-t border-dashed border-white/25 sm:left-8 sm:right-8" />
-        <span className="absolute bottom-[11px] right-6 h-2.5 w-2.5 rounded-full border-2 border-white bg-accent sm:right-8" />
       </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">

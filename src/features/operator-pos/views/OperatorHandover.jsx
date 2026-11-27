@@ -306,36 +306,31 @@ export default function OperatorHandover() {
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter'] relative">
       {/* ── BANNER GRADIENT ── */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] p-6 text-white shadow-card sm:p-8">
-        <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10" />
-        <div className="absolute bottom-0 right-32 h-28 w-28 rounded-full bg-accent/20" />
-        <div className="relative flex flex-col gap-4 pb-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-2 flex-wrap">
-              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-              <span className="text-[11px] font-bold uppercase tracking-widest text-accent flex items-center gap-1.5">
-                <UserCheck className="w-3.5 h-3.5" /> Validasi Handover
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
+        <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
+        <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 mb-1 min-w-0">
+              <span className="w-2 h-2 rounded-full bg-accent animate-pulse shrink-0" />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-accent flex items-center gap-1.5 truncate">
+                <UserCheck className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">Validasi Handover</span>
               </span>
             </div>
-            <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight break-words">
-              Handover & OTP Serah Paket
+            <h1 className="font-display text-xl sm:text-2xl font-bold text-white tracking-tight truncate">
+              Handover &amp; OTP Serah Paket
             </h1>
-            <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
-              Pindai tiket paket penerima dan masukkan 6-digit OTP klaim untuk serah terima & pencairan dana.
-            </p>
           </div>
 
           <button
             type="button"
             onClick={() => setShowForceModal(true)}
-            className="px-4 py-2.5 bg-amber-400/20 hover:bg-amber-400/30 border border-amber-300/40 text-amber-200 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2 transition cursor-pointer self-start sm:self-auto shrink-0 shadow-sm backdrop-blur"
+            className="px-4 py-2.5 bg-white/15 hover:bg-white/25 border border-white/25 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition cursor-pointer self-start sm:self-auto shrink-0 shadow-sm backdrop-blur whitespace-nowrap"
           >
-            <AlertTriangle className="w-4 h-4 text-amber-300" />
+            <AlertTriangle className="w-4 h-4 text-accent" />
             <span>Penyelesaian Manual (Bypass)</span>
           </button>
         </div>
-        <div className="absolute bottom-4 left-6 right-6 border-t border-dashed border-white/25 sm:left-8 sm:right-8" />
-        <span className="absolute bottom-[11px] right-6 h-2.5 w-2.5 rounded-full border-2 border-white bg-accent sm:right-8" />
       </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">

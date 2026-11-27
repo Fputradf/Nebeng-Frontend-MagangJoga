@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { IMAGE_PRESETS, resizeImageToDataUrl } from '../../../utils/imageUpload';
 import {
   Sliders,
   RotateCcw,
@@ -30,9 +31,13 @@ export default function AppConfigManagement() {
   const {
     appName,
     appLogo,
+    appLogoDark,
+    appFavicon,
     appTagline,
     isCustom,
     defaultLogo,
+    defaultLogoDark,
+    defaultFavicon,
     defaultName,
     defaultTagline,
     updateConfig,
@@ -46,72 +51,65 @@ export default function AppConfigManagement() {
   const [nameInput, setNameInput] = useState(appName || defaultName);
   const [taglineInput, setTaglineInput] = useState(appTagline || defaultTagline);
   const [logoPreview, setLogoPreview] = useState(appLogo || defaultLogo);
+  const [logoDarkPreview, setLogoDarkPreview] = useState(appLogoDark || defaultLogoDark);
+  const [faviconPreview, setFaviconPreview] = useState(appFavicon || defaultFavicon);
   const [logoInputType, setLogoInputType] = useState('upload'); // 'upload' | 'url'
-  const [logoUrlInput, setLogoUrlInput] = useState('');
+  const [urlInputs, setUrlInputs] = useState({ light: '', dark: '', favicon: '' });
   const [isSaving, setIsSaving] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
+  const [draggingTarget, setDraggingTarget] = useState(null);
   const [successNotice, setSuccessNotice] = useState(false);
   const [applyGlobally, setApplyGlobally] = useState(true);
 
-  const fileInputRef = useRef(null);
+  const lightInputRef = useRef(null);
+  const darkInputRef = useRef(null);
+  const faviconInputRef = useRef(null);
 
   // Sinkronisasi form saat context berubah
   useEffect(() => {
     setNameInput(appName || defaultName);
     setTaglineInput(appTagline || defaultTagline);
     setLogoPreview(appLogo || defaultLogo);
-  }, [appName, appTagline, appLogo, defaultName, defaultTagline, defaultLogo]);
+    setLogoDarkPreview(appLogoDark || defaultLogoDark);
+    setFaviconPreview(appFavicon || defaultFavicon);
+  }, [appName, appTagline, appLogo, appLogoDark, appFavicon, defaultName, defaultTagline, defaultLogo, defaultLogoDark, defaultFavicon]);
 
-  // Handle pemrosesan berkas logo
-  const handleFileProcess = (file) => {
+  const setSlotPreview = (slot, value) => {
+    if (slot === 'light') setLogoPreview(value);
+    else if (slot === 'dark') setLogoDarkPreview(value);
+    else if (slot === 'favicon') setFaviconPreview(value);
+  };
+
+  // Handle pemrosesan berkas logo / favicon
+  const handleFileProcess = async (file, slot = 'light') => {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      toast.error('Format berkas tidak valid. Harap pilih gambar (PNG, SVG, JPG, WEBP).');
+      toast.error('Format berkas tidak valid. Harap pilih gambar (PNG, SVG, JPG, WEBP, ICO).');
       return;
     }
 
     if (file.size > MAX_LOGO_SIZE) {
-      toast.error('Ukuran berkas logo melebihi batas maksimal 2MB.');
+      toast.error('Ukuran berkas melebihi batas maksimal 2MB.');
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setLogoPreview(e.target.result);
-      toast.info('Logo berhasil dipilih. Tekan "Simpan Kebijakan Identitas" untuk menerapkan.');
-    };
-    reader.readAsDataURL(file);
+    try {
+      const resizedDataUrl = await resizeImageToDataUrl(file, IMAGE_PRESETS.logo);
+      setSlotPreview(slot, resizedDataUrl);
+      toast.info('Aset berhasil dipilih & dioptimalkan. Tekan "Simpan Identitas" untuk menerapkan.');
+    } catch {
+      toast.error('Gagal memproses berkas gambar.');
+    }
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    handleFileProcess(file);
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setIsDragging(false);
-    const file = e.dataTransfer.files?.[0];
-    handleFileProcess(file);
-  };
-
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = () => {
-    setIsDragging(false);
-  };
-
-  const handleApplyLogoUrl = () => {
-    if (!logoUrlInput.trim()) {
-      toast.error('Masukkan tautan URL logo yang valid');
+  const handleApplySlotUrl = (slot) => {
+    const raw = (urlInputs[slot] || '').trim();
+    if (!raw) {
+      toast.error('Masukkan tautan URL gambar yang valid');
       return;
     }
-    setLogoPreview(logoUrlInput.trim());
-    toast.info('Pratinjau logo URL diperbarui. Tekan "Simpan Kebijakan Identitas" untuk menerapkan.');
+    setSlotPreview(slot, raw);
+    toast.info('Pratinjau URL diperbarui. Tekan "Simpan Identitas" untuk menerapkan.');
   };
 
   const handleSaveSettings = async (e) => {
@@ -128,10 +126,12 @@ export default function AppConfigManagement() {
       updateConfig({
         appName: trimmedName,
         appLogo: logoPreview,
+        appLogoDark: logoDarkPreview,
+        appFavicon: faviconPreview,
         appTagline: taglineInput.trim() || defaultTagline,
       });
       setSuccessNotice(true);
-      toast.success('Konfigurasi logo dan nama aplikasi berhasil disimpan!');
+      toast.success('Konfigurasi logo, favicon, dan nama aplikasi berhasil disimpan!');
       setTimeout(() => setSuccessNotice(false), 5000);
     } catch (err) {
       console.error(err);
@@ -144,7 +144,7 @@ export default function AppConfigManagement() {
   const handleResetDefaults = async () => {
     const ok = await confirm({
       title: 'Reset Identitas Aplikasi',
-      message: 'Apakah Anda yakin ingin mengembalikan logo dan nama aplikasi ke konfigurasi bawaan (default)?',
+      message: 'Apakah Anda yakin ingin mengembalikan seluruh logo, favicon, dan nama aplikasi ke konfigurasi bawaan (default)?',
       confirmText: 'Ya, Reset',
       cancelText: 'Batal',
       variant: 'warning',
@@ -155,7 +155,9 @@ export default function AppConfigManagement() {
       setNameInput(defaultName);
       setTaglineInput(defaultTagline);
       setLogoPreview(defaultLogo);
-      setLogoUrlInput('');
+      setLogoDarkPreview(defaultLogoDark);
+      setFaviconPreview(defaultFavicon);
+      setUrlInputs({ light: '', dark: '', favicon: '' });
       toast.success('Identitas aplikasi berhasil dikembalikan ke standar bawaan.');
     }
   };
@@ -169,30 +171,25 @@ export default function AppConfigManagement() {
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
       {/* ── BANNER GRADIENT ── */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#0c2353] via-[#10367D] to-[#1e58b8] p-6 text-white shadow-card sm:p-8">
-        <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10 blur-xl pointer-events-none" />
-        <div className="absolute bottom-0 right-32 h-28 w-28 rounded-full bg-amber-400/20 blur-lg pointer-events-none" />
-
-        <div className="relative flex flex-col gap-4 pb-2 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-              <span className="text-[11px] font-bold uppercase tracking-widest text-amber-300">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
+        <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
+        <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 mb-1 min-w-0">
+              <span className="w-2 h-2 rounded-full bg-accent animate-pulse shrink-0" />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-accent truncate">
                 SISTEM TATA KELOLA IDENTITAS & BRANDING
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+            <h1 className="font-display text-xl sm:text-2xl font-bold text-white tracking-tight truncate">
               Konfigurasi Logo & Nama Aplikasi
             </h1>
-            <p className="mt-1 text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
-              Atur matriks identitas visual sistem, nama platform antarmuka, aset logo resmi, dan pratinjau langsung pada seluruh panel ekosistem.
-            </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5 shrink-0 self-start sm:self-auto">
             <button
               onClick={handleResetDefaults}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold backdrop-blur-xs transition cursor-pointer border border-white/15"
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold backdrop-blur-xs transition cursor-pointer border border-white/15 whitespace-nowrap"
             >
               <RotateCcw className="w-4 h-4" />
               Reset Bawaan
@@ -200,22 +197,22 @@ export default function AppConfigManagement() {
             <button
               onClick={handleSaveSettings}
               disabled={isSaving}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-bold shadow-lg shadow-amber-400/20 transition cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-blue-50 text-[#10367D] text-xs font-bold shadow-sm transition cursor-pointer disabled:opacity-50 whitespace-nowrap"
             >
               <Save className="w-4 h-4" />
               {isSaving ? 'Menyimpan...' : 'Simpan Identitas'}
             </button>
           </div>
         </div>
-
-        {/* NOTIFIKASI SUKSES */}
-        {successNotice && (
-          <div className="mt-4 p-3 bg-emerald-500/20 border border-emerald-400/40 rounded-xl flex items-center gap-2.5 text-xs text-emerald-100 animate-fadeIn">
-            <CheckCircle2 className="w-4 h-4 text-emerald-300 shrink-0" />
-            <span>Perubahan logo dan nama aplikasi telah berhasil disimpan dan disinkronkan ke seluruh sistem!</span>
-          </div>
-        )}
       </section>
+
+      {/* NOTIFIKASI SUKSES */}
+      {successNotice && (
+        <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2.5 text-xs text-emerald-800 animate-fadeIn">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+          <span>Perubahan logo dan nama aplikasi telah berhasil disimpan dan disinkronkan ke seluruh sistem!</span>
+        </div>
+      )}
 
       {/* ── STATS CARDS ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -224,8 +221,9 @@ export default function AppConfigManagement() {
           value={isCustom ? 'Kustom' : 'Standar'}
           subtitle={isCustom ? 'Branding mandiri aktif' : 'Konfigurasi bawaan sistem'}
           badgeText={isCustom ? 'Kustomisasi' : 'Default'}
-          badgeVariant={isCustom ? 'blue' : 'emerald'}
+          badgeVariant="blue"
           icon={Sparkles}
+          iconVariant="blue"
           variant="light"
         />
         <StatCard
@@ -233,8 +231,9 @@ export default function AppConfigManagement() {
           value={nameInput.trim() || 'SatuRute'}
           subtitle="Tampil di sidebar & tab"
           badgeText="Resmi"
-          badgeVariant="emerald"
+          badgeVariant="blue"
           icon={Globe}
+          iconVariant="blue"
           variant="light"
         />
         <StatCard
@@ -242,8 +241,9 @@ export default function AppConfigManagement() {
           value={logoSourceLabel}
           subtitle="Resolusi rasio 1:1 transparan"
           badgeText="Aktif"
-          badgeVariant="amber"
+          badgeVariant="blue"
           icon={ImageIcon}
+          iconVariant="blue"
           variant="light"
         />
         <StatCard
@@ -253,7 +253,8 @@ export default function AppConfigManagement() {
           badgeText="Aktif"
           badgeVariant="blue"
           icon={Sliders}
-          variant="primary"
+          iconVariant="blue"
+          variant="light"
         />
       </div>
 
@@ -309,65 +310,63 @@ export default function AppConfigManagement() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-2">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <div className="flex flex-col">
+                <label className="text-xs font-semibold text-slate-700 mb-1.5 min-h-[24px] flex items-end">
                   Nama Aplikasi Utama
                 </label>
-                <div className="relative">
+                <div className="flex items-center rounded-xl border border-slate-200 bg-white overflow-hidden focus-within:ring-2 focus-within:ring-[#10367D]/20 focus-within:border-[#10367D]">
                   <input
                     type="text"
                     maxLength={35}
                     value={nameInput}
                     onChange={(e) => setNameInput(e.target.value)}
                     placeholder="Contoh: SatuRute"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#10367D]/20 focus:border-[#10367D]"
+                    className="w-full min-w-0 px-3.5 py-2.5 text-sm focus:outline-none"
                   />
-                  <span className="absolute right-3.5 top-2.5 text-xs text-slate-400 font-medium">
+                  <span className="px-3 py-2.5 bg-slate-50 border-l border-slate-200 text-xs text-slate-400 font-medium shrink-0">
                     {nameInput.length}/35
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-500 mt-1">
+                <p className="text-[11px] text-slate-500 mt-1.5">
                   Nama utama yang ditampilkan pada seluruh sidebar, topbar, dan judul tab peramban.
                 </p>
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <div className="flex flex-col">
+                <label className="text-xs font-semibold text-slate-700 mb-1.5 min-h-[24px] flex items-end">
                   Slogan / Tagline Platform
                 </label>
-                <div className="relative">
+                <div className="flex items-center rounded-xl border border-slate-200 bg-white overflow-hidden focus-within:ring-2 focus-within:ring-[#10367D]/20 focus-within:border-[#10367D]">
                   <input
                     type="text"
                     maxLength={80}
                     value={taglineInput}
                     onChange={(e) => setTaglineInput(e.target.value)}
                     placeholder="Contoh: Platform Ekosistem Transportasi Antarkota"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#10367D]/20 focus:border-[#10367D]"
+                    className="w-full min-w-0 px-3.5 py-2.5 text-sm focus:outline-none"
                   />
-                  <span className="absolute right-3.5 top-2.5 text-xs text-slate-400 font-medium">
+                  <span className="px-3 py-2.5 bg-slate-50 border-l border-slate-200 text-xs text-slate-400 font-medium shrink-0">
                     {taglineInput.length}/80
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-500 mt-1">
+                <p className="text-[11px] text-slate-500 mt-1.5">
                   Deskripsi singkat platform yang digunakan pada topbar dan informasi sistem.
                 </p>
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <div className="flex flex-col">
+                <label className="text-xs font-semibold text-slate-700 mb-1.5 min-h-[24px] flex items-end">
                   Metode Pemilihan Logo
                 </label>
-                <div className="relative">
-                  <select
-                    value={logoInputType}
-                    onChange={(e) => setLogoInputType(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#10367D]/20 focus:border-[#10367D] bg-white cursor-pointer"
-                  >
-                    <option value="upload">Unggah Berkas Gambar (Upload File)</option>
-                    <option value="url">Tautan Gambar Daring (External URL)</option>
-                  </select>
-                </div>
-                <p className="text-[11px] text-slate-500 mt-1">
+                <select
+                  value={logoInputType}
+                  onChange={(e) => setLogoInputType(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#10367D]/20 focus:border-[#10367D] bg-white cursor-pointer"
+                >
+                  <option value="upload">Unggah Berkas Gambar (Upload File)</option>
+                  <option value="url">Tautan Gambar Daring (External URL)</option>
+                </select>
+                <p className="text-[11px] text-slate-500 mt-1.5">
                   Pilih metode pemasangan logo aplikasi baik berkas lokal maupun URL CDN eksternal.
                 </p>
               </div>
@@ -375,100 +374,143 @@ export default function AppConfigManagement() {
           </div>
 
           {/* Matrix Cards for Logo Management & Preview */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {/* Card 1: Logo Asset Management */}
-            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 space-y-4 hover:border-slate-300 transition">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            {/* Card 1: Logo & Favicon Asset Management (3 slots) */}
+            <div className="lg:col-span-7 bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 space-y-4 hover:border-slate-300 transition">
               <div className="flex items-start justify-between gap-3 pb-3 border-b border-slate-100">
                 <div>
                   <div className="flex items-center gap-2">
                     <ImageIcon className="w-4 h-4 text-[#10367D] shrink-0" />
                     <h3 className="text-sm font-bold text-slate-900">
-                      Manajemen Berkas Logo Utama
+                      Manajemen Berkas Logo &amp; Favicon
                     </h3>
                   </div>
                   <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
-                    Unggah aset logo resmi beresolusi tinggi dengan latar belakang transparan.
+                    Atur aset logo terpisah untuk halaman terang (White Page), halaman gelap (Black Page), dan ikon tab peramban (Favicon).
                   </p>
                 </div>
               </div>
 
               <div className="space-y-4">
-                {/* Tier 1 / Upload Box */}
-                <div className="bg-slate-50/70 p-3.5 rounded-xl border border-slate-200/60 space-y-3">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">
-                    {logoInputType === 'upload' ? 'Area Unggah Berkas' : 'Alamat URL Logo'}
-                  </span>
-
-                  {logoInputType === 'upload' ? (
-                    <div
-                      onDrop={handleDrop}
-                      onDragOver={handleDragOver}
-                      onDragLeave={handleDragLeave}
-                      onClick={() => fileInputRef.current?.click()}
-                      className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition flex flex-col items-center justify-center gap-2 ${
-                        isDragging
-                          ? 'border-[#10367D] bg-blue-50/60'
-                          : 'border-slate-300 bg-white hover:bg-slate-50/80 hover:border-slate-400'
-                      }`}
-                    >
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/png, image/svg+xml, image/jpeg, image/webp"
-                        className="hidden"
-                        onChange={handleFileChange}
-                      />
-                      <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-[#10367D]">
-                        <Upload className="w-5 h-5" />
+                {[
+                  {
+                    key: 'light',
+                    title: '1. Logo Halaman Terang (White Page)',
+                    desc: 'Digunakan pada Topbar, Landing Page, Cetak PDF, dan form latar putih.',
+                    preview: logoPreview,
+                    fallback: defaultLogo,
+                    inputRef: lightInputRef,
+                    previewBg: 'bg-white border-slate-200',
+                    resetLabel: 'Reset Logo Terang',
+                  },
+                  {
+                    key: 'dark',
+                    title: '2. Logo Halaman Gelap (Black Page)',
+                    desc: 'Digunakan pada Sidebar navigasi dan panel berlatar gelap/biru tua.',
+                    preview: logoDarkPreview,
+                    fallback: defaultLogoDark,
+                    inputRef: darkInputRef,
+                    previewBg: 'bg-[#0c2353] border-blue-400/30',
+                    resetLabel: 'Reset Logo Gelap',
+                  },
+                  {
+                    key: 'favicon',
+                    title: '3. Favicon Tab Browser',
+                    desc: 'Ikon kecil pada tab peramban, bookmark, dan shortcut layar utama.',
+                    preview: faviconPreview,
+                    fallback: defaultFavicon,
+                    inputRef: faviconInputRef,
+                    previewBg: 'bg-slate-100 border-slate-200',
+                    resetLabel: 'Reset Favicon',
+                  },
+                ].map((slot) => (
+                  <div key={slot.key} className="bg-slate-50/70 p-3.5 rounded-xl border border-slate-200/70 space-y-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className={`w-11 h-11 rounded-xl border flex items-center justify-center p-1.5 shrink-0 ${slot.previewBg}`}>
+                          <img
+                            src={slot.preview}
+                            alt={slot.title}
+                            className="w-full h-full object-contain"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = slot.fallback;
+                            }}
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <span className="text-xs font-bold text-slate-800 block truncate">
+                            {slot.title}
+                          </span>
+                          <p className="text-[11px] text-slate-500 leading-snug">
+                            {slot.desc}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-xs font-bold text-slate-800">
-                          Tarik berkas ke sini atau <span className="text-[#10367D] underline">pilih dari perangkat</span>
-                        </p>
-                        <p className="text-[11px] text-slate-400 mt-0.5">
-                          PNG transparan atau SVG disarankan (Maksimal 2MB)
-                        </p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex gap-2">
-                      <input
-                        type="url"
-                        value={logoUrlInput}
-                        onChange={(e) => setLogoUrlInput(e.target.value)}
-                        placeholder="https://cdn.example.com/logo.png"
-                        className="flex-1 px-3 py-2 text-xs bg-white rounded-lg border border-slate-200 focus:border-[#10367D] focus:outline-hidden"
-                      />
                       <button
                         type="button"
-                        onClick={handleApplyLogoUrl}
-                        className="px-3 py-2 bg-[#10367D] hover:bg-[#0c2353] text-white rounded-lg text-xs font-bold transition shrink-0 cursor-pointer"
+                        onClick={() => {
+                          setSlotPreview(slot.key, slot.fallback);
+                          toast.info(`${slot.resetLabel} dikembalikan ke bawaan.`);
+                        }}
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-100 rounded-lg text-[11px] font-semibold text-slate-700 transition cursor-pointer shrink-0"
                       >
-                        Terapkan
+                        <RotateCcw className="w-3 h-3 text-slate-500" />
+                        Default
                       </button>
                     </div>
-                  )}
-                </div>
 
-                {/* Tier 2 / Actions Box */}
-                <div className="bg-slate-50/70 p-3.5 rounded-xl border border-slate-200/60 space-y-2.5">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">
-                    Aksi Reset & Normalisasi
-                  </span>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setLogoPreview(defaultLogo);
-                        toast.info('Logo dikembalikan ke pratinjau standar bawaan.');
-                      }}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-100 rounded-lg text-xs font-semibold text-slate-700 transition cursor-pointer"
-                    >
-                      <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
-                      Gunakan Logo Bawaan Sistem
-                    </button>
+                    {logoInputType === 'upload' ? (
+                      <div
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          setDraggingTarget(null);
+                          handleFileProcess(e.dataTransfer.files?.[0], slot.key);
+                        }}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          setDraggingTarget(slot.key);
+                        }}
+                        onDragLeave={() => setDraggingTarget(null)}
+                        onClick={() => slot.inputRef.current?.click()}
+                        className={`border-2 border-dashed rounded-xl px-4 py-3 text-center cursor-pointer transition flex items-center justify-center gap-3 ${
+                          draggingTarget === slot.key
+                            ? 'border-[#10367D] bg-blue-50/60'
+                            : 'border-slate-300 bg-white hover:bg-slate-50/80 hover:border-slate-400'
+                        }`}
+                      >
+                        <input
+                          ref={slot.inputRef}
+                          type="file"
+                          accept="image/png, image/svg+xml, image/jpeg, image/webp, image/x-icon"
+                          className="hidden"
+                          onChange={(e) => handleFileProcess(e.target.files?.[0], slot.key)}
+                        />
+                        <Upload className="w-4 h-4 text-[#10367D] shrink-0" />
+                        <span className="text-xs font-semibold text-slate-700">
+                          Tarik berkas ke sini atau <span className="text-[#10367D] underline">pilih gambar</span> (PNG/SVG, maks 2MB)
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        <input
+                          type="url"
+                          value={urlInputs[slot.key]}
+                          onChange={(e) => setUrlInputs((prev) => ({ ...prev, [slot.key]: e.target.value }))}
+                          placeholder="https://cdn.example.com/logo.png"
+                          className="flex-1 px-3 py-2 text-xs bg-white rounded-lg border border-slate-200 focus:border-[#10367D] focus:outline-hidden"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleApplySlotUrl(slot.key)}
+                          className="px-3 py-2 bg-[#10367D] hover:bg-[#0c2353] text-white rounded-lg text-xs font-bold transition shrink-0 cursor-pointer"
+                        >
+                          Terapkan
+                        </button>
+                      </div>
+                    )}
                   </div>
-                </div>
+                ))}
               </div>
 
               <div className="pt-2 flex items-center justify-between text-xs text-slate-600">
@@ -487,35 +529,35 @@ export default function AppConfigManagement() {
             </div>
 
             {/* Card 2: Transparency & Contrast Testing */}
-            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 space-y-4 hover:border-slate-300 transition">
+            <div className="lg:col-span-5 bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 space-y-4 hover:border-slate-300 transition">
               <div className="flex items-start justify-between gap-3 pb-3 border-b border-slate-100">
                 <div>
                   <div className="flex items-center gap-2">
                     <Eye className="w-4 h-4 text-[#10367D] shrink-0" />
                     <h3 className="text-sm font-bold text-slate-900">
-                      Uji Transparansi & Kontras Latar
+                      Uji Transparansi &amp; Kontras Latar
                     </h3>
                   </div>
                   <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
-                    Pastikan logo terlihat tajam dan terbaca jelas pada tema gelap dan terang.
+                    Pastikan masing-masing logo terlihat tajam pada tema gelap, terang, dan tab browser.
                   </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                {/* Latar Gelap (Sidebar Theme) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Latar Gelap (Black Page / Sidebar Theme) */}
                 <div className="bg-gradient-to-b from-[#0c2353] via-[#10367D] to-[#18458f] p-4 rounded-xl border border-blue-400/20 text-white flex flex-col items-center justify-center gap-2.5">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-200/80 block">
-                    Latar Gelap (Sidebar)
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-200/80 block text-center">
+                    Black Page (Sidebar)
                   </span>
                   <div className="w-14 h-14 rounded-xl bg-white/10 p-2 flex items-center justify-center border border-white/15">
                     <img
-                      src={logoPreview}
-                      alt="Logo Gelap"
-                      className="w-full h-full object-contain filter brightness-0 invert"
+                      src={logoDarkPreview}
+                      alt="Logo Black Page"
+                      className="w-full h-full object-contain"
                       onError={(e) => {
                         e.target.onerror = null;
-                        e.target.src = defaultLogo;
+                        e.target.src = defaultLogoDark;
                       }}
                     />
                   </div>
@@ -524,15 +566,15 @@ export default function AppConfigManagement() {
                   </span>
                 </div>
 
-                {/* Latar Terang (Topbar Theme) */}
+                {/* Latar Terang (White Page / Topbar Theme) */}
                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col items-center justify-center gap-2.5">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
-                    Latar Terang (Topbar)
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block text-center">
+                    White Page (Topbar)
                   </span>
                   <div className="w-14 h-14 rounded-xl bg-white p-2 shadow-2xs border border-slate-200 flex items-center justify-center">
                     <img
                       src={logoPreview}
-                      alt="Logo Terang"
+                      alt="Logo White Page"
                       className="w-full h-full object-contain"
                       onError={(e) => {
                         e.target.onerror = null;
@@ -546,9 +588,32 @@ export default function AppConfigManagement() {
                 </div>
               </div>
 
-              <div className="pt-2 text-[11px] text-slate-500 flex items-center gap-2">
+              {/* Favicon Preview Box */}
+              <div className="bg-slate-100/80 p-3.5 rounded-xl border border-slate-200 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center p-1 shrink-0">
+                    <img
+                      src={faviconPreview}
+                      alt="Favicon"
+                      className="w-full h-full object-contain"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = defaultFavicon;
+                      }}
+                    />
+                  </div>
+                  <span className="text-xs font-semibold text-slate-700 truncate">
+                    {nameInput.trim() || defaultName} — Tab Peramban
+                  </span>
+                </div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 shrink-0">
+                  Favicon
+                </span>
+              </div>
+
+              <div className="pt-1 text-[11px] text-slate-500 flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                <span>Format PNG transparan otomatis beradaptasi dengan warna latar navigasi.</span>
+                <span>Setiap tema menggunakan aset logo khususnya secara otomatis.</span>
               </div>
             </div>
           </div>
@@ -582,12 +647,12 @@ export default function AppConfigManagement() {
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center p-1.5 shrink-0 border border-white/15">
                         <img
-                          src={logoPreview}
+                          src={logoDarkPreview}
                           alt="Logo"
-                          className="w-full h-full object-contain filter brightness-0 invert"
+                          className="w-full h-full object-contain"
                           onError={(e) => {
                             e.target.onerror = null;
-                            e.target.src = defaultLogo;
+                            e.target.src = defaultLogoDark;
                           }}
                         />
                       </div>
@@ -645,12 +710,12 @@ export default function AppConfigManagement() {
                 <div className="max-w-md bg-slate-100 rounded-xl p-3 border border-slate-200 flex items-center gap-2.5">
                   <div className="w-4 h-4 rounded bg-white flex items-center justify-center p-0.5 shrink-0 border border-slate-300">
                     <img
-                      src={logoPreview}
+                      src={faviconPreview}
                       alt=""
                       className="w-full h-full object-contain"
                       onError={(e) => {
                         e.target.onerror = null;
-                        e.target.src = defaultLogo;
+                        e.target.src = defaultFavicon;
                       }}
                     />
                   </div>
