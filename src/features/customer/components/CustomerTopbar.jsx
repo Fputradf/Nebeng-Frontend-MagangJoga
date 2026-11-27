@@ -65,7 +65,7 @@ export default function CustomerTopbar({ profile, onProfileClick }) {
   const photoUrl = getFullFileUrl(rawPhoto);
 
   return (
-    <div className="text-[#10367D] pl-4 pr-4 sm:pr-6 lg:px-8 pt-4 pb-4 flex items-center justify-between sticky top-0 z-10 font-['Inter'] bg-white/85 backdrop-blur-md border-b border-neutral-100/80">
+    <div className="text-[#1356d6] pl-4 pr-4 sm:pr-6 lg:px-8 pt-4 pb-4 flex items-center justify-between sticky top-0 z-10 font-['Inter'] bg-white/85 backdrop-blur-md border-b border-neutral-100/80">
       <div className="flex items-center gap-2.5 lg:hidden">
         <img
           src={appLogo || logoAsset}
@@ -81,10 +81,10 @@ export default function CustomerTopbar({ profile, onProfileClick }) {
         </span>
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-[#10367D]/70">
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-[#1356d6]/70">
           {formatTanggal.format(now)}
         </p>
-        <p className="truncate font-bold text-xl leading-tight text-[#10367D] hidden sm:block">
+        <p className="truncate font-bold text-xl leading-tight text-[#1356d6] hidden sm:block">
           <span>Selamat {getWaktu(now.getHours())}</span>
           {firstName ? `, ${firstName}` : ''}
         </p>
@@ -93,7 +93,7 @@ export default function CustomerTopbar({ profile, onProfileClick }) {
         <NotificationBell basePath="/customer" />
         <button
           onClick={onProfileClick}
-          className="w-10 h-10 md:w-9 md:h-9 rounded-full bg-[#10367D] flex items-center justify-center text-white hover:bg-[#0C2C66] transition font-bold text-[17px] cursor-pointer overflow-hidden"
+          className="w-10 h-10 md:w-9 md:h-9 rounded-full bg-[#1356d6] flex items-center justify-center text-white hover:bg-[#0e44ba] transition font-bold text-[17px] cursor-pointer overflow-hidden"
         >
           {photoUrl ? (
             <img src={photoUrl} alt="Profil" className="w-full h-full object-cover" />

@@ -6,6 +6,8 @@ import Login from './features/auth/Login';
 import Register from './features/auth/Register';
 import ForgotPassword from './features/auth/ForgotPassword';
 import CustomerLandingPage from './features/landing/CustomerLandingPage';
+import MitraDriverLandingPage from './features/landing/MitraDriverLandingPage';
+import MitraPosLandingPage from './features/landing/MitraPosLandingPage';
 import PublicFaqPage from './features/landing/PublicFaqPage';
 import PublicTermsPage from './features/landing/PublicTermsPage';
 import ProtectedRoute from './components/routing/ProtectedRoute';
@@ -27,7 +29,6 @@ import PricingManagement from './features/superadmin/views/PricingManagement';
 import AuditLedger from './features/superadmin/views/AuditLedger';
 import UserGovernance from './features/superadmin/views/UserGovernance';
 import SuperadminAccountSettings from './features/superadmin/views/SuperadminAccountSettings';
-import MerchandiseManagement from './features/superadmin/views/MerchandiseManagement';
 import BannerManagement from './features/superadmin/views/BannerManagement';
 import VoucherManagement from './features/superadmin/views/VoucherManagement';
 import SocialLinksManagement from './features/superadmin/views/SocialLinksManagement';
@@ -81,7 +82,6 @@ import SearchTrip from './features/customer/views/SearchTrip';
 import MyTickets from './features/customer/views/MyTickets';
 import CustomerQrDisplay from './features/customer/views/CustomerQrDisplay';
 import CustomerAccountSettings from './features/customer/views/CustomerAccountSettings';
-import CustomerRewards from './features/customer/views/CustomerRewards';
 import CustomerVouchers from './features/customer/views/CustomerVouchers';
 import CustomerChat from './features/customer/views/CustomerChat';
 import CustomerWallet from './features/customer/views/CustomerWallet';
@@ -134,6 +134,8 @@ export default function App() {
     const PAGE_TITLES = {
       '/':                             'Beranda - Cari & Booking Trip',
       '/landing':                      'Beranda - Cari & Booking Trip',
+      '/mitra-driver':                 'Gabung Mitra Driver',
+      '/mitra-pos':                    'Gabung Mitra Pos',
       '/faq':                          'FAQ - Pusat Bantuan',
       '/syarat-ketentuan':             'Syarat & Ketentuan Layanan',
       '/login':                        'Masuk',
@@ -153,7 +155,6 @@ export default function App() {
       '/admin/bank':                   'Bank',
       '/admin/konfigurasi-aplikasi':   'Konfigurasi Aplikasi',
       '/admin/konfigurasi-logo':       'Konfigurasi Logo',
-      '/admin/merchandise':            'Merchandise',
       '/admin/banner':                 'Banner',
       '/admin/voucher':                'Voucher',
       '/admin/sosial-link':            'Link Sosial',
@@ -218,6 +219,8 @@ export default function App() {
       <Routes>
       <Route path="/" element={<CustomerLandingPage />} />
       <Route path="/landing" element={<CustomerLandingPage />} />
+      <Route path="/mitra-driver" element={<MitraDriverLandingPage />} />
+      <Route path="/mitra-pos" element={<MitraPosLandingPage />} />
       <Route path="/faq" element={<PublicFaqPage />} />
       <Route path="/syarat-ketentuan" element={<PublicTermsPage />} />
 
@@ -279,7 +282,6 @@ export default function App() {
         <Route path="gateway-pembayaran" element={<TarifPembayaranHub defaultTab="pembayaran" />} />
         <Route path="konfigurasi-aplikasi" element={<BrandingSosialHub defaultTab="konfigurasi-aplikasi" />} />
         <Route path="konfigurasi-logo" element={<BrandingSosialHub defaultTab="konfigurasi-aplikasi" />} />
-        <Route path="merchandise" element={<PromoKontenHub defaultTab="merchandise" />} />
         <Route path="banner" element={<PromoKontenHub defaultTab="banner" />} />
         <Route path="voucher" element={<PromoKontenHub defaultTab="voucher" />} />
         <Route path="sosial-link" element={<BrandingSosialHub defaultTab="sosial-link" />} />
@@ -387,7 +389,6 @@ export default function App() {
         <Route path="qr" element={<CustomerQrDisplay />} />
         <Route path="vouchers" element={<CustomerVouchers />} />
         <Route path="chat" element={<CustomerChat />} />
-        <Route path="rewards" element={<CustomerRewards />} />
         <Route path="wallet" element={<CustomerWallet />} />
         <Route path="bantuan" element={<HelpCenterView userRole="customer" />} />
         <Route path="notifications" element={<NotificationHistory />} />

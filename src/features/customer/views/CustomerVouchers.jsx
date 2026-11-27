@@ -161,11 +161,11 @@ export default function CustomerVouchers() {
   }, [vouchers]);
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-sans">
+    <div className="w-full mx-auto p-4 space-y-5 min-h-screen font-sans">
       {/* ── BANNER ── */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2684ff] px-5 py-4 flex items-center text-white shadow-card">
         <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
-        <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative w-full flex flex-col gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 mb-1 min-w-0">
               <span className="w-2 h-2 rounded-full bg-accent animate-pulse shrink-0" />
@@ -208,11 +208,11 @@ export default function CustomerVouchers() {
       </section>
 
       {/* ── KLAIM KODE VOUCHER SECTION ── */}
-      <div className="bg-white p-5 sm:p-6 rounded-3xl shadow-card border border-neutral-200">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div className="flex items-start sm:items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl border border-slate-200 flex items-center justify-center text-[#10367D] shrink-0 shadow-xs">
-              <Gift className="w-6 h-6 text-[#10367D]" />
+      <div className="bg-white p-4 rounded-3xl shadow-card border border-neutral-200">
+        <div className="flex flex-col justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="w-11 h-11 rounded-2xl border border-slate-200 flex items-center justify-center text-[#1356d6] shrink-0 shadow-xs">
+              <Gift className="w-5 h-5 text-[#1356d6]" />
             </div>
             <div>
               <h2 className="text-base font-bold text-neutral-800">
@@ -226,9 +226,9 @@ export default function CustomerVouchers() {
 
           <form
             onSubmit={handleRedeemVoucher}
-            className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full lg:w-auto"
+            className="flex flex-col items-stretch gap-2.5 w-full"
           >
-            <div className="relative flex-1 sm:w-72">
+            <div className="relative flex-1">
               <input
                 type="text"
                 value={redeemCode}
@@ -241,14 +241,14 @@ export default function CustomerVouchers() {
                 className={`w-full px-4 py-2.5 bg-slate-50 border rounded-xl text-xs font-mono font-bold tracking-wider placeholder:font-sans placeholder:font-normal focus:outline-none focus:bg-white transition ${
                   redeemError
                     ? 'border-red-300 focus:border-red-500'
-                    : 'border-slate-300 focus:border-[#10367D]'
+                    : 'border-slate-300 focus:border-[#1356d6]'
                 }`}
               />
             </div>
             <button
               type="submit"
               disabled={isRedeeming || !redeemCode.trim()}
-              className="px-5 py-2.5 bg-[#10367D] hover:bg-[#0C2C66] text-white text-xs font-bold rounded-xl transition shadow-xs disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer shrink-0"
+              className="px-5 py-2.5 bg-[#1356d6] hover:bg-[#0e44ba] text-white text-xs font-bold rounded-xl transition shadow-xs disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer shrink-0"
             >
               {isRedeeming ? (
                 <>
@@ -274,14 +274,14 @@ export default function CustomerVouchers() {
       </div>
 
       {/* Filter Tabs & Search */}
-      <div className="bg-white p-4 rounded-2xl shadow-card border border-neutral-200 flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
+      <div className="bg-white p-4 rounded-2xl shadow-card border border-neutral-200 flex flex-col gap-3 items-stretch justify-between">
         {/* Tab Layanan */}
         <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl">
           <button
             onClick={() => setActiveTab('ALL')}
             className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
               activeTab === 'ALL'
-                ? 'bg-white text-[#10367D] shadow-xs'
+                ? 'bg-white text-[#1356d6] shadow-xs'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
@@ -291,7 +291,7 @@ export default function CustomerVouchers() {
             onClick={() => setActiveTab('PASSENGER')}
             className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
               activeTab === 'PASSENGER'
-                ? 'bg-white text-[#10367D] shadow-xs'
+                ? 'bg-white text-[#1356d6] shadow-xs'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
@@ -302,7 +302,7 @@ export default function CustomerVouchers() {
             onClick={() => setActiveTab('PARCEL')}
             className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
               activeTab === 'PARCEL'
-                ? 'bg-white text-[#10367D] shadow-xs'
+                ? 'bg-white text-[#1356d6] shadow-xs'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
@@ -312,15 +312,15 @@ export default function CustomerVouchers() {
         </div>
 
         {/* Search & Only Available Checkbox */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-          <div className="relative flex-1 sm:w-64">
+        <div className="flex flex-col items-stretch gap-3">
+          <div className="relative flex-1">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Cari kode atau judul voucher..."
-              className="w-full pl-9 pr-3.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-[#10367D] focus:bg-white transition"
+              className="w-full pl-9 pr-3.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-[#1356d6] focus:bg-white transition"
             />
           </div>
 
@@ -338,7 +338,7 @@ export default function CustomerVouchers() {
 
       {/* Grid Voucher Cards */}
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="bg-white rounded-2xl p-5 border border-slate-200 shadow-card space-y-3">
               <Skeleton className="h-6 w-1/3 rounded-md" />
@@ -364,7 +364,7 @@ export default function CustomerVouchers() {
           />
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 gap-4">
           {filteredVouchers.map((voucher) => {
             const isPercentage = voucher.discountType === 'percentage';
             const isUsable = voucher.isAvailable;
@@ -383,7 +383,7 @@ export default function CustomerVouchers() {
                 <div className="p-5 space-y-3">
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <div className="text-xl sm:text-2xl font-black text-[#10367D] tracking-tight">
+                      <div className="text-xl sm:text-2xl font-black text-[#1356d6] tracking-tight">
                         {isPercentage ? `${voucher.discountValue}% OFF` : formatRp(voucher.discountValue)}
                       </div>
                       <div className="text-xs font-semibold text-slate-500 mt-0.5">
@@ -417,7 +417,7 @@ export default function CustomerVouchers() {
 
                   {/* Judul & Deskripsi */}
                   <div>
-                    <h3 className="font-bold text-slate-900 text-[14px] leading-snug group-hover:text-[#10367D] transition-colors">
+                    <h3 className="font-bold text-slate-900 text-[14px] leading-snug group-hover:text-[#1356d6] transition-colors">
                       {voucher.title}
                     </h3>
                     {voucher.description && (
@@ -486,7 +486,7 @@ export default function CustomerVouchers() {
                     <button
                       type="button"
                       onClick={(e) => handleUseVoucher(voucher, e)}
-                      className="px-3 py-1.5 bg-[#10367D] hover:bg-[#0C2C66] text-white text-xs font-bold rounded-lg transition shadow-xs flex items-center gap-1 cursor-pointer"
+                      className="px-3 py-1.5 bg-[#1356d6] hover:bg-[#0e44ba] text-white text-xs font-bold rounded-lg transition shadow-xs flex items-center gap-1 cursor-pointer"
                     >
                       <span>Pakai</span>
                       <ArrowRight className="w-3.5 h-3.5" />
@@ -513,7 +513,7 @@ export default function CustomerVouchers() {
           <div className="space-y-4 text-xs">
             {/* Banner Nilai Diskon */}
             <div className="p-4 rounded-xl border border-slate-200 text-center space-y-1">
-              <div className="text-2xl font-black text-[#10367D]">
+              <div className="text-2xl font-black text-[#1356d6]">
                 {selectedVoucher.discountType === 'percentage'
                   ? `Diskon ${selectedVoucher.discountValue}%`
                   : `Potongan ${formatRp(selectedVoucher.discountValue)}`}
@@ -553,7 +553,7 @@ export default function CustomerVouchers() {
             {/* Rincian Ketentuan */}
             <div className="space-y-2 pt-2 border-t border-slate-200 text-slate-700">
               <h4 className="font-bold text-slate-900 flex items-center gap-1.5">
-                <Info className="w-3.5 h-3.5 text-[#10367D]" />
+                <Info className="w-3.5 h-3.5 text-[#1356d6]" />
                 <span>Syarat & Ketentuan Penggunaan</span>
               </h4>
 
@@ -620,7 +620,7 @@ export default function CustomerVouchers() {
                 <button
                   type="button"
                   onClick={(e) => handleUseVoucher(selectedVoucher, e)}
-                  className="flex-1 py-2.5 bg-[#10367D] hover:bg-[#0C2C66] text-white font-bold rounded-xl transition shadow-xs cursor-pointer flex items-center justify-center gap-1.5"
+                  className="flex-1 py-2.5 bg-[#1356d6] hover:bg-[#0e44ba] text-white font-bold rounded-xl transition shadow-xs cursor-pointer flex items-center justify-center gap-1.5"
                 >
                   <span>Gunakan Sekarang</span>
                   <ArrowRight className="w-4 h-4" />

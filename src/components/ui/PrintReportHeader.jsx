@@ -36,7 +36,7 @@ export default function PrintReportHeader({
             <h1 className="text-[17px] font-black uppercase tracking-wider text-slate-900 leading-tight">
               PT SATURUTE TRANSPORT INDONESIA
             </h1>
-            <p className="text-[11px] font-bold text-[#10367D] uppercase tracking-wide">
+            <p className="text-[11px] font-bold text-[#1356d6] uppercase tracking-wide">
               {subtitle}
             </p>
             <p className="text-[10px] text-slate-500">
@@ -58,7 +58,7 @@ export default function PrintReportHeader({
 
       {/* ── GARIS KOP GANDA (Corporate Double Line) ── */}
       <div className="space-y-[2px] pb-4">
-        <div className="h-[2.5px] bg-[#10367D] w-full" />
+        <div className="h-[2.5px] bg-[#1356d6] w-full" />
         <div className="h-[1px] bg-[#74B4D9] w-full" />
       </div>
 

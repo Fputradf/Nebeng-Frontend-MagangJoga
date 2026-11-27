@@ -29,7 +29,7 @@ function resolveFileUrl(path) {
 
 const FOCUS = 'focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500 focus-visible:outline-offset-2';
 
-export default function AppTopbar({ profile, roleLabel, onProfileClick, onToggleSidebar, basePath }) {
+export default function AppTopbar({ profile, roleLabel, onProfileClick, onToggleSidebar, basePath, mobileFrame = false }) {
   const { appName, appLogo } = useAppConfig();
   const [now, setNow] = useState(() => new Date());
 
@@ -48,10 +48,16 @@ export default function AppTopbar({ profile, roleLabel, onProfileClick, onToggle
     .toUpperCase();
 
   return (
-    <header className="sticky top-0 z-20 border-b border-dashed border-brand-500/25 bg-white/80 backdrop-blur-md">
-      <div className="flex h-16 sm:h-[72px] items-center gap-3 px-3 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-2 lg:hidden">
-          {onToggleSidebar && (
+    <header
+      className={`sticky top-0 z-20 ${
+        mobileFrame
+          ? 'bg-white border-b border-slate-100'
+          : 'border-b border-dashed border-brand-500/25 bg-white/80 backdrop-blur-md'
+      }`}
+    >
+      <div className={`flex h-16 items-center gap-3 px-3 ${mobileFrame ? 'px-4' : 'sm:h-[72px] sm:px-6 lg:px-8'}`}>
+        <div className={`flex items-center gap-2 ${mobileFrame ? '' : 'lg:hidden'}`}>
+          {!mobileFrame && onToggleSidebar && (
             <button
               type="button"
               onClick={onToggleSidebar}
@@ -70,49 +76,70 @@ export default function AppTopbar({ profile, roleLabel, onProfileClick, onToggle
               e.target.src = logoAsset;
             }}
           />
-          <span className="hidden font-display text-lg font-extrabold leading-none text-brand-500 min-[380px]:inline truncate max-w-[150px]">
+          <span
+            className={`font-display text-lg font-extrabold leading-none text-brand-500 truncate ${
+              mobileFrame ? 'max-w-[180px]' : 'hidden min-[380px]:inline max-w-[140px]'
+            }`}
+          >
             {appName || 'SatuRute'}
           </span>
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="hidden text-[11px] font-semibold uppercase tracking-wider text-brand-500/70 sm:block">
-            {formatTanggal.format(now)}
-          </p>
-          <p className="truncate font-display text-sm font-bold leading-tight text-brand-700 sm:text-lg hidden sm:block">
-            <span>Selamat {getWaktu(now.getHours())}</span>
-            {firstName ? `, ${firstName}` : ''}
-          </p>
+          {!mobileFrame && (
+            <>
+              <p className="hidden text-[11px] font-semibold uppercase tracking-wider text-brand-500/70 sm:block">
+                {formatTanggal.format(now)}
+              </p>
+              <p className="truncate font-display text-sm font-bold leading-tight text-brand-700 sm:text-lg hidden sm:block">
+                <span>Selamat {getWaktu(now.getHours())}</span>
+                {firstName ? `, ${firstName}` : ''}
+              </p>
+            </>
+          )}
         </div>
 
-        <div className="ml-auto flex items-center gap-3">
+        <div className="ml-auto flex items-center gap-2.5">
           <NotificationBell basePath={basePath} />
 
-          <button
-            type="button"
-            onClick={onProfileClick}
-            aria-label="Profil pengguna"
-            className={`flex items-center gap-3 rounded-2xl border border-dashed border-brand-500/30 bg-brand-50/40 p-1.5 transition hover:bg-brand-50/70 hover:border-brand-500/50 sm:pr-3.5 ${FOCUS}`}
-          >
-            <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-brand-500 font-display text-sm font-bold text-white shadow-soft ring-2 ring-white">
-              {avatarUrl ? (
-                <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
-              ) : (
-                <span>{initial}</span>
-              )}
-            </div>
+          {mobileFrame ? (
+            onToggleSidebar && (
+              <button
+                type="button"
+                onClick={onToggleSidebar}
+                aria-label="Buka menu navigasi"
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-soft transition active:scale-95 hover:bg-slate-50 ${FOCUS}`}
+              >
+                <Menu className="h-5 w-5 text-brand-600" />
+              </button>
+            )
+          ) : (
+            <button
+              type="button"
+              onClick={onProfileClick}
+              aria-label="Profil pengguna"
+              className={`flex items-center gap-2.5 rounded-2xl border border-dashed border-brand-500/30 bg-brand-50/40 p-1.5 transition hover:bg-brand-50/70 hover:border-brand-500/50 sm:pr-3.5 ${FOCUS}`}
+            >
+              <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-brand-500 font-display text-sm font-bold text-white shadow-soft ring-2 ring-white">
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <span>{initial}</span>
+                )}
+              </div>
 
-            <div className="hidden text-left min-[420px]:block">
-              <p className="max-w-[140px] truncate text-xs font-bold leading-tight text-brand-900 sm:max-w-[180px]">
-                {fullName}
-              </p>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-brand-500">
-                {roleLabel}
-              </p>
-            </div>
+              <div className="hidden text-left min-[420px]:block">
+                <p className="truncate text-xs font-bold leading-tight text-brand-900 max-w-[140px] sm:max-w-[180px]">
+                  {fullName}
+                </p>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-brand-500">
+                  {roleLabel}
+                </p>
+              </div>
 
-            <ChevronDown className="hidden h-4 w-4 text-brand-500 min-[420px]:block" />
-          </button>
+              <ChevronDown className="hidden h-4 w-4 text-brand-500 min-[420px]:block" />
+            </button>
+          )}
         </div>
       </div>
     </header>

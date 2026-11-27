@@ -8,14 +8,26 @@ import AppBottomNav from './AppBottomNav';
  * Latar memakai token `canvas` plus dua pendar warna brand yang tetap di layar.
  * Ruang bawah disisakan untuk bottom-nav mobile (pb-20 lg:pb-0).
  */
-export default function AppShell({ sidebar, topbar, banner = null, children = null, role = null }) {
+export default function AppShell({
+  sidebar,
+  topbar,
+  banner = null,
+  children = null,
+  role = null,
+  mobileFrame: propMobileFrame,
+}) {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const isMobileFrame =
+    typeof propMobileFrame === 'boolean'
+      ? propMobileFrame
+      : role === 'customer' || role === 'mitra';
 
   // Suntikkan handler buka-tutup mobile drawer ke sidebar jika berupa React element
   const enhancedSidebar = isValidElement(sidebar)
     ? cloneElement(sidebar, {
         isOpen: isMobileSidebarOpen,
         onClose: () => setIsMobileSidebarOpen(false),
+        ...(isMobileFrame ? { mobileOnly: true } : {}),
       })
     : sidebar;
 
@@ -23,6 +35,7 @@ export default function AppShell({ sidebar, topbar, banner = null, children = nu
   const enhancedTopbar = isValidElement(topbar)
     ? cloneElement(topbar, {
         onToggleSidebar: () => setIsMobileSidebarOpen((prev) => !prev),
+        ...(isMobileFrame ? { mobileFrame: true } : {}),
       })
     : topbar;
 
@@ -46,16 +59,23 @@ export default function AppShell({ sidebar, topbar, banner = null, children = nu
 
       {enhancedSidebar}
 
-      <div className="flex min-h-screen w-full min-w-0 flex-1 flex-col pb-20 lg:ml-64 lg:pb-0 print:m-0 print:p-0 print:ml-0">
+      <div
+        className={
+          isMobileFrame
+            ? 'mx-auto flex min-h-screen w-full max-w-[430px] flex-col bg-white pb-20 shadow-[0_0_50px_rgba(16,54,125,0.12)] sm:border-x sm:border-slate-200/80 print:m-0 print:max-w-none print:border-0 print:p-0 print:shadow-none'
+            : 'flex min-h-screen w-full min-w-0 flex-1 flex-col pb-20 lg:ml-64 lg:pb-0 print:m-0 print:p-0 print:ml-0'
+        }
+      >
         {enhancedTopbar}
         {banner}
-        <div id="konten" className="flex-1">
+        <div id="konten" className={`flex-1 ${isMobileFrame ? 'relative isolate bg-white' : ''}`}>
           <Outlet />
         </div>
       </div>
 
       <AppBottomNav
         role={role}
+        mobileFrame={isMobileFrame}
         onOpenSidebar={() => setIsMobileSidebarOpen((prev) => !prev)}
       />
 

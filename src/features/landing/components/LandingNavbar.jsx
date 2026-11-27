@@ -9,7 +9,8 @@ import logoDarkAsset from '../../../assets/LOGO-dark.png';
 const NAV_LINKS = [
   { id: 'tentang', label: 'Tentang' },
   { id: 'layanan', label: 'Layanan' },
-  { id: 'mitra', label: 'Mitra Driver' },
+  { path: '/mitra-driver', label: 'Mitra Driver' },
+  { path: '/mitra-pos', label: 'Mitra Pos' },
   { path: '/faq', label: 'FAQ' },
   { path: '/syarat-ketentuan', label: 'Syarat & Ketentuan' },
 ];

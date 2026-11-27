@@ -319,7 +319,7 @@ export default function RegionalTripMonitoringPage() {
       }).addTo(map);
 
       traveledLineRef.current = L.polyline([coords[0]], {
-        color: '#10367D',
+        color: '#1356d6',
         weight: 6,
         opacity: 0.95,
         lineCap: 'round',
@@ -336,7 +336,7 @@ export default function RegionalTripMonitoringPage() {
             pointer-events:none;
           ">
             <div style="
-              background:linear-gradient(135deg, #10367D 0%, #0C2C66 100%);
+              background:linear-gradient(135deg, #1356d6 0%, #0e44ba 100%);
               color:white;
               padding:6px 12px;
               border-radius:8px;
@@ -352,7 +352,7 @@ export default function RegionalTripMonitoringPage() {
             <div style="
               width:24px;
               height:24px;
-              background:#10367D;
+              background:#1356d6;
               border:3px solid white;
               border-radius:50%;
               box-shadow:0 2px 12px rgba(16, 54, 125, 0.5);
@@ -538,7 +538,7 @@ export default function RegionalTripMonitoringPage() {
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
 
       {/* ── BANNER GRADIENT ── */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2684ff] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
         <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
         <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0 flex-1">
@@ -572,7 +572,7 @@ export default function RegionalTripMonitoringPage() {
             onClick={() => { setScopeFilter('origin'); setCurrentPage(1); }}
             className={`px-4 py-2 rounded-xl text-[13px] font-bold transition flex items-center gap-2 cursor-pointer ${
               scopeFilter === 'origin'
-                ? 'bg-[#10367D] text-white shadow-sm'
+                ? 'bg-[#1356d6] text-white shadow-sm'
                 : 'bg-neutral-50 text-neutral-600 hover:bg-neutral-100'
             }`}
           >
@@ -588,7 +588,7 @@ export default function RegionalTripMonitoringPage() {
             onClick={() => { setScopeFilter('all'); setCurrentPage(1); }}
             className={`px-4 py-2 rounded-xl text-[13px] font-bold transition flex items-center gap-2 cursor-pointer ${
               scopeFilter === 'all'
-                ? 'bg-[#10367D] text-white shadow-sm'
+                ? 'bg-[#1356d6] text-white shadow-sm'
                 : 'bg-neutral-50 text-neutral-600 hover:bg-neutral-100'
             }`}
           >
@@ -599,7 +599,7 @@ export default function RegionalTripMonitoringPage() {
             onClick={() => { setScopeFilter('destination'); setCurrentPage(1); }}
             className={`px-4 py-2 rounded-xl text-[13px] font-bold transition flex items-center gap-2 cursor-pointer ${
               scopeFilter === 'destination'
-                ? 'bg-[#10367D] text-white shadow-sm'
+                ? 'bg-[#1356d6] text-white shadow-sm'
                 : 'bg-neutral-50 text-neutral-600 hover:bg-neutral-100'
             }`}
           >
@@ -655,7 +655,7 @@ export default function RegionalTripMonitoringPage() {
               setSearchQuery(e.target.value);
               setCurrentPage(1);
             }}
-            className="w-full bg-neutral-50 border border-neutral-200 rounded-full pl-9 pr-8 py-2 text-[13px] sm:text-[14px] font-medium text-neutral-700 focus:outline-none focus:ring-2 focus:ring-[#10367D] transition"
+            className="w-full bg-neutral-50 border border-neutral-200 rounded-full pl-9 pr-8 py-2 text-[13px] sm:text-[14px] font-medium text-neutral-700 focus:outline-none focus:ring-2 focus:ring-[#1356d6] transition"
           />
         </div>
 
@@ -666,7 +666,7 @@ export default function RegionalTripMonitoringPage() {
               setStatusFilter(e.target.value);
               setCurrentPage(1);
             }}
-            className="bg-neutral-50 border border-neutral-200 rounded-full px-3 py-1.5 text-[13px] font-semibold text-neutral-700 focus:outline-none focus:ring-2 focus:ring-[#10367D] cursor-pointer"
+            className="bg-neutral-50 border border-neutral-200 rounded-full px-3 py-1.5 text-[13px] font-semibold text-neutral-700 focus:outline-none focus:ring-2 focus:ring-[#1356d6] cursor-pointer"
           >
             <option value="Semua">Semua Status</option>
             <option value="scheduled">Terjadwal (Scheduled)</option>
@@ -732,14 +732,14 @@ export default function RegionalTripMonitoringPage() {
                     </td>
                     <td className="py-3.5 px-5">
                       <div className="flex items-center gap-1.5 font-semibold text-neutral-700">
-                        <MapPin size={11} className="text-[#10367D] shrink-0" />
+                        <MapPin size={11} className="text-[#1356d6] shrink-0" />
                         <span className="truncate">
                           {trip.originPos}
                           {trip.isOriginLocal && (
                             <span className="ml-1 text-[10px] px-1 py-0.2 rounded bg-blue-100 text-blue-700 font-bold">Pos Lokal</span>
                           )}
                         </span>
-                        <ArrowRight size={10} className="text-[#10367D] shrink-0" />
+                        <ArrowRight size={10} className="text-[#1356d6] shrink-0" />
                         <span className="truncate">{trip.destinationPos}</span>
                       </div>
                       <div className="text-[11px] text-neutral-400 mt-0.5">
@@ -759,7 +759,7 @@ export default function RegionalTripMonitoringPage() {
                         <button
                           onClick={() => handleOpenDetail(trip, 'replay')}
                           title="Visual Replay & Live Tracking"
-                          className="p-1.5 bg-[#74B4D9]/15 hover:bg-[#74B4D9]/25 text-[#10367D] rounded-lg transition cursor-pointer"
+                          className="p-1.5 bg-[#74B4D9]/15 hover:bg-[#74B4D9]/25 text-[#1356d6] rounded-lg transition cursor-pointer"
                         >
                           <Play size={13} />
                         </button>
@@ -894,9 +894,9 @@ export default function RegionalTripMonitoringPage() {
                         setReplayProgress(Number(e.target.value));
                         setIsPlayingReplay(false);
                       }}
-                      className="w-full h-2 bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-[#10367D] disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full h-2 bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-[#1356d6] disabled:opacity-50 disabled:cursor-not-allowed"
                       style={{
-                        backgroundImage: 'linear-gradient(to right, #10367D 0%, #10367D ' + replayProgress + '%, #374151 ' + replayProgress + '%, #374151 100%)'
+                        backgroundImage: 'linear-gradient(to right, #1356d6 0%, #1356d6 ' + replayProgress + '%, #374151 ' + replayProgress + '%, #374151 100%)'
                       }}
                     />
                     <div className="flex justify-between text-[10px] text-neutral-500 font-mono">
@@ -914,7 +914,7 @@ export default function RegionalTripMonitoringPage() {
                         <button
                           onClick={() => setIsPlayingReplay(!isPlayingReplay)}
                           disabled={isFetchingRoute}
-                          className="px-4 py-2 bg-gradient-to-r from-[#10367D] to-[#0C2C66] hover:from-[#0C2C66] hover:to-[#082044] text-white rounded-xl text-[12px] font-bold flex items-center gap-1.5 transition shadow-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="px-4 py-2 bg-gradient-to-r from-[#1356d6] to-[#0e44ba] hover:from-[#0e44ba] hover:to-[#082044] text-white rounded-xl text-[12px] font-bold flex items-center gap-1.5 transition shadow-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {isPlayingReplay ? <Pause size={12} /> : <Play size={12} />}
                           <span>{isPlayingReplay ? 'Pause' : 'Mulai Replay'}</span>
@@ -939,7 +939,7 @@ export default function RegionalTripMonitoringPage() {
             <div className="pt-4 border-t border-neutral-200 flex justify-end">
               <button
                 onClick={handleCloseDetailModal}
-                className="px-5 py-2.5 bg-gradient-to-r from-[#10367D] to-[#0C2C66] hover:from-[#0C2C66] hover:to-[#082044] text-white text-[13px] font-bold rounded-xl transition cursor-pointer shadow-lg"
+                className="px-5 py-2.5 bg-gradient-to-r from-[#1356d6] to-[#0e44ba] hover:from-[#0e44ba] hover:to-[#082044] text-white text-[13px] font-bold rounded-xl transition cursor-pointer shadow-lg"
               >
                 Tutup
               </button>
@@ -986,7 +986,7 @@ export default function RegionalTripMonitoringPage() {
               <select
                 value={reportCategory}
                 onChange={(e) => setReportCategory(e.target.value)}
-                className="w-full bg-white border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-medium text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#10367D]"
+                className="w-full bg-white border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-medium text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#1356d6]"
               >
                 <option value="SERVICE_QUALITY">Pelayanan / Ketidakpatuhan Jadwal Pos</option>
                 <option value="SAFETY_AND_HARASSMENT">Keamanan / Ketertiban di Area Pos</option>
@@ -1011,7 +1011,7 @@ export default function RegionalTripMonitoringPage() {
                     onClick={() => setReportSeverity(s.id)}
                     className={`py-2 px-2 rounded-xl text-[11px] font-bold border transition cursor-pointer text-center ${
                       reportSeverity === s.id
-                        ? 'bg-[#10367D] text-white border-[#10367D]'
+                        ? 'bg-[#1356d6] text-white border-[#1356d6]'
                         : 'bg-white text-neutral-600 border-neutral-200 hover:bg-neutral-50'
                     }`}
                   >
@@ -1030,7 +1030,7 @@ export default function RegionalTripMonitoringPage() {
                 value={reportTitle}
                 onChange={(e) => setReportTitle(e.target.value)}
                 placeholder="Contoh: Mitra terlambat lebih dari 30 menit di Pos A"
-                className="w-full bg-white border border-neutral-200 rounded-xl px-3 py-2 text-[13px] text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#10367D]"
+                className="w-full bg-white border border-neutral-200 rounded-xl px-3 py-2 text-[13px] text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#1356d6]"
               />
             </div>
 
@@ -1043,7 +1043,7 @@ export default function RegionalTripMonitoringPage() {
                 value={reportDescription}
                 onChange={(e) => setReportDescription(e.target.value)}
                 placeholder="Tuliskan kronologi kejadian di pos secara objektif..."
-                className="w-full bg-white border border-neutral-200 rounded-xl p-3 text-[13px] text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#10367D]"
+                className="w-full bg-white border border-neutral-200 rounded-xl p-3 text-[13px] text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#1356d6]"
               />
             </div>
 

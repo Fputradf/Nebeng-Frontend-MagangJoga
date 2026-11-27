@@ -202,7 +202,7 @@ export default function AuditFinancialReport() {
       </div>
 
       {/* ── BANNER GRADIENT ── */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card print:hidden">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2684ff] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card print:hidden">
         <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
         <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0 flex-1">
@@ -219,7 +219,7 @@ export default function AuditFinancialReport() {
 
           <button
             onClick={() => window.print()}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-blue-50 text-[#10367D] rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer shadow-sm shrink-0 whitespace-nowrap self-start sm:self-auto"
+            className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-blue-50 text-[#1356d6] rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer shadow-sm shrink-0 whitespace-nowrap self-start sm:self-auto"
           >
             <Printer size={16} />
             <span>Cetak Laporan PDF</span>
@@ -270,7 +270,7 @@ export default function AuditFinancialReport() {
             }}
             className={`px-4 py-1.5 rounded-full text-[13px] font-bold transition cursor-pointer flex items-center gap-1.5 ${
               activeTab === 'escrow'
-                ? 'bg-[#10367D] text-white shadow-sm'
+                ? 'bg-[#1356d6] text-white shadow-sm'
                 : 'text-neutral-500 hover:text-neutral-700'
             }`}
           >
@@ -346,7 +346,7 @@ export default function AuditFinancialReport() {
                         <div className="font-bold text-neutral-800 font-mono text-[13px] print:text-neutral-900">
                           {item.id}
                         </div>
-                        <div className="text-[11px] font-bold text-[#10367D] font-mono print:text-neutral-600">
+                        <div className="text-[11px] font-bold text-[#1356d6] font-mono print:text-neutral-600">
                           {item.orderId}
                         </div>
                       </td>
@@ -432,7 +432,7 @@ export default function AuditFinancialReport() {
                         onClick={() => setCurrentPage(p)}
                         className={`w-8 h-8 rounded-lg text-[13px] font-bold transition cursor-pointer ${
                           currentPage === p
-                            ? 'bg-[#10367D] text-white shadow-sm'
+                            ? 'bg-[#1356d6] text-white shadow-sm'
                             : 'bg-white border border-neutral-200 text-neutral-600 hover:bg-neutral-50'
                         }`}
                       >

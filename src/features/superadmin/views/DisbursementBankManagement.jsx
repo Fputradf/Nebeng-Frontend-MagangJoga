@@ -229,7 +229,7 @@ export default function DisbursementBankManagement() {
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
       {/* ── BANNER GRADIENT HEADER ── */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2684ff] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
         <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
         <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0 flex-1">
@@ -257,7 +257,7 @@ export default function DisbursementBankManagement() {
 
             <button
               onClick={handleOpenCreateModal}
-              className="px-4 py-2.5 bg-white hover:bg-blue-50 text-[#10367D] rounded-xl text-xs sm:text-sm font-bold shadow-sm transition flex items-center justify-center gap-2 cursor-pointer shrink-0 active:scale-95 whitespace-nowrap"
+              className="px-4 py-2.5 bg-white hover:bg-blue-50 text-[#1356d6] rounded-xl text-xs sm:text-sm font-bold shadow-sm transition flex items-center justify-center gap-2 cursor-pointer shrink-0 active:scale-95 whitespace-nowrap"
             >
               <Plus className="w-4 h-4 stroke-[2.5]" />
               <span>Tambah Bank Baru</span>
@@ -324,7 +324,7 @@ export default function DisbursementBankManagement() {
             placeholder="Cari kode atau nama bank..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-neutral-50 border border-neutral-200 rounded-xl text-xs sm:text-sm text-neutral-800 focus:outline-none focus:border-[#10367D] focus:bg-white transition-all"
+            className="w-full pl-9 pr-4 py-2 bg-neutral-50 border border-neutral-200 rounded-xl text-xs sm:text-sm text-neutral-800 focus:outline-none focus:border-[#1356d6] focus:bg-white transition-all"
           />
         </div>
 
@@ -405,7 +405,7 @@ export default function DisbursementBankManagement() {
               <div
                 className={`h-1.5 w-full ${
                   bank.isActive
-                    ? 'bg-gradient-to-r from-[#0c2353] via-[#10367D] to-[#38bdf8]'
+                    ? 'bg-gradient-to-r from-[#0b3ba8] via-[#1356d6] to-[#38bdf8]'
                     : 'bg-neutral-300'
                 }`}
               />
@@ -419,7 +419,7 @@ export default function DisbursementBankManagement() {
                       <div
                         className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 shadow-sm border ${
                           bank.isActive
-                            ? 'bg-gradient-to-br from-[#0c2353] to-[#10367D] text-white border-blue-900/30'
+                            ? 'bg-gradient-to-br from-[#0b3ba8] to-[#1356d6] text-white border-blue-900/30'
                             : 'bg-neutral-200 text-neutral-500 border-neutral-300'
                         }`}
                       >
@@ -525,7 +525,7 @@ export default function DisbursementBankManagement() {
                   <button
                     type="button"
                     onClick={() => handleOpenEditModal(bank)}
-                    className="p-2 border border-neutral-200 text-neutral-600 hover:text-[#10367D] hover:bg-neutral-50 rounded-xl transition-colors cursor-pointer"
+                    className="p-2 border border-neutral-200 text-neutral-600 hover:text-[#1356d6] hover:bg-neutral-50 rounded-xl transition-colors cursor-pointer"
                     title="Ubah Konfigurasi Bank"
                   >
                     <Edit2 className="w-4 h-4" />
@@ -569,7 +569,7 @@ export default function DisbursementBankManagement() {
                     onClick={() => handleSelectPreset(preset)}
                     className={`text-[11px] font-bold px-2 py-1 rounded-lg border transition-all cursor-pointer ${
                       formData.bankCode === preset.code
-                        ? 'bg-[#10367D] text-white border-[#10367D]'
+                        ? 'bg-[#1356d6] text-white border-[#1356d6]'
                         : 'bg-white text-neutral-700 border-neutral-200 hover:border-neutral-400'
                     }`}
                   >
@@ -594,7 +594,7 @@ export default function DisbursementBankManagement() {
                 onChange={(e) =>
                   setFormData({ ...formData, bankCode: e.target.value.toUpperCase() })
                 }
-                className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold uppercase text-neutral-900 focus:outline-none focus:border-[#10367D] focus:bg-white text-xs sm:text-sm"
+                className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold uppercase text-neutral-900 focus:outline-none focus:border-[#1356d6] focus:bg-white text-xs sm:text-sm"
               />
               <p className="text-[10px] text-neutral-400 mt-0.5">
                 Standar kode kliring Xendit / BI FAST
@@ -614,7 +614,7 @@ export default function DisbursementBankManagement() {
                 onChange={(e) =>
                   setFormData({ ...formData, orderIndex: parseInt(e.target.value) || 0 })
                 }
-                className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-medium text-neutral-900 focus:outline-none focus:border-[#10367D] focus:bg-white text-xs sm:text-sm"
+                className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-medium text-neutral-900 focus:outline-none focus:border-[#1356d6] focus:bg-white text-xs sm:text-sm"
               />
               <p className="text-[10px] text-neutral-400 mt-0.5">
                 Urutan terkecil muncul paling atas
@@ -633,7 +633,7 @@ export default function DisbursementBankManagement() {
               placeholder="cth: Bank Central Asia (BCA)"
               value={formData.bankName}
               onChange={(e) => setFormData({ ...formData, bankName: e.target.value })}
-              className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-medium text-neutral-900 focus:outline-none focus:border-[#10367D] focus:bg-white text-xs sm:text-sm"
+              className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-medium text-neutral-900 focus:outline-none focus:border-[#1356d6] focus:bg-white text-xs sm:text-sm"
             />
           </div>
 
@@ -647,7 +647,7 @@ export default function DisbursementBankManagement() {
               placeholder="cth: Proses instan 24 jam / Jam kerja 08:00 - 17:00"
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-medium text-neutral-900 focus:outline-none focus:border-[#10367D] focus:bg-white text-xs sm:text-sm"
+              className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-medium text-neutral-900 focus:outline-none focus:border-[#1356d6] focus:bg-white text-xs sm:text-sm"
             />
           </div>
 
@@ -663,7 +663,7 @@ export default function DisbursementBankManagement() {
               onChange={(e) =>
                 setFormData({ ...formData, accountNumberSample: e.target.value })
               }
-              className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-medium text-neutral-900 focus:outline-none focus:border-[#10367D] focus:bg-white text-xs sm:text-sm"
+              className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-medium text-neutral-900 focus:outline-none focus:border-[#1356d6] focus:bg-white text-xs sm:text-sm"
             />
           </div>
 
@@ -677,7 +677,7 @@ export default function DisbursementBankManagement() {
               placeholder="https://domain.com/logo-bank.png"
               value={formData.logoUrl}
               onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
-              className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-medium text-neutral-900 focus:outline-none focus:border-[#10367D] focus:bg-white text-xs sm:text-sm"
+              className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-medium text-neutral-900 focus:outline-none focus:border-[#1356d6] focus:bg-white text-xs sm:text-sm"
             />
           </div>
 
@@ -716,7 +716,7 @@ export default function DisbursementBankManagement() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-5 py-2.5 bg-[#10367D] hover:bg-[#0d2d69] text-white text-xs sm:text-sm font-bold rounded-xl shadow-sm transition-all disabled:opacity-50 cursor-pointer"
+              className="px-5 py-2.5 bg-[#1356d6] hover:bg-[#0d2d69] text-white text-xs sm:text-sm font-bold rounded-xl shadow-sm transition-all disabled:opacity-50 cursor-pointer"
             >
               {isSubmitting
                 ? 'Menyimpan...'

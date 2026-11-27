@@ -277,7 +277,7 @@ export default function PosMitraManagement() {
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
       {/* ── BANNER GRADIENT ── */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2684ff] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
         <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
         <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0 flex-1">
@@ -296,7 +296,7 @@ export default function PosMitraManagement() {
           <div className="flex items-center gap-2.5 self-start sm:self-auto shrink-0">
             <button 
               onClick={handleOpenAdd}
-              className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-blue-50 text-[#10367D] rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer shadow-sm whitespace-nowrap"
+              className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-blue-50 text-[#1356d6] rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer shadow-sm whitespace-nowrap"
             >
               <Plus size={14} className="stroke-[3]" />
               <span>Tambah Pos Baru</span>
@@ -315,7 +315,7 @@ export default function PosMitraManagement() {
               placeholder="Cari pos, alamat, mitra pos..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-neutral-50 border border-neutral-200 rounded-full pl-9 pr-8 py-2 text-[13px] sm:text-[14px] font-medium text-neutral-700 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-[#10367D] transition"
+              className="w-full bg-neutral-50 border border-neutral-200 rounded-full pl-9 pr-8 py-2 text-[13px] sm:text-[14px] font-medium text-neutral-700 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-[#1356d6] transition"
             />
           </div>
 
@@ -325,7 +325,7 @@ export default function PosMitraManagement() {
               <select
                 value={selectedFilterRegion}
                 onChange={(e) => setSelectedFilterRegion(e.target.value)}
-                className="bg-neutral-50 border border-neutral-200 rounded-full px-4 py-2 text-xs font-bold text-[#10367D] focus:outline-none focus:ring-2 focus:ring-[#10367D] cursor-pointer"
+                className="bg-neutral-50 border border-neutral-200 rounded-full px-4 py-2 text-xs font-bold text-[#1356d6] focus:outline-none focus:ring-2 focus:ring-[#1356d6] cursor-pointer"
               >
                 <option value="all">🌐 Semua Wilayah</option>
                 {regionsList.map((r) => (
@@ -361,25 +361,25 @@ export default function PosMitraManagement() {
                   <tr key={pos.id} className="hover:bg-gray-50/50 transition">
                     <td className="py-3.5 px-5">
                       <div className="font-bold text-neutral-800 text-[13px]">{pos.name}</div>
-                      <div className="text-[11px] font-bold text-[#10367D] font-mono">{pos.id}</div>
+                      <div className="text-[11px] font-bold text-[#1356d6] font-mono">{pos.id}</div>
                     </td>
                     <td className="py-3.5 px-5 font-medium text-neutral-600">{pos.address}</td>
                     <td className="py-3.5 px-5">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#10367D]/10 text-[#10367D]">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#1356d6]/10 text-[#1356d6]">
                         {pos.regionName || 'Wilayah Terdaftar'}
                       </span>
                     </td>
                     <td className="py-3.5 px-5">
-                      <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-bold ${pos.operatorName !== 'Belum Ditugaskan' ? 'bg-[#74B4D9]/15 text-[#10367D] border border-[#74B4D9]/30' : 'bg-neutral-100 text-neutral-500'}`}>
+                      <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-bold ${pos.operatorName !== 'Belum Ditugaskan' ? 'bg-[#74B4D9]/15 text-[#1356d6] border border-[#74B4D9]/30' : 'bg-neutral-100 text-neutral-500'}`}>
                         <UserCheck size={11} /> {pos.operatorName}
                       </span>
                     </td>
                     <td className="py-3.5 px-5">
                       <div className="flex items-center justify-center gap-2">
-                        <button onClick={() => handleShowQr(pos)} className="p-1.5 text-neutral-500 hover:text-[#10367D] hover:bg-neutral-100 rounded-lg transition" title="Lihat QR Code">
+                        <button onClick={() => handleShowQr(pos)} className="p-1.5 text-neutral-500 hover:text-[#1356d6] hover:bg-neutral-100 rounded-lg transition" title="Lihat QR Code">
                           <QrCode size={16} />
                         </button>
-                        <button onClick={() => handleOpenEdit(pos)} className="p-1.5 text-neutral-500 hover:text-[#10367D] hover:bg-neutral-100 rounded-lg transition" title="Edit Pos">
+                        <button onClick={() => handleOpenEdit(pos)} className="p-1.5 text-neutral-500 hover:text-[#1356d6] hover:bg-neutral-100 rounded-lg transition" title="Edit Pos">
                           <Pencil size={16} />
                         </button>
                         <button onClick={() => handleDeletePos(pos)} className="p-1.5 text-neutral-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition" title="Hapus Pos">
@@ -412,7 +412,7 @@ export default function PosMitraManagement() {
         <form onSubmit={handleSave} className="space-y-3 text-[13px]">
 
           <div className="space-y-1 bg-[#74B4D9]/10 p-3 rounded-xl border border-[#74B4D9]/30">
-            <label className="text-[12px] font-bold text-[#10367D] uppercase flex items-center gap-1">
+            <label className="text-[12px] font-bold text-[#1356d6] uppercase flex items-center gap-1">
               <Globe size={12} /> Cari Tempat / Alamat (Otomatis Deteksi Titik)
             </label>
             <div className="flex gap-2">
@@ -421,13 +421,13 @@ export default function PosMitraManagement() {
                 placeholder="Contoh: Terminal Tirtonadi, Stasiun Balapan Surakarta..."
                 value={locationSearchQuery}
                 onChange={(e) => setLocationSearchQuery(e.target.value)}
-                className="flex-1 bg-white border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-medium text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#10367D]"
+                className="flex-1 bg-white border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-medium text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#1356d6]"
               />
               <button
                 type="button"
                 onClick={handleAutoDetectCoordinate}
                 disabled={isSearchingLocation}
-                className="px-3 py-2 bg-[#10367D] hover:bg-[#0C2C66] text-white font-bold rounded-xl flex items-center gap-1 cursor-pointer disabled:opacity-50 shrink-0"
+                className="px-3 py-2 bg-[#1356d6] hover:bg-[#0e44ba] text-white font-bold rounded-xl flex items-center gap-1 cursor-pointer disabled:opacity-50 shrink-0"
               >
                 {isSearchingLocation ? <Loader2 size={13} className="animate-spin" /> : <Search size={13} />}
                 <span>Cari Peta</span>
@@ -443,7 +443,7 @@ export default function PosMitraManagement() {
               placeholder="Contoh: Pos Terminal Tirtonadi" 
               value={formData.name} 
               onChange={(e) => setFormData({...formData, name: e.target.value})} 
-              className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-medium text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#10367D]" 
+              className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-medium text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#1356d6]" 
             />
           </div>
 
@@ -455,7 +455,7 @@ export default function PosMitraManagement() {
               placeholder="Jl. Menteri Supeno No. 1..." 
               value={formData.address} 
               onChange={(e) => setFormData({...formData, address: e.target.value})} 
-              className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-medium text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#10367D] resize-none" 
+              className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-medium text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#1356d6] resize-none" 
             />
           </div>
 
@@ -476,16 +476,16 @@ export default function PosMitraManagement() {
                     }));
                     if (targetReg) setCurrentRegionInfo(targetReg);
                   }}
-                  className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-bold text-[#10367D] focus:outline-none focus:ring-2 focus:ring-[#10367D] cursor-pointer"
+                  className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-bold text-[#1356d6] focus:outline-none focus:ring-2 focus:ring-[#1356d6] cursor-pointer"
                 >
                   {regionsList.map((r) => (
                     <option key={r.id} value={r.id}>{r.name}</option>
                   ))}
                 </select>
               ) : (
-                <div className="w-full bg-neutral-100 border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-bold text-[#10367D] flex items-center justify-between">
+                <div className="w-full bg-neutral-100 border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-bold text-[#1356d6] flex items-center justify-between">
                   <span>{currentRegionInfo?.name || 'Wilayah Terdaftar'}</span>
-                  <span className="text-[10px] bg-[#10367D]/10 text-[#10367D] px-2 py-0.5 rounded-full font-semibold">Terkunci Akun</span>
+                  <span className="text-[10px] bg-[#1356d6]/10 text-[#1356d6] px-2 py-0.5 rounded-full font-semibold">Terkunci Akun</span>
                 </div>
               )}
             </div>
@@ -500,7 +500,7 @@ export default function PosMitraManagement() {
               <select 
                 value={formData.operatorId} 
                 onChange={(e) => setFormData({...formData, operatorId: e.target.value})} 
-                className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-semibold text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#10367D] cursor-pointer"
+                className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-semibold text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#1356d6] cursor-pointer"
               >
                 <option value="">-- Belum Ditugaskan --</option>
                 {operatorList.map((op) => (
@@ -520,7 +520,7 @@ export default function PosMitraManagement() {
                 placeholder="Contoh: -7.5666" 
                 value={formData.latitude} 
                 onChange={(e) => setFormData({...formData, latitude: e.target.value})} 
-                className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-mono font-medium text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#10367D]" 
+                className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-mono font-medium text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#1356d6]" 
               />
             </div>
             <div className="space-y-1">
@@ -532,7 +532,7 @@ export default function PosMitraManagement() {
                 placeholder="Contoh: 110.8283" 
                 value={formData.longitude} 
                 onChange={(e) => setFormData({...formData, longitude: e.target.value})} 
-                className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-mono font-medium text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#10367D]" 
+                className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-mono font-medium text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#1356d6]" 
               />
             </div>
           </div>
@@ -541,7 +541,7 @@ export default function PosMitraManagement() {
           <div className="space-y-1">
             <div className="flex justify-between items-center">
               <label className="text-[12px] font-bold text-neutral-500 uppercase flex items-center gap-1">
-                <Layers size={12} className="text-[#10367D]" />
+                <Layers size={12} className="text-[#1356d6]" />
                 Tempatkan Pos di Peta
               </label>
               {currentRegionInfo?.boundaryPolygon && (
@@ -591,13 +591,13 @@ export default function PosMitraManagement() {
                     <GeoJSON 
                       key={JSON.stringify(currentRegionInfo.boundaryPolygon)}
                       data={parseGeoJSON(currentRegionInfo.boundaryPolygon)}
-                      pathOptions={{ color: '#10367D', fillColor: '#10367D', fillOpacity: 0.15, weight: 2 }}
+                      pathOptions={{ color: '#1356d6', fillColor: '#1356d6', fillOpacity: 0.15, weight: 2 }}
                     />
                   ) : currentRegionInfo?.latitude && currentRegionInfo?.longitude ? (
                     <Circle 
                       center={[Number(currentRegionInfo.latitude), Number(currentRegionInfo.longitude)]} 
                       radius={(currentRegionInfo.radiusKm || 20) * 1000} 
-                      pathOptions={{ color: '#10367D', fillColor: '#10367D', fillOpacity: 0.12 }}
+                      pathOptions={{ color: '#1356d6', fillColor: '#1356d6', fillOpacity: 0.12 }}
                     />
                   ) : null}
                   <ChangeMapView center={[Number(formData.latitude) || -7.5666, Number(formData.longitude) || 110.8316]} />
@@ -608,7 +608,7 @@ export default function PosMitraManagement() {
 
           <div className="flex items-center justify-end gap-2 pt-2">
             <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-[13px] font-bold text-neutral-500 hover:bg-neutral-100 rounded-full cursor-pointer">Batal</button>
-            <button type="submit" className="px-4 py-2 text-[13px] font-bold text-white bg-[#10367D] hover:bg-[#0C2C66] rounded-full flex items-center gap-1 cursor-pointer shadow-sm transition">
+            <button type="submit" className="px-4 py-2 text-[13px] font-bold text-white bg-[#1356d6] hover:bg-[#0e44ba] rounded-full flex items-center gap-1 cursor-pointer shadow-sm transition">
               <Save size={13} /> Simpan Pos
             </button>
           </div>

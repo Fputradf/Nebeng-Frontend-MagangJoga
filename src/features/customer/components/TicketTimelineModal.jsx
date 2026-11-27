@@ -1,7 +1,7 @@
 import { X, CheckCircle2, Clock, MapPin, ShieldCheck, UserCheck, AlertCircle, Users, Star } from 'lucide-react';
 import BaseModal from '../../../components/ui/BaseModal';
 
-// const PRIMARY_COLOR = '#10367D';
+// const PRIMARY_COLOR = '#1356d6';
 
 export default function TicketTimelineModal({ isOpen, onClose, ticket }) {
   if (!isOpen || !ticket) return null;
@@ -199,7 +199,7 @@ export default function TicketTimelineModal({ isOpen, onClose, ticket }) {
         {ticket.passengers && ticket.passengers.length > 0 && (
           <div className="my-4 p-3.5 bg-blue-50/70 border border-blue-200 rounded-2xl text-xs space-y-2">
             <div className="flex items-center justify-between">
-              <span className="font-bold text-[#10367D] flex items-center gap-1.5 text-xs">
+              <span className="font-bold text-[#1356d6] flex items-center gap-1.5 text-xs">
                 <Users className="w-4 h-4 text-blue-600" />
                 Manifest Penumpang ({ticket.passengers.length} Orang)
               </span>
@@ -211,7 +211,7 @@ export default function TicketTimelineModal({ isOpen, onClose, ticket }) {
               {ticket.passengers.map((p, idx) => (
                 <div key={idx} className="bg-white p-2 rounded-xl border border-blue-100 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-[#10367D] text-[10px] font-bold flex items-center justify-center">
+                    <span className="w-5 h-5 rounded-full bg-blue-100 text-[#1356d6] text-[10px] font-bold flex items-center justify-center">
                       {p.seatNumber || (idx + 1)}
                     </span>
                     <div>

@@ -6,8 +6,8 @@ import { operatorService } from '../../../services/operatorService';
 import apiClient from '../../../services/apiClient';
 import { Html5Qrcode } from 'html5-qrcode';
 
-const PRIMARY_COLOR = '#10367D';
-const PRIMARY_HOVER = '#0C2C66';
+const PRIMARY_COLOR = '#1356d6';
+const PRIMARY_HOVER = '#0e44ba';
 const PRIMARY_ACCENT = '#74B4D9';
 const INSPECTION_STORAGE_KEY = 'nebeng_operator_inspection_history';
 
@@ -466,7 +466,7 @@ export default function OperatorInspection() {
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter'] relative">
       {/* ── BANNER GRADIENT ── */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2684ff] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
         <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
         <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0 flex-1">

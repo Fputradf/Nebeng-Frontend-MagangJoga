@@ -31,8 +31,8 @@ import BaseModal from '../../../components/ui/BaseModal';
 import ToggleSwitch from '../../../components/ui/ToggleSwitch';
 import apiClient from '../../../services/apiClient';
 
-const PRIMARY_COLOR = '#10367D';
-const PRIMARY_HOVER = '#0C2C66';
+const PRIMARY_COLOR = '#1356d6';
+const PRIMARY_HOVER = '#0e44ba';
 const PRIMARY_ACCENT = '#74B4D9';
 
 const PHONE_REGEX = /^(\+62|62|0)8[1-9][0-9]{6,10}$/;
@@ -762,11 +762,11 @@ export default function MitraAccountSettings() {
     'Mitra SatuRute';
 
   return (
-    <div className="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
+    <div className="mx-auto p-4 space-y-5 min-h-screen font-['Inter']">
       {/* ── BANNER GRADIENT ── */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2684ff] px-5 py-4 flex items-center text-white shadow-card">
         <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
-        <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative w-full flex flex-col gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 mb-1 min-w-0">
               <span className="w-2 h-2 rounded-full bg-accent animate-pulse shrink-0" />
@@ -870,7 +870,7 @@ export default function MitraAccountSettings() {
             onSubmit={handleSaveProfile}
             className="space-y-3.5 text-[13px] pt-1 border-t border-neutral-100"
           >
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-3.5">
+            <div className="grid grid-cols-1 gap-3.5 pt-3.5">
               <div>
                 <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                   Nama Lengkap
@@ -988,7 +988,7 @@ export default function MitraAccountSettings() {
         <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-neutral-100 pb-4">
             <div className="flex items-center gap-2.5">
-              <div className="p-2 bg-[#10367D]/10 text-[#10367D] rounded-xl shrink-0">
+              <div className="p-2 bg-[#1356d6]/10 text-[#1356d6] rounded-xl shrink-0">
                 <Car className="w-5 h-5" />
               </div>
               <div>
@@ -1004,7 +1004,7 @@ export default function MitraAccountSettings() {
             <button
               type="button"
               onClick={handleOpenAddVehicle}
-              className="px-4 py-2 bg-[#10367D] hover:bg-[#0C2C66] text-white text-[12px] font-bold rounded-xl transition shadow-sm cursor-pointer flex items-center gap-1.5 self-start sm:self-auto"
+              className="px-4 py-2 bg-[#1356d6] hover:bg-[#0e44ba] text-white text-[12px] font-bold rounded-xl transition shadow-sm cursor-pointer flex items-center gap-1.5 self-start sm:self-auto"
             >
               <Plus className="w-4 h-4" />
               Tambah Kendaraan Baru
@@ -1019,13 +1019,13 @@ export default function MitraAccountSettings() {
               <button
                 type="button"
                 onClick={handleOpenAddVehicle}
-                className="mt-3 px-4 py-1.5 bg-[#10367D] text-white rounded-xl text-xs font-bold transition shadow-xs"
+                className="mt-3 px-4 py-1.5 bg-[#1356d6] text-white rounded-xl text-xs font-bold transition shadow-xs"
               >
                 + Daftarkan Kendaraan
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+            <div className="grid grid-cols-1 gap-3.5">
               {vehiclesList.map((veh) => {
                 const isMotor = (veh.type || '').toLowerCase() === 'motor';
                 return (
@@ -1059,7 +1059,7 @@ export default function MitraAccountSettings() {
                         <button
                           type="button"
                           onClick={() => handleOpenEditVehicle(veh)}
-                          className="p-1.5 text-neutral-400 hover:text-[#10367D] hover:bg-neutral-100 rounded-lg transition cursor-pointer"
+                          className="p-1.5 text-neutral-400 hover:text-[#1356d6] hover:bg-neutral-100 rounded-lg transition cursor-pointer"
                           title="Edit informasi kendaraan ini"
                         >
                           <Pencil className="w-4 h-4" />
@@ -1093,7 +1093,7 @@ export default function MitraAccountSettings() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-neutral-100">
             <div className="flex items-center gap-2.5">
               <div className="p-2 bg-blue-50 text-brand-700 rounded-xl shrink-0">
-                <ShieldAlert className="w-5 h-5 text-[#10367D]" />
+                <ShieldAlert className="w-5 h-5 text-[#1356d6]" />
               </div>
               <div>
                 <h3 className="text-[17px] font-bold text-neutral-800">
@@ -1293,7 +1293,7 @@ export default function MitraAccountSettings() {
           </div>
 
           <form onSubmit={handleSavePin} className="space-y-3.5 text-[13px] border-t border-neutral-100 pt-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div className="grid grid-cols-1 gap-3.5">
               <div>
                 <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                   {liveUser?.hasPin ? 'PIN Baru (6 Digit Angka)' : 'Buat PIN (6 Digit Angka)'}
@@ -1432,7 +1432,7 @@ export default function MitraAccountSettings() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div className="grid grid-cols-1 gap-3.5">
               <div>
                 <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                   Kata Sandi Baru (Min. 8 Karakter)
@@ -1723,7 +1723,7 @@ export default function MitraAccountSettings() {
                   }))}
                   className={`py-2.5 px-3 rounded-xl border text-left font-bold transition flex items-center gap-2 cursor-pointer ${
                     newVehicleForm.type === 'motor'
-                      ? 'border-[#10367D] bg-blue-50/50 text-[#10367D]'
+                      ? 'border-[#1356d6] bg-blue-50/50 text-[#1356d6]'
                       : 'border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50'
                   }`}
                 >
@@ -1740,7 +1740,7 @@ export default function MitraAccountSettings() {
                   }))}
                   className={`py-2.5 px-3 rounded-xl border text-left font-bold transition flex items-center gap-2 cursor-pointer ${
                     newVehicleForm.type === 'mobil'
-                      ? 'border-[#10367D] bg-blue-50/50 text-[#10367D]'
+                      ? 'border-[#1356d6] bg-blue-50/50 text-[#1356d6]'
                       : 'border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50'
                   }`}
                 >
@@ -1837,7 +1837,7 @@ export default function MitraAccountSettings() {
               <button
                 type="submit"
                 disabled={isSubmittingVehicle}
-                className="flex-1 py-2.5 bg-[#10367D] hover:bg-[#0C2C66] text-white rounded-xl font-bold transition cursor-pointer shadow-sm flex items-center justify-center gap-1.5"
+                className="flex-1 py-2.5 bg-[#1356d6] hover:bg-[#0e44ba] text-white rounded-xl font-bold transition cursor-pointer shadow-sm flex items-center justify-center gap-1.5"
               >
                 {isSubmittingVehicle ? (
                   <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -1858,7 +1858,7 @@ export default function MitraAccountSettings() {
         >
           <form onSubmit={handleSubmitAppeal} className="space-y-4 pt-1">
             {/* Header Card Bergaya Sidebar Biru */}
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#0c2353] via-[#10367D] to-[#18458f] p-4 text-white shadow-md">
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#0b3ba8] via-[#1356d6] to-[#2684ff] p-4 text-white shadow-md">
               <div className="absolute -right-6 -top-10 h-28 w-28 rounded-full bg-white/10 pointer-events-none" />
               <div className="absolute bottom-0 right-16 h-16 w-16 rounded-full bg-cyan-400/20 pointer-events-none" />
               <div className="relative z-10">
@@ -1882,7 +1882,7 @@ export default function MitraAccountSettings() {
 
             {/* Info Banner */}
             <div className="p-3 bg-blue-50/80 border border-blue-200/80 rounded-xl text-blue-900 text-[12px] flex items-start gap-2.5 shadow-2xs">
-              <ShieldCheck className="w-4 h-4 text-[#10367D] shrink-0 mt-0.5" />
+              <ShieldCheck className="w-4 h-4 text-[#1356d6] shrink-0 mt-0.5" />
               <p className="leading-relaxed">
                 Jika pembatalan trip terjadi karena <strong>force majeure / kendala darurat</strong> dengan bukti sah, Admin Wilayah dapat menyetujui banding untuk mencabut sanksi dan memulihkan skor reputasi Anda.
               </p>
@@ -1892,7 +1892,7 @@ export default function MitraAccountSettings() {
             <div className="space-y-1.5">
               <label className="flex items-center justify-between text-[12px] font-bold text-neutral-700">
                 <span className="flex items-center gap-1.5">
-                  <FileText className="w-3.5 h-3.5 text-[#10367D]" />
+                  <FileText className="w-3.5 h-3.5 text-[#1356d6]" />
                   Alasan & Kronologi Banding
                 </span>
                 <span className="text-[10px] font-semibold text-rose-500 uppercase tracking-wide">Wajib Diisi</span>
@@ -1903,7 +1903,7 @@ export default function MitraAccountSettings() {
                 value={appealReason}
                 onChange={(e) => setAppealReason(e.target.value)}
                 placeholder="Tuliskan secara lengkap kronologi kendala darurat, alasan pembatalan, atau kendala kendaraan Anda..."
-                className="w-full px-3.5 py-2.5 border border-neutral-300 rounded-xl text-[13px] text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#10367D] focus:border-[#10367D] bg-white transition shadow-2xs"
+                className="w-full px-3.5 py-2.5 border border-neutral-300 rounded-xl text-[13px] text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#1356d6] focus:border-[#1356d6] bg-white transition shadow-2xs"
               />
             </div>
 
@@ -1911,7 +1911,7 @@ export default function MitraAccountSettings() {
             <div className="space-y-2">
               <label className="flex items-center justify-between text-[12px] font-bold text-neutral-700">
                 <span className="flex items-center gap-1.5">
-                  <Camera className="w-3.5 h-3.5 text-[#10367D]" />
+                  <Camera className="w-3.5 h-3.5 text-[#1356d6]" />
                   Foto Bukti Pendukung
                 </span>
                 <span className="text-[10px] font-semibold text-neutral-400">Opsional</span>
@@ -1979,14 +1979,14 @@ export default function MitraAccountSettings() {
                       : 'border-blue-200 bg-blue-50/40 hover:bg-blue-50/80 hover:border-blue-400'
                   }`}
                 >
-                  <div className="w-9 h-9 rounded-full bg-blue-100 text-[#10367D] flex items-center justify-center">
+                  <div className="w-9 h-9 rounded-full bg-blue-100 text-[#1356d6] flex items-center justify-center">
                     {isUploadingAppealFile ? (
-                      <span className="w-4 h-4 border-2 border-[#10367D] border-t-transparent rounded-full animate-spin" />
+                      <span className="w-4 h-4 border-2 border-[#1356d6] border-t-transparent rounded-full animate-spin" />
                     ) : (
                       <Upload className="w-4 h-4" />
                     )}
                   </div>
-                  <span className="text-[12px] font-bold text-[#10367D]">
+                  <span className="text-[12px] font-bold text-[#1356d6]">
                     {isUploadingAppealFile ? 'Sedang mengunggah...' : 'Klik untuk Upload Foto Bukti'}
                   </span>
                   <p className="text-[11px] text-neutral-500">
@@ -2012,7 +2012,7 @@ export default function MitraAccountSettings() {
                         setAppealFilePreview(null);
                       }}
                       placeholder="https://drive.google.com/... atau link foto online"
-                      className="w-full px-3 py-2 border border-neutral-300 rounded-xl text-[12px] text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#10367D] focus:border-[#10367D] bg-white transition shadow-2xs"
+                      className="w-full px-3 py-2 border border-neutral-300 rounded-xl text-[12px] text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#1356d6] focus:border-[#1356d6] bg-white transition shadow-2xs"
                     />
                     <p className="text-[10px] text-neutral-400">
                       Gunakan ini jika foto tersimpan di Google Drive atau penyimpanan daring publik.
@@ -2035,7 +2035,7 @@ export default function MitraAccountSettings() {
               <button
                 type="submit"
                 disabled={isSubmittingAppeal}
-                className="flex-1 py-2.5 bg-gradient-to-r from-[#0c2353] via-[#10367D] to-[#18458f] hover:brightness-110 text-white rounded-xl font-bold text-[13px] transition cursor-pointer shadow-md flex items-center justify-center gap-2"
+                className="flex-1 py-2.5 bg-gradient-to-r from-[#0b3ba8] via-[#1356d6] to-[#2684ff] hover:brightness-110 text-white rounded-xl font-bold text-[13px] transition cursor-pointer shadow-md flex items-center justify-center gap-2"
               >
                 {isSubmittingAppeal ? (
                   <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

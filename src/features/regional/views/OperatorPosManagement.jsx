@@ -179,8 +179,8 @@ export default function OperatorPosPage() {
       <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-neutral-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="w-2 h-2 rounded-full bg-[#10367D] animate-pulse"></span>
-            <span className="text-[12px] font-bold uppercase tracking-widest text-[#10367D]">
+            <span className="w-2 h-2 rounded-full bg-[#1356d6] animate-pulse"></span>
+            <span className="text-[12px] font-bold uppercase tracking-widest text-[#1356d6]">
               MANAJEMEN AKUN MITRA POS REGIONAL
             </span>
           </div>
@@ -190,7 +190,7 @@ export default function OperatorPosPage() {
 
         <button 
           onClick={handleOpenAdd}
-          className="flex items-center gap-2 px-4 py-2 bg-[#10367D] hover:bg-[#0C2C66] text-white rounded-full text-[13px] sm:text-[14px] font-bold transition cursor-pointer shadow-sm shrink-0"
+          className="flex items-center gap-2 px-4 py-2 bg-[#1356d6] hover:bg-[#0e44ba] text-white rounded-full text-[13px] sm:text-[14px] font-bold transition cursor-pointer shadow-sm shrink-0"
         >
           <Plus size={14} />
           <span>Buat Mitra Pos Baru</span>
@@ -205,7 +205,7 @@ export default function OperatorPosPage() {
             placeholder="Cari nama, email, atau pos..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-neutral-50 border border-neutral-200 rounded-full pl-9 pr-8 py-2 text-[13px] sm:text-[14px] font-medium text-neutral-700 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-[#10367D] transition"
+            className="w-full bg-neutral-50 border border-neutral-200 rounded-full pl-9 pr-8 py-2 text-[13px] sm:text-[14px] font-medium text-neutral-700 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-[#1356d6] transition"
           />
         </div>
         <div className="text-[13px] font-semibold text-neutral-400 px-2">
@@ -236,7 +236,7 @@ export default function OperatorPosPage() {
                     <tr key={op.id} className="hover:bg-gray-50/50 transition">
                       <td className="py-3.5 px-5">
                         <div className="font-bold text-neutral-800 text-[13px]">{op.name}</div>
-                        <div className="text-[11px] font-bold text-[#10367D] font-mono">{op.id}</div>
+                        <div className="text-[11px] font-bold text-[#1356d6] font-mono">{op.id}</div>
                       </td>
                       <td className="py-3.5 px-5 font-semibold text-neutral-700">
                         <div className="flex items-center gap-1.5">
@@ -289,24 +289,24 @@ export default function OperatorPosPage() {
         <form onSubmit={handleSave} className="space-y-3">
           <div className="space-y-1">
             <label className="text-[12px] font-bold text-neutral-500 uppercase">Nama Lengkap</label>
-            <input type="text" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-medium text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#10367D]" />
+            <input type="text" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-medium text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#1356d6]" />
           </div>
           <div className="space-y-1">
             <label className="text-[12px] font-bold text-neutral-500 uppercase">Email Akun</label>
-            <input type="email" required value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-medium text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#10367D]" />
+            <input type="email" required value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-medium text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#1356d6]" />
           </div>
           <div className="space-y-1">
             <label className="text-[12px] font-bold text-neutral-500 uppercase">Nomor Telepon</label>
-            <input type="text" required value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-medium text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#10367D]" />
+            <input type="text" required value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-medium text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#1356d6]" />
           </div>
           <div className="space-y-1">
             <label className="text-[12px] font-bold text-neutral-500 uppercase">Password Awal</label>
-            <input type="password" required value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-medium text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#10367D]" />
+            <input type="password" required value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-medium text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#1356d6]" />
           </div>
 
           <div className="flex items-center justify-end gap-2 pt-3">
             <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-[13px] font-bold text-neutral-500 hover:bg-neutral-100 rounded-full cursor-pointer">Batal</button>
-            <button type="submit" className="px-4 py-2 text-[13px] font-bold text-white bg-[#10367D] rounded-full cursor-pointer shadow-sm">Simpan</button>
+            <button type="submit" className="px-4 py-2 text-[13px] font-bold text-white bg-[#1356d6] rounded-full cursor-pointer shadow-sm">Simpan</button>
           </div>
         </form>
       </BaseModal>

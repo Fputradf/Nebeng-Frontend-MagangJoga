@@ -160,7 +160,7 @@ export default function NotificationHistory() {
           break;
         case 'reward_earned':
         case 'reward_redeemed':
-          navigateTo('/customer/rewards');
+          navigateTo('/customer/tickets');
           break;
         case 'verification_approved':
         case 'verification_rejected':
@@ -245,7 +245,7 @@ export default function NotificationHistory() {
 
   if (loading && history.length === 0) {
     return (
-      <div className="max-w-2xl mx-auto p-6">
+      <div className="mx-auto p-4">
         <div className="flex items-center justify-center py-12">
           <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
         </div>
@@ -254,20 +254,22 @@ export default function NotificationHistory() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      <div className="bg-white rounded-lg shadow-sm">
-        <div className="p-6 border-b border-gray-200">
+    <div className="mx-auto p-4 space-y-4">
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+        <div className="p-4 border-b border-slate-100">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Bell className="w-6 h-6 text-blue-600" />
-              <h1 className="text-2xl font-bold text-gray-900">Riwayat Notifikasi</h1>
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-[#1356d6]">
+                <Bell className="w-4.5 h-4.5" />
+              </div>
+              <h1 className="font-display text-lg font-bold text-slate-900">Riwayat Notifikasi</h1>
             </div>
             <button
               onClick={handleRefresh}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
               title="Refresh"
             >
-              <RefreshCw className="w-5 h-5 text-gray-600" />
+              <RefreshCw className="w-4.5 h-4.5 text-slate-600" />
             </button>
           </div>
         </div>

@@ -16,20 +16,20 @@ const VARIANT_CONFIG = {
   },
   info: {
     icon: Info,
-    badgeBg: 'bg-blue-50 text-[#10367D] ring-8 ring-blue-50/70',
-    buttonBg: 'bg-[#10367D] hover:bg-[#0C2C66] active:bg-[#081e46] text-white shadow-sm shadow-blue-200',
+    badgeBg: 'bg-blue-50 text-[#1356d6] ring-8 ring-blue-50/70',
+    buttonBg: 'bg-[#1356d6] hover:bg-[#0e44ba] active:bg-[#081e46] text-white shadow-sm shadow-blue-200',
     defaultConfirmText: 'Konfirmasi',
   },
   primary: {
     icon: HelpCircle,
-    badgeBg: 'bg-blue-50 text-[#10367D] ring-8 ring-blue-50/70',
-    buttonBg: 'bg-[#10367D] hover:bg-[#0C2C66] active:bg-[#081e46] text-white shadow-sm shadow-blue-200',
+    badgeBg: 'bg-blue-50 text-[#1356d6] ring-8 ring-blue-50/70',
+    buttonBg: 'bg-[#1356d6] hover:bg-[#0e44ba] active:bg-[#081e46] text-white shadow-sm shadow-blue-200',
     defaultConfirmText: 'Ya, Lanjutkan',
   },
   default: {
     icon: HelpCircle,
     badgeBg: 'bg-slate-50 text-slate-700 ring-8 ring-slate-100/70',
-    buttonBg: 'bg-[#10367D] hover:bg-[#0C2C66] active:bg-[#081e46] text-white shadow-sm shadow-blue-200',
+    buttonBg: 'bg-[#1356d6] hover:bg-[#0e44ba] active:bg-[#081e46] text-white shadow-sm shadow-blue-200',
     defaultConfirmText: 'Ya, Lanjutkan',
   },
 };

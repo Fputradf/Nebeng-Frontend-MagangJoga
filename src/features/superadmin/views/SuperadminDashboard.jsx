@@ -54,7 +54,7 @@ const getWeight = (baseWeight, index, regionName) => {
 function RpTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-[#10367D] rounded-xl shadow-xl px-3 py-2.5 text-white text-[12px] min-w-[160px]">
+    <div className="bg-[#1356d6] rounded-xl shadow-xl px-3 py-2.5 text-white text-[12px] min-w-[160px]">
       <p className="font-semibold text-white/70 mb-1.5">{label}</p>
       {payload.map((p) => (
         <div key={p.dataKey} className="flex justify-between gap-3 items-center mb-0.5">
@@ -70,7 +70,7 @@ function RpTooltip({ active, payload, label }) {
 }
 
 // ─── Mini SparkLine ────────────────────────────────────────────────────────────
-function SparkLine({ data = [], color = '#10367D' }) {
+function SparkLine({ data = [], color = '#1356d6' }) {
   if (data.length < 2) return null;
   const W = 72, H = 28;
   const maxV = Math.max(...data, 1);
@@ -159,7 +159,7 @@ export default function SuperadminDashboard() {
     },
     {
       icon: Wallet, color: '#10b981', bg: 'bg-emerald-50',
-      label: 'KOMISI PLATFORM', value: formatRp(platformCommission),
+      label: 'BIAYA ADMIN', value: formatRp(platformCommission),
       sub: `${totalRevenue > 0 ? ((platformCommission/totalRevenue)*100).toFixed(1) : 0}% dari pendapatan`, trend: kpiTrends.commission, change: +5.1
     },
     {
@@ -168,7 +168,7 @@ export default function SuperadminDashboard() {
       sub: 'Dana tertahan aktif', trend: kpiTrends.escrow, change: -2.3
     },
     {
-      icon: MapPin, color: '#10367D', bg: 'bg-[#10367D]/10',
+      icon: MapPin, color: '#1356d6', bg: 'bg-[#1356d6]/10',
       label: 'TOTAL WILAYAH', value: String(totalRegions || 0),
       sub: 'Wilayah aktif terdaftar', trend: kpiTrends.regions,
     },
@@ -274,7 +274,7 @@ export default function SuperadminDashboard() {
   const totalBersihJt = revenueChartData.reduce((s,d) => s+d.pemasukanBersih, 0);
 
   // ── Pie chart (regional share) ────────────────────────────────────────────────
-  const PIE_COLORS = ['#10367D','#74B4D9','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4'];
+  const PIE_COLORS = ['#1356d6','#74B4D9','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4'];
   const pieData = useMemo(() => {
     if (!regionalActivities.length) return [];
     return regionalActivities.slice(0, 6).map((r, i) => ({
@@ -312,10 +312,10 @@ export default function SuperadminDashboard() {
   };
 
   const rowAccents = [
-    { bg: 'bg-[#10367D]/10', text: 'text-[#10367D]' },
-    { bg: 'bg-[#74B4D9]/15', text: 'text-[#10367D]' },
+    { bg: 'bg-[#1356d6]/10', text: 'text-[#1356d6]' },
+    { bg: 'bg-[#74B4D9]/15', text: 'text-[#1356d6]' },
     { bg: 'bg-neutral-100',  text: 'text-neutral-500' },
-    { bg: 'bg-[#10367D]/[0.08]', text: 'text-[#10367D]/80' },
+    { bg: 'bg-[#1356d6]/[0.08]', text: 'text-[#1356d6]/80' },
   ];
 
   const categoryTabs = ['Semua','Kota Besar','Kota Sedang'];
@@ -325,7 +325,7 @@ export default function SuperadminDashboard() {
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-sans">
 
       {/* ── BANNER ── */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2684ff] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
         <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
         <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0 flex-1">
@@ -386,7 +386,7 @@ export default function SuperadminDashboard() {
         <div className="lg:col-span-2 bg-white p-5 sm:p-6 rounded-2xl shadow-card border border-slate-200 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-neutral-100 pb-4">
             <div className="flex items-center gap-2.5">
-              <div className="p-2 bg-[#10367D]/10 text-[#10367D] rounded-xl">
+              <div className="p-2 bg-[#1356d6]/10 text-[#1356d6] rounded-xl">
                 <Activity className="w-4 h-4" />
               </div>
               <div>
@@ -405,7 +405,7 @@ export default function SuperadminDashboard() {
                     onClick={() => setActiveRange(r.id)}
                     className={`text-[12px] font-semibold px-3.5 py-1 rounded-full transition cursor-pointer ${
                       activeRange === r.id
-                        ? 'bg-[#10367D] text-white shadow-sm'
+                        ? 'bg-[#1356d6] text-white shadow-sm'
                         : 'text-neutral-400 hover:text-neutral-600'
                     }`}
                   >
@@ -428,11 +428,11 @@ export default function SuperadminDashboard() {
 
               <div className="flex items-center gap-0.5 bg-neutral-50 border border-neutral-200 rounded-full p-1">
                 <button onClick={() => setChartType('area')} title="Area"
-                  className={`w-7 h-7 rounded-full flex items-center justify-center transition cursor-pointer ${chartType === 'area' ? 'bg-[#10367D] text-white' : 'text-neutral-400'}`}>
+                  className={`w-7 h-7 rounded-full flex items-center justify-center transition cursor-pointer ${chartType === 'area' ? 'bg-[#1356d6] text-white' : 'text-neutral-400'}`}>
                   <LineChartIcon className="w-3.5 h-3.5" />
                 </button>
                 <button onClick={() => setChartType('bar')} title="Bar"
-                  className={`w-7 h-7 rounded-full flex items-center justify-center transition cursor-pointer ${chartType === 'bar' ? 'bg-[#10367D] text-white' : 'text-neutral-400'}`}>
+                  className={`w-7 h-7 rounded-full flex items-center justify-center transition cursor-pointer ${chartType === 'bar' ? 'bg-[#1356d6] text-white' : 'text-neutral-400'}`}>
                   <BarChart3 className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -443,7 +443,7 @@ export default function SuperadminDashboard() {
           <div className="flex items-center gap-6">
             <div>
               <div className="flex items-center gap-1.5 mb-0.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#10367D]" />
+                <span className="w-2.5 h-2.5 rounded-full bg-[#1356d6]" />
                 <span className="text-[12px] text-neutral-500">Total Pemasukan</span>
               </div>
               <p className="text-[20px] font-bold text-neutral-800">{formatRpJt(totalPemasukanJt)}</p>
@@ -465,8 +465,8 @@ export default function SuperadminDashboard() {
                 <AreaChart data={revenueChartData} margin={{ top: 4, right: 8, left: -10, bottom: 0 }}>
                   <defs>
                     <linearGradient id="saGradTotal" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10367D" stopOpacity={0.2} />
-                      <stop offset="95%" stopColor="#10367D" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#1356d6" stopOpacity={0.2} />
+                      <stop offset="95%" stopColor="#1356d6" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="saGradBersih" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#74B4D9" stopOpacity={0.25} />
@@ -478,7 +478,7 @@ export default function SuperadminDashboard() {
                   <YAxis tick={{ fontSize: 10, fill: '#A3A3A3', fontFamily: 'Inter' }} axisLine={false} tickLine={false} tickFormatter={formatSumbuJt} />
                   <Tooltip content={<RpTooltip />} />
                   <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
-                  <Area type="monotone" dataKey="pemasukanTotal" name="Total" stroke="#10367D" strokeWidth={2.5} fill="url(#saGradTotal)" dot={false} activeDot={{ r: 5, stroke: '#fff', strokeWidth: 2 }} />
+                  <Area type="monotone" dataKey="pemasukanTotal" name="Total" stroke="#1356d6" strokeWidth={2.5} fill="url(#saGradTotal)" dot={false} activeDot={{ r: 5, stroke: '#fff', strokeWidth: 2 }} />
                   <Area type="monotone" dataKey="pemasukanBersih" name="Bersih" stroke="#74B4D9" strokeWidth={2} fill="url(#saGradBersih)" dot={false} activeDot={{ r: 4, stroke: '#fff', strokeWidth: 2 }} />
                 </AreaChart>
               ) : (
@@ -488,7 +488,7 @@ export default function SuperadminDashboard() {
                   <YAxis tick={{ fontSize: 10, fill: '#A3A3A3', fontFamily: 'Inter' }} axisLine={false} tickLine={false} tickFormatter={formatSumbuJt} />
                   <Tooltip content={<RpTooltip />} />
                   <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
-                  <Bar dataKey="pemasukanTotal" name="Total" fill="#10367D" radius={[3,3,0,0]} opacity={0.85} />
+                  <Bar dataKey="pemasukanTotal" name="Total" fill="#1356d6" radius={[3,3,0,0]} opacity={0.85} />
                   <Bar dataKey="pemasukanBersih" name="Bersih" fill="#74B4D9" radius={[3,3,0,0]} opacity={0.85} />
                 </BarChart>
               )}
@@ -500,7 +500,7 @@ export default function SuperadminDashboard() {
         <div className="bg-white p-5 rounded-2xl shadow-card border border-slate-200 flex flex-col">
           <div className="flex items-center justify-between gap-2 mb-4">
             <div className="flex items-center gap-2 min-w-0">
-              <div className="p-2 bg-[#10367D]/10 text-[#10367D] rounded-xl shrink-0">
+              <div className="p-2 bg-[#1356d6]/10 text-[#1356d6] rounded-xl shrink-0">
                 <PieChartIcon className="w-4 h-4" />
               </div>
               <div className="min-w-0">
@@ -515,7 +515,7 @@ export default function SuperadminDashboard() {
                 onClick={() => setDistributionMetric('revenue')}
                 className={`text-[11px] font-semibold px-2.5 py-1 rounded-full transition cursor-pointer ${
                   distributionMetric === 'revenue'
-                    ? 'bg-[#10367D] text-white shadow-sm'
+                    ? 'bg-[#1356d6] text-white shadow-sm'
                     : 'text-neutral-400 hover:text-neutral-600'
                 }`}
               >
@@ -525,7 +525,7 @@ export default function SuperadminDashboard() {
                 onClick={() => setDistributionMetric('users')}
                 className={`text-[11px] font-semibold px-2.5 py-1 rounded-full transition cursor-pointer ${
                   distributionMetric === 'users'
-                    ? 'bg-[#10367D] text-white shadow-sm'
+                    ? 'bg-[#1356d6] text-white shadow-sm'
                     : 'text-neutral-400 hover:text-neutral-600'
                 }`}
               >
@@ -624,7 +624,7 @@ export default function SuperadminDashboard() {
               <div className="p-5 border-b border-gray-100 space-y-4">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                   <div className="flex items-center gap-2.5">
-                    <div className="bg-[#10367D]/10 text-[#10367D] p-1.5 rounded-xl">
+                    <div className="bg-[#1356d6]/10 text-[#1356d6] p-1.5 rounded-xl">
                       <MapPin size={15} />
                     </div>
                     <h2 className="text-[16px] font-bold text-neutral-800">Data Wilayah</h2>
@@ -633,7 +633,7 @@ export default function SuperadminDashboard() {
                   <div className="relative">
                     <button
                       onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-semibold transition cursor-pointer border ${filterSortBy !== 'default' ? 'bg-[#10367D] text-white border-[#10367D]' : 'bg-neutral-50 text-neutral-600 border-neutral-200 hover:bg-neutral-100'}`}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-semibold transition cursor-pointer border ${filterSortBy !== 'default' ? 'bg-[#1356d6] text-white border-[#1356d6]' : 'bg-neutral-50 text-neutral-600 border-neutral-200 hover:bg-neutral-100'}`}
                     >
                       <SlidersHorizontal size={12} />
                       Filter{filterSortBy !== 'default' && ' •'}
@@ -649,7 +649,7 @@ export default function SuperadminDashboard() {
                           { key: 'change-negative', label: 'Perubahan Negatif (-)' },
                         ].map(opt => (
                           <button key={opt.key} onClick={() => { setFilterSortBy(opt.key); setShowFilterDropdown(false); }}
-                            className={`w-full text-left px-3 py-1.5 text-[13px] hover:bg-neutral-50 ${filterSortBy === opt.key ? 'font-bold text-[#10367D]' : 'text-neutral-700'}`}>
+                            className={`w-full text-left px-3 py-1.5 text-[13px] hover:bg-neutral-50 ${filterSortBy === opt.key ? 'font-bold text-[#1356d6]' : 'text-neutral-700'}`}>
                             {opt.label}
                           </button>
                         ))}
@@ -660,7 +660,7 @@ export default function SuperadminDashboard() {
                 <div className="flex items-center gap-4 overflow-x-auto">
                   {categoryTabs.map(tab => (
                     <button key={tab} onClick={() => setRegionTab(tab)}
-                      className={`pb-1.5 text-[13px] font-semibold whitespace-nowrap transition cursor-pointer border-b-2 ${regionTab === tab ? 'text-[#10367D] border-[#10367D]' : 'text-neutral-400 border-transparent hover:text-neutral-600'}`}>
+                      className={`pb-1.5 text-[13px] font-semibold whitespace-nowrap transition cursor-pointer border-b-2 ${regionTab === tab ? 'text-[#1356d6] border-[#1356d6]' : 'text-neutral-400 border-transparent hover:text-neutral-600'}`}>
                       {tab}
                     </button>
                   ))}
@@ -698,7 +698,7 @@ export default function SuperadminDashboard() {
                           <span className="font-semibold text-neutral-700">{region.sharePercentage}% ({region.activeOrders} user)</span>
                         </div>
                         <div className="h-1.5 bg-neutral-100 rounded-full overflow-hidden">
-                          <div className="h-full bg-[#10367D] rounded-full" style={{ width: `${region.sharePercentage}%` }} />
+                          <div className="h-full bg-[#1356d6] rounded-full" style={{ width: `${region.sharePercentage}%` }} />
                         </div>
                       </div>
                       <div className="flex justify-between pt-1 border-t border-dashed border-neutral-100 text-[13px]">
@@ -747,7 +747,7 @@ export default function SuperadminDashboard() {
                             <div className="flex items-center gap-2 min-w-28">
                               <span className="text-[12px] font-semibold text-neutral-600 w-8 shrink-0">{share}%</span>
                               <div className="flex-1 h-1 bg-neutral-100 rounded-full overflow-hidden">
-                                <div className="h-full bg-[#10367D] rounded-full" style={{ width: `${barWidth}%` }} />
+                                <div className="h-full bg-[#1356d6] rounded-full" style={{ width: `${barWidth}%` }} />
                               </div>
                             </div>
                           </td>
@@ -789,7 +789,7 @@ export default function SuperadminDashboard() {
             <div className="bg-white p-5 rounded-2xl shadow-card border border-slate-200 flex flex-col">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <div className="p-1.5 bg-[#10367D]/10 text-[#10367D] rounded-lg">
+                  <div className="p-1.5 bg-[#1356d6]/10 text-[#1356d6] rounded-lg">
                     <Wallet className="w-4 h-4" />
                   </div>
                   <h2 className="text-[16px] font-bold text-neutral-800">Aktivitas Dana Jaminan</h2>

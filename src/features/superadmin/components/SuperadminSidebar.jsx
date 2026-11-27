@@ -103,7 +103,7 @@ export default function SuperadminSidebar({ activeMenu = 'Dashboard', onMenuSele
         />
       )}
 
-      <aside className={`w-64 h-screen bg-gradient-to-b from-[#0c2353] via-[#10367D] to-[#18458f] border-r border-blue-400/20 shadow-2xl text-white flex flex-col justify-between p-5 fixed left-0 top-0 font-sans overflow-y-auto z-50 transition-transform duration-300 print:hidden ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
+      <aside className={`w-64 h-screen bg-gradient-to-b from-[#0b3ba8] via-[#1356d6] to-[#2684ff] border-r border-blue-400/20 shadow-2xl text-white flex flex-col justify-between p-5 fixed left-0 top-0 font-sans overflow-y-auto z-50 transition-transform duration-300 print:hidden ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
         <div>
           <div className="mb-8 px-2 flex items-center justify-between">
             <button
@@ -150,11 +150,11 @@ export default function SuperadminSidebar({ activeMenu = 'Dashboard', onMenuSele
                         onClick={() => handleMenuSelect(item.name)}
                         className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm transition text-left cursor-pointer ${
                           isActive
-                            ? 'bg-white text-[#10367D] font-bold shadow-md'
+                            ? 'bg-white text-[#1356d6] font-bold shadow-md'
                             : 'text-white/85 font-medium hover:bg-white/10 hover:text-white'
                         }`}
                       >
-                        <IconComponent className={`w-4 h-4 ${isActive ? 'text-[#10367D]' : 'text-white/80'}`} />
+                        <IconComponent className={`w-4 h-4 ${isActive ? 'text-[#1356d6]' : 'text-white/80'}`} />
                         {item.name}
                       </button>
                     );

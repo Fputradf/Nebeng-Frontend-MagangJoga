@@ -14,28 +14,28 @@
   --text-lg--line-height: 1.7rem;
 
   /*
-   * NAVY BLUE BRAND COLOR SYSTEM
-   * Professional navy blue palette for Nebeng
+   * BRIGHT ROYAL BLUE BRAND COLOR SYSTEM
+   * Vibrant modern blue palette for SatuRute
    */
-  --color-brand-auth-deep: #0a1e3c;
-  --color-brand-auth-mid: #10367d;
-  --color-brand-auth-bright: #1a4a9c;
+  --color-brand-auth-deep: #0b3ba8;
+  --color-brand-auth-mid: #1356d6;
+  --color-brand-auth-bright: #2684ff;
 
-  --color-brand-role-start: #0d1f3a;
-  --color-brand-role-mid: #10367d;
-  --color-brand-role-mid-dark: #0c2c66;
-  --color-brand-role-end: #4a7cc9;
+  --color-brand-role-start: #0b3ba8;
+  --color-brand-role-mid: #1356d6;
+  --color-brand-role-mid-dark: #0e44ba;
+  --color-brand-role-end: #2684ff;
 
-  --color-brand-operator: #2d5a9e;
-  --color-brand-magenta-dark: #0a1e3c;
+  --color-brand-operator: #2684ff;
+  --color-brand-magenta-dark: #0b3ba8;
 
-  --color-brand-50: #f0f4f8;
-  --color-brand-100: #e0e8f0;
-  --color-brand-500: #10367d;
-  --color-brand-600: #0c2c66;
-  --color-brand-700: #0a1e3c;
-  --color-brand-900: #061528;
-  --color-brand-950: #030d1a;
+  --color-brand-50: #eff6ff;
+  --color-brand-100: #dbeafe;
+  --color-brand-500: #1356d6;
+  --color-brand-600: #0e44ba;
+  --color-brand-700: #0b3ba8;
+  --color-brand-900: #082a7a;
+  --color-brand-950: #051b52;
 
   /*
    * TOKEN BARU (dipindah dari tailwind.config.js karena Tailwind v4

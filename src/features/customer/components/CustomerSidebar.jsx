@@ -29,6 +29,7 @@ export default function CustomerSidebar({
   onLogout,
   isOpen: propIsOpen,
   onClose: propOnClose,
+  mobileOnly = false,
 }) {
   const { appName, appLogoDark } = useAppConfig();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -114,7 +115,6 @@ export default function CustomerSidebar({
         },
         { name: 'Dompet Saya', icon: Wallet, locked: !isCustomerVerified },
         { name: 'Voucher Saya', icon: Tag, locked: !isCustomerVerified },
-        { name: 'Rewards & Penukaran', icon: Gift, locked: !isCustomerVerified },
       ],
     },
     {
@@ -150,21 +150,30 @@ export default function CustomerSidebar({
         <button
           onClick={() => setInternalOpen(true)}
           aria-label="Buka menu navigasi"
-          className="lg:hidden fixed top-4 left-4 z-20 w-11 h-11 rounded-xl bg-white shadow-card border border-slate-200 flex items-center justify-center text-slate-900 hover:bg-slate-50 transition-colors"
+          className={`${mobileOnly ? '' : 'lg:hidden '}fixed top-4 left-4 z-20 w-11 h-11 rounded-xl bg-white shadow-card border border-slate-200 flex items-center justify-center text-slate-900 hover:bg-slate-50 transition-colors`}
         >
           <Menu className="w-5 h-5" />
         </button>
       )}
 
-      {isMobileOpen && (
-        <div
-          onClick={handleClose}
-          className="lg:hidden fixed inset-0 bg-black/60 z-40 backdrop-blur-xs transition-opacity"
-          aria-hidden="true"
-        />
-      )}
+      <div
+        className={
+          mobileOnly
+            ? `fixed inset-y-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] z-50 overflow-hidden ${
+                isMobileOpen ? 'pointer-events-auto' : 'pointer-events-none'
+              }`
+            : ''
+        }
+      >
+        {isMobileOpen && (
+          <div
+            onClick={handleClose}
+            className={`${mobileOnly ? 'absolute' : 'lg:hidden fixed'} inset-0 bg-black/60 z-40 backdrop-blur-xs transition-opacity`}
+            aria-hidden="true"
+          />
+        )}
 
-      <aside className={`w-64 h-screen bg-gradient-to-b from-[#0c2353] via-[#10367D] to-[#18458f] text-white flex flex-col justify-between p-5 fixed left-0 top-0 shadow-2xl border-r border-blue-400/20 overflow-y-auto z-50 transition-transform duration-300 font-sans print:hidden select-none ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
+        <aside className={`w-64 ${mobileOnly ? 'h-full absolute' : 'h-screen fixed'} bg-gradient-to-b from-[#0b3ba8] via-[#1356d6] to-[#2684ff] text-white flex flex-col justify-between p-5 left-0 top-0 shadow-2xl border-r border-blue-400/20 overflow-y-auto z-50 transition-transform duration-300 font-sans print:hidden select-none ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'} ${mobileOnly ? '' : 'lg:translate-x-0'}`}>
         <div>
           <div className="mb-8 px-2 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -184,7 +193,7 @@ export default function CustomerSidebar({
             <button
               onClick={handleClose}
               aria-label="Tutup menu navigasi"
-              className="lg:hidden w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-white hover:bg-white/15 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
+              className={`${mobileOnly ? '' : 'lg:hidden '}w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-white hover:bg-white/15 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-white`}
             >
               <X className="w-4 h-4" />
             </button>
@@ -239,7 +248,7 @@ export default function CustomerSidebar({
                         }
                         className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition text-left ${
                           isActive
-                            ? 'bg-white text-[#10367D] font-bold shadow-md cursor-default'
+                            ? 'bg-white text-[#1356d6] font-bold shadow-md cursor-default'
                             : item.locked
                             ? 'text-white/40 font-medium cursor-not-allowed opacity-60'
                             : 'text-white/85 font-medium hover:bg-white/10 hover:text-white cursor-pointer'
@@ -247,7 +256,7 @@ export default function CustomerSidebar({
                       >
                         <IconComponent
                           className={`w-4 h-4 ${
-                            isActive ? 'text-[#10367D]' : item.locked ? 'text-white/30' : 'text-white/80'
+                            isActive ? 'text-[#1356d6]' : item.locked ? 'text-white/30' : 'text-white/80'
                           }`}
                         />
                         <span className="flex-1">{item.label || item.name}</span>
@@ -281,7 +290,8 @@ export default function CustomerSidebar({
             <span>Log Out</span>
           </button>
         </div>
-      </aside>
+        </aside>
+      </div>
 
       <ConfirmModal
         isOpen={showLogoutModal}

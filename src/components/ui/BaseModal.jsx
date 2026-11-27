@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
 export default function BaseModal({
@@ -22,7 +23,7 @@ export default function BaseModal({
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div 
       className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-150 font-['Inter']"
       onClick={onClose}
@@ -48,6 +49,7 @@ export default function BaseModal({
         )}
         <div className="text-[13px] overflow-y-auto pr-1 flex-1 py-1">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

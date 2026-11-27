@@ -4,8 +4,8 @@ import { createPortal } from 'react-dom';
 import { Mail, Phone, Car, ShieldCheck, Settings, X } from 'lucide-react';
 import apiClient from '../../../services/apiClient';
 
-const PRIMARY_COLOR = '#10367D';
-const PRIMARY_HOVER = '#0C2C66';
+const PRIMARY_COLOR = '#1356d6';
+const PRIMARY_HOVER = '#0e44ba';
 
 const getFullFileUrl = (path) => {
   if (!path) return null;

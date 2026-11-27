@@ -9,8 +9,8 @@ import PrintReportFooter from '../../../components/ui/PrintReportFooter';
 import { useAuth } from '../../../context/AuthContext';
 import { operatorService } from '../../../services/operatorService';
 
-const PRIMARY_COLOR = '#10367D';
-const PRIMARY_HOVER = '#0C2C66';
+const PRIMARY_COLOR = '#1356d6';
+const PRIMARY_HOVER = '#0e44ba';
 const PRIMARY_ACCENT = '#74B4D9';
 
 const MONTH_NAMES = [
@@ -190,7 +190,7 @@ export default function OperatorFinancial() {
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter'] print:p-0 print:max-w-none print:bg-white">
       <div className="space-y-6 print:hidden">
         {/* ── BANNER GRADIENT ── */}
-        <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
+        <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2684ff] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
           <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
           <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0 flex-1">
@@ -208,7 +208,7 @@ export default function OperatorFinancial() {
 
             <button
               onClick={() => window.print()}
-              className="px-4 py-2.5 bg-white hover:bg-blue-50 text-[#10367D] rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer shadow-sm shrink-0 self-start sm:self-auto flex items-center justify-center gap-2 whitespace-nowrap"
+              className="px-4 py-2.5 bg-white hover:bg-blue-50 text-[#1356d6] rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer shadow-sm shrink-0 self-start sm:self-auto flex items-center justify-center gap-2 whitespace-nowrap"
             >
               <Printer className="w-4 h-4" />
               <span>Cetak Laporan Shift</span>
@@ -219,13 +219,13 @@ export default function OperatorFinancial() {
         {/* ── FILTER BULAN & TAHUN ── */}
         <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#10367D] flex items-center justify-center shrink-0 border border-blue-100">
-              <Calendar className="w-5 h-5 text-[#10367D]" />
+            <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#1356d6] flex items-center justify-center shrink-0 border border-blue-100">
+              <Calendar className="w-5 h-5 text-[#1356d6]" />
             </div>
             <div>
               <h3 className="text-sm font-bold text-neutral-800 flex items-center gap-2">
                 <span>Filter Periode Laporan</span>
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-100/80 text-[#10367D] border border-blue-200">
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-100/80 text-[#1356d6] border border-blue-200">
                   {getFilterPeriodLabel(selectedMonth, selectedYear)}
                 </span>
               </h3>
@@ -248,7 +248,7 @@ export default function OperatorFinancial() {
                   setSelectedMonth(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="bg-neutral-50 border border-neutral-300 rounded-xl px-3 py-2 text-xs font-bold text-neutral-700 focus:outline-none focus:ring-2 focus:ring-[#10367D] focus:border-[#10367D] cursor-pointer shadow-2xs"
+                className="bg-neutral-50 border border-neutral-300 rounded-xl px-3 py-2 text-xs font-bold text-neutral-700 focus:outline-none focus:ring-2 focus:ring-[#1356d6] focus:border-[#1356d6] cursor-pointer shadow-2xs"
               >
                 {MONTH_NAMES.map((m) => (
                   <option key={m.value} value={m.value}>
@@ -270,7 +270,7 @@ export default function OperatorFinancial() {
                   setSelectedYear(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="bg-neutral-50 border border-neutral-300 rounded-xl px-3 py-2 text-xs font-bold text-neutral-700 focus:outline-none focus:ring-2 focus:ring-[#10367D] focus:border-[#10367D] cursor-pointer shadow-2xs"
+                className="bg-neutral-50 border border-neutral-300 rounded-xl px-3 py-2 text-xs font-bold text-neutral-700 focus:outline-none focus:ring-2 focus:ring-[#1356d6] focus:border-[#1356d6] cursor-pointer shadow-2xs"
               >
                 {YEAR_OPTIONS.map((y) => (
                   <option key={y.value} value={y.value}>
@@ -423,7 +423,7 @@ export default function OperatorFinancial() {
                             onClick={() => setCurrentPage(page)}
                             className={`w-7 h-7 rounded-lg text-[13px] font-bold cursor-pointer transition ${
                               currentPage === page
-                                ? 'bg-[#10367D] text-white shadow-xs'
+                                ? 'bg-[#1356d6] text-white shadow-xs'
                                 : 'bg-neutral-50 border border-neutral-200 text-neutral-600 hover:bg-neutral-100'
                             }`}
                           >
@@ -495,7 +495,7 @@ export default function OperatorFinancial() {
             <span className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
               Bagi Hasil Regional (15%)
             </span>
-            <p className="text-[15px] font-black font-mono text-[#10367D] mt-0.5">
+            <p className="text-[15px] font-black font-mono text-[#1356d6] mt-0.5">
               Rp {regionalCommission.toLocaleString('id-ID')}
             </p>
             <span className="text-[9.5px] text-slate-500 block mt-0.5">

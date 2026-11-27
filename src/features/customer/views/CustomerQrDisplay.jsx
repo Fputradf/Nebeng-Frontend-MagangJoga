@@ -30,7 +30,7 @@ import {
   isTripPastTolerance,
 } from '../../../utils/dateUtils';
 
-const PRIMARY_COLOR = '#10367D';
+const PRIMARY_COLOR = '#1356d6';
 const PRIMARY_ACCENT = '#74B4D9';
 
 export default function CustomerQrDisplay() {
@@ -199,11 +199,11 @@ export default function CustomerQrDisplay() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-[calc(100vh-80px)] lg:min-h-screen font-['Inter']">
+    <div className="mx-auto p-4 space-y-5 min-h-[calc(100vh-9.5rem)] font-['Inter']">
       {/* ── BANNER GRADIENT ── */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2684ff] px-5 py-4 flex items-center text-white shadow-card">
         <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
-        <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative w-full flex flex-col gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 mb-1 min-w-0">
               <span className="w-2 h-2 rounded-full bg-accent animate-pulse shrink-0" />
@@ -274,9 +274,9 @@ export default function CustomerQrDisplay() {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-5">
           {/* ── KOLOM KIRI: DAFTAR TIKET AKTIF ── */}
-          <div className="bg-white rounded-2xl shadow-sm border border-neutral-200/90 p-5 sm:p-6 lg:col-span-1 space-y-4">
+          <div className="bg-white rounded-2xl shadow-sm border border-neutral-200/90 p-4 space-y-4">
             <div className="flex items-center justify-between pb-2 border-b border-neutral-100">
               <h2 className="text-[16px] font-bold text-neutral-800 flex items-center gap-2">
                 <QrCode className="w-4 h-4 text-brand-600" />
@@ -358,7 +358,7 @@ export default function CustomerQrDisplay() {
           </div>
 
           {/* ── KOLOM KANAN: DIGITAL QR DEVICE DISPLAY (MOCKUP PERANGKAT) ── */}
-          <div className="bg-white rounded-2xl shadow-sm border border-neutral-200/90 p-5 sm:p-6 lg:col-span-2 flex flex-col items-center justify-center text-center">
+          <div className="bg-white rounded-2xl shadow-sm border border-neutral-200/90 p-4 flex flex-col items-center justify-center text-center">
             <div className="w-full max-w-sm bg-neutral-900 p-5 rounded-3xl text-white shadow-xl border-4 border-neutral-800 relative">
               {/* Header Mockup */}
               <div className="flex justify-between items-center text-[11px] text-neutral-400 mb-3 px-1">

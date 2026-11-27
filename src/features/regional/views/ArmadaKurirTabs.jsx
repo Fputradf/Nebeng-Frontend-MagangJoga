@@ -17,7 +17,7 @@ export default function ArmadaKurirTabs({ defaultTab = 'armada' }) {
           onClick={() => setSubTab('armada')}
           className={`px-4 py-1.5 rounded-full text-[13px] sm:text-[14px] font-bold transition cursor-pointer ${
             subTab === 'armada'
-              ? 'bg-[#10367D] hover:bg-[#0C2C66] text-white shadow-sm'
+              ? 'bg-[#1356d6] hover:bg-[#0e44ba] text-white shadow-sm'
               : 'bg-white text-neutral-600 border border-neutral-200 hover:bg-[#74B4D9]/15'
           }`}
         >
@@ -28,7 +28,7 @@ export default function ArmadaKurirTabs({ defaultTab = 'armada' }) {
           onClick={() => setSubTab('kurir')}
           className={`px-4 py-1.5 rounded-full text-[13px] sm:text-[14px] font-bold transition cursor-pointer ${
             subTab === 'kurir'
-              ? 'bg-[#10367D] hover:bg-[#0C2C66] text-white shadow-sm'
+              ? 'bg-[#1356d6] hover:bg-[#0e44ba] text-white shadow-sm'
               : 'bg-white text-neutral-600 border border-neutral-200 hover:bg-[#74B4D9]/15'
           }`}
         >

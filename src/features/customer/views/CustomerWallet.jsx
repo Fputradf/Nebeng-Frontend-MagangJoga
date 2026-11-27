@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { 
   Wallet, 
@@ -29,7 +29,7 @@ import apiClient from '../../../services/apiClient';
 import { walletService } from '../../../services/walletService';
 import { disbursementBankService, FALLBACK_SUPPORTED_BANKS } from '../../../services/disbursementBankService';
 
-const PRIMARY_COLOR = '#10367D';
+const PRIMARY_COLOR = '#1356d6';
 const MIN_WITHDRAW_AMOUNT = 10000;
 
 const formatRupiah = (value) => `Rp ${Math.max(0, Math.round(value || 0)).toLocaleString('id-ID')}`;
@@ -94,7 +94,7 @@ const getTransactionMeta = (row) => {
         description: row.orderId ? `Refund Order #${row.orderId}` : (safeDesc || 'Pengembalian Dana'),
         isPositive: true,
         badgeVariant: 'bg-blue-50 text-blue-700 border-blue-200',
-        iconBg: 'bg-blue-100 text-blue-600',
+        iconBg: 'bg-gradient-to-br from-[#2563eb] to-[#1d4ed8] text-white shadow-xs ring-1 ring-inset ring-white/25',
         Icon: RotateCcw,
         filterCategory: 'refund',
       };
@@ -170,6 +170,7 @@ export default function CustomerWallet() {
   // Filter Transaksi
   const [activeFilter, setActiveFilter] = useState('all');
   const [txPage, setTxPage] = useState(1);
+  const filterTabsRef = useRef(null);
   const TX_PER_PAGE = 5;
 
   // State Top Up
@@ -446,88 +447,49 @@ export default function CustomerWallet() {
   }, [filteredTransactions, txPage]);
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
-      {/* ──────────────── HEADER ──────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-brand-700 border border-blue-200">
-              <Wallet className="w-3 h-3 text-brand-600" />
-              SATURUTE PAY
+    <div className="w-full mx-auto p-4 space-y-4 min-h-screen font-['Inter']">
+      {/* ──────────────── HERO CARD SALDO KOMPAK ──────────────── */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0b3ba8] via-[#1356d6] to-[#2684ff] p-4 text-white shadow-[0_8px_24px_rgba(19,86,214,0.22)]">
+        <div className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-white/10 blur-xl" />
+
+        <div className="relative z-10 space-y-3.5">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-white/15 border border-white/20 flex items-center justify-center text-white">
+              <Wallet className="w-3.5 h-3.5" />
+            </div>
+            <span className="text-[11px] tracking-wider text-blue-100 font-bold uppercase">
+              Dompet Utama
             </span>
-            <span className="text-[12px] text-neutral-600 font-medium">Dompet Digital Terintegrasi</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 tracking-tight">
-            Dompet Saya
-          </h1>
-          <p className="text-[13px] text-neutral-500 mt-0.5">
-            Kelola saldo, lakukan top up instan, penarikan dana, dan pantau seluruh mutasi transaksi Anda.
-          </p>
-        </div>
-
-        <button
-          onClick={handleManualSync}
-          disabled={isSyncing || isLoading}
-          className="self-start sm:self-center px-3.5 py-2 rounded-xl text-[12px] font-bold text-neutral-700 bg-white hover:bg-neutral-50 border border-neutral-200 shadow-sm flex items-center gap-2 cursor-pointer transition disabled:opacity-50"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 text-brand-600 ${isSyncing ? 'animate-spin' : ''}`} />
-          <span>{isSyncing ? 'Menyinkronkan...' : 'Sinkronkan Saldo'}</span>
-        </button>
-      </div>
-
-      {/* ──────────────── HERO CARD SALDO UTAMA & ACTIONS ──────────────── */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0c2353] via-[#10367D] to-[#1c4e9e] p-6 sm:p-8 text-white shadow-xl border border-blue-400/20">
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-3">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-white/15 border border-white/20 flex items-center justify-center text-blue-200">
-                <Wallet className="w-4 h-4" />
-              </div>
-              <span className="text-[12px] tracking-wider text-blue-100 font-bold uppercase">
-                DOMPET UTAMA
-              </span>
-            </div>
-
-            <div>
-              <p className="text-[12px] font-semibold text-blue-200 uppercase tracking-wider">
-                Total Saldo Tersedia
-              </p>
-              <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white mt-0.5">
-                {isLoading ? '...' : formatRupiah(wallet?.balance || 0)}
-              </h2>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-4 text-[12px] text-blue-100/90 pt-1">
-              <span className="flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-                Saldo Aktif & Dilindungi
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 text-blue-300 shrink-0" />
-                Terhubung ke Gateway Xendit
-              </span>
-            </div>
           </div>
 
-          {/* Quick Action Buttons */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+          <div>
+            <p className="text-[11px] font-semibold text-blue-100/85">
+              Total Saldo Tersedia
+            </p>
+            <h2 className="font-display text-2xl font-extrabold tracking-tight text-white mt-0.5">
+              {isLoading ? '...' : formatRupiah(wallet?.balance || 0)}
+            </h2>
+          </div>
+
+          {/* Quick Action Buttons (2 Kolom Sejajar) */}
+          <div className="grid grid-cols-2 gap-2.5 pt-0.5">
             <button
               onClick={() => {
                 setTopUpAmount('');
                 setIsTopUpModalOpen(true);
               }}
-              className="px-6 py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[13px] rounded-2xl shadow-lg shadow-emerald-950/20 transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 cursor-pointer"
+              className="py-2.5 px-3 bg-white hover:bg-blue-50 text-[#1356d6] font-bold text-xs rounded-xl shadow-sm transition active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
             >
-              <PlusCircle className="w-4 h-4 stroke-[2.5]" />
-              Top Up Saldo
+              <PlusCircle className="w-4 h-4 stroke-[2.3]" />
+              Top Up
             </button>
 
             <button
               onClick={handleOpenWithdrawModal}
               disabled={isLoading || !wallet || wallet.balance < MIN_WITHDRAW_AMOUNT}
-              className="px-6 py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[13px] rounded-2xl shadow-lg shadow-emerald-950/20 transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="py-2.5 px-3 bg-white/15 hover:bg-white/25 border border-white/25 text-white font-bold text-xs rounded-xl transition active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <ArrowDownToLine className="w-4 h-4 stroke-[2.5]" />
+              <ArrowDownToLine className="w-4 h-4 stroke-[2.3]" />
               Tarik Saldo
             </button>
           </div>
@@ -535,9 +497,9 @@ export default function CustomerWallet() {
       </div>
 
       {/* ──────────────── KARTU DANA DITAHAN & REKENING PENCAIRAN ──────────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 gap-3.5">
         {/* Kartu Dana Ditahan */}
-        <div className="bg-white p-6 rounded-2xl border border-neutral-200/90 shadow-sm flex flex-col justify-between space-y-4">
+        <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-[0_2px_16px_rgba(16,54,125,0.06)] flex flex-col justify-between space-y-2.5">
           <div className="flex items-start justify-between">
             <div className="space-y-1">
               <span className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">
@@ -547,23 +509,18 @@ export default function CustomerWallet() {
                 Saldo Ditahan (Pesanan Aktif)
               </h3>
             </div>
-            <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl shrink-0 border border-amber-200/60">
-              <Lock className="w-5 h-5" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-[#f59e0b] to-[#d97706] text-white shadow-sm ring-1 ring-inset ring-white/25 shrink-0">
+              <Lock className="w-5 h-5 stroke-[2.2]" />
             </div>
           </div>
 
-          <div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-neutral-900 font-mono">
-              {isLoading ? '...' : formatRupiah(wallet?.heldEscrowBalance || 0)}
-            </div>
-            <p className="text-[12px] text-neutral-500 mt-1">
-              Dana pesanan aktif yang ditahan aman di sistem rekening bersama (Escrow). Dana otomatis dicairkan ke mitra setelah perjalanan selesai, atau di-refund ke Saldo Tersedia jika trip dibatalkan.
-            </p>
+          <div className="text-2xl font-extrabold text-neutral-900 font-mono">
+            {isLoading ? '...' : formatRupiah(wallet?.heldEscrowBalance || 0)}
           </div>
         </div>
 
         {/* Kartu Rekening Pencairan */}
-        <div className="bg-white p-6 rounded-2xl border border-neutral-200/90 shadow-sm flex flex-col justify-between space-y-4">
+        <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-[0_2px_16px_rgba(16,54,125,0.06)] flex flex-col justify-between space-y-3">
           <div className="flex items-start justify-between">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
@@ -584,8 +541,8 @@ export default function CustomerWallet() {
                 Pencairan Dana Rekening
               </h3>
             </div>
-            <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl shrink-0 border border-blue-200/60">
-              <Building2 className="w-5 h-5" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-[#2563eb] to-[#1d4ed8] text-white shadow-sm ring-1 ring-inset ring-white/25 shrink-0">
+              <Building2 className="w-5 h-5 stroke-[2.2]" />
             </div>
           </div>
 
@@ -647,33 +604,59 @@ export default function CustomerWallet() {
             <h3 className="text-lg font-bold text-neutral-900">
               Riwayat Mutasi Saldo
             </h3>
-            <p className="text-[12px] text-neutral-400">
-              Menampilkan seluruh riwayat transaksi top up, pembayaran, dan pencairan saldo Anda.
-            </p>
           </div>
 
-          {/* Filter Kategori */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
-            {[
-              { id: 'all', label: 'Semua' },
-              { id: 'topup', label: 'Top Up' },
-              { id: 'payment', label: 'Pembayaran' },
-              { id: 'withdraw', label: 'Penarikan' },
-              { id: 'escrow', label: 'Dana Ditahan' },
-              { id: 'refund', label: 'Refund' },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => { setActiveFilter(tab.id); setTxPage(1); }}
-                className={`px-3 py-1.5 rounded-xl text-[12px] font-bold transition cursor-pointer whitespace-nowrap ${
-                  activeFilter === tab.id
-                    ? 'bg-neutral-900 text-white shadow-sm'
-                    : 'bg-neutral-100 hover:bg-neutral-200 text-neutral-600'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+          {/* Filter Kategori + Panah Geser Kiri & Kanan */}
+          <div className="flex items-center gap-1.5 min-w-0">
+            <button
+              type="button"
+              onClick={() => {
+                if (filterTabsRef.current) {
+                  filterTabsRef.current.scrollBy({ left: -140, behavior: 'smooth' });
+                }
+              }}
+              aria-label="Geser filter ke kiri"
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-[#1356d6] shadow-2xs transition hover:bg-blue-50 active:scale-95 cursor-pointer"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <div
+              ref={filterTabsRef}
+              className="flex flex-1 items-center gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            >
+              {[
+                { id: 'all', label: 'Semua' },
+                { id: 'topup', label: 'Top Up' },
+                { id: 'payment', label: 'Pembayaran' },
+                { id: 'withdraw', label: 'Penarikan' },
+                { id: 'escrow', label: 'Dana Ditahan' },
+                { id: 'refund', label: 'Refund' },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => { setActiveFilter(tab.id); setTxPage(1); }}
+                  className={`px-3 py-1.5 rounded-xl text-[12px] font-bold transition cursor-pointer whitespace-nowrap shrink-0 ${
+                    activeFilter === tab.id
+                      ? 'bg-[#1356d6] text-white shadow-sm'
+                      : 'bg-neutral-100 hover:bg-neutral-200 text-neutral-600'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                if (filterTabsRef.current) {
+                  filterTabsRef.current.scrollBy({ left: 140, behavior: 'smooth' });
+                }
+              }}
+              aria-label="Geser filter ke kanan"
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-[#1356d6] shadow-2xs transition hover:bg-blue-50 active:scale-95 cursor-pointer"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
           </div>
         </div>
 
@@ -697,7 +680,7 @@ export default function CustomerWallet() {
                 >
                   <div className="flex items-center gap-3.5 min-w-0">
                     <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${meta.iconBg}`}>
-                      <Icon className="w-5 h-5" />
+                      <Icon className="w-5 h-5 stroke-[2.2]" />
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">

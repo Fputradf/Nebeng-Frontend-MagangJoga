@@ -495,13 +495,21 @@ export default function CustomerLandingPage() {
                 </p>
               </div>
 
-              <div className="shrink-0 w-full sm:w-auto">
+              <div className="shrink-0 w-full sm:w-auto flex flex-col sm:flex-row gap-3">
                 <button
                   type="button"
-                  onClick={() => navigate('/register')}
+                  onClick={() => navigate('/mitra-driver')}
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-white hover:bg-brand-50 px-5 py-3 text-sm font-bold text-brand-700 shadow-soft transition active:scale-95 cursor-pointer"
                 >
-                  <span>Daftar Jadi Mitra</span>
+                  <span>Daftar Mitra Driver</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate('/mitra-pos')}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-white/15 hover:bg-white/25 border border-white/30 px-5 py-3 text-sm font-bold text-white transition active:scale-95 cursor-pointer"
+                >
+                  <span>Daftar Mitra Pos</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>

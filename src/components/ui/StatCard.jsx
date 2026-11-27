@@ -10,7 +10,7 @@ export default function StatCard({
   iconBg,
 }) {
   const badgeVariants = {
-    blue: 'text-[#10367D] bg-[#74B4D9]/20',
+    blue: 'text-[#1356d6] bg-[#74B4D9]/20',
     emerald: 'text-emerald-700 bg-emerald-50',
     amber: 'text-amber-700 bg-amber-50',
     rose: 'text-rose-700 bg-rose-50',
@@ -21,7 +21,7 @@ export default function StatCard({
     badgeVariants[badgeVariant] || badgeVariants.emerald;
 
   const iconClasses = {
-    blue: 'bg-[#74B4D9]/15 text-[#10367D]',
+    blue: 'bg-[#74B4D9]/15 text-[#1356d6]',
     emerald: 'bg-emerald-50 text-emerald-600 border border-emerald-200/60',
     amber: 'bg-amber-50 text-amber-600 border border-amber-200/60',
   };
@@ -29,7 +29,7 @@ export default function StatCard({
   // PRIMARY CARD (Royal Blue Theme)
   if (variant === 'primary') {
     return (
-      <div className="bg-[#10367D] text-white p-5 rounded-2xl shadow-sm flex items-center justify-between font-['Inter']">
+      <div className="bg-[#1356d6] text-white p-5 rounded-2xl shadow-sm flex items-center justify-between font-['Inter']">
         <div>
           <p className="text-[11px] font-bold text-white/80 uppercase tracking-wider">
             {title}

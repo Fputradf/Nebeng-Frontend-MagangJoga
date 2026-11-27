@@ -268,7 +268,7 @@ export default function PaymentGatewayManagement() {
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
       {/* ── BANNER GRADIENT IDENTIK DENGAN FORM LAIN ── */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2684ff] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
         <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
         <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0 flex-1">
@@ -296,7 +296,7 @@ export default function PaymentGatewayManagement() {
               type="button"
               onClick={handleSaveConfig}
               disabled={isSaving}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-blue-50 text-[#10367D] text-xs font-bold shadow-sm transition cursor-pointer disabled:opacity-50 whitespace-nowrap"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-blue-50 text-[#1356d6] text-xs font-bold shadow-sm transition cursor-pointer disabled:opacity-50 whitespace-nowrap"
             >
               <Save className="w-4 h-4" />
               {isSaving ? 'Menyimpan...' : 'Simpan Konfigurasi'}
@@ -363,7 +363,7 @@ export default function PaymentGatewayManagement() {
           onClick={() => setActiveTab('settings')}
           className={`pb-3.5 flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
             activeTab === 'settings'
-              ? 'border-[#10367D] text-[#10367D]'
+              ? 'border-[#1356d6] text-[#1356d6]'
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
@@ -375,7 +375,7 @@ export default function PaymentGatewayManagement() {
           onClick={() => setActiveTab('verifications')}
           className={`pb-3.5 flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
             activeTab === 'verifications'
-              ? 'border-[#10367D] text-[#10367D]'
+              ? 'border-[#1356d6] text-[#1356d6]'
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
@@ -395,7 +395,7 @@ export default function PaymentGatewayManagement() {
           {/* Card 1: Pilihan Saluran Mutually Exclusive */}
           <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 sm:p-6 space-y-4">
             <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
-              <CreditCard className="w-5 h-5 text-[#10367D]" />
+              <CreditCard className="w-5 h-5 text-[#1356d6]" />
               <h2 className="text-base font-bold text-slate-900">
                 Pilihan Saluran Pembayaran Aktif
               </h2>
@@ -407,14 +407,14 @@ export default function PaymentGatewayManagement() {
                 onClick={() => setActiveMode('MANUAL')}
                 className={`p-4 rounded-xl border-2 cursor-pointer transition flex items-center justify-between ${
                   activeMode === 'MANUAL'
-                    ? 'border-[#10367D] bg-blue-50/40 shadow-xs ring-2 ring-[#10367D]/10'
+                    ? 'border-[#1356d6] bg-blue-50/40 shadow-xs ring-2 ring-[#1356d6]/10'
                     : 'border-slate-200 bg-white hover:border-slate-300'
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <div
                     className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                      activeMode === 'MANUAL' ? 'bg-[#10367D] text-white' : 'bg-slate-100 text-slate-600'
+                      activeMode === 'MANUAL' ? 'bg-[#1356d6] text-white' : 'bg-slate-100 text-slate-600'
                     }`}
                   >
                     <Building2 className="w-5 h-5" />
@@ -434,7 +434,7 @@ export default function PaymentGatewayManagement() {
                   name="payment_mode"
                   checked={activeMode === 'MANUAL'}
                   onChange={() => setActiveMode('MANUAL')}
-                  className="w-4 h-4 text-[#10367D] focus:ring-[#10367D] cursor-pointer"
+                  className="w-4 h-4 text-[#1356d6] focus:ring-[#1356d6] cursor-pointer"
                 />
               </div>
 
@@ -443,14 +443,14 @@ export default function PaymentGatewayManagement() {
                 onClick={() => setActiveMode('GATEWAY')}
                 className={`p-4 rounded-xl border-2 cursor-pointer transition flex items-center justify-between ${
                   activeMode === 'GATEWAY'
-                    ? 'border-[#10367D] bg-blue-50/40 shadow-xs ring-2 ring-[#10367D]/10'
+                    ? 'border-[#1356d6] bg-blue-50/40 shadow-xs ring-2 ring-[#1356d6]/10'
                     : 'border-slate-200 bg-white hover:border-slate-300'
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <div
                     className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                      activeMode === 'GATEWAY' ? 'bg-[#10367D] text-white' : 'bg-slate-100 text-slate-600'
+                      activeMode === 'GATEWAY' ? 'bg-[#1356d6] text-white' : 'bg-slate-100 text-slate-600'
                     }`}
                   >
                     <CreditCard className="w-5 h-5" />
@@ -463,7 +463,7 @@ export default function PaymentGatewayManagement() {
                   name="payment_mode"
                   checked={activeMode === 'GATEWAY'}
                   onChange={() => setActiveMode('GATEWAY')}
-                  className="w-4 h-4 text-[#10367D] focus:ring-[#10367D] cursor-pointer"
+                  className="w-4 h-4 text-[#1356d6] focus:ring-[#1356d6] cursor-pointer"
                 />
               </div>
             </div>
@@ -473,7 +473,7 @@ export default function PaymentGatewayManagement() {
           <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 sm:p-6 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
-                <Building2 className="w-5 h-5 text-[#10367D]" />
+                <Building2 className="w-5 h-5 text-[#1356d6]" />
                 <h2 className="text-base font-bold text-slate-900">
                   Rekening Bank Resmi
                 </h2>
@@ -497,7 +497,7 @@ export default function PaymentGatewayManagement() {
                   value={manualBankName}
                   onChange={(e) => setManualBankName(e.target.value)}
                   placeholder="Contoh: Bank Central Asia (BCA)"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#10367D]/20 focus:border-[#10367D]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#1356d6]/20 focus:border-[#1356d6]"
                 />
               </div>
 
@@ -510,7 +510,7 @@ export default function PaymentGatewayManagement() {
                   value={manualAccountNumber}
                   onChange={(e) => setManualAccountNumber(e.target.value)}
                   placeholder="Contoh: 8830192837"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-mono font-bold focus:outline-hidden focus:ring-2 focus:ring-[#10367D]/20 focus:border-[#10367D]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-mono font-bold focus:outline-hidden focus:ring-2 focus:ring-[#1356d6]/20 focus:border-[#1356d6]"
                 />
               </div>
 
@@ -523,7 +523,7 @@ export default function PaymentGatewayManagement() {
                   value={manualAccountHolder}
                   onChange={(e) => setManualAccountHolder(e.target.value)}
                   placeholder="Contoh: PT SATURUTE INDONESIA DIGITAL"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm uppercase focus:outline-hidden focus:ring-2 focus:ring-[#10367D]/20 focus:border-[#10367D]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm uppercase focus:outline-hidden focus:ring-2 focus:ring-[#1356d6]/20 focus:border-[#1356d6]"
                 />
               </div>
             </div>
@@ -532,7 +532,7 @@ export default function PaymentGatewayManagement() {
           {/* Card 3: QRIS Statis Pemilik */}
           <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 sm:p-6 space-y-4">
             <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
-              <QrCode className="w-5 h-5 text-[#10367D]" />
+              <QrCode className="w-5 h-5 text-[#1356d6]" />
               <h2 className="text-base font-bold text-slate-900">
                 Standee QRIS Statis Pemilik
               </h2>
@@ -581,7 +581,7 @@ export default function PaymentGatewayManagement() {
                     value={manualQrisPayload}
                     onChange={(e) => setManualQrisPayload(e.target.value)}
                     placeholder="00020101021226680016ID.CO.NEBENG..."
-                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 font-mono text-xs focus:outline-hidden focus:ring-2 focus:ring-[#10367D]/20 focus:border-[#10367D]"
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 font-mono text-xs focus:outline-hidden focus:ring-2 focus:ring-[#1356d6]/20 focus:border-[#1356d6]"
                   />
                 </div>
 
@@ -591,7 +591,7 @@ export default function PaymentGatewayManagement() {
                       type="checkbox"
                       checked={autoVerifyManual}
                       onChange={(e) => setAutoVerifyManual(e.target.checked)}
-                      className="w-4 h-4 rounded text-[#10367D] focus:ring-[#10367D]"
+                      className="w-4 h-4 rounded text-[#1356d6] focus:ring-[#1356d6]"
                     />
                     <span className="text-xs font-semibold text-slate-700">
                       Verifikasi Otomatis Instan (Mode Demo)
@@ -624,7 +624,7 @@ export default function PaymentGatewayManagement() {
           {/* Card 4: Panduan Langkah Transfer */}
           <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 sm:p-6 space-y-4">
             <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
-              <FileText className="w-5 h-5 text-[#10367D]" />
+              <FileText className="w-5 h-5 text-[#1356d6]" />
               <h2 className="text-base font-bold text-slate-900">
                 Panduan Langkah Pembayaran Pelanggan
               </h2>
@@ -633,7 +633,7 @@ export default function PaymentGatewayManagement() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
               {transferGuides.map((guide, idx) => (
                 <div key={idx} className="flex items-center gap-2.5">
-                  <span className="w-6 h-6 rounded-full bg-[#10367D]/10 text-[#10367D] font-bold text-xs flex items-center justify-center shrink-0">
+                  <span className="w-6 h-6 rounded-full bg-[#1356d6]/10 text-[#1356d6] font-bold text-xs flex items-center justify-center shrink-0">
                     {idx + 1}
                   </span>
                   <input
@@ -644,7 +644,7 @@ export default function PaymentGatewayManagement() {
                       next[idx] = e.target.value;
                       setTransferGuides(next);
                     }}
-                    className="flex-1 px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-hidden focus:ring-2 focus:ring-[#10367D]/20 focus:border-[#10367D]"
+                    className="flex-1 px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-hidden focus:ring-2 focus:ring-[#1356d6]/20 focus:border-[#1356d6]"
                   />
                 </div>
               ))}
@@ -655,7 +655,7 @@ export default function PaymentGatewayManagement() {
           <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 sm:p-6 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
-                <CreditCard className="w-5 h-5 text-[#10367D]" />
+                <CreditCard className="w-5 h-5 text-[#1356d6]" />
                 <h2 className="text-base font-bold text-slate-900">
                   Kredensial Gateway Otomatis (Xendit / Midtrans)
                 </h2>
@@ -677,7 +677,7 @@ export default function PaymentGatewayManagement() {
                 <select
                   value={gatewayProvider}
                   onChange={(e) => setGatewayProvider(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#10367D]/20 focus:border-[#10367D] bg-white"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#1356d6]/20 focus:border-[#1356d6] bg-white"
                 >
                   <option value="XENDIT">Xendit Indonesia</option>
                   <option value="MIDTRANS">Midtrans Snap</option>
@@ -693,7 +693,7 @@ export default function PaymentGatewayManagement() {
                   value={xenditSecretKey}
                   onChange={(e) => setXenditSecretKey(e.target.value)}
                   placeholder="xnd_development_..."
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-mono focus:outline-hidden focus:ring-2 focus:ring-[#10367D]/20 focus:border-[#10367D]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-mono focus:outline-hidden focus:ring-2 focus:ring-[#1356d6]/20 focus:border-[#1356d6]"
                 />
               </div>
 
@@ -706,7 +706,7 @@ export default function PaymentGatewayManagement() {
                   value={xenditCallbackToken}
                   onChange={(e) => setXenditCallbackToken(e.target.value)}
                   placeholder="x-callback-token"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-mono focus:outline-hidden focus:ring-2 focus:ring-[#10367D]/20 focus:border-[#10367D]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-mono focus:outline-hidden focus:ring-2 focus:ring-[#1356d6]/20 focus:border-[#1356d6]"
                 />
               </div>
             </div>
@@ -737,7 +737,7 @@ export default function PaymentGatewayManagement() {
               Filter Status:
             </span>
             {[
-              { key: 'all', label: 'Semua', count: manualPayments.length, activeClass: 'bg-[#10367D] text-white border-[#10367D]' },
+              { key: 'all', label: 'Semua', count: manualPayments.length, activeClass: 'bg-[#1356d6] text-white border-[#1356d6]' },
               { key: 'pending', label: 'Menunggu', count: pendingCount, activeClass: 'bg-amber-500 text-white border-amber-500' },
               { key: 'success', label: 'Lunas', count: successCount, activeClass: 'bg-emerald-600 text-white border-emerald-600' },
               { key: 'failed', label: 'Ditolak', count: failedCount, activeClass: 'bg-rose-600 text-white border-rose-600' },
@@ -808,7 +808,7 @@ export default function PaymentGatewayManagement() {
                           <p className="font-bold text-slate-900 text-xs">{p.order?.customer?.name || 'Customer'}</p>
                           <p className="text-[11px] text-slate-400">{p.order?.customer?.phone || p.order?.customer?.email || '-'}</p>
                         </td>
-                        <td className="py-3 px-3 font-extrabold text-[#10367D] text-sm">
+                        <td className="py-3 px-3 font-extrabold text-[#1356d6] text-sm">
                           Rp {Number(p.amount || 0).toLocaleString('id-ID')}
                         </td>
                         <td className="py-3 px-3 text-xs">
@@ -821,7 +821,7 @@ export default function PaymentGatewayManagement() {
                           {p.proofUrl ? (
                             <button
                               onClick={() => setSelectedProofModal(p)}
-                              className="px-2.5 py-1 rounded-lg bg-blue-50 text-[#10367D] hover:bg-blue-100 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
+                              className="px-2.5 py-1 rounded-lg bg-blue-50 text-[#1356d6] hover:bg-blue-100 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
                             >
                               <Eye className="w-3.5 h-3.5" />
                               Lihat Struk
@@ -906,7 +906,7 @@ export default function PaymentGatewayManagement() {
             <div className="p-5 overflow-y-auto flex flex-col items-center gap-4 bg-slate-50">
               <div className="w-full text-center">
                 <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Tagihan</span>
-                <p className="text-2xl font-black text-[#10367D]">
+                <p className="text-2xl font-black text-[#1356d6]">
                   Rp {Number(selectedProofModal.amount || 0).toLocaleString('id-ID')}
                 </p>
               </div>
@@ -989,7 +989,7 @@ export default function PaymentGatewayManagement() {
             <div className="p-5 space-y-4">
               <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
                 <span className="text-slate-500 font-medium">Nominal Pembayaran</span>
-                <span className="font-extrabold text-[#10367D] text-sm">
+                <span className="font-extrabold text-[#1356d6] text-sm">
                   Rp {Number(editingPayment.amount || 0).toLocaleString('id-ID')}
                 </span>
               </div>
@@ -1035,7 +1035,7 @@ export default function PaymentGatewayManagement() {
                   value={editReviewNotes}
                   onChange={(e) => setEditReviewNotes(e.target.value)}
                   placeholder="Tambahkan alasan atau catatan perubahan status..."
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-hidden focus:ring-2 focus:ring-[#10367D]/20 focus:border-[#10367D]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-hidden focus:ring-2 focus:ring-[#1356d6]/20 focus:border-[#1356d6]"
                 />
               </div>
             </div>
@@ -1052,7 +1052,7 @@ export default function PaymentGatewayManagement() {
               <button
                 type="submit"
                 disabled={isUpdatingStatus}
-                className="px-5 py-2 rounded-xl bg-[#10367D] hover:bg-[#0c2a63] text-white font-bold text-xs shadow-sm transition cursor-pointer disabled:opacity-50"
+                className="px-5 py-2 rounded-xl bg-[#1356d6] hover:bg-[#0c2a63] text-white font-bold text-xs shadow-sm transition cursor-pointer disabled:opacity-50"
               >
                 {isUpdatingStatus ? 'Menyimpan...' : 'Simpan Perubahan'}
               </button>

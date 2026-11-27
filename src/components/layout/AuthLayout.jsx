@@ -30,7 +30,7 @@ export default function AuthLayout({
       {/* =========================
           LEFT PANEL - FULL-SIZE HERO ILLUSTRATION (Desktop)
       ========================== */}
-      <div className="hidden lg:flex lg:w-1/2 xl:w-5/12 min-h-screen relative flex-col justify-between p-8 xl:p-12 bg-gradient-to-br from-brand-700 via-brand-500 to-[#10367D] text-white shrink-0">
+      <div className="hidden lg:flex lg:w-1/2 xl:w-5/12 min-h-screen relative flex-col justify-between p-8 xl:p-12 bg-gradient-to-br from-brand-700 via-brand-500 to-[#1356d6] text-white shrink-0">
         {/* Top Header on Left */}
         <div className="relative z-10 flex items-center justify-between">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 border border-white/20 text-xs font-bold text-accent">
@@ -119,7 +119,7 @@ export default function AuthLayout({
       {/* =========================
           RIGHT PANEL - FULL-SIZE FORM AREA
       ========================== */}
-      <div className="flex-1 flex flex-col justify-between px-5 sm:px-8 md:px-12 lg:px-8 xl:px-14 py-4 sm:py-6 bg-gradient-to-br from-brand-700 via-brand-600 to-[#10367D] lg:bg-none lg:bg-slate-50/50 min-h-screen lg:min-h-0 lg:overflow-y-auto">
+      <div className="flex-1 flex flex-col justify-between px-5 sm:px-8 md:px-12 lg:px-8 xl:px-14 py-4 sm:py-6 bg-gradient-to-br from-brand-700 via-brand-600 to-[#1356d6] lg:bg-none lg:bg-slate-50/50 min-h-screen lg:min-h-0 lg:overflow-y-auto">
 
         {/* Top Bar with Mode Switcher & Logo */}
         <div className={`w-full ${maxWidth} mx-auto flex items-center justify-between pb-3 border-b border-white/25 lg:border-slate-200 shrink-0`}>
@@ -172,7 +172,7 @@ export default function AuthLayout({
                 className="hidden lg:block w-8 h-8 object-contain"
               />
             )}
-            <span className="font-display text-xl sm:text-2xl font-black tracking-tight text-white lg:text-[#10367D]">
+            <span className="font-display text-xl sm:text-2xl font-black tracking-tight text-white lg:text-[#1356d6]">
               {brandName}
             </span>
           </div>

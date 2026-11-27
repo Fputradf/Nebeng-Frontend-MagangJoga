@@ -2,8 +2,8 @@ import apiClient from './apiClient';
 
 export const emergencyService = {
   /**
-   * Pemicu sinyal SOS darurat dari Customer
-   * @param {{ orderId: string|number, tripId: string|number, latitude: number, longitude: number, category?: string, notes?: string }} payload
+   * Pemicu sinyal SOS darurat dari Customer atau Mitra Driver
+   * @param {{ orderId?: string|number, tripId: string|number, latitude: number, longitude: number, category?: string, notes?: string }} payload
    */
   async triggerSos(payload) {
     const response = await apiClient.post('/emergency/sos', payload);

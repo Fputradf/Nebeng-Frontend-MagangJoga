@@ -17,8 +17,8 @@ import { useToast } from '../../../context/ToastContext';
 import apiClient from '../../../services/apiClient';
 import { compressImageFile } from '../../../utils/imageUpload';
 
-const PRIMARY_COLOR = '#10367D';
-const PRIMARY_HOVER = '#0C2C66';
+const PRIMARY_COLOR = '#1356d6';
+const PRIMARY_HOVER = '#0e44ba';
 const PRIMARY_ACCENT = '#74B4D9';
 
 const MAX_KTP_SIZE_BYTES = 5 * 1024 * 1024;
@@ -490,8 +490,8 @@ export default function BiometricOnboarding() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
-      <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-neutral-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="mx-auto p-4 space-y-5 min-h-screen font-['Inter']">
+      <div className="bg-white p-4 rounded-2xl shadow-sm border border-neutral-200 flex flex-col justify-between gap-3">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span
@@ -532,7 +532,7 @@ export default function BiometricOnboarding() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-xl mx-auto">
+      <div className="grid grid-cols-1 gap-2.5 max-w-xl mx-auto">
         <div
           className={`p-3.5 rounded-2xl border transition`}
           style={

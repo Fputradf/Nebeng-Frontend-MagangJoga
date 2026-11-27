@@ -1,10 +1,21 @@
 import { useEffect, useState } from 'react';
 import { bannerService } from '../../services/bannerService';
-import { ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
+import apiClient from '../../services/apiClient';
+import { BASE_URL } from '../../config/env';
+import { ChevronLeft, ChevronRight, ExternalLink, Sparkles } from 'lucide-react';
+
+function resolveBannerImageUrl(path) {
+  if (!path) return '';
+  if (/^(blob:|data:|https?:\/\/)/.test(path)) return path;
+  const base = apiClient.defaults.baseURL
+    ? apiClient.defaults.baseURL.replace('/api', '')
+    : BASE_URL;
+  return `${base}${path.startsWith('/') ? path : `/${path}`}`;
+}
 
 export const BannerSlider = ({
   role,
-  containerClassName = 'h-48 md:h-64 mb-6',
+  containerClassName = 'h-44 mb-0',
   fallback = null,
 }) => {
   const [banners, setBanners] = useState([]);
@@ -15,7 +26,12 @@ export const BannerSlider = ({
     const fetchBanners = async () => {
       try {
         const data = await bannerService.getBanners(role);
-        setBanners(data || []);
+        const list = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.data)
+            ? data.data
+            : [];
+        setBanners(list);
       } catch (error) {
         console.error('Error fetching banners:', error);
       } finally {
@@ -41,8 +57,42 @@ export const BannerSlider = ({
     setCurrentIndex((prev) => (prev === 0 ? banners.length - 1 : prev - 1));
   };
 
-  if (loading) return null;
-  if (banners.length === 0) return fallback;
+  if (loading) {
+    return (
+      <div className={`w-full rounded-2xl bg-slate-100 animate-pulse ${containerClassName}`} />
+    );
+  }
+
+  if (banners.length === 0) {
+    if (fallback) return fallback;
+    const isMitra = role === 'mitra';
+    return (
+      <div
+        className={`relative w-full rounded-2xl overflow-hidden bg-gradient-to-br from-[#0b3ba8] via-[#1356d6] to-[#2684ff] text-white shadow-card p-5 flex flex-col justify-between ${containerClassName}`}
+      >
+        <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-[#74B4D9]/20 blur-xl pointer-events-none" />
+        <div className="absolute -left-6 -bottom-10 h-28 w-28 rounded-full bg-white/10 pointer-events-none" />
+        <div className="relative z-10 flex items-center gap-1.5">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white/15 border border-white/20 text-[10px] font-bold uppercase tracking-wider text-[#74B4D9]">
+            <Sparkles className="w-3 h-3" />
+            {isMitra ? 'Info & Promo Mitra' : 'Promo SatuRute'}
+          </span>
+        </div>
+        <div className="relative z-10 space-y-1">
+          <h2 className="font-display text-base font-bold leading-snug text-white">
+            {isMitra
+              ? 'Raih Penghasilan Lebih dengan Trip Terjadwal'
+              : 'Perjalanan Antarkota Aman, Nyaman & Hemat'}
+          </h2>
+          <p className="text-xs text-blue-100/90 line-clamp-2">
+            {isMitra
+              ? 'Pantau pesanan masuk, kelola kursi & bagasi, dan nikmati pencairan saldo cepat.'
+              : 'Pesan kursi atau kirim paket langsung dari pos terdekat dengan tarif transparan.'}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`relative w-full rounded-2xl overflow-hidden group bg-slate-900 shadow-card ${containerClassName}`}>
@@ -61,7 +111,7 @@ export const BannerSlider = ({
             aria-label={banner.title || 'Banner promosi'}
           >
             <img
-              src={banner.imageUrl}
+              src={resolveBannerImageUrl(banner.imageUrl)}
               alt={banner.title || 'Banner promosi'}
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             />

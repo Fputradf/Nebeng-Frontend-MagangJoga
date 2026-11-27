@@ -5,8 +5,8 @@ import { useToast } from '../../../context/ToastContext';
 import { useNotification } from '../../../context/NotificationContext';
 import PhoneCallModal from '../../../components/ui/PhoneCallModal';
 
-const PRIMARY_COLOR = '#10367D';
-const PRIMARY_HOVER = '#0C2C66';
+const PRIMARY_COLOR = '#1356d6';
+const PRIMARY_HOVER = '#0e44ba';
 const PRIMARY_ACCENT = '#74B4D9';
 
 const getTripStatusBadge = (status, isLocked) => {
@@ -223,10 +223,10 @@ export default function CustomerChat() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 font-['Inter'] flex flex-col h-[calc(100vh-2rem)]">
+    <div className="mx-auto p-4 space-y-4 font-['Inter'] flex flex-col h-[calc(100vh-9.5rem)]">
 
       {/* Header */}
-      <div className="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-neutral-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
+      <div className="bg-white p-4 rounded-2xl shadow-sm border border-neutral-200 flex flex-col justify-between gap-3 shrink-0">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span
@@ -254,12 +254,12 @@ export default function CustomerChat() {
       </div>
 
       {/* Layout Utama Chat */}
-      <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 grid grid-cols-1 lg:grid-cols-3 overflow-hidden flex-1 min-h-0">
+      <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 grid grid-cols-1 overflow-hidden flex-1 min-h-0">
 
         {/* Panel Daftar Chat */}
         <div
           className={`border-r border-neutral-100 flex flex-col col-span-1 bg-neutral-50/50 min-h-0 ${
-            showMobileChat ? 'hidden lg:flex' : 'flex'
+            showMobileChat ? 'hidden' : 'flex'
           }`}
         >
           <div className="p-3.5 border-b border-neutral-100 shrink-0">
@@ -365,8 +365,8 @@ export default function CustomerChat() {
 
         {/* Panel Obrolan */}
         <div
-          className={`col-span-2 flex flex-col bg-white min-h-0 ${
-            !showMobileChat ? 'hidden lg:flex' : 'flex'
+          className={`flex flex-col bg-white min-h-0 ${
+            !showMobileChat ? 'hidden' : 'flex'
           }`}
         >
           {/* Header Chat */}
@@ -374,7 +374,7 @@ export default function CustomerChat() {
             <div className="flex items-center gap-2.5">
               <button
                 onClick={() => setShowMobileChat(false)}
-                className="lg:hidden p-1.5 rounded-lg text-neutral-600 hover:bg-neutral-100 cursor-pointer"
+                className="p-1.5 rounded-lg text-neutral-600 hover:bg-neutral-100 cursor-pointer"
               >
                 <ArrowLeft className="w-4 h-4" />
               </button>

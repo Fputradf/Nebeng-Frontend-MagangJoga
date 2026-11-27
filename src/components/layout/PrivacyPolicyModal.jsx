@@ -27,7 +27,7 @@ export default function PrivacyPolicyModal({ isOpen, onClose }) {
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-5 py-4 bg-gradient-to-r from-[#0c2353] via-[#10367D] to-[#18458f] text-white flex items-center justify-between gap-4 shrink-0">
+        <div className="px-5 py-4 bg-gradient-to-r from-[#0b3ba8] via-[#1356d6] to-[#2684ff] text-white flex items-center justify-between gap-4 shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-blue-200">
               <ShieldCheck className="w-5 h-5" />
@@ -56,7 +56,7 @@ export default function PrivacyPolicyModal({ isOpen, onClose }) {
           {/* Section 1 */}
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-slate-900 font-extrabold">
-              <div className="w-6 h-6 rounded-lg bg-blue-100 text-[#10367D] flex items-center justify-center text-xs">
+              <div className="w-6 h-6 rounded-lg bg-blue-100 text-[#1356d6] flex items-center justify-center text-xs">
                 1
               </div>
               <h3>Prinsip Utama Privasi di Platform SatuRute</h3>
@@ -69,7 +69,7 @@ export default function PrivacyPolicyModal({ isOpen, onClose }) {
           {/* Section 2 */}
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-slate-900 font-extrabold">
-              <div className="w-6 h-6 rounded-lg bg-blue-100 text-[#10367D] flex items-center justify-center text-xs">
+              <div className="w-6 h-6 rounded-lg bg-blue-100 text-[#1356d6] flex items-center justify-center text-xs">
                 2
               </div>
               <h3>Data yang Dikumpulkan & Tujuannya</h3>
@@ -99,7 +99,7 @@ export default function PrivacyPolicyModal({ isOpen, onClose }) {
           {/* Section 3 */}
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-slate-900 font-extrabold">
-              <div className="w-6 h-6 rounded-lg bg-blue-100 text-[#10367D] flex items-center justify-center text-xs">
+              <div className="w-6 h-6 rounded-lg bg-blue-100 text-[#1356d6] flex items-center justify-center text-xs">
                 3
               </div>
               <h3>Akses Terbatas oleh Admin Wilayah</h3>
@@ -112,7 +112,7 @@ export default function PrivacyPolicyModal({ isOpen, onClose }) {
           {/* Section 4 */}
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-slate-900 font-extrabold">
-              <div className="w-6 h-6 rounded-lg bg-blue-100 text-[#10367D] flex items-center justify-center text-xs">
+              <div className="w-6 h-6 rounded-lg bg-blue-100 text-[#1356d6] flex items-center justify-center text-xs">
                 4
               </div>
               <h3>Hak Pengguna atas Data Pribadi</h3>
@@ -130,7 +130,7 @@ export default function PrivacyPolicyModal({ isOpen, onClose }) {
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-2.5 rounded-xl bg-[#10367D] hover:bg-blue-900 text-white text-xs font-bold transition cursor-pointer shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1"
+            className="px-5 py-2.5 rounded-xl bg-[#1356d6] hover:bg-blue-900 text-white text-xs font-bold transition cursor-pointer shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1"
           >
             Saya Memahami & Menyetujui
           </button>

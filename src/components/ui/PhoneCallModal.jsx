@@ -3,8 +3,8 @@ import { Phone, MessageCircle, Copy, Check, ExternalLink, X, ShieldAlert } from 
 import BaseModal from './BaseModal';
 import { useToast } from '../../context/ToastContext';
 
-const PRIMARY_COLOR = '#10367D';
-const PRIMARY_HOVER = '#0C2C66';
+const PRIMARY_COLOR = '#1356d6';
+const PRIMARY_HOVER = '#0e44ba';
 
 export default function PhoneCallModal({
   isOpen,

@@ -15,12 +15,24 @@ import {
   Bike,
   Package,
   Users,
-  Star
+  Star,
+  ChevronRight,
+  QrCode,
+  Ticket,
+  Receipt,
+  Wallet,
+  ArrowUpDown,
+  RotateCcw
 } from 'lucide-react';
 import EmptyState from '../../../components/ui/EmptyState';
 import BaseModal from '../../../components/ui/BaseModal';
 import { BannerSlider } from '../../../components/ui/BannerSlider';
 import DashboardRegionSwitcher from '../../../components/ui/DashboardRegionSwitcher';
+import NotificationBell from '../../../components/ui/NotificationBell';
+import { useAuth } from '../../../context/AuthContext';
+import { useAppConfig } from '../../../context/AppConfigContext';
+import logoAsset from '../../../assets/LOGO-dark.png';
+import heroCarWave from '../../../assets/hero-car-wave.jpg';
 import { useToast } from '../../../context/ToastContext';
 import apiClient from '../../../services/apiClient';
 import { walletService } from '../../../services/walletService';
@@ -31,8 +43,8 @@ import InAppCheckoutModal from '../components/InAppCheckoutModal';
 
 const PHONE_REGEX = /^(\+?62|0)?8[1-9][0-9]{7,11}$/;
 const TODAY_ISO = new Date().toISOString().split('T')[0];
-const PRIMARY_COLOR = '#10367D';
-const PRIMARY_HOVER = '#0C2C66';
+const PRIMARY_COLOR = '#1356d6';
+const PRIMARY_HOVER = '#0e44ba';
 const formatRupiah = (value) => `Rp ${Math.max(0, Math.round(value || 0)).toLocaleString('id-ID')}`;
 
 const inferServiceType = (trip) => {
@@ -97,6 +109,10 @@ export default function SearchTrip() {
   const navigate = useNavigate();
   const location = useLocation();
   const toast = useToast();
+  const { customerProfile } = useAuth();
+  const { appName, appLogoDark } = useAppConfig();
+  const searchSectionRef = useRef(null);
+  const [quickSearchQuery, setQuickSearchQuery] = useState('');
 
   const queryParams = new URLSearchParams(location.search);
   const initialOrigin = location.state?.origin || queryParams.get('origin') || '';
@@ -651,116 +667,400 @@ export default function SearchTrip() {
     }
   };
 
-  return (
-    <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-sans">
-      {/* ── BANNER PENGINGAT TAGIHAN BELUM DIBAYAR ── */}
-      <PendingBillsBanner />
+  const firstName = (customerProfile?.fullName || customerProfile?.name || 'Pelanggan').split(' ')[0];
 
-      {/* ── BANNER ── */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
-        <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
-        <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2 mb-1 min-w-0">
-              <span className="w-2 h-2 rounded-full bg-accent animate-pulse shrink-0" />
-              <span className="text-[11px] font-bold uppercase tracking-widest text-accent truncate">
-                LAYANAN PERJALANAN &amp; PENGIRIMAN
-              </span>
-            </div>
-            <h1 className="font-display text-xl sm:text-2xl font-bold text-white tracking-tight truncate">
-              Cari &amp; Booking Trip
-            </h1>
-          </div>
-          <div className="shrink-0 flex items-center">
-            <DashboardRegionSwitcher
-              variant="banner"
-              onRegionChanged={() => setRefreshKey((k) => k + 1)}
+  const handleQuickSearchSubmit = (e) => {
+    e.preventDefault();
+    const q = quickSearchQuery.trim().toLowerCase();
+    if (q) {
+      if (q.includes('motor')) setActiveService('motor');
+      else if (q.includes('mobil')) setActiveService('mobil');
+      else if (q.includes('barang') || q.includes('paket')) setActiveService('barang');
+      else {
+        const matchedPoint = pickupPoints.find((p) => (p.name || '').toLowerCase().includes(q));
+        if (matchedPoint) setDestination(String(matchedPoint.id));
+      }
+    }
+    searchSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  return (
+    <div className="w-full mx-auto min-h-screen bg-white font-sans pb-6">
+      {/* ── HERO HEADER BIRU DENGAN WAVE ── */}
+      <section className="relative bg-gradient-to-br from-[#0b3ba8] via-[#1356d6] to-[#2684ff] px-4 pt-4 pb-14 text-white">
+        {/* Background & Wave di dalam wrapper overflow-hidden agar dropdown notifikasi tidak terpotong */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+          <img
+            src={heroCarWave}
+            alt=""
+            className="absolute bottom-2 -right-4 h-[88%] w-[68%] object-cover object-[52%_72%] opacity-95"
+            style={{
+              WebkitMaskImage: 'radial-gradient(ellipse 85% 90% at 72% 72%, rgba(0,0,0,1) 42%, rgba(0,0,0,0) 82%)',
+              maskImage: 'radial-gradient(ellipse 85% 90% at 72% 72%, rgba(0,0,0,1) 42%, rgba(0,0,0,0) 82%)',
+            }}
+          />
+          <svg
+            viewBox="0 0 430 36"
+            fill="none"
+            preserveAspectRatio="none"
+            className="absolute bottom-0 left-0 right-0 h-7 w-full"
+          >
+            <path
+              d="M0 16C85 34 175 0 275 18C345 30 395 14 430 6V36H0V16Z"
+              fill="#ffffff"
             />
+          </svg>
+        </div>
+
+        {/* Top Bar: Logo + Nama Aplikasi & Notifikasi (z-30 agar di atas pill lokasi & search bar) */}
+        <div className="relative z-30 flex items-center justify-between">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <img
+              src={appLogoDark || logoAsset}
+              alt={appName || 'SatuRute'}
+              className="h-8 w-8 rounded-xl bg-white/15 p-1 object-contain shrink-0"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = logoAsset;
+              }}
+            />
+            <span className="font-display text-lg font-extrabold tracking-tight text-white truncate">
+              {appName || 'SatuRute'}
+            </span>
           </div>
+
+          <NotificationBell basePath="/customer" compact />
+        </div>
+
+        {/* Pill Lokasi (Langsung dari DashboardRegionSwitcher tanpa wrapper ganda) */}
+        <div className="relative z-10 mt-3.5">
+          <DashboardRegionSwitcher
+            variant="banner"
+            onRegionChanged={() => setRefreshKey((k) => k + 1)}
+          />
+        </div>
+
+        {/* Sapaan */}
+        <div className="relative z-10 mt-3.5 space-y-0.5">
+          <h1 className="font-display text-2xl font-extrabold tracking-tight text-white">
+            Halo, {firstName}! <span aria-hidden="true">👋</span>
+          </h1>
+          <p className="text-xs font-medium text-blue-100">
+            Mau ke mana hari ini?
+          </p>
         </div>
       </section>
-      <BannerSlider role="customer" />
 
-      <div className="bg-white p-5 sm:p-6 rounded-xl shadow-card border border-slate-200">
-        <h2 className="text-sm font-bold text-slate-700 mb-4 uppercase tracking-wider">Layanan Kami</h2>
-        <div role="tablist" aria-label="Pilih Jenis Layanan" className="flex justify-around items-center">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeService === 'motor'}
-            aria-label="Layanan SatuRute Motor"
-            className="flex flex-col items-center gap-2.5 hover:opacity-90 transition cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded-2xl p-1"
-            onClick={() => setActiveService('motor')}
-          >
-            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-white shadow-soft transition-all duration-200 ${activeService === 'motor' ? 'bg-[#262160] scale-105' : 'bg-slate-200 group-hover:bg-slate-300'}`}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5V14l-3-3 4-3 2 3h2"/></svg>
-            </div>
-            <span className={`text-sm font-bold ${activeService === 'motor' ? 'text-[#262160]' : 'text-slate-500'}`}>SatuRute Motor</span>
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeService === 'mobil'}
-            aria-label="Layanan SatuRute Mobil"
-            className="flex flex-col items-center gap-2.5 hover:opacity-90 transition cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded-2xl p-1"
-            onClick={() => setActiveService('mobil')}
-          >
-            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-white shadow-soft transition-all duration-200 ${activeService === 'mobil' ? 'bg-[#262160] scale-105' : 'bg-slate-200 group-hover:bg-slate-300'}`}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>
-            </div>
-            <span className={`text-sm font-bold ${activeService === 'mobil' ? 'text-[#262160]' : 'text-slate-500'}`}>SatuRute Mobil</span>
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeService === 'barang'}
-            aria-label="Layanan SatuRute Barang"
-            className="flex flex-col items-center gap-2.5 hover:opacity-90 transition cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded-2xl p-1"
-            onClick={() => setActiveService('barang')}
-          >
-            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-white shadow-soft transition-all duration-200 ${activeService === 'barang' ? 'bg-[#262160] scale-105' : 'bg-slate-200 group-hover:bg-slate-300'}`}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-            </div>
-            <span className={`text-sm font-bold ${activeService === 'barang' ? 'text-[#262160]' : 'text-slate-500'}`}>SatuRute Barang</span>
-          </button>
-        </div>
-      </div>
+      {/* ── FLOATING SEARCH BAR ── */}
+      <form
+        onSubmit={handleQuickSearchSubmit}
+        className="relative z-20 -mt-6 mx-4 flex items-center gap-2 rounded-full border border-slate-100 bg-white p-1.5 pl-4 shadow-[0_8px_24px_rgba(16,54,125,0.12)]"
+      >
+        <Search className="h-4 w-4 text-slate-400 shrink-0" />
+        <input
+          type="text"
+          value={quickSearchQuery}
+          onChange={(e) => setQuickSearchQuery(e.target.value)}
+          placeholder="Cari tujuan, lokasi, atau layanan..."
+          className="min-w-0 flex-1 bg-transparent text-xs font-medium text-slate-700 placeholder:text-slate-400 focus:outline-none"
+        />
+        <button
+          type="submit"
+          aria-label="Cari trip"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#1356d6] text-white shadow-sm transition hover:bg-[#0b3ba8] active:scale-95 cursor-pointer"
+        >
+          <ArrowRight className="h-4 w-4" />
+        </button>
+      </form>
 
-      <div className="bg-white rounded-xl shadow-card border border-slate-200 p-5 sm:p-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-          <div>
-            <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Pos Asal</label>
-            <select value={origin} onChange={(e) => setOrigin(e.target.value)} className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg font-medium focus:outline-none focus:border-[#10367D] focus:ring-2 focus:ring-[#10367D]/20 transition-all truncate">
-              <option value="">Semua Pos Asal</option>
-              {pickupPoints.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Pos Tujuan</label>
-            <select value={destination} onChange={(e) => setDestination(e.target.value)} className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg font-medium focus:outline-none focus:border-[#10367D] focus:ring-2 focus:ring-[#10367D]/20 transition-all truncate">
-              <option value="">Semua Pos Tujuan</option>
-              {pickupPoints.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Tanggal</label>
-            <input type="date" min={TODAY_ISO} value={date} onChange={(e) => setDate(e.target.value)} className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg font-medium focus:outline-none focus:border-[#10367D] focus:ring-2 focus:ring-[#10367D]/20 transition-all" />
+      <div className="px-4 pt-4 space-y-5">
+        <PendingBillsBanner />
+
+        {/* ── KARTU LAYANAN UTAMA (4 KOLOM) ── */}
+        <div className="rounded-2xl border border-slate-100 bg-white p-3 shadow-[0_2px_16px_rgba(16,54,125,0.06)]">
+          <div role="tablist" aria-label="Pilih Jenis Layanan" className="grid grid-cols-4 gap-2">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeService === 'motor'}
+              onClick={() => {
+                setActiveService('motor');
+                searchSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}
+              className={`flex flex-col items-center gap-1.5 rounded-2xl p-1.5 transition cursor-pointer ${
+                activeService === 'motor' ? 'bg-blue-50/90 ring-2 ring-[#1356d6]/40' : 'hover:bg-slate-50'
+              }`}
+            >
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#2563eb] to-[#1d4ed8] text-white shadow-[0_6px_14px_rgba(37,99,235,0.28)] ring-1 ring-inset ring-white/25">
+                <Bike className="h-7 w-7 stroke-[2.2]" />
+              </div>
+              <span className={`text-[11px] font-bold ${activeService === 'motor' ? 'text-[#1356d6]' : 'text-slate-700'}`}>
+                Motor
+              </span>
+            </button>
+
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeService === 'mobil'}
+              onClick={() => {
+                setActiveService('mobil');
+                searchSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}
+              className={`flex flex-col items-center gap-1.5 rounded-2xl p-1.5 transition cursor-pointer ${
+                activeService === 'mobil' ? 'bg-sky-50/90 ring-2 ring-[#0284c7]/40' : 'hover:bg-slate-50'
+              }`}
+            >
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0ea5e9] to-[#0284c7] text-white shadow-[0_6px_14px_rgba(14,165,233,0.28)] ring-1 ring-inset ring-white/25">
+                <Car className="h-7 w-7 stroke-[2.2]" />
+              </div>
+              <span className={`text-[11px] font-bold ${activeService === 'mobil' ? 'text-[#0284c7]' : 'text-slate-700'}`}>
+                Mobil
+              </span>
+            </button>
+
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeService === 'barang'}
+              onClick={() => {
+                setActiveService('barang');
+                searchSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}
+              className={`flex flex-col items-center gap-1.5 rounded-2xl p-1.5 transition cursor-pointer ${
+                activeService === 'barang' ? 'bg-amber-50/90 ring-2 ring-amber-400/60' : 'hover:bg-slate-50'
+              }`}
+            >
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#f59e0b] to-[#d97706] text-white shadow-[0_6px_14px_rgba(245,158,11,0.28)] ring-1 ring-inset ring-white/25">
+                <Package className="h-7 w-7 stroke-[2.2]" />
+              </div>
+              <span className={`text-[11px] font-bold ${activeService === 'barang' ? 'text-amber-700' : 'text-slate-700'}`}>
+                Barang
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => navigate('/customer/qr')}
+              className="flex flex-col items-center gap-1.5 rounded-2xl p-1.5 transition hover:bg-slate-50 cursor-pointer"
+            >
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#6366f1] to-[#4f46e5] text-white shadow-[0_6px_14px_rgba(99,102,241,0.28)] ring-1 ring-inset ring-white/25">
+                <QrCode className="h-7 w-7 stroke-[2.2]" />
+              </div>
+              <span className="text-[11px] font-bold text-slate-700">
+                Digital QR
+              </span>
+            </button>
           </div>
         </div>
-      </div>
+
+        {/* ── BANNER IKLAN / PROMO ── */}
+        <BannerSlider role="customer" containerClassName="h-44 mb-2" />
+
+        {/* ── LAYANAN LAINNYA ── */}
+        <div className="pt-3 space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="font-display text-sm font-extrabold text-slate-900">
+              Layanan Lainnya
+            </h2>
+            <button
+              type="button"
+              onClick={() => navigate('/customer/tickets')}
+              className="inline-flex items-center gap-0.5 text-xs font-bold text-[#1356d6] hover:underline cursor-pointer"
+            >
+              <span>Lihat Semua</span>
+              <ChevronRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-4 gap-2.5">
+            <button
+              type="button"
+              onClick={() => navigate('/customer/tickets')}
+              className="flex flex-col items-center gap-1.5 rounded-2xl border border-slate-100 bg-white p-2.5 shadow-[0_2px_10px_rgba(16,54,125,0.05)] transition hover:bg-slate-50 cursor-pointer"
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#3b82f6] to-[#1d4ed8] text-white shadow-sm ring-1 ring-inset ring-white/25">
+                <Ticket className="h-6 w-6 stroke-[2.2]" />
+              </div>
+              <span className="text-[11px] font-semibold text-slate-700">Tiket</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => navigate('/customer/vouchers')}
+              className="flex flex-col items-center gap-1.5 rounded-2xl border border-slate-100 bg-white p-2.5 shadow-[0_2px_10px_rgba(16,54,125,0.05)] transition hover:bg-slate-50 cursor-pointer"
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#fb923c] to-[#ea580c] text-white shadow-sm ring-1 ring-inset ring-white/25">
+                <Tag className="h-6 w-6 stroke-[2.2]" />
+              </div>
+              <span className="text-[11px] font-semibold text-slate-700">Voucher</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => navigate('/customer/tagihan')}
+              className="flex flex-col items-center gap-1.5 rounded-2xl border border-slate-100 bg-white p-2.5 shadow-[0_2px_10px_rgba(16,54,125,0.05)] transition hover:bg-slate-50 cursor-pointer"
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#10b981] to-[#059669] text-white shadow-sm ring-1 ring-inset ring-white/25">
+                <Receipt className="h-6 w-6 stroke-[2.2]" />
+              </div>
+              <span className="text-[11px] font-semibold text-slate-700">Tagihan</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => navigate('/customer/wallet')}
+              className="flex flex-col items-center gap-1.5 rounded-2xl border border-slate-100 bg-white p-2.5 shadow-[0_2px_10px_rgba(16,54,125,0.05)] transition hover:bg-slate-50 cursor-pointer"
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#14b8a6] to-[#0d9488] text-white shadow-sm ring-1 ring-inset ring-white/25">
+                <Wallet className="h-6 w-6 stroke-[2.2]" />
+              </div>
+              <span className="text-[11px] font-semibold text-slate-700">Dompet Saya</span>
+            </button>
+          </div>
+        </div>
+
+        {/* ── KARTU AMAN & NYAMAN ── */}
+        <button
+          type="button"
+          onClick={() => navigate('/customer/bantuan')}
+          className="w-full flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50/90 px-4 py-3 text-left transition hover:bg-slate-100/80 cursor-pointer"
+        >
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#1356d6] text-white shadow-xs">
+              <ShieldCheck className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-xs font-extrabold text-slate-900">Aman &amp; Nyaman</p>
+              <p className="text-[11px] text-slate-500">Perjalanan Anda selalu terlindungi</p>
+            </div>
+          </div>
+          <ChevronRight className="h-4 w-4 text-slate-400 shrink-0" />
+        </button>
+
+        {/* ── FORM FILTER & HASIL TRIP ── */}
+        <div
+          ref={searchSectionRef}
+          className="rounded-2xl border border-slate-100 bg-white p-4 shadow-[0_4px_20px_rgba(16,54,125,0.07)] space-y-3.5"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-display text-sm font-extrabold text-slate-900">
+                Cari Jadwal Perjalanan
+              </h2>
+              <p className="text-[11px] text-slate-400">
+                Pilih rute pos asal, tujuan, dan tanggal keberangkatan
+              </p>
+            </div>
+            {(origin || destination || date) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setOrigin('');
+                  setDestination('');
+                  setDate('');
+                }}
+                className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-600 hover:bg-slate-200 transition cursor-pointer"
+              >
+                <RotateCcw className="h-3 w-3" />
+                Reset
+              </button>
+            )}
+          </div>
+
+          <div className="space-y-2.5 text-sm">
+            <div className="relative space-y-2.5">
+              {/* Pos Asal */}
+              <div className="rounded-xl border border-slate-200/80 bg-slate-50/70 px-3 py-2.5 focus-within:border-[#1356d6] focus-within:bg-white transition">
+                <div className="flex items-center gap-2.5">
+                  <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-100 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      Pos Asal
+                    </label>
+                    <select
+                      value={origin}
+                      onChange={(e) => setOrigin(e.target.value)}
+                      className="w-full bg-transparent text-xs font-bold text-slate-800 focus:outline-none truncate cursor-pointer pr-6"
+                    >
+                      <option value="">Semua Pos Asal</option>
+                      {pickupPoints.map((p) => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tombol Tukar Rute (di tengah antara Asal & Tujuan, tidak menimpa panah select) */}
+              <button
+                type="button"
+                onClick={() => {
+                  setOrigin(destination);
+                  setDestination(origin);
+                }}
+                aria-label="Tukar pos asal dan tujuan"
+                className="absolute right-8 top-1/2 -translate-y-1/2 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-[#1356d6] shadow-sm transition hover:bg-blue-50 active:scale-95 cursor-pointer"
+              >
+                <ArrowUpDown className="h-3.5 w-3.5" />
+              </button>
+
+              {/* Pos Tujuan */}
+              <div className="rounded-xl border border-slate-200/80 bg-slate-50/70 px-3 py-2.5 focus-within:border-[#1356d6] focus-within:bg-white transition">
+                <div className="flex items-center gap-2.5">
+                  <span className="h-2.5 w-2.5 rounded-full bg-[#1356d6] ring-4 ring-blue-100 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      Pos Tujuan
+                    </label>
+                    <select
+                      value={destination}
+                      onChange={(e) => setDestination(e.target.value)}
+                      className="w-full bg-transparent text-xs font-bold text-slate-800 focus:outline-none truncate cursor-pointer pr-6"
+                    >
+                      <option value="">Semua Pos Tujuan</option>
+                      {pickupPoints.map((p) => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Tanggal */}
+            <div className="rounded-xl border border-slate-200/80 bg-slate-50/70 px-3 py-2.5 focus-within:border-[#1356d6] focus-within:bg-white transition">
+              <div className="flex items-center gap-2.5">
+                <span className="h-2.5 w-2.5 rounded-full bg-sky-500 ring-4 ring-sky-100 shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    Tanggal Berangkat
+                  </label>
+                  <input
+                    type="date"
+                    min={TODAY_ISO}
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    className="w-full bg-transparent text-xs font-bold text-slate-800 focus:outline-none cursor-pointer"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
             <span>Hasil Trip Tersedia</span>
-            <span className="px-2 py-0.5 text-xs font-extrabold bg-[#10367D]/10 text-[#10367D] rounded-full">
+            <span className="px-2 py-0.5 text-xs font-extrabold bg-[#1356d6]/10 text-[#1356d6] rounded-full">
               {trips.length}
             </span>
           </h2>
         </div>
 
         {isLoadingTrips ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
+          <div className="grid grid-cols-1 gap-4">
             {[1, 2].map((i) => (
               <div key={i} className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm animate-pulse space-y-4">
                 <div className="flex justify-between items-center">
@@ -781,7 +1081,7 @@ export default function SearchTrip() {
             ))}
           </div>
         ) : trips.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
+          <div className="grid grid-cols-1 gap-4">
             {trips.map((trip) => {
               const tripIdStr = String(trip.id);
               const isAlreadyBookedByMe = myBookedTripIds.has(tripIdStr);
@@ -803,7 +1103,7 @@ export default function SearchTrip() {
               return (
                 <div
                   key={trip.id}
-                  className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between gap-4 group hover:border-[#10367D]/40"
+                  className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between gap-4 group hover:border-[#1356d6]/40"
                 >
                   <div>
                     {/* Header: Service Tag & Availability Badge */}
@@ -811,7 +1111,7 @@ export default function SearchTrip() {
                       <span
                         className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border transition ${
                           isPassenger
-                            ? 'bg-blue-50 text-[#10367D] border-blue-200/70'
+                            ? 'bg-blue-50 text-[#1356d6] border-blue-200/70'
                             : 'bg-sky-50 text-sky-700 border-sky-200/70'
                         }`}
                       >
@@ -847,7 +1147,7 @@ export default function SearchTrip() {
                         <div className="flex flex-col items-center pt-1">
                           <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-100" />
                           <div className="w-0.5 h-7 bg-slate-200 my-1" />
-                          <div className="w-2.5 h-2.5 rounded-full bg-[#10367D] ring-4 ring-blue-100" />
+                          <div className="w-2.5 h-2.5 rounded-full bg-[#1356d6] ring-4 ring-blue-100" />
                         </div>
                         <div className="flex-1 flex flex-col justify-between gap-2 min-w-0">
                           <div>
@@ -940,13 +1240,13 @@ export default function SearchTrip() {
                       <div className="col-span-2 flex items-center justify-between p-2.5 rounded-xl bg-blue-50/40 border border-blue-100/70">
                         <div className="flex items-center gap-2">
                           {isBarang ? (
-                            <Package className="w-4 h-4 text-[#10367D]" />
+                            <Package className="w-4 h-4 text-[#1356d6]" />
                           ) : (
-                            <Users className="w-4 h-4 text-[#10367D]" />
+                            <Users className="w-4 h-4 text-[#1356d6]" />
                           )}
                           <span className="text-xs font-bold text-slate-700">Sisa Kuota:</span>
                         </div>
-                        <span className="text-xs font-extrabold px-2.5 py-0.5 rounded-md bg-white border border-blue-200 text-[#10367D] shadow-xs">
+                        <span className="text-xs font-extrabold px-2.5 py-0.5 rounded-md bg-white border border-blue-200 text-[#1356d6] shadow-xs">
                           {quotaRemaining}
                         </span>
                       </div>
@@ -997,7 +1297,33 @@ export default function SearchTrip() {
             })}
           </div>
         ) : (
-          <EmptyState icon={Search} title="Tidak Ada Trip" description="Tidak ada jadwal trip yang cocok." />
+          <div className="rounded-2xl border border-dashed border-blue-200/80 bg-gradient-to-b from-blue-50/50 to-white p-5">
+            <EmptyState
+              icon={Search}
+              title="Belum Ada Jadwal Trip"
+              description={
+                origin || destination || date
+                  ? 'Tidak ada jadwal yang cocok dengan filter Anda. Coba reset filter atau pilih layanan lain.'
+                  : 'Belum ada trip tersedia untuk layanan ini di wilayah yang dipilih.'
+              }
+            />
+            {(origin || destination || date) && (
+              <div className="mt-3 flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOrigin('');
+                    setDestination('');
+                    setDate('');
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-[#1356d6] px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-[#0b3ba8] transition cursor-pointer"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  Reset Filter Pencarian
+                </button>
+              </div>
+            )}
+          </div>
         )}
       </div>
 
@@ -1092,7 +1418,7 @@ export default function SearchTrip() {
                   <div key={idx} className="p-3 bg-neutral-50/80 border border-neutral-200 rounded-xl space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold text-neutral-800 flex items-center gap-1.5">
-                        <span className="w-5 h-5 rounded-full bg-blue-100 text-[#10367D] flex items-center justify-center text-[11px] font-extrabold">
+                        <span className="w-5 h-5 rounded-full bg-blue-100 text-[#1356d6] flex items-center justify-center text-[11px] font-extrabold">
                           {idx + 1}
                         </span>
                         Kursi {idx + 1}: {idx === 0 && !bookingForOthers ? 'Data Penumpang (Saya)' : `Penumpang ${idx + 1}`}
@@ -1191,7 +1517,7 @@ export default function SearchTrip() {
                   <label className="block text-[11px] font-bold text-neutral-400 uppercase">
                     Ukuran Paket (Kategori Tarif)
                   </label>
-                  <span className="text-[10px] text-[#10367D] font-bold bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
+                  <span className="text-[10px] text-[#1356d6] font-bold bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
                     Otomatis Sesuai Berat
                   </span>
                 </div>
@@ -1248,7 +1574,7 @@ export default function SearchTrip() {
                 onClick={() => setPaymentMethod('xendit')}
                 className={`py-2 px-3 border rounded-xl text-[13px] font-bold transition text-left cursor-pointer ${
                   paymentMethod === 'xendit'
-                    ? 'border-[#10367D] bg-blue-50 text-[#10367D]'
+                    ? 'border-[#1356d6] bg-blue-50 text-[#1356d6]'
                     : 'border-neutral-200 text-neutral-500 hover:border-neutral-300'
                 }`}
               >
@@ -1268,7 +1594,7 @@ export default function SearchTrip() {
                   !isWalletBalanceSufficient
                     ? 'border-neutral-200 bg-neutral-100 text-neutral-400 cursor-not-allowed opacity-75'
                     : paymentMethod === 'wallet'
-                    ? 'border-[#10367D] bg-blue-50 text-[#10367D] cursor-pointer'
+                    ? 'border-[#1356d6] bg-blue-50 text-[#1356d6] cursor-pointer'
                     : 'border-neutral-200 text-neutral-500 hover:border-neutral-300 cursor-pointer'
                 }`}
               >
@@ -1383,7 +1709,7 @@ export default function SearchTrip() {
                     setShowManualInput(!showManualInput);
                     setVoucherError('');
                   }}
-                  className="text-[11px] font-semibold text-[#10367D] hover:underline cursor-pointer"
+                  className="text-[11px] font-semibold text-[#1356d6] hover:underline cursor-pointer"
                 >
                   {showManualInput ? 'Pilih dari daftar voucher' : 'Punya kode lain?'}
                 </button>
@@ -1393,9 +1719,9 @@ export default function SearchTrip() {
             {appliedVoucher ? (
               <div className="flex items-center justify-between p-2.5 border border-slate-200 rounded-xl bg-white">
                 <div className="flex items-center gap-2 min-w-0">
-                  <Tag className="w-4 h-4 text-[#10367D] shrink-0" />
+                  <Tag className="w-4 h-4 text-[#1356d6] shrink-0" />
                   <div className="truncate text-xs">
-                    <span className="font-mono font-bold text-[#10367D] mr-1.5">
+                    <span className="font-mono font-bold text-[#1356d6] mr-1.5">
                       {appliedVoucher.code}
                     </span>
                     <span className="text-emerald-600 font-bold">
@@ -1424,13 +1750,13 @@ export default function SearchTrip() {
                     }}
                     placeholder="Masukkan kode voucher"
                     disabled={isValidatingVoucher || cooldownSeconds > 0}
-                    className="flex-1 p-2 bg-neutral-50 border border-neutral-200 rounded-xl font-mono font-bold uppercase text-[12px] focus:outline-none focus:border-[#10367D] tracking-wider disabled:bg-neutral-100"
+                    className="flex-1 p-2 bg-neutral-50 border border-neutral-200 rounded-xl font-mono font-bold uppercase text-[12px] focus:outline-none focus:border-[#1356d6] tracking-wider disabled:bg-neutral-100"
                   />
                   <button
                     type="button"
                     onClick={() => handleApplyVoucher()}
                     disabled={!voucherInput.trim() || isValidatingVoucher || cooldownSeconds > 0}
-                    className="px-4 py-2 bg-[#10367D] hover:bg-[#0C2C66] disabled:bg-neutral-200 disabled:text-neutral-400 disabled:cursor-not-allowed text-white text-[12px] font-bold rounded-xl transition flex items-center justify-center shrink-0 shadow-sm cursor-pointer"
+                    className="px-4 py-2 bg-[#1356d6] hover:bg-[#0e44ba] disabled:bg-neutral-200 disabled:text-neutral-400 disabled:cursor-not-allowed text-white text-[12px] font-bold rounded-xl transition flex items-center justify-center shrink-0 shadow-sm cursor-pointer"
                   >
                     {isValidatingVoucher ? (
                       <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -1462,7 +1788,7 @@ export default function SearchTrip() {
                     >
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="font-mono font-bold text-xs text-[#10367D]">
+                          <span className="font-mono font-bold text-xs text-[#1356d6]">
                             {v.code}
                           </span>
                           <span className="text-xs font-bold text-emerald-600">
@@ -1529,7 +1855,7 @@ export default function SearchTrip() {
               </div>
               {currentCustomerFee > 0 && (
                 <div className="flex justify-between text-slate-600">
-                  <span>Biaya Layanan Aplikasi:</span>
+                  <span>Biaya Aplikasi:</span>
                   <span className="font-semibold text-slate-800">{formatRupiah(currentCustomerFee)}</span>
                 </div>
               )}
@@ -1589,6 +1915,7 @@ export default function SearchTrip() {
           }}
         />
       )}
+      </div>
     </div>
   );
 }

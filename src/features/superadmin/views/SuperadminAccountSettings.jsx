@@ -253,7 +253,7 @@ export default function SuperadminAccountSettings() {
   return (
     <div className="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
       {/* ── BANNER GRADIENT ── */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2684ff] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
         <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
         <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0 flex-1">
@@ -274,7 +274,7 @@ export default function SuperadminAccountSettings() {
       <div className="space-y-5">
         <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 space-y-4">
           <h3 className="text-[17px] font-bold text-neutral-800 flex items-center gap-1.5">
-            <User className="w-4 h-4 text-[#10367D]" /> Edit Profil
+            <User className="w-4 h-4 text-[#1356d6]" /> Edit Profil
           </h3>
 
           <div className="flex items-center gap-4">
@@ -282,14 +282,14 @@ export default function SuperadminAccountSettings() {
               {avatarPreview ? (
                 <img src={avatarPreview} alt="Foto Profil" className="w-16 h-16 rounded-full object-cover border-4 border-sky-50 shadow-sm" />
               ) : (
-                <div className="w-16 h-16 rounded-full bg-[#10367D] text-white flex items-center justify-center text-[23px] font-extrabold shadow-sm">
+                <div className="w-16 h-16 rounded-full bg-[#1356d6] text-white flex items-center justify-center text-[23px] font-extrabold shadow-sm">
                   {(profileDraft.name || 'S').trim().charAt(0).toUpperCase()}
                 </div>
               )}
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-white border border-neutral-200 text-[#10367D] flex items-center justify-center shadow-sm hover:bg-neutral-50 transition cursor-pointer"
+                className="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-white border border-neutral-200 text-[#1356d6] flex items-center justify-center shadow-sm hover:bg-neutral-50 transition cursor-pointer"
                 title="Ubah Foto Profil"
               >
                 <Camera className="w-3 h-3" />
@@ -320,7 +320,7 @@ export default function SuperadminAccountSettings() {
                   type="text"
                   value={profileDraft.name}
                   onChange={(e) => handleProfileFieldChange('name', e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#10367D]"
+                  className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#1356d6]"
                   required
                 />
               </div>
@@ -331,7 +331,7 @@ export default function SuperadminAccountSettings() {
                   placeholder="nama@email.com"
                   value={profileDraft.email}
                   onChange={(e) => handleProfileFieldChange('email', e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#10367D]"
+                  className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#1356d6]"
                   required
                 />
               </div>
@@ -340,7 +340,7 @@ export default function SuperadminAccountSettings() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-4 py-2.5 bg-[#10367D] hover:bg-[#0C2C66] text-white rounded-xl font-bold transition shadow-sm cursor-pointer disabled:opacity-50"
+                className="px-4 py-2.5 bg-[#1356d6] hover:bg-[#0e44ba] text-white rounded-xl font-bold transition shadow-sm cursor-pointer disabled:opacity-50"
               >
                 {isSubmitting ? 'Menyimpan...' : 'Simpan Perubahan'}
               </button>
@@ -350,7 +350,7 @@ export default function SuperadminAccountSettings() {
 
         <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 space-y-5">
           <h3 className="text-[17px] font-bold text-neutral-800 flex items-center gap-1.5">
-            <KeyRound className="w-4 h-4 text-[#10367D]" /> Keamanan Akun
+            <KeyRound className="w-4 h-4 text-[#1356d6]" /> Keamanan Akun
           </h3>
 
           <form onSubmit={handleChangePassword} className="space-y-3 text-[13px]">
@@ -367,7 +367,7 @@ export default function SuperadminAccountSettings() {
                     type={showPassword[key] ? 'text' : 'password'}
                     value={passwordForm[key]}
                     onChange={(e) => setPasswordForm((prev) => ({ ...prev, [key]: e.target.value }))}
-                    className="w-full px-3 py-2.5 pr-9 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#10367D]"
+                    className="w-full px-3 py-2.5 pr-9 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#1356d6]"
                   />
                   <button
                     type="button"
@@ -384,7 +384,7 @@ export default function SuperadminAccountSettings() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-4 py-2.5 bg-[#10367D] hover:bg-[#0C2C66] text-white rounded-xl font-bold transition shadow-sm cursor-pointer disabled:opacity-50"
+                className="px-4 py-2.5 bg-[#1356d6] hover:bg-[#0e44ba] text-white rounded-xl font-bold transition shadow-sm cursor-pointer disabled:opacity-50"
               >
                 {isSubmitting ? 'Memproses...' : 'Perbarui Kata Sandi'}
               </button>
@@ -393,7 +393,7 @@ export default function SuperadminAccountSettings() {
 
           <div className="pt-4 border-t border-neutral-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-start gap-2.5">
-              <div className="p-2 bg-sky-50 text-[#10367D] rounded-xl shrink-0">
+              <div className="p-2 bg-sky-50 text-[#1356d6] rounded-xl shrink-0">
                 <ShieldCheck className="w-4 h-4" />
               </div>
               <div>
@@ -428,7 +428,7 @@ export default function SuperadminAccountSettings() {
 
         <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 space-y-4">
           <h3 className="text-[17px] font-bold text-neutral-800 flex items-center gap-1.5">
-            <Bell className="w-4 h-4 text-[#10367D]" /> Preferensi Notifikasi
+            <Bell className="w-4 h-4 text-[#1356d6]" /> Preferensi Notifikasi
           </h3>
           <div className="space-y-2.5">
             {[
@@ -469,7 +469,7 @@ export default function SuperadminAccountSettings() {
             </button>
             <button
               onClick={handleConfirm2FA}
-              className="flex-1 py-2.5 bg-[#10367D] hover:bg-[#0C2C66] text-white rounded-xl font-bold transition shadow-sm cursor-pointer"
+              className="flex-1 py-2.5 bg-[#1356d6] hover:bg-[#0e44ba] text-white rounded-xl font-bold transition shadow-sm cursor-pointer"
             >
               Aktifkan
             </button>

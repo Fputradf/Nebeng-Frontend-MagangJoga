@@ -1,0 +1,95 @@
+{
+  "project": "nebeng-mitra-landing",
+  "description": "Konfigurasi integrasi Landing Page Mitra Driver & Mitra Pos (Vercel) dengan Backend / AI Agent (VPS).",
+  "frontend": {
+    "platform": "vercel",
+    "framework": "vite-react",
+    "build_command": "npm run build",
+    "output_dir": "dist",
+    "target_pages": [
+      {
+        "route": "/mitra-driver",
+        "purpose": "Landing page pendaftaran & informasi Mitra Driver (motor & mobil)"
+      },
+      {
+        "route": "/mitra-pos",
+        "purpose": "Landing page pendaftaran & informasi Mitra Pos / Agen Titik Drop-off"
+      }
+    ],
+    "required_env": {
+      "VITE_API_BASE_URL": "https://api.domain-anda.com/api",
+      "VITE_AGENT_API_URL": "https://api.domain-anda.com/agent",
+      "VITE_PUBLIC_SITE_URL": "https://mitra.domain-anda.com"
+    }
+  },
+  "vps": {
+    "reverse_proxy": "nginx",
+    "ssl": "certbot-letsencrypt",
+    "services": {
+      "backend_api": {
+        "internal_host": "127.0.0.1",
+        "internal_port": 3000,
+        "public_path": "/api",
+        "healthcheck": "/api/health"
+      },
+      "ai_agent": {
+        "internal_host": "127.0.0.1",
+        "internal_port": 8000,
+        "public_path": "/agent",
+        "healthcheck": "/agent/health"
+      }
+    },
+    "cors": {
+      "allowed_origins": [
+        "https://mitra.domain-anda.com",
+        "https://*.vercel.app",
+        "http://localhost:5173"
+      ],
+      "allowed_methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+      "allowed_headers": ["Content-Type", "Authorization", "X-Agent-Signature"],
+      "allow_credentials": true
+    },
+    "agent_endpoints_contract": [
+      {
+        "method": "POST",
+        "path": "/api/public/mitra-driver/leads",
+        "description": "Menerima pendaftaran calon Mitra Driver dari landing page Vercel",
+        "payload_example": {
+          "full_name": "string",
+          "phone": "string (format 628xxx)",
+          "city": "string",
+          "vehicle_type": "motor | mobil",
+          "source": "landing-mitra-driver"
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/api/public/mitra-pos/leads",
+        "description": "Menerima pendaftaran calon Mitra Pos dari landing page Vercel",
+        "payload_example": {
+          "pic_name": "string",
+          "business_name": "string",
+          "phone": "string (format 628xxx)",
+          "city": "string",
+          "address": "string",
+          "source": "landing-mitra-pos"
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/agent/chat",
+        "description": "Endpoint opsional untuk widget chat AI Agent di landing page (tanya jawab syarat Mitra Driver & Mitra Pos)",
+        "payload_example": {
+          "session_id": "string",
+          "role_interest": "mitra_driver | mitra_pos",
+          "message": "string"
+        }
+      }
+    ],
+    "security": {
+      "rate_limit_rpm": 60,
+      "firewall_open_ports": [22, 80, 443],
+      "keep_internal_ports_closed": [3000, 8000]
+    }
+  }
+}

@@ -233,7 +233,7 @@ export default function AdminWilayahManagement() {
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
       {/* ── BANNER GRADIENT ── */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2684ff] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
         <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
         <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0 flex-1">
@@ -250,7 +250,7 @@ export default function AdminWilayahManagement() {
 
           <button
             onClick={handleOpenAddModal}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-blue-50 text-[#10367D] rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer shadow-sm shrink-0 whitespace-nowrap self-start sm:self-auto"
+            className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-blue-50 text-[#1356d6] rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer shadow-sm shrink-0 whitespace-nowrap self-start sm:self-auto"
           >
             <Plus size={16} />
             <span>Buat Admin Baru</span>
@@ -314,7 +314,7 @@ export default function AdminWilayahManagement() {
                     <tr key={admin.id} className="hover:bg-gray-50/50">
                       <td className="py-3.5 px-5">
                         <div className="font-bold text-neutral-800 text-[13px]">{admin.name}</div>
-                        <div className="text-[11px] font-bold text-[#10367D] font-mono">ID: {String(admin.id)}</div>
+                        <div className="text-[11px] font-bold text-[#1356d6] font-mono">ID: {String(admin.id)}</div>
                       </td>
                       <td className="py-3.5 px-5 font-semibold text-neutral-700">{admin.email}</td>
                       <td className="py-3.5 px-5 font-bold text-neutral-800">{regionName}</td>
@@ -325,7 +325,7 @@ export default function AdminWilayahManagement() {
                       </td>
                       <td className="py-3.5 px-5">
                         <div className="flex items-center justify-center gap-1.5">
-                          <button onClick={() => { setSelectedAdmin(admin); setIsDetailModalOpen(true); }} className="p-1.5 bg-[#10367D]/10 text-[#10367D] rounded-lg cursor-pointer">
+                          <button onClick={() => { setSelectedAdmin(admin); setIsDetailModalOpen(true); }} className="p-1.5 bg-[#1356d6]/10 text-[#1356d6] rounded-lg cursor-pointer">
                             <Eye size={13} />
                           </button>
                           <button onClick={() => handleOpenEditModal(admin)} className="p-1.5 bg-blue-50 text-blue-600 rounded-lg cursor-pointer">
@@ -396,7 +396,7 @@ export default function AdminWilayahManagement() {
             </div>
             <div className="flex justify-between">
               <span className="text-neutral-400 font-bold uppercase">Wilayah Penempatan:</span>
-              <span className="font-bold text-[#10367D]">{selectedAdmin ? getRegionName(selectedAdmin) : '-'}</span>
+              <span className="font-bold text-[#1356d6]">{selectedAdmin ? getRegionName(selectedAdmin) : '-'}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-neutral-400 font-bold uppercase">Status Akun:</span>
@@ -407,7 +407,7 @@ export default function AdminWilayahManagement() {
           </div>
           <button
             onClick={() => setIsDetailModalOpen(false)}
-            className="w-full py-2 bg-[#10367D] hover:bg-[#0C2C66] text-white text-[13px] font-bold rounded-full cursor-pointer transition shadow-sm"
+            className="w-full py-2 bg-[#1356d6] hover:bg-[#0e44ba] text-white text-[13px] font-bold rounded-full cursor-pointer transition shadow-sm"
           >
             Tutup
           </button>
@@ -506,14 +506,14 @@ export default function AdminWilayahManagement() {
                           setIsRegionDropdownOpen(false);
                         }}
                         className={`px-3 py-2 hover:bg-blue-50 cursor-pointer flex items-center justify-between transition ${
-                          isSelected ? 'bg-blue-50/80 text-[#10367D] font-bold' : 'text-neutral-700'
+                          isSelected ? 'bg-blue-50/80 text-[#1356d6] font-bold' : 'text-neutral-700'
                         }`}
                       >
                         <div>
                           <span className="font-semibold">{reg.name}</span>
                           <span className="text-[11px] text-neutral-400 ml-1.5 font-mono">({reg.code})</span>
                         </div>
-                        {isSelected && <Check size={13} className="text-[#10367D]" />}
+                        {isSelected && <Check size={13} className="text-[#1356d6]" />}
                       </div>
                     );
                   })
@@ -530,7 +530,7 @@ export default function AdminWilayahManagement() {
             <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-[13px] font-bold text-neutral-500 hover:bg-neutral-100 rounded-full cursor-pointer">
               Batal
             </button>
-            <button type="submit" className="px-4 py-2 text-[13px] font-bold text-white bg-[#10367D] hover:bg-[#0C2C66] rounded-full flex items-center gap-1 cursor-pointer shadow-sm transition">
+            <button type="submit" className="px-4 py-2 text-[13px] font-bold text-white bg-[#1356d6] hover:bg-[#0e44ba] rounded-full flex items-center gap-1 cursor-pointer shadow-sm transition">
               <Save size={13} /> Simpan
             </button>
           </div>

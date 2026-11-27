@@ -171,7 +171,7 @@ export default function AppConfigManagement() {
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
       {/* ── BANNER GRADIENT ── */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2684ff] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
         <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
         <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0 flex-1">
@@ -197,7 +197,7 @@ export default function AppConfigManagement() {
             <button
               onClick={handleSaveSettings}
               disabled={isSaving}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-blue-50 text-[#10367D] text-xs font-bold shadow-sm transition cursor-pointer disabled:opacity-50 whitespace-nowrap"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-blue-50 text-[#1356d6] text-xs font-bold shadow-sm transition cursor-pointer disabled:opacity-50 whitespace-nowrap"
             >
               <Save className="w-4 h-4" />
               {isSaving ? 'Menyimpan...' : 'Simpan Identitas'}
@@ -264,7 +264,7 @@ export default function AppConfigManagement() {
           onClick={() => setActiveTab('config')}
           className={`pb-3.5 flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
             activeTab === 'config'
-              ? 'border-[#10367D] text-[#10367D]'
+              ? 'border-[#1356d6] text-[#1356d6]'
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
@@ -276,7 +276,7 @@ export default function AppConfigManagement() {
           onClick={() => setActiveTab('preview')}
           className={`pb-3.5 flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
             activeTab === 'preview'
-              ? 'border-[#10367D] text-[#10367D]'
+              ? 'border-[#1356d6] text-[#1356d6]'
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
@@ -288,7 +288,7 @@ export default function AppConfigManagement() {
           onClick={() => setActiveTab('guidelines')}
           className={`pb-3.5 flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
             activeTab === 'guidelines'
-              ? 'border-[#10367D] text-[#10367D]'
+              ? 'border-[#1356d6] text-[#1356d6]'
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
@@ -303,7 +303,7 @@ export default function AppConfigManagement() {
           {/* General Parameters Card */}
           <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 sm:p-6 space-y-4">
             <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
-              <Sliders className="w-5 h-5 text-[#10367D]" />
+              <Sliders className="w-5 h-5 text-[#1356d6]" />
               <h2 className="text-base font-bold text-slate-900">
                 Parameter Nama & Slogan Platform Global
               </h2>
@@ -314,7 +314,7 @@ export default function AppConfigManagement() {
                 <label className="text-xs font-semibold text-slate-700 mb-1.5 min-h-[24px] flex items-end">
                   Nama Aplikasi Utama
                 </label>
-                <div className="flex items-center rounded-xl border border-slate-200 bg-white overflow-hidden focus-within:ring-2 focus-within:ring-[#10367D]/20 focus-within:border-[#10367D]">
+                <div className="flex items-center rounded-xl border border-slate-200 bg-white overflow-hidden focus-within:ring-2 focus-within:ring-[#1356d6]/20 focus-within:border-[#1356d6]">
                   <input
                     type="text"
                     maxLength={35}
@@ -336,7 +336,7 @@ export default function AppConfigManagement() {
                 <label className="text-xs font-semibold text-slate-700 mb-1.5 min-h-[24px] flex items-end">
                   Slogan / Tagline Platform
                 </label>
-                <div className="flex items-center rounded-xl border border-slate-200 bg-white overflow-hidden focus-within:ring-2 focus-within:ring-[#10367D]/20 focus-within:border-[#10367D]">
+                <div className="flex items-center rounded-xl border border-slate-200 bg-white overflow-hidden focus-within:ring-2 focus-within:ring-[#1356d6]/20 focus-within:border-[#1356d6]">
                   <input
                     type="text"
                     maxLength={80}
@@ -361,7 +361,7 @@ export default function AppConfigManagement() {
                 <select
                   value={logoInputType}
                   onChange={(e) => setLogoInputType(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#10367D]/20 focus:border-[#10367D] bg-white cursor-pointer"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#1356d6]/20 focus:border-[#1356d6] bg-white cursor-pointer"
                 >
                   <option value="upload">Unggah Berkas Gambar (Upload File)</option>
                   <option value="url">Tautan Gambar Daring (External URL)</option>
@@ -380,7 +380,7 @@ export default function AppConfigManagement() {
               <div className="flex items-start justify-between gap-3 pb-3 border-b border-slate-100">
                 <div>
                   <div className="flex items-center gap-2">
-                    <ImageIcon className="w-4 h-4 text-[#10367D] shrink-0" />
+                    <ImageIcon className="w-4 h-4 text-[#1356d6] shrink-0" />
                     <h3 className="text-sm font-bold text-slate-900">
                       Manajemen Berkas Logo &amp; Favicon
                     </h3>
@@ -410,7 +410,7 @@ export default function AppConfigManagement() {
                     preview: logoDarkPreview,
                     fallback: defaultLogoDark,
                     inputRef: darkInputRef,
-                    previewBg: 'bg-[#0c2353] border-blue-400/30',
+                    previewBg: 'bg-[#0b3ba8] border-blue-400/30',
                     resetLabel: 'Reset Logo Gelap',
                   },
                   {
@@ -475,7 +475,7 @@ export default function AppConfigManagement() {
                         onClick={() => slot.inputRef.current?.click()}
                         className={`border-2 border-dashed rounded-xl px-4 py-3 text-center cursor-pointer transition flex items-center justify-center gap-3 ${
                           draggingTarget === slot.key
-                            ? 'border-[#10367D] bg-blue-50/60'
+                            ? 'border-[#1356d6] bg-blue-50/60'
                             : 'border-slate-300 bg-white hover:bg-slate-50/80 hover:border-slate-400'
                         }`}
                       >
@@ -486,9 +486,9 @@ export default function AppConfigManagement() {
                           className="hidden"
                           onChange={(e) => handleFileProcess(e.target.files?.[0], slot.key)}
                         />
-                        <Upload className="w-4 h-4 text-[#10367D] shrink-0" />
+                        <Upload className="w-4 h-4 text-[#1356d6] shrink-0" />
                         <span className="text-xs font-semibold text-slate-700">
-                          Tarik berkas ke sini atau <span className="text-[#10367D] underline">pilih gambar</span> (PNG/SVG, maks 2MB)
+                          Tarik berkas ke sini atau <span className="text-[#1356d6] underline">pilih gambar</span> (PNG/SVG, maks 2MB)
                         </span>
                       </div>
                     ) : (
@@ -498,12 +498,12 @@ export default function AppConfigManagement() {
                           value={urlInputs[slot.key]}
                           onChange={(e) => setUrlInputs((prev) => ({ ...prev, [slot.key]: e.target.value }))}
                           placeholder="https://cdn.example.com/logo.png"
-                          className="flex-1 px-3 py-2 text-xs bg-white rounded-lg border border-slate-200 focus:border-[#10367D] focus:outline-hidden"
+                          className="flex-1 px-3 py-2 text-xs bg-white rounded-lg border border-slate-200 focus:border-[#1356d6] focus:outline-hidden"
                         />
                         <button
                           type="button"
                           onClick={() => handleApplySlotUrl(slot.key)}
-                          className="px-3 py-2 bg-[#10367D] hover:bg-[#0c2353] text-white rounded-lg text-xs font-bold transition shrink-0 cursor-pointer"
+                          className="px-3 py-2 bg-[#1356d6] hover:bg-[#0b3ba8] text-white rounded-lg text-xs font-bold transition shrink-0 cursor-pointer"
                         >
                           Terapkan
                         </button>
@@ -519,7 +519,7 @@ export default function AppConfigManagement() {
                     type="checkbox"
                     checked={applyGlobally}
                     onChange={(e) => setApplyGlobally(e.target.checked)}
-                    className="rounded-sm border-slate-300 text-[#10367D] focus:ring-[#10367D]"
+                    className="rounded-sm border-slate-300 text-[#1356d6] focus:ring-[#1356d6]"
                   />
                   <span className="font-medium text-slate-700">
                     Otomatis sinkronkan identitas ke semua role pengguna (Regional, Mitra, Pos, Customer)
@@ -533,7 +533,7 @@ export default function AppConfigManagement() {
               <div className="flex items-start justify-between gap-3 pb-3 border-b border-slate-100">
                 <div>
                   <div className="flex items-center gap-2">
-                    <Eye className="w-4 h-4 text-[#10367D] shrink-0" />
+                    <Eye className="w-4 h-4 text-[#1356d6] shrink-0" />
                     <h3 className="text-sm font-bold text-slate-900">
                       Uji Transparansi &amp; Kontras Latar
                     </h3>
@@ -546,7 +546,7 @@ export default function AppConfigManagement() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Latar Gelap (Black Page / Sidebar Theme) */}
-                <div className="bg-gradient-to-b from-[#0c2353] via-[#10367D] to-[#18458f] p-4 rounded-xl border border-blue-400/20 text-white flex flex-col items-center justify-center gap-2.5">
+                <div className="bg-gradient-to-b from-[#0b3ba8] via-[#1356d6] to-[#2684ff] p-4 rounded-xl border border-blue-400/20 text-white flex flex-col items-center justify-center gap-2.5">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-blue-200/80 block text-center">
                     Black Page (Sidebar)
                   </span>
@@ -582,7 +582,7 @@ export default function AppConfigManagement() {
                       }}
                     />
                   </div>
-                  <span className="text-[11px] font-bold text-[#10367D] truncate max-w-[120px]">
+                  <span className="text-[11px] font-bold text-[#1356d6] truncate max-w-[120px]">
                     {nameInput.trim() || defaultName}
                   </span>
                 </div>
@@ -627,7 +627,7 @@ export default function AppConfigManagement() {
             <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between">
               <div>
                 <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                  <Layout className="w-5 h-5 text-[#10367D]" />
+                  <Layout className="w-5 h-5 text-[#1356d6]" />
                   Simulasi Tampilan di Seluruh Antarmuka Sistem
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
@@ -642,7 +642,7 @@ export default function AppConfigManagement() {
                 <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                   1. Header Sidebar Panel Navigasi (Super Admin & Regional)
                 </span>
-                <div className="max-w-md bg-gradient-to-r from-[#0c2353] via-[#10367D] to-[#18458f] rounded-2xl p-4 text-white shadow-md border border-blue-400/20">
+                <div className="max-w-md bg-gradient-to-r from-[#0b3ba8] via-[#1356d6] to-[#2684ff] rounded-2xl p-4 text-white shadow-md border border-blue-400/20">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center p-1.5 shrink-0 border border-white/15">
@@ -691,7 +691,7 @@ export default function AppConfigManagement() {
                       />
                     </div>
                     <div className="min-w-0">
-                      <p className="font-extrabold text-[#10367D] text-base leading-none truncate">
+                      <p className="font-extrabold text-[#1356d6] text-base leading-none truncate">
                         {nameInput.trim() || defaultName}
                       </p>
                       <span className="text-[10px] text-slate-400 font-medium truncate block mt-0.5">
@@ -734,7 +734,7 @@ export default function AppConfigManagement() {
         <div className="space-y-5">
           <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 sm:p-6 space-y-4">
             <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
-              <BookOpen className="w-5 h-5 text-[#10367D]" />
+              <BookOpen className="w-5 h-5 text-[#1356d6]" />
               <h2 className="text-base font-bold text-slate-900">
                 Spesifikasi & Pedoman Desain Visual Brand
               </h2>
@@ -742,7 +742,7 @@ export default function AppConfigManagement() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-1">
               <div className="bg-slate-50/70 p-4 rounded-xl border border-slate-200/60 space-y-2">
-                <span className="text-xs font-bold text-[#10367D] uppercase tracking-wider block">
+                <span className="text-xs font-bold text-[#1356d6] uppercase tracking-wider block">
                   1. Rasio & Dimensi
                 </span>
                 <p className="text-xs text-slate-600 leading-relaxed">
@@ -751,7 +751,7 @@ export default function AppConfigManagement() {
               </div>
 
               <div className="bg-slate-50/70 p-4 rounded-xl border border-slate-200/60 space-y-2">
-                <span className="text-xs font-bold text-[#10367D] uppercase tracking-wider block">
+                <span className="text-xs font-bold text-[#1356d6] uppercase tracking-wider block">
                   2. Format Berkas
                 </span>
                 <p className="text-xs text-slate-600 leading-relaxed">
@@ -760,7 +760,7 @@ export default function AppConfigManagement() {
               </div>
 
               <div className="bg-slate-50/70 p-4 rounded-xl border border-slate-200/60 space-y-2">
-                <span className="text-xs font-bold text-[#10367D] uppercase tracking-wider block">
+                <span className="text-xs font-bold text-[#1356d6] uppercase tracking-wider block">
                   3. Tata Nama & Tipografi
                 </span>
                 <p className="text-xs text-slate-600 leading-relaxed">

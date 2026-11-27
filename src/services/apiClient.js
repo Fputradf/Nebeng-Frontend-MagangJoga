@@ -5,6 +5,20 @@ import { resizeFormDataImages } from '../utils/imageUpload';
 
 const AUTH_STORAGE_KEY = 'nebeng_auth';
 
+const PUBLIC_PATHS = [
+  '/',
+  '/landing',
+  '/mitra-driver',
+  '/mitra-pos',
+  '/faq',
+  '/syarat-ketentuan',
+  '/login',
+  '/register',
+  '/forgot-password',
+];
+
+const isPublicRoute = (pathname) => PUBLIC_PATHS.includes(pathname);
+
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api',
   timeout: 10000,
@@ -106,17 +120,7 @@ apiClient.interceptors.response.use(
     // Jika error 401 dan bukan sedang mencoba endpoint login/refresh itu sendiri
     if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url.includes('/auth/')) {
       // Jangan coba refresh token jika sudah di halaman publik (beranda/landing/auth)
-      const currentPath = window.location.pathname;
-      const isPublicPath =
-        currentPath === '/' ||
-        currentPath === '/landing' ||
-        currentPath === '/faq' ||
-        currentPath === '/syarat-ketentuan' ||
-        currentPath === '/login' ||
-        currentPath === '/register' ||
-        currentPath === '/forgot-password';
-
-      if (isPublicPath) {
+      if (isPublicRoute(window.location.pathname)) {
         sessionStorage.removeItem(AUTH_STORAGE_KEY);
         localStorage.removeItem(AUTH_STORAGE_KEY);
         return Promise.reject(error);
@@ -166,17 +170,7 @@ apiClient.interceptors.response.use(
         localStorage.removeItem(AUTH_STORAGE_KEY);
         
         // Cek apakah di halaman publik untuk mencegah redirect paksa saat berada di landing page/auth
-        const currentPath = window.location.pathname;
-        const isPublicPath =
-          currentPath === '/' ||
-          currentPath === '/landing' ||
-          currentPath === '/faq' ||
-          currentPath === '/syarat-ketentuan' ||
-          currentPath === '/login' ||
-          currentPath === '/register' ||
-          currentPath === '/forgot-password';
-
-        if (!isPublicPath) {
+        if (!isPublicRoute(window.location.pathname)) {
           window.location.href = '/login';
         }
         

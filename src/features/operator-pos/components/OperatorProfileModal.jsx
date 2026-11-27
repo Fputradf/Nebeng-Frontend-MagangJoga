@@ -19,8 +19,8 @@ function getInitials(name) {
   ).toUpperCase();
 }
 
-const PRIMARY_COLOR = '#10367D';
-const PRIMARY_HOVER = '#0C2C66';
+const PRIMARY_COLOR = '#1356d6';
+const PRIMARY_HOVER = '#0e44ba';
 const PRIMARY_ACCENT = '#74B4D9';
 
 export default function OperatorProfileModal({

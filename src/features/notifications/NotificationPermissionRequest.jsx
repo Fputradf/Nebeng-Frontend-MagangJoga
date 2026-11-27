@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useNotification } from '../../context/NotificationContext';
 import { Bell, X, Check, ShieldCheck, Sparkles } from 'lucide-react';
 
-const PRIMARY_COLOR = '#10367D';
-const PRIMARY_HOVER = '#0C2C66';
+const PRIMARY_COLOR = '#1356d6';
+const PRIMARY_HOVER = '#0e44ba';
 
 // Inner component — modal kustom elegan non-template
 export default function NotificationPermissionRequest() {

@@ -329,7 +329,7 @@ export default function HelpCenterView({ userRole = 'customer' }) {
   return (
     <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-sans">
       {/* ── BANNER GRADIENT (MATCHING PAGES LAIN) ── */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] p-6 text-white shadow-card sm:p-8">
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2684ff] p-6 text-white shadow-card sm:p-8">
         <div className="absolute -right-12 -top-16 h-56 w-56 rounded-full bg-white/10" />
         <div className="absolute bottom-0 right-32 h-28 w-28 rounded-full bg-accent/20" />
         <div className="relative flex flex-col gap-4 pb-4 md:flex-row md:items-center md:justify-between">
@@ -398,7 +398,7 @@ export default function HelpCenterView({ userRole = 'customer' }) {
             onClick={() => setActiveTab('faq')}
             className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer flex items-center gap-2 ${
               activeTab === 'faq'
-                ? 'bg-[#10367D] text-white shadow-sm'
+                ? 'bg-[#1356d6] text-white shadow-sm'
                 : 'bg-white text-neutral-600 border border-neutral-200 hover:bg-neutral-50'
             }`}
           >
@@ -410,7 +410,7 @@ export default function HelpCenterView({ userRole = 'customer' }) {
             onClick={() => setActiveTab('chat')}
             className={`relative px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer flex items-center gap-2 ${
               activeTab === 'chat'
-                ? 'bg-[#10367D] text-white shadow-sm'
+                ? 'bg-[#1356d6] text-white shadow-sm'
                 : 'bg-white text-neutral-600 border border-neutral-200 hover:bg-neutral-50'
             }`}
           >
@@ -432,8 +432,8 @@ export default function HelpCenterView({ userRole = 'customer' }) {
           <div className="bg-white p-5 sm:p-6 rounded-3xl shadow-card border border-neutral-200 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-neutral-100 gap-3">
               <div className="flex items-center gap-3.5">
-                <div className="w-11 h-11 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-[#10367D] shrink-0 shadow-2xs">
-                  <Search className="w-5 h-5 text-[#10367D]" />
+                <div className="w-11 h-11 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-[#1356d6] shrink-0 shadow-2xs">
+                  <Search className="w-5 h-5 text-[#1356d6]" />
                 </div>
                 <div>
                   <h2 className="text-base font-bold text-neutral-800">
@@ -445,7 +445,7 @@ export default function HelpCenterView({ userRole = 'customer' }) {
                 </div>
               </div>
 
-              <span className="text-xs font-bold text-[#10367D] bg-blue-50 px-3 py-1.5 rounded-xl border border-blue-100 self-start sm:self-auto">
+              <span className="text-xs font-bold text-[#1356d6] bg-blue-50 px-3 py-1.5 rounded-xl border border-blue-100 self-start sm:self-auto">
                 {filteredFaqs.length} Topik Ditemukan
               </span>
             </div>
@@ -458,7 +458,7 @@ export default function HelpCenterView({ userRole = 'customer' }) {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Ketik kata kunci pertanyaan... (contoh: tiket, refund, saldo dompet, pos mitra, verifikasi)"
-                className="w-full pl-11 pr-20 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#10367D] transition"
+                className="w-full pl-11 pr-20 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#1356d6] transition"
               />
               {searchQuery && (
                 <button
@@ -508,7 +508,7 @@ export default function HelpCenterView({ userRole = 'customer' }) {
                       onClick={() => handleCatClick(cat.id)}
                       className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer shrink-0 ${
                         isSelected
-                          ? 'bg-[#10367D] text-white shadow-xs ring-1 ring-[#10367D]'
+                          ? 'bg-[#1356d6] text-white shadow-xs ring-1 ring-[#1356d6]'
                           : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200/60'
                       }`}
                     >
@@ -553,15 +553,15 @@ export default function HelpCenterView({ userRole = 'customer' }) {
                       className="w-full p-5 sm:p-6 flex items-start sm:items-center justify-between gap-4 text-left cursor-pointer"
                     >
                       <div className="flex items-start sm:items-center gap-3.5">
-                        <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-100 text-[#10367D] flex items-center justify-center shrink-0 mt-0.5 sm:mt-0 shadow-2xs">
-                          <HelpCircle className="w-5 h-5 text-[#10367D]" />
+                        <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-100 text-[#1356d6] flex items-center justify-center shrink-0 mt-0.5 sm:mt-0 shadow-2xs">
+                          <HelpCircle className="w-5 h-5 text-[#1356d6]" />
                         </div>
                         <div>
                           <span className="text-sm sm:text-base font-bold text-neutral-900 leading-snug">
                             {faq.question}
                           </span>
                           <div className="flex items-center gap-2 mt-1.5">
-                            <span className="text-[11px] font-bold text-[#10367D] bg-blue-50 px-2 py-0.5 rounded-md uppercase tracking-wider">
+                            <span className="text-[11px] font-bold text-[#1356d6] bg-blue-50 px-2 py-0.5 rounded-md uppercase tracking-wider">
                               {FAQ_CATEGORIES.find((c) => c.id === faq.category)?.label || 'Informasi'}
                             </span>
                             <span className="text-[11px] text-neutral-400">&bull;</span>
@@ -632,7 +632,7 @@ export default function HelpCenterView({ userRole = 'customer' }) {
                 </p>
                 <button
                   onClick={() => setActiveTab('chat')}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#10367D] hover:bg-blue-900 text-white rounded-xl text-xs font-bold transition shadow-sm cursor-pointer"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#1356d6] hover:bg-blue-900 text-white rounded-xl text-xs font-bold transition shadow-sm cursor-pointer"
                 >
                   <MessageSquare className="w-4 h-4" />
                   <span>Chat dengan Admin Wilayah Sekarang</span>
@@ -645,8 +645,8 @@ export default function HelpCenterView({ userRole = 'customer' }) {
           <div className="bg-white p-5 sm:p-6 rounded-3xl shadow-card border border-neutral-200">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
               <div className="flex items-start sm:items-center gap-3.5">
-                <div className="w-12 h-12 rounded-2xl border border-blue-200 bg-blue-50 flex items-center justify-center text-[#10367D] shrink-0 shadow-xs">
-                  <Headset className="w-6 h-6 text-[#10367D]" />
+                <div className="w-12 h-12 rounded-2xl border border-blue-200 bg-blue-50 flex items-center justify-center text-[#1356d6] shrink-0 shadow-xs">
+                  <Headset className="w-6 h-6 text-[#1356d6]" />
                 </div>
                 <div>
                   <h2 className="text-base font-bold text-neutral-800">
@@ -660,7 +660,7 @@ export default function HelpCenterView({ userRole = 'customer' }) {
 
               <button
                 onClick={() => setActiveTab('chat')}
-                className="px-5 py-3 rounded-xl bg-[#10367D] hover:bg-[#0c2353] text-white text-xs sm:text-sm font-bold transition shadow-card flex items-center justify-center gap-2 cursor-pointer shrink-0"
+                className="px-5 py-3 rounded-xl bg-[#1356d6] hover:bg-[#0b3ba8] text-white text-xs sm:text-sm font-bold transition shadow-card flex items-center justify-center gap-2 cursor-pointer shrink-0"
               >
                 <MessageSquare className="w-4 h-4" />
                 <span>Chat dengan Admin Wilayah</span>
@@ -678,7 +678,7 @@ export default function HelpCenterView({ userRole = 'customer' }) {
           <div className="px-5 sm:px-6 py-4 border-b border-neutral-200 bg-slate-50/80 flex items-center justify-between gap-4">
             <div className="flex items-center gap-3.5">
               <div className="relative">
-                <div className="w-11 h-11 rounded-2xl bg-[#10367D] text-white flex items-center justify-center font-bold text-sm shadow-xs">
+                <div className="w-11 h-11 rounded-2xl bg-[#1356d6] text-white flex items-center justify-center font-bold text-sm shadow-xs">
                   <Building2 className="w-5 h-5 text-cyan-300" />
                 </div>
                 <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full" />
@@ -790,7 +790,7 @@ export default function HelpCenterView({ userRole = 'customer' }) {
                     <div
                       className={`max-w-[85%] sm:max-w-md p-3.5 sm:p-4 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-2xs whitespace-pre-line ${
                         isMe
-                          ? 'bg-[#10367D] text-white rounded-tr-none'
+                          ? 'bg-[#1356d6] text-white rounded-tr-none'
                           : 'bg-white text-neutral-800 border border-neutral-200 rounded-tl-none'
                       }`}
                     >
@@ -817,12 +817,12 @@ export default function HelpCenterView({ userRole = 'customer' }) {
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 placeholder="Tulis pesan atau pertanyaan Anda ke Admin Wilayah..."
-                className="flex-1 px-4 py-3 bg-slate-50 border border-neutral-200 rounded-xl text-xs sm:text-sm text-neutral-800 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-[#10367D] focus:bg-white transition"
+                className="flex-1 px-4 py-3 bg-slate-50 border border-neutral-200 rounded-xl text-xs sm:text-sm text-neutral-800 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-[#1356d6] focus:bg-white transition"
               />
               <button
                 type="submit"
                 disabled={!inputText.trim() || isSending}
-                className="px-5 py-3 bg-[#10367D] hover:bg-blue-900 disabled:opacity-50 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition cursor-pointer shadow-sm shrink-0"
+                className="px-5 py-3 bg-[#1356d6] hover:bg-blue-900 disabled:opacity-50 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition cursor-pointer shadow-sm shrink-0"
               >
                 <Send className="w-4 h-4" />
                 <span className="hidden sm:inline">Kirim</span>

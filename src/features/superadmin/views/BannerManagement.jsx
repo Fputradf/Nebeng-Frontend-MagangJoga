@@ -25,7 +25,7 @@ import { Skeleton } from '../../../components/ui/Skeleton';
 import { useToast } from '../../../context/ToastContext';
 import { useConfirm } from '../../../context/ConfirmContext';
 
-const PRIMARY_COLOR = '#10367D';
+const PRIMARY_COLOR = '#1356d6';
 
 const ROLE_BADGES = {
   customer: {
@@ -261,7 +261,7 @@ export default function BannerManagement() {
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto font-sans">
       {/* ── BANNER GRADIENT ── */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2684ff] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
         <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
         <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0 flex-1">
@@ -279,7 +279,7 @@ export default function BannerManagement() {
 
           <button
             onClick={() => handleOpenModal()}
-            className="px-4 py-2.5 bg-white hover:bg-blue-50 text-[#10367D] rounded-xl text-xs sm:text-sm font-bold shadow-sm transition flex items-center justify-center gap-2 cursor-pointer self-start sm:self-auto shrink-0 whitespace-nowrap"
+            className="px-4 py-2.5 bg-white hover:bg-blue-50 text-[#1356d6] rounded-xl text-xs sm:text-sm font-bold shadow-sm transition flex items-center justify-center gap-2 cursor-pointer self-start sm:self-auto shrink-0 whitespace-nowrap"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
             <span>Tambah Banner Baru</span>
@@ -290,7 +290,7 @@ export default function BannerManagement() {
       {/* Mini Stats Bar */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white p-4 rounded-lg shadow-card border border-slate-200 flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-lg bg-slate-50 text-[#10367D] flex items-center justify-center">
+          <div className="w-10 h-10 rounded-lg bg-slate-50 text-[#1356d6] flex items-center justify-center">
             <Layers className="w-5 h-5" />
           </div>
           <div>
@@ -329,7 +329,7 @@ export default function BannerManagement() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Cari judul banner..."
-            className="w-full pl-9.5 pr-4 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-[#10367D] focus:ring-2 focus:ring-[#10367D]/20 focus:bg-white transition-all"
+            className="w-full pl-9.5 pr-4 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-[#1356d6] focus:ring-2 focus:ring-[#1356d6]/20 focus:bg-white transition-all"
           />
         </div>
 
@@ -342,7 +342,7 @@ export default function BannerManagement() {
           <select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
-            className="px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-700 focus:outline-none focus:border-[#10367D] focus:ring-2 focus:ring-[#10367D]/20 cursor-pointer transition-all"
+            className="px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-700 focus:outline-none focus:border-[#1356d6] focus:ring-2 focus:ring-[#1356d6]/20 cursor-pointer transition-all"
           >
             <option value="ALL">Semua Audiens</option>
             <option value="PUBLIC">Publik / Semua</option>
@@ -356,7 +356,7 @@ export default function BannerManagement() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-700 focus:outline-none focus:border-[#10367D] focus:ring-2 focus:ring-[#10367D]/20 cursor-pointer transition-all"
+            className="px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-700 focus:outline-none focus:border-[#1356d6] focus:ring-2 focus:ring-[#1356d6]/20 cursor-pointer transition-all"
           >
             <option value="ALL">Semua Status</option>
             <option value="ACTIVE">Hanya Aktif</option>
@@ -476,7 +476,7 @@ export default function BannerManagement() {
                 <div className="p-4 space-y-3 flex-1 flex flex-col bg-white">
                   <div>
                     <h3
-                      className="font-bold text-[15px] text-slate-900 line-clamp-1 group-hover:text-[#10367D] transition-colors"
+                      className="font-bold text-[15px] text-slate-900 line-clamp-1 group-hover:text-[#1356d6] transition-colors"
                       title={banner.title}
                     >
                       {banner.title}
@@ -538,7 +538,7 @@ export default function BannerManagement() {
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => handleOpenModal(banner)}
-                      className="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 hover:text-[#10367D] hover:bg-white border border-transparent hover:border-slate-200 transition shadow-none hover:shadow-xs flex items-center gap-1.5 cursor-pointer"
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 hover:text-[#1356d6] hover:bg-white border border-transparent hover:border-slate-200 transition shadow-none hover:shadow-xs flex items-center gap-1.5 cursor-pointer"
                     >
                       <Edit2 className="w-3.5 h-3.5" />
                       <span>Edit</span>
@@ -576,7 +576,7 @@ export default function BannerManagement() {
               required
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-[#10367D] focus:ring-2 focus:ring-[#10367D]/20 focus:bg-white transition-all"
+              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-[#1356d6] focus:ring-2 focus:ring-[#1356d6]/20 focus:bg-white transition-all"
               placeholder="Contoh: Promo Diskon Mudik 2026"
             />
           </div>
@@ -610,7 +610,7 @@ export default function BannerManagement() {
                   type="text"
                   value={formData.imageUrl}
                   onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                  className="flex-1 px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-[#10367D] focus:ring-2 focus:ring-[#10367D]/20 focus:bg-white transition-all font-mono text-xs"
+                  className="flex-1 px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-[#1356d6] focus:ring-2 focus:ring-[#1356d6]/20 focus:bg-white transition-all font-mono text-xs"
                   placeholder="https://domain.com/banner.jpg atau upload..."
                 />
 
@@ -626,7 +626,7 @@ export default function BannerManagement() {
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isUploading}
-                  className="px-4 bg-[#10367D] text-white rounded-lg text-xs font-bold flex items-center gap-1.5 hover:bg-[#0C2C66] transition disabled:opacity-50 cursor-pointer shadow-soft shrink-0"
+                  className="px-4 bg-[#1356d6] text-white rounded-lg text-xs font-bold flex items-center gap-1.5 hover:bg-[#0e44ba] transition disabled:opacity-50 cursor-pointer shadow-soft shrink-0"
                 >
                   {isUploading ? (
                     <span className="animate-spin text-sm">⏳</span>
@@ -652,7 +652,7 @@ export default function BannerManagement() {
               type="text"
               value={formData.linkUrl}
               onChange={(e) => setFormData({ ...formData, linkUrl: e.target.value })}
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-[#10367D] focus:ring-2 focus:ring-[#10367D]/20 focus:bg-white transition-all font-mono text-xs"
+              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-[#1356d6] focus:ring-2 focus:ring-[#1356d6]/20 focus:bg-white transition-all font-mono text-xs"
               placeholder="https://nebeng.id/promo-lebaran"
             />
           </div>
@@ -665,7 +665,7 @@ export default function BannerManagement() {
               <select
                 value={formData.targetRole}
                 onChange={(e) => setFormData({ ...formData, targetRole: e.target.value })}
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-[#10367D] focus:ring-2 focus:ring-[#10367D]/20 cursor-pointer transition-all"
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-[#1356d6] focus:ring-2 focus:ring-[#1356d6]/20 cursor-pointer transition-all"
               >
                 <option value="">Semua (Publik)</option>
                 <option value="customer">Customer (Penumpang)</option>
@@ -682,7 +682,7 @@ export default function BannerManagement() {
                   type="checkbox"
                   checked={formData.isActive}
                   onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                  className="w-4 h-4 text-[#10367D] rounded focus:ring-0 cursor-pointer"
+                  className="w-4 h-4 text-[#1356d6] rounded focus:ring-0 cursor-pointer"
                 />
                 <span className="text-xs font-bold text-slate-700">Publikasikan Langsung</span>
               </label>
@@ -701,7 +701,7 @@ export default function BannerManagement() {
             <button
               type="submit"
               disabled={isUploading || isSubmitting}
-              className="px-5 py-2 bg-[#10367D] text-white rounded-lg text-xs font-bold hover:bg-[#0C2C66] transition disabled:opacity-50 flex items-center gap-2 cursor-pointer shadow-soft"
+              className="px-5 py-2 bg-[#1356d6] text-white rounded-lg text-xs font-bold hover:bg-[#0e44ba] transition disabled:opacity-50 flex items-center gap-2 cursor-pointer shadow-soft"
             >
               {isSubmitting && <span className="animate-spin">⏳</span>}
               <span>{editingBanner ? 'Simpan Perubahan' : 'Buat Banner'}</span>

@@ -27,7 +27,7 @@ export default function TermsOfServiceModal({ isOpen, onClose, onAccept }) {
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-5 py-4 bg-gradient-to-r from-[#0c2353] via-[#10367D] to-[#18458f] text-white flex items-center justify-between gap-4 shrink-0">
+        <div className="px-5 py-4 bg-gradient-to-r from-[#0b3ba8] via-[#1356d6] to-[#2684ff] text-white flex items-center justify-between gap-4 shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-blue-200">
               <FileText className="w-5 h-5" />

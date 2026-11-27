@@ -64,7 +64,7 @@ function inferRoleFromPath(pathname) {
   return null;
 }
 
-export default function AppBottomNav({ role: propRole, onOpenSidebar }) {
+export default function AppBottomNav({ role: propRole, onOpenSidebar, mobileFrame = false }) {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -79,7 +79,11 @@ export default function AppBottomNav({ role: propRole, onOpenSidebar }) {
   return (
     <nav
       aria-label="Navigasi bawah mobile"
-      className="lg:hidden fixed bottom-0 inset-x-0 z-30 border-t border-slate-200/90 bg-white/95 backdrop-blur-md shadow-[0_-4px_24px_rgba(16,54,125,0.08)] print:hidden select-none"
+      className={`${
+        mobileFrame
+          ? 'fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px]'
+          : 'lg:hidden fixed bottom-0 inset-x-0'
+      } z-30 border-t border-slate-200/90 bg-white/95 backdrop-blur-md shadow-[0_-4px_24px_rgba(16,54,125,0.08)] print:hidden select-none`}
       style={{
         paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom, 0px))',
       }}

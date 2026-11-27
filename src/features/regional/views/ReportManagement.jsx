@@ -171,7 +171,7 @@ export default function ReportManagement() {
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
       {/* ── BANNER GRADIENT ── */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2684ff] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
         <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
         <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0 flex-1">
@@ -197,7 +197,7 @@ export default function ReportManagement() {
               onClick={loadReports}
               disabled={isLoading}
               title="Segarkan data laporan"
-              className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-blue-50 text-[#10367D] rounded-xl text-xs font-bold transition cursor-pointer shadow-sm disabled:opacity-50 whitespace-nowrap"
+              className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-blue-50 text-[#1356d6] rounded-xl text-xs font-bold transition cursor-pointer shadow-sm disabled:opacity-50 whitespace-nowrap"
             >
               <RotateCcw size={14} className={isLoading ? 'animate-spin' : ''} />
               <span>Segarkan Data</span>
@@ -260,7 +260,7 @@ export default function ReportManagement() {
               placeholder="Cari nomor tiket, nama pelapor, atau pihak terlapor..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xl text-xs font-medium text-neutral-800 placeholder-neutral-400 focus:outline-hidden focus:ring-2 focus:ring-[#10367D]/20 focus:border-[#10367D] transition"
+              className="w-full pl-9 pr-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xl text-xs font-medium text-neutral-800 placeholder-neutral-400 focus:outline-hidden focus:ring-2 focus:ring-[#1356d6]/20 focus:border-[#1356d6] transition"
             />
           </div>
 
@@ -269,7 +269,7 @@ export default function ReportManagement() {
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               aria-label="Filter berdasarkan status tiket"
-              className="bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-xs font-semibold text-neutral-700 focus:outline-hidden focus:ring-2 focus:ring-[#10367D]/20 cursor-pointer"
+              className="bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-xs font-semibold text-neutral-700 focus:outline-hidden focus:ring-2 focus:ring-[#1356d6]/20 cursor-pointer"
             >
               <option value="">Semua Status</option>
               <option value="PENDING">Menunggu Investigasi</option>
@@ -281,7 +281,7 @@ export default function ReportManagement() {
 
             <button
               type="submit"
-              className="px-4 py-2 bg-[#10367D] hover:bg-[#0c2b66] text-white rounded-xl text-xs font-bold transition cursor-pointer shrink-0 shadow-xs"
+              className="px-4 py-2 bg-[#1356d6] hover:bg-[#0c2b66] text-white rounded-xl text-xs font-bold transition cursor-pointer shrink-0 shadow-xs"
             >
               Cari
             </button>
@@ -389,7 +389,7 @@ export default function ReportManagement() {
                         <button
                           type="button"
                           onClick={() => openDetail(item)}
-                          className="px-3 py-1.5 bg-[#10367D]/10 hover:bg-[#10367D]/20 text-[#10367D] rounded-xl text-xs font-bold transition cursor-pointer inline-flex items-center gap-1.5 focus:outline-hidden focus:ring-2 focus:ring-[#10367D]/20"
+                          className="px-3 py-1.5 bg-[#1356d6]/10 hover:bg-[#1356d6]/20 text-[#1356d6] rounded-xl text-xs font-bold transition cursor-pointer inline-flex items-center gap-1.5 focus:outline-hidden focus:ring-2 focus:ring-[#1356d6]/20"
                         >
                           <Eye className="w-3.5 h-3.5" />
                           <span>Investigasi</span>
@@ -452,7 +452,7 @@ export default function ReportManagement() {
             {/* Konteks Operasional */}
             {(selectedReport.trip || selectedReport.order || selectedReport.pickupPoint) && (
               <div className="p-3 bg-blue-50/50 border border-blue-100 rounded-xl text-xs space-y-1">
-                <span className="font-bold text-[#10367D] block mb-1">
+                <span className="font-bold text-[#1356d6] block mb-1">
                   Konteks Operasional Terkait:
                 </span>
                 {selectedReport.trip && (
@@ -497,7 +497,7 @@ export default function ReportManagement() {
                       <div
                         key={idx}
                         onClick={() => setZoomedImage(fullUrl)}
-                        className="cursor-pointer group relative w-20 h-20 rounded-xl overflow-hidden border border-neutral-200 bg-neutral-100 hover:ring-2 hover:ring-[#10367D] transition shadow-xs"
+                        className="cursor-pointer group relative w-20 h-20 rounded-xl overflow-hidden border border-neutral-200 bg-neutral-100 hover:ring-2 hover:ring-[#1356d6] transition shadow-xs"
                       >
                         <img
                           src={fullUrl}
@@ -517,7 +517,7 @@ export default function ReportManagement() {
             {/* Formulir Keputusan Investigasi */}
             <form onSubmit={handleResolveSubmit} className="pt-3 border-t border-neutral-200 space-y-3.5">
               <div className="flex items-center gap-1.5 text-neutral-900 font-bold text-[13px]">
-                <UserCheck className="w-4 h-4 text-[#10367D]" />
+                <UserCheck className="w-4 h-4 text-[#1356d6]" />
                 <span>Keputusan & Tindak Lanjut Investigasi</span>
               </div>
 
@@ -529,7 +529,7 @@ export default function ReportManagement() {
                   value={resolveStatus}
                   onChange={(e) => setResolveStatus(e.target.value)}
                   disabled={isResolving}
-                  className="w-full min-h-[40px] px-3.5 py-2 border border-neutral-300 rounded-xl text-xs text-neutral-900 bg-white focus:outline-hidden focus:ring-2 focus:ring-[#10367D]/20 cursor-pointer"
+                  className="w-full min-h-[40px] px-3.5 py-2 border border-neutral-300 rounded-xl text-xs text-neutral-900 bg-white focus:outline-hidden focus:ring-2 focus:ring-[#1356d6]/20 cursor-pointer"
                 >
                   <option value="INVESTIGATING">Tetap Dalam Investigasi (Kumpulkan Bukti Lanjutan)</option>
                   <option value="RESOLVED_VALID">Terbukti Valid (Terapkan Tindakan & Sanksi)</option>
@@ -548,7 +548,7 @@ export default function ReportManagement() {
                   onChange={(e) => setActionNotes(e.target.value)}
                   disabled={isResolving}
                   placeholder="Tuliskan pertimbangan, hasil klarifikasi para pihak, atau solusi yang diberikan..."
-                  className="w-full p-3 border border-neutral-300 rounded-xl text-xs text-neutral-900 focus:outline-hidden focus:ring-2 focus:ring-[#10367D]/20 resize-none leading-relaxed"
+                  className="w-full p-3 border border-neutral-300 rounded-xl text-xs text-neutral-900 focus:outline-hidden focus:ring-2 focus:ring-[#1356d6]/20 resize-none leading-relaxed"
                 />
               </div>
 

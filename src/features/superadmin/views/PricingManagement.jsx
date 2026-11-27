@@ -1,22 +1,30 @@
 import { useState, useEffect } from 'react';
-import { 
-  Bike, 
-  Car, 
-  Percent, 
-  Save, 
-  Scale, 
+import {
+  Bike,
+  Car,
+  Percent,
+  Save,
+  Scale,
   Package,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  QrCode,
 } from 'lucide-react';
-import { updateCompletePricingPolicy, getPricingPolicy } from '../../../services/pricingService';
+import {
+  updateCompletePricingPolicy,
+  getPricingPolicy,
+  getPosCommissionSettings,
+  updatePosCommissionSettings,
+} from '../../../services/pricingService';
 
 export default function PricingPolicyManagement() {
   const [transportPricing, setTransportPricing] = useState({
     motorPerKm: 2500,
     carPerKm: 5000,
     motorBaseFare: 5000,
-    carBaseFare: 10000
+    carBaseFare: 10000,
+    motorBaseDistanceKm: 5,
+    carBaseDistanceKm: 5
   });
 
   const [platformFee, setPlatformFee] = useState({
@@ -24,6 +32,12 @@ export default function PricingPolicyManagement() {
     parcelFeePercent: 12,
     rideCustomerFee: 0,
     parcelCustomerFee: 0
+  });
+
+  const [posCommission, setPosCommission] = useState({
+    enabled: false,
+    flatRate: 0,
+    perCustomerHead: true,
   });
 
   const [parcelMatrix, setParcelMatrix] = useState([
@@ -41,13 +55,28 @@ export default function PricingPolicyManagement() {
 
   const MIN_FARE = 0;
   const MAX_FARE = 1000000;
+  const MAX_BASE_DISTANCE_KM = 100;
   const MIN_FEE_PERCENT = 0;
   const MAX_FEE_PERCENT = 50;
 
   useEffect(() => {
     async function fetchPricingData() {
       try {
-        const data = await getPricingPolicy();
+        const [data, posCommissionData] = await Promise.all([
+          getPricingPolicy(),
+          getPosCommissionSettings().catch(() => null),
+        ]);
+
+        if (posCommissionData) {
+          setPosCommission({
+            enabled: Boolean(posCommissionData.enabled),
+            flatRate: Number(posCommissionData.flatRate) || 0,
+            perCustomerHead:
+              posCommissionData.perCustomerHead === undefined
+                ? true
+                : Boolean(posCommissionData.perCustomerHead),
+          });
+        }
 
         if (Array.isArray(data) && data.length > 0) {
           const motorData = data.find(item => item.serviceType === 'motor');
@@ -61,6 +90,9 @@ export default function PricingPolicyManagement() {
               ...prev,
               motorPerKm: Number(motorData.farePerKm) || 2500,
               motorBaseFare: Number(motorData.baseFare) || 5000,
+              motorBaseDistanceKm: motorData.baseDistanceKm !== undefined && motorData.baseDistanceKm !== null
+                ? Number(motorData.baseDistanceKm)
+                : 0,
             }));
 
             setPlatformFee(prev => ({
@@ -75,6 +107,9 @@ export default function PricingPolicyManagement() {
               ...prev,
               carPerKm: Number(carData.farePerKm) || 5000,
               carBaseFare: Number(carData.baseFare) || 10000,
+              carBaseDistanceKm: carData.baseDistanceKm !== undefined && carData.baseDistanceKm !== null
+                ? Number(carData.baseDistanceKm)
+                : 0,
             }));
           }
 
@@ -137,9 +172,10 @@ export default function PricingPolicyManagement() {
 
     if (Number.isNaN(num)) return;
 
+    const isDistanceField = field === 'motorBaseDistanceKm' || field === 'carBaseDistanceKm';
     setTransportPricing(prev => ({
       ...prev,
-      [field]: clamp(num, MIN_FARE, MAX_FARE)
+      [field]: clamp(num, MIN_FARE, isDistanceField ? MAX_BASE_DISTANCE_KM : MAX_FARE)
     }));
   };
 
@@ -239,10 +275,18 @@ export default function PricingPolicyManagement() {
         Number(value) < MIN_FARE
       ) {
         errors.push(
-          `Biaya layanan customer "${key}" tidak valid.`
+          `Biaya aplikasi customer "${key}" tidak valid.`
         );
       }
     });
+
+    if (
+      posCommission.flatRate === '' ||
+      Number.isNaN(Number(posCommission.flatRate)) ||
+      Number(posCommission.flatRate) < 0
+    ) {
+      errors.push('Tarif flat komisi scan Mitra Pos tidak valid.');
+    }
 
     if (errors.length > 0) {
       setFormErrors(errors);
@@ -267,6 +311,12 @@ export default function PricingPolicyManagement() {
         carBaseFare: Number(
           transportPricing.carBaseFare
         ),
+        motorBaseDistanceKm: Number(
+          transportPricing.motorBaseDistanceKm || 0
+        ),
+        carBaseDistanceKm: Number(
+          transportPricing.carBaseDistanceKm || 0
+        ),
         rideFeePercent: Number(
           platformFee.rideFeePercent
         ),
@@ -286,7 +336,14 @@ export default function PricingPolicyManagement() {
         }))
       };
 
-      await updateCompletePricingPolicy(payload);
+      await Promise.all([
+        updateCompletePricingPolicy(payload),
+        updatePosCommissionSettings({
+          enabled: Boolean(posCommission.enabled),
+          flatRate: Number(posCommission.flatRate || 0),
+          perCustomerHead: Boolean(posCommission.perCustomerHead),
+        }),
+      ]);
 
       setNotification(true);
 
@@ -313,7 +370,7 @@ export default function PricingPolicyManagement() {
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
 
       {/* ── BANNER GRADIENT ── */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2684ff] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
         <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
         <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0 flex-1">
@@ -332,7 +389,7 @@ export default function PricingPolicyManagement() {
             type="button"
             onClick={handleSaveAll}
             disabled={isSubmitting}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-blue-50 text-[#10367D] rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer shadow-sm shrink-0 whitespace-nowrap self-start sm:self-auto disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-blue-50 text-[#1356d6] rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer shadow-sm shrink-0 whitespace-nowrap self-start sm:self-auto disabled:opacity-50"
           >
             <Save size={16} />
             <span>
@@ -384,7 +441,7 @@ export default function PricingPolicyManagement() {
       >
         <div className="bg-white p-5 rounded-2xl shadow-sm border border-neutral-200 space-y-4">
           <div className="flex items-center gap-2.5 pb-3 border-b border-neutral-100">
-            <div className="p-2 bg-[#10367D]/10 text-[#10367D] rounded-xl">
+            <div className="p-2 bg-[#1356d6]/10 text-[#1356d6] rounded-xl">
               <Car size={16} />
             </div>
 
@@ -401,7 +458,7 @@ export default function PricingPolicyManagement() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-200/80 space-y-3">
-              <div className="flex items-center gap-1.5 text-[#10367D] font-bold text-[13px]">
+              <div className="flex items-center gap-1.5 text-[#1356d6] font-bold text-[13px]">
                 <Bike size={14} />
                 <span>SATURUTE MOTOR</span>
               </div>
@@ -423,7 +480,26 @@ export default function PricingPolicyManagement() {
 
                 <div>
                   <label className="block text-[11px] font-bold uppercase text-neutral-400 mb-1">
-                    Tarif Per KM (Rp)
+                    Batas Jarak Tarif Flat (KM)
+                  </label>
+
+                  <input
+                    type="number"
+                    min={0}
+                    max={MAX_BASE_DISTANCE_KM}
+                    step="0.5"
+                    value={transportPricing.motorBaseDistanceKm}
+                    onChange={handleFareChange('motorBaseDistanceKm')}
+                    className="w-full bg-white border border-neutral-200 rounded-xl px-3 py-1.5 text-[13px] font-bold text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#74B4D9]"
+                  />
+                  <p className="text-[11px] text-neutral-400 mt-1">
+                    Jarak 0 – {transportPricing.motorBaseDistanceKm || 0} km dikenakan tarif dasar flat; di atasnya ditambah tarif per KM.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold uppercase text-neutral-400 mb-1">
+                    Tarif Per KM Setelah Batas Jarak (Rp)
                   </label>
 
                   <input
@@ -438,7 +514,7 @@ export default function PricingPolicyManagement() {
             </div>
 
             <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-200/80 space-y-3">
-              <div className="flex items-center gap-1.5 text-[#10367D] font-bold text-[13px]">
+              <div className="flex items-center gap-1.5 text-[#1356d6] font-bold text-[13px]">
                 <Car size={14} />
                 <span>SATURUTE MOBIL</span>
               </div>
@@ -460,7 +536,26 @@ export default function PricingPolicyManagement() {
 
                 <div>
                   <label className="block text-[11px] font-bold uppercase text-neutral-400 mb-1">
-                    Tarif Per KM (Rp)
+                    Batas Jarak Tarif Flat (KM)
+                  </label>
+
+                  <input
+                    type="number"
+                    min={0}
+                    max={MAX_BASE_DISTANCE_KM}
+                    step="0.5"
+                    value={transportPricing.carBaseDistanceKm}
+                    onChange={handleFareChange('carBaseDistanceKm')}
+                    className="w-full bg-white border border-neutral-200 rounded-xl px-3 py-1.5 text-[13px] font-bold text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#74B4D9]"
+                  />
+                  <p className="text-[11px] text-neutral-400 mt-1">
+                    Jarak 0 – {transportPricing.carBaseDistanceKm || 0} km dikenakan tarif dasar flat; di atasnya ditambah tarif per KM.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold uppercase text-neutral-400 mb-1">
+                    Tarif Per KM Setelah Batas Jarak (Rp)
                   </label>
 
                   <input
@@ -478,7 +573,7 @@ export default function PricingPolicyManagement() {
 
         <div className="bg-white p-5 rounded-2xl shadow-sm border border-neutral-200 space-y-4">
           <div className="flex items-center gap-2.5 pb-3 border-b border-neutral-100">
-            <div className="p-2 bg-[#10367D]/10 text-[#10367D] rounded-xl">
+            <div className="p-2 bg-[#1356d6]/10 text-[#1356d6] rounded-xl">
               <Package size={16} />
             </div>
 
@@ -508,7 +603,7 @@ export default function PricingPolicyManagement() {
                 {parcelMatrix.map((item, index) => (
                   <tr key={index} className="hover:bg-gray-50/50">
                     <td className="py-2.5 px-4">
-                      <span className="px-2 py-0.5 bg-[#10367D]/10 text-[#10367D] rounded-md font-bold font-mono">
+                      <span className="px-2 py-0.5 bg-[#1356d6]/10 text-[#1356d6] rounded-md font-bold font-mono">
                         {item.size}
                       </span>
                     </td>
@@ -553,17 +648,17 @@ export default function PricingPolicyManagement() {
 
         <div className="bg-white p-5 rounded-2xl shadow-sm border border-neutral-200 space-y-4">
           <div className="flex items-center gap-2.5 pb-3 border-b border-neutral-100">
-            <div className="p-2 bg-[#10367D]/10 text-[#10367D] rounded-xl">
+            <div className="p-2 bg-[#1356d6]/10 text-[#1356d6] rounded-xl">
               <Percent size={16} />
             </div>
 
             <div>
               <h2 className="text-[17px] font-bold text-neutral-800">
-                3. Persentase Komisi Platform
+                3. Biaya Admin Transportasi & Biaya Admin Paket
               </h2>
 
               <p className="text-[12px] text-neutral-400">
-                Potongan komisi aplikasi dari setiap transaksi.
+                Potongan biaya admin platform dari setiap transaksi (ditampilkan sebagai Biaya Aplikasi di sisi Customer &amp; Mitra Driver).
               </p>
             </div>
           </div>
@@ -571,7 +666,7 @@ export default function PricingPolicyManagement() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-200/80 space-y-2">
               <label className="block text-[12px] font-bold uppercase text-neutral-500">
-                Komisi Transportasi (%)
+                Biaya Admin Transportasi (%)
               </label>
 
               <input
@@ -585,7 +680,7 @@ export default function PricingPolicyManagement() {
 
             <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-200/80 space-y-2">
               <label className="block text-[12px] font-bold uppercase text-neutral-500">
-                Komisi Pengiriman Paket (%)
+                Biaya Admin Paket (%)
               </label>
 
               <input
@@ -599,7 +694,7 @@ export default function PricingPolicyManagement() {
 
             <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-200/80 space-y-2">
               <label className="block text-[12px] font-bold uppercase text-neutral-500">
-                Biaya Layanan Customer - Transportasi (Rp)
+                Biaya Aplikasi Customer - Transportasi (Rp)
               </label>
 
               <input
@@ -613,7 +708,7 @@ export default function PricingPolicyManagement() {
 
             <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-200/80 space-y-2">
               <label className="block text-[12px] font-bold uppercase text-neutral-500">
-                Biaya Layanan Customer - Paket (Rp)
+                Biaya Aplikasi Customer - Paket (Rp)
               </label>
 
               <input
@@ -623,6 +718,99 @@ export default function PricingPolicyManagement() {
                 onChange={handleFeeChange('parcelCustomerFee')}
                 className="w-full bg-white border border-neutral-200 rounded-xl px-3 py-1.5 text-[13px] font-bold text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#74B4D9]"
               />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-5 rounded-2xl shadow-sm border border-neutral-200 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-neutral-100">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 bg-[#1356d6]/10 text-[#1356d6] rounded-xl">
+                <QrCode size={16} />
+              </div>
+              <div>
+                <h2 className="text-[17px] font-bold text-neutral-800">
+                  4. Komisi Scan Mitra Pos (Ditanggung Platform)
+                </h2>
+                <p className="text-[12px] text-neutral-400">
+                  Komisi flat untuk Mitra Pos setiap kali melakukan scan tiket customer (tidak memotong pendapatan Mitra Driver maupun tagihan Customer).
+                </p>
+              </div>
+            </div>
+
+            <label className="inline-flex items-center gap-2.5 cursor-pointer select-none self-start sm:self-auto">
+              <span className={`text-xs font-bold ${posCommission.enabled ? 'text-emerald-700' : 'text-neutral-500'}`}>
+                {posCommission.enabled ? 'AKTIF (ON)' : 'NONAKTIF (OFF)'}
+              </span>
+              <input
+                type="checkbox"
+                checked={posCommission.enabled}
+                onChange={(e) =>
+                  setPosCommission((prev) => ({
+                    ...prev,
+                    enabled: e.target.checked,
+                  }))
+                }
+                className="sr-only peer"
+              />
+              <div className="relative w-11 h-6 bg-neutral-200 rounded-full peer peer-checked:bg-emerald-600 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5" />
+            </label>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-200/80 space-y-2">
+              <label className="block text-[12px] font-bold uppercase text-neutral-500">
+                Tarif Flat Komisi Scan (Rp)
+              </label>
+              <input
+                type="number"
+                min={0}
+                disabled={!posCommission.enabled}
+                value={posCommission.flatRate}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  if (raw === '') {
+                    setPosCommission((prev) => ({ ...prev, flatRate: '' }));
+                    return;
+                  }
+                  const num = Number(raw);
+                  if (!Number.isNaN(num)) {
+                    setPosCommission((prev) => ({
+                      ...prev,
+                      flatRate: clamp(num, MIN_FARE, MAX_FARE),
+                    }));
+                  }
+                }}
+                className="w-full bg-white border border-neutral-200 rounded-xl px-3 py-1.5 text-[13px] font-bold text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#74B4D9] disabled:opacity-50"
+              />
+            </div>
+
+            <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-200/80 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[12px] font-bold uppercase text-neutral-500">
+                  Hitung Per Kepala Customer
+                </p>
+                <p className="text-[11px] text-neutral-400 mt-0.5">
+                  {posCommission.perCustomerHead
+                    ? 'Aktif: Tarif flat dikalikan jumlah penumpang per order.'
+                    : 'Nonaktif: Tarif flat berlaku 1x per order yang discan.'}
+                </p>
+              </div>
+              <label className="inline-flex items-center cursor-pointer select-none shrink-0">
+                <input
+                  type="checkbox"
+                  disabled={!posCommission.enabled}
+                  checked={posCommission.perCustomerHead}
+                  onChange={(e) =>
+                    setPosCommission((prev) => ({
+                      ...prev,
+                      perCustomerHead: e.target.checked,
+                    }))
+                  }
+                  className="sr-only peer"
+                />
+                <div className="relative w-11 h-6 bg-neutral-200 rounded-full peer peer-checked:bg-[#1356d6] peer-disabled:opacity-50 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5" />
+              </label>
             </div>
           </div>
         </div>

@@ -251,7 +251,7 @@ export default function SocialLinksManagement() {
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto font-sans">
       {/* ── HEADER BANNER ── */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2684ff] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
         <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
         <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0 flex-1">
@@ -277,7 +277,7 @@ export default function SocialLinksManagement() {
             {/* Tambah Button */}
             <button
               onClick={handleOpenCreateModal}
-              className="px-4 py-2 bg-white hover:bg-blue-50 text-[#10367D] rounded-xl text-xs sm:text-sm font-bold shadow-sm transition flex items-center justify-center gap-2 cursor-pointer shrink-0 active:scale-95 whitespace-nowrap"
+              className="px-4 py-2 bg-white hover:bg-blue-50 text-[#1356d6] rounded-xl text-xs sm:text-sm font-bold shadow-sm transition flex items-center justify-center gap-2 cursor-pointer shrink-0 active:scale-95 whitespace-nowrap"
             >
               <Plus className="w-4 h-4 stroke-[2.5]" />
               <span>Tambah Link Sosmed</span>
@@ -471,7 +471,7 @@ export default function SocialLinksManagement() {
                 }
                 className={`py-2 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
                   formData.iconType === 'preset'
-                    ? 'bg-white text-[#10367D] shadow-xs'
+                    ? 'bg-white text-[#1356d6] shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
@@ -489,7 +489,7 @@ export default function SocialLinksManagement() {
                 }
                 className={`py-2 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
                   formData.iconType === 'custom'
-                    ? 'bg-white text-[#10367D] shadow-xs'
+                    ? 'bg-white text-[#1356d6] shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
@@ -521,7 +521,7 @@ export default function SocialLinksManagement() {
                       }
                       className={`p-2.5 rounded-xl border flex flex-col items-center gap-1.5 transition text-xs font-medium cursor-pointer ${
                         isSelected
-                          ? 'border-[#10367D] bg-blue-50/50 text-[#10367D] shadow-xs ring-2 ring-[#10367D]/20 font-bold'
+                          ? 'border-[#1356d6] bg-blue-50/50 text-[#1356d6] shadow-xs ring-2 ring-[#1356d6]/20 font-bold'
                           : 'border-slate-200 bg-white hover:border-slate-300 text-slate-700 hover:bg-slate-50'
                       }`}
                     >
@@ -597,10 +597,10 @@ export default function SocialLinksManagement() {
                     className={`border-2 border-dashed rounded-xl p-5 text-center transition cursor-pointer ${
                       isUploadingLogo
                         ? 'border-blue-300 bg-blue-50/50 cursor-wait'
-                        : 'border-slate-300 hover:border-[#10367D] hover:bg-slate-50/70'
+                        : 'border-slate-300 hover:border-[#1356d6] hover:bg-slate-50/70'
                     }`}
                   >
-                    <div className="w-10 h-10 mx-auto rounded-full bg-blue-50 text-[#10367D] flex items-center justify-center mb-2">
+                    <div className="w-10 h-10 mx-auto rounded-full bg-blue-50 text-[#1356d6] flex items-center justify-center mb-2">
                       {isUploadingLogo ? (
                         <Loader2 className="w-5 h-5 animate-spin" />
                       ) : (
@@ -624,7 +624,7 @@ export default function SocialLinksManagement() {
             <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 shrink-0">
               Preview Tombol Login:
             </div>
-            <div className="w-8 h-8 rounded-lg bg-[#10367D] text-white border border-white/20 flex items-center justify-center p-1.5 shadow-xs shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-[#1356d6] text-white border border-white/20 flex items-center justify-center p-1.5 shadow-xs shrink-0">
               <SocialIcon
                 platform={formData.platform}
                 iconType={formData.iconType}
@@ -652,7 +652,7 @@ export default function SocialLinksManagement() {
               required
               value={formData.platform}
               onChange={(e) => setFormData({ ...formData, platform: e.target.value })}
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-[#10367D] focus:ring-2 focus:ring-[#10367D]/20 focus:bg-white transition-all"
+              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-[#1356d6] focus:ring-2 focus:ring-[#1356d6]/20 focus:bg-white transition-all"
               placeholder="Contoh: Instagram, Threads, Discord, dll"
             />
           </div>
@@ -667,7 +667,7 @@ export default function SocialLinksManagement() {
               required
               value={formData.url}
               onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-[#10367D] focus:ring-2 focus:ring-[#10367D]/20 focus:bg-white transition-all"
+              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-[#1356d6] focus:ring-2 focus:ring-[#1356d6]/20 focus:bg-white transition-all"
               placeholder="https://instagram.com/nebeng.id"
             />
           </div>
@@ -700,7 +700,7 @@ export default function SocialLinksManagement() {
             <button
               type="submit"
               disabled={isSubmitting || isUploadingLogo}
-              className="px-4 py-2 rounded-lg bg-[#10367D] text-white text-xs font-bold hover:bg-[#0c2b64] active:scale-95 transition disabled:opacity-50 cursor-pointer flex items-center gap-2"
+              className="px-4 py-2 rounded-lg bg-[#1356d6] text-white text-xs font-bold hover:bg-[#0c2b64] active:scale-95 transition disabled:opacity-50 cursor-pointer flex items-center gap-2"
             >
               {isSubmitting ? (
                 <>

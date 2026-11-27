@@ -134,7 +134,7 @@ export default function GuestHelpModal({ isOpen, onClose, onNavigateLogin, onNav
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200 font-sans">
       <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] shadow-2xl border border-slate-200 flex flex-col overflow-hidden">
         {/* Modal Header */}
-        <div className="p-5 sm:p-6 bg-gradient-to-r from-[#0c2353] via-[#10367D] to-[#18458f] text-white flex items-center justify-between gap-4 shrink-0">
+        <div className="p-5 sm:p-6 bg-gradient-to-r from-[#0b3ba8] via-[#1356d6] to-[#2684ff] text-white flex items-center justify-between gap-4 shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-cyan-300">
               <HelpCircle className="w-5 h-5" />
@@ -175,7 +175,7 @@ export default function GuestHelpModal({ isOpen, onClose, onNavigateLogin, onNav
               onClick={() => setIsWrapMode(!isWrapMode)}
               className={`p-2.5 rounded-xl border transition cursor-pointer text-xs font-semibold flex items-center gap-1.5 shrink-0 ${
                 isWrapMode
-                  ? 'bg-blue-50 border-blue-300 text-[#10367D]'
+                  ? 'bg-blue-50 border-blue-300 text-[#1356d6]'
                   : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'
               }`}
               title={isWrapMode ? 'Beralih ke mode geser horizontal' : 'Tampilkan semua kategori sekaligus'}
@@ -222,7 +222,7 @@ export default function GuestHelpModal({ isOpen, onClose, onNavigateLogin, onNav
                   onClick={() => handleCategorySelect(cat.id)}
                   className={`px-3.5 py-1.5 rounded-xl font-bold whitespace-nowrap transition cursor-pointer shrink-0 ${
                     selectedCategory === cat.id
-                      ? 'bg-[#10367D] text-white shadow-sm'
+                      ? 'bg-[#1356d6] text-white shadow-sm'
                       : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
                   }`}
                 >
@@ -251,7 +251,7 @@ export default function GuestHelpModal({ isOpen, onClose, onNavigateLogin, onNav
         <div className="p-4 sm:p-6 overflow-y-auto space-y-3 flex-1 bg-slate-50/30">
           {showChatNotice ? (
             <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5 text-center space-y-4 animate-in fade-in duration-200">
-              <div className="w-12 h-12 bg-blue-100 text-[#10367D] rounded-2xl mx-auto flex items-center justify-center shadow-xs">
+              <div className="w-12 h-12 bg-blue-100 text-[#1356d6] rounded-2xl mx-auto flex items-center justify-center shadow-xs">
                 <MessageSquare className="w-6 h-6" />
               </div>
               <div className="space-y-1.5 max-w-md mx-auto">
@@ -269,7 +269,7 @@ export default function GuestHelpModal({ isOpen, onClose, onNavigateLogin, onNav
                     onClose();
                     onNavigateLogin && onNavigateLogin();
                   }}
-                  className="w-full sm:w-auto px-5 py-2.5 bg-[#10367D] hover:bg-blue-900 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full sm:w-auto px-5 py-2.5 bg-[#1356d6] hover:bg-blue-900 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <LogIn className="w-4 h-4" />
                   <span>Masuk Akun Sekarang</span>
@@ -342,7 +342,7 @@ export default function GuestHelpModal({ isOpen, onClose, onNavigateLogin, onNav
           </span>
           <button
             onClick={() => setShowChatNotice(true)}
-            className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#10367D] hover:bg-blue-900 text-white text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+            className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#1356d6] hover:bg-blue-900 text-white text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-xs"
           >
             <MessageSquare className="w-4 h-4" />
             <span>Chat dengan Admin Wilayah</span>

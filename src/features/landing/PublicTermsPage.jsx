@@ -43,7 +43,7 @@ export default function PublicTermsPage() {
       {/* Main Card */}
       <main className="flex-1 mx-auto w-full max-w-3xl px-4 sm:px-6 py-8 sm:py-12">
         <div className="bg-white rounded-2xl shadow-card border border-slate-200 overflow-hidden">
-          <div className="px-6 py-6 bg-gradient-to-r from-[#0c2353] via-[#10367D] to-[#18458f] text-white flex items-center gap-4">
+          <div className="px-6 py-6 bg-gradient-to-r from-[#0b3ba8] via-[#1356d6] to-[#2684ff] text-white flex items-center gap-4">
             <div className="w-11 h-11 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-blue-200 shrink-0">
               <FileText className="w-5 h-5" />
             </div>

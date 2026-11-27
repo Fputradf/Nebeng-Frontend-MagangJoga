@@ -25,7 +25,7 @@ const ROLE_BASE_PATHS = {
   customer: '/customer',
 };
 
-export default function NotificationBell({ basePath }) {
+export default function NotificationBell({ basePath, compact = false }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { role, user } = useAuth();
@@ -309,9 +309,11 @@ export default function NotificationBell({ basePath }) {
       <button
         onClick={() => setIsOpen(!isOpen)}
         aria-label={`Notifikasi ${unreadCount > 0 ? `(${unreadCount} belum dibaca)` : ''}`}
-        className="relative grid h-12 w-12 cursor-pointer place-items-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-soft transition hover:border-brand-500/30 hover:text-brand-500"
+        className={`relative grid cursor-pointer place-items-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-soft transition hover:border-brand-500/30 hover:text-brand-500 ${
+          compact ? 'h-9 w-9' : 'h-12 w-12'
+        }`}
       >
-        <Bell className="w-5 h-5" />
+        <Bell className={compact ? 'w-4 h-4' : 'w-5 h-5'} />
         {unreadCount > 0 && (
           <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center bg-red-500 text-white text-[11px] font-bold rounded-full">
             {unreadCount > 9 ? '9+' : unreadCount}
@@ -321,7 +323,13 @@ export default function NotificationBell({ basePath }) {
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden z-50">
+        <div
+          className={`absolute right-0 mt-2 bg-white shadow-xl border border-slate-200 overflow-hidden z-50 ${
+            compact
+              ? 'w-[min(calc(100vw-2rem),360px)] rounded-2xl'
+              : 'w-80 max-w-[calc(100vw-2rem)] rounded-xl'
+          }`}
+        >
           {/* Header */}
           <div className="p-4 border-b border-gray-100">
             <div className="flex items-center justify-between mb-3">

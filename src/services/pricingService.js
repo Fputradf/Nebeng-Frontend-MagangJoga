@@ -29,3 +29,15 @@ export async function updateCompletePricingPolicy(payload) {
   const response = await apiClient.patch('/admin/settings/pricing-policy', payload);
   return response.data;
 }
+
+// Mengambil konfigurasi komisi scan Mitra Pos
+export async function getPosCommissionSettings() {
+  const response = await apiClient.get('/admin/settings/pos-commission');
+  return response.data;
+}
+
+// Memperbarui konfigurasi komisi scan Mitra Pos
+export async function updatePosCommissionSettings(payload) {
+  const response = await apiClient.patch('/admin/settings/pos-commission', payload);
+  return response.data;
+}

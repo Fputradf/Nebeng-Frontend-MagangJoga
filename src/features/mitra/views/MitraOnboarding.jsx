@@ -27,7 +27,7 @@ const SKCK_TYPES = [...IMAGE_TYPES, 'application/pdf'];
 const PHONE_REGEX = /^(\+62|62|0)8[1-9][0-9]{7,11}$/;
 const PLATE_REGEX = /^[A-Z]{1,2}\s?[0-9]{1,4}\s?[A-Z]{1,3}$/;
 
-const PRIMARY_COLOR = '#10367D';
+const PRIMARY_COLOR = '#1356d6';
 const PRIMARY_ACCENT = '#74B4D9';
 
 export default function MitraOnboarding() {
@@ -596,8 +596,8 @@ export default function MitraOnboarding() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
-      <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-neutral-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="mx-auto p-4 space-y-5 min-h-screen font-['Inter']">
+      <div className="bg-white p-4 rounded-2xl shadow-sm border border-neutral-200 flex flex-col justify-between gap-3">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span
@@ -645,7 +645,7 @@ export default function MitraOnboarding() {
                   1. Informasi Data Diri & Kendaraan
                 </h2>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                <div className="grid grid-cols-1 gap-3.5">
                   <div>
                     <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                       Nama Lengkap (Sesuai KTP)
@@ -657,7 +657,7 @@ export default function MitraOnboarding() {
                       placeholder="Nama Lengkap"
                       value={formData.fullName}
                       onChange={handleInputChange}
-                      className={`w-full px-3.5 py-2.5 bg-neutral-50 border rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#10367D] ${
+                      className={`w-full px-3.5 py-2.5 bg-neutral-50 border rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#1356d6] ${
                         !formData.fullName.trim() ? 'border-rose-300' : 'border-neutral-200'
                       }`}
                     />
@@ -693,7 +693,7 @@ export default function MitraOnboarding() {
                       className={`w-full px-3.5 py-2.5 bg-neutral-50 border rounded-xl font-bold text-neutral-800 focus:outline-none transition-all ${
                         nikError || formData.nik.length !== 16
                           ? 'border-rose-300 focus:border-rose-500 focus:ring-1 focus:ring-rose-200'
-                          : 'border-neutral-200 focus:border-[#10367D]'
+                          : 'border-neutral-200 focus:border-[#1356d6]'
                       }`}
                     />
                     {nikError && (
@@ -721,7 +721,7 @@ export default function MitraOnboarding() {
                       placeholder="0812xxxxxxxx"
                       value={formData.phone}
                       onChange={handleInputChange}
-                      className={`w-full px-3.5 py-2.5 bg-neutral-50 border rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#10367D] ${
+                      className={`w-full px-3.5 py-2.5 bg-neutral-50 border rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#1356d6] ${
                         formData.phone && !isPhoneValid ? 'border-rose-300' : 'border-neutral-200'
                       }`}
                     />
@@ -744,7 +744,7 @@ export default function MitraOnboarding() {
                       name="vehicleType"
                       value={formData.vehicleType}
                       onChange={handleInputChange}
-                      className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#10367D]"
+                      className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#1356d6]"
                     >
                       <option value="motor">Sepeda Motor</option>
                       <option value="mobil">Mobil / Minibus</option>
@@ -762,7 +762,7 @@ export default function MitraOnboarding() {
                       placeholder="cth: Honda Beat / Avanza"
                       value={formData.vehicleModel}
                       onChange={handleInputChange}
-                      className={`w-full px-3.5 py-2.5 bg-neutral-50 border rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#10367D] ${
+                      className={`w-full px-3.5 py-2.5 bg-neutral-50 border rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#1356d6] ${
                         !formData.vehicleModel.trim() ? 'border-rose-300' : 'border-neutral-200'
                       }`}
                     />
@@ -785,7 +785,7 @@ export default function MitraOnboarding() {
                       placeholder="cth: AD 1234 XX"
                       value={formData.plateNumber}
                       onChange={handleInputChange}
-                      className={`w-full px-3.5 py-2.5 bg-neutral-50 border rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#10367D] uppercase font-mono ${
+                      className={`w-full px-3.5 py-2.5 bg-neutral-50 border rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#1356d6] uppercase font-mono ${
                         formData.plateNumber && !isPlateValid ? 'border-rose-300' : 'border-neutral-200'
                       }`}
                     />
@@ -800,7 +800,7 @@ export default function MitraOnboarding() {
                     )}
                   </div>
 
-                  <div className="md:col-span-2">
+                  <div>
                     <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                       Alamat Domisili
                     </label>
@@ -811,7 +811,7 @@ export default function MitraOnboarding() {
                       placeholder="Masukkan alamat lengkap domisili..."
                       value={formData.address}
                       onChange={handleInputChange}
-                      className={`w-full px-3.5 py-2.5 bg-neutral-50 border rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#10367D] resize-none ${
+                      className={`w-full px-3.5 py-2.5 bg-neutral-50 border rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#1356d6] resize-none ${
                         !formData.address.trim() ? 'border-rose-300' : 'border-neutral-200'
                       }`}
                     />
@@ -825,7 +825,7 @@ export default function MitraOnboarding() {
                   Informasi Rekening Bank (Pencairan)
                 </h2>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                <div className="grid grid-cols-1 gap-3.5">
                   <div>
                     <label className="block text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                       Nama Bank
@@ -835,7 +835,7 @@ export default function MitraOnboarding() {
                       required
                       value={formData.bankName}
                       onChange={handleInputChange}
-                      className={`w-full px-3.5 py-2.5 bg-neutral-50 border rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#10367D] ${
+                      className={`w-full px-3.5 py-2.5 bg-neutral-50 border rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#1356d6] ${
                         !formData.bankName.trim() ? 'border-rose-300' : 'border-neutral-200'
                       }`}
                     >
@@ -866,7 +866,7 @@ export default function MitraOnboarding() {
                       inputMode="numeric"
                       value={formData.bankAccountNumber}
                       onChange={handleInputChange}
-                      className={`w-full px-3.5 py-2.5 bg-neutral-50 border rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#10367D] font-mono ${
+                      className={`w-full px-3.5 py-2.5 bg-neutral-50 border rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#1356d6] font-mono ${
                         formData.bankAccountNumber && formData.bankAccountNumber.length < 8 ? 'border-rose-300' : 'border-neutral-200'
                       }`}
                     />
@@ -892,7 +892,7 @@ export default function MitraOnboarding() {
                       placeholder="Sesuai buku tabungan"
                       value={formData.bankAccountHolder}
                       onChange={handleInputChange}
-                      className={`w-full px-3.5 py-2.5 bg-neutral-50 border rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#10367D] ${
+                      className={`w-full px-3.5 py-2.5 bg-neutral-50 border rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#1356d6] ${
                         !formData.bankAccountHolder.trim() ? 'border-rose-300' : 'border-neutral-200'
                       }`}
                     />
@@ -910,7 +910,7 @@ export default function MitraOnboarding() {
                 : 'Unggah Dokumen Legalitas (KTP, SIM, SKCK, STNK)'}
             </h2>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 gap-3.5">
               {targetDocs.map((field) => (
                 <div
                   key={field}
@@ -1005,7 +1005,7 @@ export default function MitraOnboarding() {
                   <button
                     type="button"
                     onClick={captureFaceId}
-                    className="mt-2 px-3 py-1 bg-[#10367D] hover:bg-[#0C2C66] text-white text-[12px] font-bold rounded-lg transition cursor-pointer"
+                    className="mt-2 px-3 py-1 bg-[#1356d6] hover:bg-[#0e44ba] text-white text-[12px] font-bold rounded-lg transition cursor-pointer"
                   >
                     Ambil / Konfirmasi Wajah
                   </button>

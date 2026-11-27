@@ -290,7 +290,7 @@ export default function FleetCourierPage() {
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
 
       {/* ── BANNER GRADIENT ── */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2684ff] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
         <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
         <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0 flex-1">
@@ -325,7 +325,7 @@ export default function FleetCourierPage() {
             onClick={() => { setScopeTab('homebase'); setCurrentPage(1); }}
             className={`px-4 py-2 rounded-xl text-[13px] font-bold transition flex items-center gap-2 cursor-pointer ${
               scopeTab === 'homebase'
-                ? 'bg-[#10367D] text-white shadow-sm'
+                ? 'bg-[#1356d6] text-white shadow-sm'
                 : 'bg-neutral-50 text-neutral-600 hover:bg-neutral-100'
             }`}
           >
@@ -343,7 +343,7 @@ export default function FleetCourierPage() {
             onClick={() => { setScopeTab('active_pos'); setCurrentPage(1); }}
             className={`px-4 py-2 rounded-xl text-[13px] font-bold transition flex items-center gap-2 cursor-pointer ${
               scopeTab === 'active_pos'
-                ? 'bg-[#10367D] text-white shadow-sm'
+                ? 'bg-[#1356d6] text-white shadow-sm'
                 : 'bg-neutral-50 text-neutral-600 hover:bg-neutral-100'
             }`}
           >
@@ -373,7 +373,7 @@ export default function FleetCourierPage() {
             placeholder={scopeTab === 'homebase' ? "Cari nama mitra, email..." : "Cari mitra, pos asal, plat nomor..."}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-neutral-50 border border-neutral-200 rounded-full pl-9 pr-8 py-2 text-[13px] sm:text-[14px] font-medium text-neutral-700 focus:outline-none focus:ring-2 focus:ring-[#10367D] transition"
+            className="w-full bg-neutral-50 border border-neutral-200 rounded-full pl-9 pr-8 py-2 text-[13px] sm:text-[14px] font-medium text-neutral-700 focus:outline-none focus:ring-2 focus:ring-[#1356d6] transition"
           />
         </div>
 
@@ -386,7 +386,7 @@ export default function FleetCourierPage() {
                 setLimit(Number(e.target.value));
                 setCurrentPage(1);
               }}
-              className="bg-neutral-50 border border-neutral-200 rounded-lg px-2.5 py-1.5 font-bold text-neutral-800 focus:outline-none focus:ring-1 focus:ring-[#10367D] cursor-pointer"
+              className="bg-neutral-50 border border-neutral-200 rounded-lg px-2.5 py-1.5 font-bold text-neutral-800 focus:outline-none focus:ring-1 focus:ring-[#1356d6] cursor-pointer"
             >
               <option value={5}>5</option>
               <option value={10}>10</option>
@@ -428,7 +428,7 @@ export default function FleetCourierPage() {
                     <tr key={item.id} className="hover:bg-[#74B4D9]/10 transition">
                       <td className="py-3.5 px-5">
                         <div className="font-bold text-neutral-800 text-[13px]">{item.name}</div>
-                        <div className="text-[11px] font-bold text-[#10367D] font-mono">ID: {item.id}</div>
+                        <div className="text-[11px] font-bold text-[#1356d6] font-mono">ID: {item.id}</div>
                       </td>
                       <td className="py-3.5 px-5 font-semibold text-neutral-700">
                         <div>{item.email}</div>
@@ -448,7 +448,7 @@ export default function FleetCourierPage() {
                         </span>
                       </td>
                       <td className="py-3.5 px-5">
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-[#10367D] border border-blue-200">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-[#1356d6] border border-blue-200">
                           <ShieldCheck size={12} /> Wewenang Penuh
                         </span>
                       </td>
@@ -456,7 +456,7 @@ export default function FleetCourierPage() {
                         <button
                           type="button"
                           onClick={() => handleOpenSanctionsModal(item)}
-                          className="px-3 py-1.5 bg-[#10367D] hover:bg-[#0C2C66] text-white text-[11px] font-bold rounded-xl shadow-xs transition cursor-pointer inline-flex items-center gap-1.5"
+                          className="px-3 py-1.5 bg-[#1356d6] hover:bg-[#0e44ba] text-white text-[11px] font-bold rounded-xl shadow-xs transition cursor-pointer inline-flex items-center gap-1.5"
                         >
                           <ShieldAlert className="w-3.5 h-3.5" />
                           <span>Sanksi & Banding</span>
@@ -515,7 +515,7 @@ export default function FleetCourierPage() {
                       </td>
                       <td className="py-3.5 px-5">
                         <div className="font-bold text-neutral-800 flex items-center gap-1">
-                          <MapPin size={12} className="text-[#10367D] shrink-0" />
+                          <MapPin size={12} className="text-[#1356d6] shrink-0" />
                           <span>{item.posName}</span>
                         </div>
                         <div className="text-[11px] text-neutral-400 flex items-center gap-1 mt-0.5">
@@ -577,7 +577,7 @@ export default function FleetCourierPage() {
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <h4 className="font-bold text-neutral-800 text-[14px]">{item.name}</h4>
-                    <p className="text-[11px] text-[#10367D] font-mono font-bold">
+                    <p className="text-[11px] text-[#1356d6] font-mono font-bold">
                       {scopeTab === 'homebase' ? `ID: ${item.id}` : `Trip #${item.tripId}`}
                     </p>
                     <p className="text-[12px] text-neutral-500 mt-0.5">{item.email || item.phone}</p>
@@ -613,7 +613,7 @@ export default function FleetCourierPage() {
                     <button
                       type="button"
                       onClick={() => handleOpenSanctionsModal(item)}
-                      className="w-full py-2 bg-[#10367D] hover:bg-[#0C2C66] text-white text-[12px] font-bold rounded-xl shadow-xs transition cursor-pointer flex items-center justify-center gap-1.5"
+                      className="w-full py-2 bg-[#1356d6] hover:bg-[#0e44ba] text-white text-[12px] font-bold rounded-xl shadow-xs transition cursor-pointer flex items-center justify-center gap-1.5"
                     >
                       <ShieldAlert className="w-3.5 h-3.5" />
                       <span>Review Sanksi & Banding</span>
@@ -676,13 +676,13 @@ export default function FleetCourierPage() {
         <div className="space-y-4 text-[13px]">
           {isLoadingSanctions ? (
             <div className="py-8 text-center text-neutral-400">
-              <span className="w-6 h-6 border-2 border-[#10367D] border-t-transparent rounded-full animate-spin inline-block mb-2" />
+              <span className="w-6 h-6 border-2 border-[#1356d6] border-t-transparent rounded-full animate-spin inline-block mb-2" />
               <p>Memuat rekam jejak integritas mitra...</p>
             </div>
           ) : mitraSanctionsData ? (
             <div className="space-y-4">
               {/* Header Banner Biru Bergaya Sidebar */}
-              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#0c2353] via-[#10367D] to-[#18458f] p-4 sm:p-5 text-white shadow-md">
+              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#0b3ba8] via-[#1356d6] to-[#2684ff] p-4 sm:p-5 text-white shadow-md">
                 <div className="absolute -right-8 -top-12 h-32 w-32 rounded-full bg-white/10 pointer-events-none" />
                 <div className="absolute bottom-0 right-20 h-16 w-16 rounded-full bg-cyan-400/20 pointer-events-none" />
                 <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -800,7 +800,7 @@ export default function FleetCourierPage() {
                             <div className="rounded-2xl border-2 border-blue-200/90 bg-gradient-to-br from-white via-blue-50/40 to-slate-50 p-4 space-y-3 shadow-xs">
                               <div className="flex items-center justify-between flex-wrap gap-2 pb-2.5 border-b border-blue-100">
                                 <div className="flex items-center gap-2">
-                                  <div className="p-1.5 bg-[#10367D] text-white rounded-lg shadow-2xs">
+                                  <div className="p-1.5 bg-[#1356d6] text-white rounded-lg shadow-2xs">
                                     <ShieldCheck className="w-3.5 h-3.5" />
                                   </div>
                                   <div>
@@ -838,7 +838,7 @@ export default function FleetCourierPage() {
                                       href={getFullFileUrl(latestAppeal.evidenceUrl)}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-100/70 hover:bg-blue-200 text-[#10367D] font-bold rounded-xl text-[11px] transition shadow-2xs"
+                                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-100/70 hover:bg-blue-200 text-[#1356d6] font-bold rounded-xl text-[11px] transition shadow-2xs"
                                     >
                                       <ExternalLink className="w-3.5 h-3.5" />
                                       <span>Buka Lampiran Bukti Foto &rarr;</span>
@@ -868,7 +868,7 @@ export default function FleetCourierPage() {
                                     value={reviewNotesMap[latestAppeal.id] || ''}
                                     onChange={(e) => setReviewNotesMap({ ...reviewNotesMap, [latestAppeal.id]: e.target.value })}
                                     placeholder="Contoh: Bukti kuitansi bengkel terverifikasi sah / Alasan penolakan..."
-                                    className="w-full px-3.5 py-2 text-[12px] border border-blue-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#10367D] bg-white text-neutral-800 shadow-2xs transition"
+                                    className="w-full px-3.5 py-2 text-[12px] border border-blue-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1356d6] bg-white text-neutral-800 shadow-2xs transition"
                                   />
                                   <div className="flex items-center gap-2 pt-1">
                                     <button
@@ -963,7 +963,7 @@ export default function FleetCourierPage() {
               <select
                 value={reportCategory}
                 onChange={(e) => setReportCategory(e.target.value)}
-                className="w-full bg-white border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-medium text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#10367D]"
+                className="w-full bg-white border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-medium text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#1356d6]"
               >
                 <option value="SERVICE_QUALITY">Pelayanan / Keterlambatan Jadwal Pos</option>
                 <option value="SAFETY_AND_HARASSMENT">Ketertiban / Keamanan di Pos</option>
@@ -988,7 +988,7 @@ export default function FleetCourierPage() {
                     onClick={() => setReportSeverity(s.id)}
                     className={`py-2 px-2 rounded-xl text-[11px] font-bold border transition cursor-pointer text-center ${
                       reportSeverity === s.id
-                        ? 'bg-[#10367D] text-white border-[#10367D]'
+                        ? 'bg-[#1356d6] text-white border-[#1356d6]'
                         : 'bg-white text-neutral-600 border-neutral-200 hover:bg-neutral-50'
                     }`}
                   >
@@ -1007,7 +1007,7 @@ export default function FleetCourierPage() {
                 value={reportTitle}
                 onChange={(e) => setReportTitle(e.target.value)}
                 placeholder="Contoh: Ketidaktertiban di antrean Pos X"
-                className="w-full bg-white border border-neutral-200 rounded-xl px-3 py-2 text-[13px] text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#10367D]"
+                className="w-full bg-white border border-neutral-200 rounded-xl px-3 py-2 text-[13px] text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#1356d6]"
               />
             </div>
 
@@ -1020,7 +1020,7 @@ export default function FleetCourierPage() {
                 value={reportDescription}
                 onChange={(e) => setReportDescription(e.target.value)}
                 placeholder="Tuliskan kronologi secara detail..."
-                className="w-full bg-white border border-neutral-200 rounded-xl p-3 text-[13px] text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#10367D]"
+                className="w-full bg-white border border-neutral-200 rounded-xl p-3 text-[13px] text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#1356d6]"
               />
             </div>
 

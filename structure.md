@@ -17,6 +17,13 @@
 │   ├── 📄 RegionalLayout.jsx
 │   └── 📄 SuperadminLayout.jsx
 ├── 📄 CUSTOMER_CHAT_IMPLEMENTATION.md
+├── 📁 deploy/
+│   └── 📁 vps-ai-agent/
+│       ├── 📄 .env.vercel.example
+│       ├── 📄 .env.vps.example
+│       ├── 📄 agent-config.json
+│       ├── 📄 nginx-nebeng-api.conf
+│       └── 📄 README.md
 ├── 📁 dev-dist/
 │   ├── 📄 sw.js
 │   └── 📄 workbox-5d155c7a.js
@@ -73,6 +80,7 @@
 │   │   ├── 📄 auth-illustration.png
 │   │   ├── 📄 AuthIllustration.png
 │   │   ├── 📄 Daftar.png
+│   │   ├── 📄 hero-car-wave.jpg
 │   │   ├── 📄 hero-transport.jpg
 │   │   ├── 📄 LOGO-dark.png
 │   │   └── 📄 LOGO.png
@@ -151,7 +159,6 @@
 │   │   │       ├── 📄 CustomerBills.jsx
 │   │   │       ├── 📄 CustomerChat.jsx
 │   │   │       ├── 📄 CustomerQrDisplay.jsx
-│   │   │       ├── 📄 CustomerRewards.jsx
 │   │   │       ├── 📄 CustomerVouchers.jsx
 │   │   │       ├── 📄 CustomerWallet.jsx
 │   │   │       ├── 📄 MyTickets.jsx
@@ -160,14 +167,20 @@
 │   │   │   └── 📄 HelpCenterView.jsx
 │   │   ├── 📁 landing/
 │   │   │   ├── 📁 components/
-│   │   │   │   └── 📄 LandingNavbar.jsx
+│   │   │   │   ├── 📄 LandingFooter.jsx
+│   │   │   │   ├── 📄 LandingNavbar.jsx
+│   │   │   │   ├── 📄 MitraDuotoneIcons.jsx
+│   │   │   │   └── 📄 MitraLeadLandingTemplate.jsx
 │   │   │   ├── 📄 CustomerLandingPage.jsx
+│   │   │   ├── 📄 MitraDriverLandingPage.jsx
+│   │   │   ├── 📄 MitraPosLandingPage.jsx
 │   │   │   ├── 📄 PublicFaqPage.jsx
 │   │   │   └── 📄 PublicTermsPage.jsx
 │   │   ├── 📁 mitra/
 │   │   │   ├── 📁 components/
 │   │   │   │   ├── 📄 MitraProfileModal.jsx
 │   │   │   │   ├── 📄 MitraSidebar.jsx
+│   │   │   │   ├── 📄 MitraSosTriggerModal.jsx
 │   │   │   │   └── 📄 MitraTopbar.jsx
 │   │   │   ├── 📄 MitraLayout.jsx
 │   │   │   └── 📁 views/
@@ -231,7 +244,6 @@
 │   │           ├── 📄 BannerManagement.jsx
 │   │           ├── 📄 DisbursementBankManagement.jsx
 │   │           ├── 📄 DriverManagement.jsx
-│   │           ├── 📄 MerchandiseManagement.jsx
 │   │           ├── 📄 PaymentGatewayManagement.jsx
 │   │           ├── 📄 PricingManagement.jsx
 │   │           ├── 📄 RegionalAdminsManagement.jsx
@@ -259,7 +271,6 @@
 │   │   ├── 📄 bannerService.js
 │   │   ├── 📄 disbursementBankService.js
 │   │   ├── 📄 emergencyService.js
-│   │   ├── 📄 merchandiseService.js
 │   │   ├── 📄 mitraPricing.js
 │   │   ├── 📄 mitraService.js
 │   │   ├── 📄 notificationService.js
@@ -289,6 +300,7 @@
 ├── 📄 structure.md
 ├── 📄 tailwind.config.js
 ├── 📄 VAPID_FIX_GUIDE.md
+├── 📄 vercel.json
 └── 📄 vite.config.js
 ```
 <!-- PROJECT_STRUCTURE_END -->

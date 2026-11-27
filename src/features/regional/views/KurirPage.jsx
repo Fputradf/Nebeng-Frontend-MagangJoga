@@ -77,7 +77,7 @@ export default function KurirPage() {
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
 
       {/* ── BANNER GRADIENT ── */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2684ff] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
         <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
         <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0 flex-1">
@@ -106,7 +106,7 @@ export default function KurirPage() {
 
       {/* INFORMASI */}
       <div className="bg-[#74B4D9]/10 border border-[#74B4D9]/30 p-4 rounded-xl flex items-start gap-3">
-        <ShieldAlert size={18} className="text-[#10367D] shrink-0 mt-0.5" />
+        <ShieldAlert size={18} className="text-[#1356d6] shrink-0 mt-0.5" />
         <div className="text-[13px] text-neutral-800 space-y-1">
           <p>Data kurir dan mitra pos divalidasi langsung berdasarkan wilayah regional yang terikat pada akun Anda.</p>
         </div>
@@ -121,7 +121,7 @@ export default function KurirPage() {
             placeholder="Cari nama kurir, email..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-neutral-50 border border-neutral-200 rounded-full pl-9 pr-8 py-2 text-[13px] sm:text-[14px] font-medium text-neutral-700 focus:outline-none focus:ring-2 focus:ring-[#10367D] transition"
+            className="w-full bg-neutral-50 border border-neutral-200 rounded-full pl-9 pr-8 py-2 text-[13px] sm:text-[14px] font-medium text-neutral-700 focus:outline-none focus:ring-2 focus:ring-[#1356d6] transition"
           />
         </div>
 
@@ -134,7 +134,7 @@ export default function KurirPage() {
                 setLimit(Number(e.target.value));
                 setCurrentPage(1);
               }}
-              className="bg-neutral-50 border border-neutral-200 rounded-lg px-2.5 py-1.5 font-bold text-neutral-800 focus:outline-none focus:ring-1 focus:ring-[#10367D] cursor-pointer"
+              className="bg-neutral-50 border border-neutral-200 rounded-lg px-2.5 py-1.5 font-bold text-neutral-800 focus:outline-none focus:ring-1 focus:ring-[#1356d6] cursor-pointer"
             >
               <option value={5}>5</option>
               <option value={10}>10</option>
@@ -171,7 +171,7 @@ export default function KurirPage() {
                   <tr key={item.id} className="hover:bg-[#74B4D9]/10 transition">
                     <td className="py-3.5 px-5">
                       <div className="font-bold text-neutral-800 text-[13px]">{item.name}</div>
-                      <div className="text-[11px] font-bold text-[#10367D] font-mono">ID: {item.id}</div>
+                      <div className="text-[11px] font-bold text-[#1356d6] font-mono">ID: {item.id}</div>
                     </td>
                     <td className="py-3.5 px-5">
                       <div className="font-semibold text-neutral-700">{item.email}</div>

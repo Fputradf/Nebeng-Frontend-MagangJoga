@@ -299,7 +299,7 @@ export default function RegionsManagement() {
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
       {/* ── BANNER GRADIENT ── */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2684ff] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
         <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
         <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0 flex-1">
@@ -316,7 +316,7 @@ export default function RegionsManagement() {
 
           <button 
             onClick={handleOpenAddModal}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-blue-50 text-[#10367D] rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer shadow-sm shrink-0 whitespace-nowrap self-start sm:self-auto"
+            className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-blue-50 text-[#1356d6] rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer shadow-sm shrink-0 whitespace-nowrap self-start sm:self-auto"
           >
             <Plus size={16} />
             <span>Tambah Wilayah Baru</span>
@@ -377,7 +377,7 @@ export default function RegionsManagement() {
                   <tr key={region.id} className="hover:bg-gray-50/50">
                     <td className="py-3.5 px-5">
                       <div className="flex items-center space-x-2.5">
-                        <div className="p-2 bg-[#10367D]/10 text-[#10367D] rounded-xl font-bold">
+                        <div className="p-2 bg-[#1356d6]/10 text-[#1356d6] rounded-xl font-bold">
                           <MapPin size={14} />
                         </div>
                         <div>
@@ -409,7 +409,7 @@ export default function RegionsManagement() {
                     </td>
                     <td className="py-3.5 px-5">
                       <div className="flex items-center justify-center gap-1.5">
-                        <button onClick={() => handleOpenDetailModal(region)} className="p-1.5 bg-[#10367D]/10 text-[#10367D] rounded-lg cursor-pointer" title="Lihat Peta Detail">
+                        <button onClick={() => handleOpenDetailModal(region)} className="p-1.5 bg-[#1356d6]/10 text-[#1356d6] rounded-lg cursor-pointer" title="Lihat Peta Detail">
                           <Eye size={13} />
                         </button>
                         <button onClick={() => handleOpenEditModal(region)} className="p-1.5 bg-blue-50 text-blue-600 rounded-lg cursor-pointer" title="Edit Wilayah">
@@ -494,7 +494,7 @@ export default function RegionsManagement() {
                     <GeoJSON 
                       key={JSON.stringify(selectedRegion.boundaryPolygon)}
                       data={parseGeoJSON(selectedRegion.boundaryPolygon)}
-                      pathOptions={{ color: '#10367D', fillColor: '#10367D', fillOpacity: 0.2, weight: 2 }}
+                      pathOptions={{ color: '#1356d6', fillColor: '#1356d6', fillOpacity: 0.2, weight: 2 }}
                     />
                   )}
                   <ChangeView center={[selectedRegion.latitude, selectedRegion.longitude]} />
@@ -504,7 +504,7 @@ export default function RegionsManagement() {
               <div className="flex items-center justify-center h-full text-neutral-400">Koordinat peta belum tersedia</div>
             )}
           </div>
-          <button onClick={() => setIsDetailModalOpen(false)} className="w-full py-2 bg-[#10367D] hover:bg-[#0C2C66] text-white text-[13px] font-bold rounded-full cursor-pointer transition">
+          <button onClick={() => setIsDetailModalOpen(false)} className="w-full py-2 bg-[#1356d6] hover:bg-[#0e44ba] text-white text-[13px] font-bold rounded-full cursor-pointer transition">
             Tutup
           </button>
         </div>
@@ -520,12 +520,12 @@ export default function RegionsManagement() {
         <form onSubmit={handleSubmitForm} className="space-y-3.5 text-[13px]">
 
           <div className="space-y-1.5">
-            <label className="text-[12px] font-bold text-[#10367D] uppercase flex items-center justify-between">
+            <label className="text-[12px] font-bold text-[#1356d6] uppercase flex items-center justify-between">
               <span className="flex items-center gap-1">
                 <Globe size={12} /> Pilih Kota / Wilayah di Indonesia ({INDONESIA_CITIES.length} Daerah)
               </span>
               {isSearchingLocation && (
-                <span className="flex items-center gap-1 text-[11px] text-[#10367D] font-normal lowercase">
+                <span className="flex items-center gap-1 text-[11px] text-[#1356d6] font-normal lowercase">
                   <Loader2 size={11} className="animate-spin" /> Mengambil batas GeoJSON resmi...
                 </span>
               )}
@@ -538,7 +538,7 @@ export default function RegionsManagement() {
                 placeholder="Ketik untuk mencari cepat nama kota / kabupaten... (misal: Bandung, Sleman, Merauke)"
                 value={citySearchQuery}
                 onChange={(e) => setCitySearchQuery(e.target.value)}
-                className="w-full bg-white border border-neutral-200 rounded-xl pl-8 pr-3 py-1.5 text-[12px] font-medium text-neutral-800 placeholder-neutral-400 focus:outline-none focus:ring-1 focus:ring-[#10367D]"
+                className="w-full bg-white border border-neutral-200 rounded-xl pl-8 pr-3 py-1.5 text-[12px] font-medium text-neutral-800 placeholder-neutral-400 focus:outline-none focus:ring-1 focus:ring-[#1356d6]"
               />
             </div>
 
@@ -546,7 +546,7 @@ export default function RegionsManagement() {
               value={selectedCityIndex}
               onChange={handleSelectCity}
               disabled={isSearchingLocation}
-              className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-bold text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#10367D] transition cursor-pointer"
+              className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-[13px] font-bold text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#1356d6] transition cursor-pointer"
             >
               <option value="">-- Pilih Kota / Kabupaten untuk Memuat Batas Wilayah ({filteredCitiesList.length} Opsi) --</option>
               {Object.entries(
@@ -598,10 +598,10 @@ export default function RegionsManagement() {
           <div className="space-y-2 bg-neutral-50 p-3.5 rounded-xl border border-neutral-200">
             <div className="flex items-center justify-between">
               <label className="text-[12px] font-bold text-neutral-700 uppercase flex items-center gap-1.5">
-                <Layers size={13} className="text-[#10367D]" />
+                <Layers size={13} className="text-[#1356d6]" />
                 Batas Wilayah Spasial GeoJSON
               </label>
-              <div className="text-[11px] font-bold text-[#10367D]">
+              <div className="text-[11px] font-bold text-[#1356d6]">
                 {formData.boundaryPolygon ? '✓ Batas Poligon Dimuat' : 'Belum Ada Poligon'}
               </div>
             </div>
@@ -626,7 +626,7 @@ export default function RegionsManagement() {
                 placeholder='Pilih kota di dropdown atas untuk mengisi batas GeoJSON resmi otomatis, atau tempel GeoJSON poligon kustom di sini.'
                 value={formData.boundaryPolygon}
                 onChange={(e) => setFormData({...formData, boundaryPolygon: e.target.value})}
-                className="w-full bg-white border border-neutral-200 rounded-lg p-2 font-mono text-[11px] text-neutral-700 leading-tight focus:outline-none focus:ring-1 focus:ring-[#10367D]"
+                className="w-full bg-white border border-neutral-200 rounded-lg p-2 font-mono text-[11px] text-neutral-700 leading-tight focus:outline-none focus:ring-1 focus:ring-[#1356d6]"
               />
             </div>
           </div>
@@ -643,7 +643,7 @@ export default function RegionsManagement() {
                     <GeoJSON 
                       key={formData.boundaryPolygon}
                       data={parseGeoJSON(formData.boundaryPolygon)}
-                      pathOptions={{ color: '#10367D', fillColor: '#10367D', fillOpacity: 0.18, weight: 2 }}
+                      pathOptions={{ color: '#1356d6', fillColor: '#1356d6', fillOpacity: 0.18, weight: 2 }}
                     />
                   )}
                   <ChangeView center={[formData.latitude, formData.longitude]} />
@@ -663,7 +663,7 @@ export default function RegionsManagement() {
             <button
               type="submit"
               disabled={isSearchingLocation}
-              className="px-4 py-2 text-[13px] font-bold text-white bg-[#10367D] hover:bg-[#0C2C66] rounded-full flex items-center gap-1 cursor-pointer shadow-sm transition disabled:opacity-50"
+              className="px-4 py-2 text-[13px] font-bold text-white bg-[#1356d6] hover:bg-[#0e44ba] rounded-full flex items-center gap-1 cursor-pointer shadow-sm transition disabled:opacity-50"
             >
               <Save size={13}/>
               Simpan Wilayah

@@ -160,7 +160,7 @@ export default function UserProfileModal({
         {/* HEADER */}
         <div
           className="
-            bg-[#10367D]
+            bg-[#1356d6]
             p-6
             text-white
             relative
@@ -322,7 +322,7 @@ export default function UserProfileModal({
                     className="
                       w-3.5
                       h-3.5
-                      text-[#10367D]
+                      text-[#1356d6]
                       mt-0.5
                       shrink-0
                     "
@@ -405,8 +405,8 @@ export default function UserProfileModal({
                 text-[13px]
                 font-bold
                 text-white
-                bg-[#10367D]
-                hover:bg-[#0C2C66]
+                bg-[#1356d6]
+                hover:bg-[#0e44ba]
                 rounded-full
                 cursor-pointer
                 shadow-sm

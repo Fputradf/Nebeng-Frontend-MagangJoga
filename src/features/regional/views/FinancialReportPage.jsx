@@ -198,7 +198,7 @@ export default function FinancialReportPage() {
           <span className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
             Hak Komisi Wilayah
           </span>
-          <p className="text-[15px] font-black font-mono text-[#10367D] mt-0.5">
+          <p className="text-[15px] font-black font-mono text-[#1356d6] mt-0.5">
             Rp {grandTotalSummary.totalCommission.toLocaleString('id-ID')}
           </p>
           <span className="text-[9.5px] text-slate-500 block mt-0.5">
@@ -220,7 +220,7 @@ export default function FinancialReportPage() {
       </div>
 
       {/* ── BANNER GRADIENT ── */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card print-hidden">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2684ff] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card print-hidden">
         <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
         <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0 flex-1">
@@ -239,7 +239,7 @@ export default function FinancialReportPage() {
           <div className="flex items-center gap-2.5 self-start sm:self-auto shrink-0">
             <button
               onClick={() => window.print()}
-              className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-blue-50 text-[#10367D] rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer shadow-sm whitespace-nowrap"
+              className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-blue-50 text-[#1356d6] rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer shadow-sm whitespace-nowrap"
             >
               <Printer size={16} />
               <span>Cetak Laporan PDF</span>
@@ -251,11 +251,11 @@ export default function FinancialReportPage() {
       {/* ── ATURAN ATRIBUSI PENDAPATAN & POS ASAL (ORIGIN-BASED REVENUE) ── */}
       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-4 text-[13px] text-blue-950 leading-relaxed print:hidden">
         <div className="flex items-start gap-3">
-          <div className="p-2 bg-blue-100/80 rounded-xl text-[#10367D] font-bold shrink-0">
+          <div className="p-2 bg-blue-100/80 rounded-xl text-[#1356d6] font-bold shrink-0">
             ℹ️
           </div>
           <div className="space-y-1">
-            <h4 className="font-bold text-[#10367D] text-[14px]">
+            <h4 className="font-bold text-[#1356d6] text-[14px]">
               Kebijakan Atribusi Komisi Berbasis Pos Asal (Origin Checkpoint Revenue)
             </h4>
             <p className="text-blue-900 text-[12px] leading-relaxed">
@@ -295,7 +295,7 @@ export default function FinancialReportPage() {
             placeholder="Cari ID transaksi, layanan, atau pos..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-neutral-50 border border-neutral-200 rounded-full pl-9 pr-8 py-2 text-[13px] sm:text-[14px] font-medium text-neutral-700 focus:outline-none focus:ring-2 focus:ring-[#10367D] transition"
+            className="w-full bg-neutral-50 border border-neutral-200 rounded-full pl-9 pr-8 py-2 text-[13px] sm:text-[14px] font-medium text-neutral-700 focus:outline-none focus:ring-2 focus:ring-[#1356d6] transition"
           />
         </div>
 
@@ -307,7 +307,7 @@ export default function FinancialReportPage() {
               setLimit(Number(e.target.value));
               setCurrentPage(1);
             }}
-            className="bg-neutral-50 border border-neutral-200 rounded-lg px-2.5 py-1.5 font-bold text-neutral-800 focus:outline-none focus:ring-1 focus:ring-[#10367D] cursor-pointer"
+            className="bg-neutral-50 border border-neutral-200 rounded-lg px-2.5 py-1.5 font-bold text-neutral-800 focus:outline-none focus:ring-1 focus:ring-[#1356d6] cursor-pointer"
           >
             <option value={5}>5</option>
             <option value={10}>10</option>
@@ -373,7 +373,7 @@ export default function FinancialReportPage() {
 
                     <td className="py-3.5 px-5 print:py-2 print:px-3 font-bold font-mono text-neutral-800 print:text-slate-900">{item.amount}</td>
 
-                    <td className="py-3.5 px-5 print:py-2 print:px-3 font-bold font-mono text-[#10367D] print:text-slate-900">
+                    <td className="py-3.5 px-5 print:py-2 print:px-3 font-bold font-mono text-[#1356d6] print:text-slate-900">
                       {item.commission} <span className="text-[11px] text-neutral-400 print:text-slate-500 font-normal">({item.commissionPercentage}%)</span>
                     </td>
 
@@ -402,7 +402,7 @@ export default function FinancialReportPage() {
                 <td className="py-2.5 px-3 font-mono text-[12px] text-slate-900 font-black">
                   Rp {pageTotalAmount.toLocaleString('id-ID')}
                 </td>
-                <td className="py-2.5 px-3 font-mono text-[12px] text-[#10367D] font-bold">
+                <td className="py-2.5 px-3 font-mono text-[12px] text-[#1356d6] font-bold">
                   Rp {pageTotalCommission.toLocaleString('id-ID')}
                 </td>
                 <td className="py-2.5 px-3 text-right text-emerald-700 text-[10px] uppercase font-bold">
@@ -480,7 +480,7 @@ export default function FinancialReportPage() {
 
           <button
             onClick={() => setSelectedStatusDetail(null)}
-            className="w-full py-2 bg-[#10367D] hover:bg-[#0C2C66] text-white text-[13px] font-bold rounded-full cursor-pointer mt-2 transition"
+            className="w-full py-2 bg-[#1356d6] hover:bg-[#0e44ba] text-white text-[13px] font-bold rounded-full cursor-pointer mt-2 transition"
           >
             Tutup
           </button>

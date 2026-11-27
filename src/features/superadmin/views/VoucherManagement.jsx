@@ -394,7 +394,7 @@ export default function VoucherManagement() {
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto font-sans">
       {/* ── BANNER GRADIENT ── */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2684ff] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
         <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
         <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0 flex-1">
@@ -421,7 +421,7 @@ export default function VoucherManagement() {
             </button>
             <button
               onClick={handleOpenCreateModal}
-              className="px-4 py-2.5 bg-white hover:bg-blue-50 text-[#10367D] rounded-xl text-xs sm:text-sm font-bold shadow-sm transition flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
+              className="px-4 py-2.5 bg-white hover:bg-blue-50 text-[#1356d6] rounded-xl text-xs sm:text-sm font-bold shadow-sm transition flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
             >
               <Plus className="w-4 h-4 stroke-[2.5]" />
               <span>Tambah Voucher Baru</span>
@@ -433,7 +433,7 @@ export default function VoucherManagement() {
       {/* Mini Stats Bar */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white p-4 rounded-xl shadow-card border border-slate-200 flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl border border-slate-200 text-[#10367D] flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl border border-slate-200 text-[#1356d6] flex items-center justify-center">
             <Layers className="w-5 h-5" />
           </div>
           <div>
@@ -482,7 +482,7 @@ export default function VoucherManagement() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Cari kode atau judul voucher..."
-            className="w-full pl-9.5 pr-4 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-[#10367D] focus:ring-2 focus:ring-[#10367D]/20 focus:bg-white transition-all font-medium"
+            className="w-full pl-9.5 pr-4 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-[#1356d6] focus:ring-2 focus:ring-[#1356d6]/20 focus:bg-white transition-all font-medium"
           />
         </div>
 
@@ -495,7 +495,7 @@ export default function VoucherManagement() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#10367D]"
+            className="px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#1356d6]"
           >
             <option value="ALL">Semua Status</option>
             <option value="ACTIVE">Hanya Aktif</option>
@@ -505,7 +505,7 @@ export default function VoucherManagement() {
           <select
             value={serviceFilter}
             onChange={(e) => setServiceFilter(e.target.value)}
-            className="px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#10367D]"
+            className="px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#1356d6]"
           >
             <option value="ALL">Semua Layanan</option>
             <option value="ALL_SERVICES">Semua (Universal)</option>
@@ -516,7 +516,7 @@ export default function VoucherManagement() {
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
-            className="px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#10367D]"
+            className="px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#1356d6]"
           >
             <option value="ALL">Semua Tipe Diskon</option>
             <option value="percentage">Persentase (%)</option>
@@ -554,7 +554,7 @@ export default function VoucherManagement() {
                     <tr key={voucher.id} className="hover:bg-slate-50/60 transition-colors">
                       {/* Kode & Judul */}
                       <td className="py-3.5 px-4">
-                        <div className="font-mono font-bold text-sm text-[#10367D]">
+                        <div className="font-mono font-bold text-sm text-[#1356d6]">
                           {voucher.code}
                         </div>
                         <div className="text-xs text-slate-500 truncate max-w-[200px]" title={voucher.title}>
@@ -619,7 +619,7 @@ export default function VoucherManagement() {
                         <div className="flex items-center justify-center gap-1">
                           <button
                             onClick={() => handleOpenEditModal(voucher)}
-                            className="p-1.5 text-slate-400 hover:text-[#10367D] hover:bg-slate-100 rounded-lg transition cursor-pointer"
+                            className="p-1.5 text-slate-400 hover:text-[#1356d6] hover:bg-slate-100 rounded-lg transition cursor-pointer"
                             title="Edit Voucher"
                           >
                             <Edit3 className="w-4 h-4" />
@@ -699,7 +699,7 @@ export default function VoucherManagement() {
                 value={formData.code}
                 onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
                 placeholder="Contoh: HEMAT50"
-                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-mono font-bold uppercase text-sm focus:outline-none focus:border-[#10367D]"
+                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-mono font-bold uppercase text-sm focus:outline-none focus:border-[#1356d6]"
               />
               <p className="text-[11px] text-slate-400 mt-0.5">Otomatis diubah ke huruf besar.</p>
             </div>
@@ -715,7 +715,7 @@ export default function VoucherManagement() {
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 placeholder="Contoh: Diskon Mudik Akhir Pekan"
-                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-sm focus:outline-none focus:border-[#10367D]"
+                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-sm focus:outline-none focus:border-[#1356d6]"
               />
             </div>
           </div>
@@ -729,7 +729,7 @@ export default function VoucherManagement() {
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder="Keterangan syarat atau informasi kampanye..."
-              className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-[#10367D]"
+              className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-[#1356d6]"
             />
           </div>
 
@@ -741,7 +741,7 @@ export default function VoucherManagement() {
               <label
                 className={`flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer transition ${
                   formData.claimType === 'direct_platform'
-                    ? 'border-[#10367D] bg-blue-50/60 text-[#10367D]'
+                    ? 'border-[#1356d6] bg-blue-50/60 text-[#1356d6]'
                     : 'border-slate-200 bg-slate-50 text-slate-700'
                 }`}
               >
@@ -759,7 +759,7 @@ export default function VoucherManagement() {
               <label
                 className={`flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer transition ${
                   formData.claimType === 'code_redemption'
-                    ? 'border-[#10367D] bg-blue-50/60 text-[#10367D]'
+                    ? 'border-[#1356d6] bg-blue-50/60 text-[#1356d6]'
                     : 'border-slate-200 bg-slate-50 text-slate-700'
                 }`}
               >
@@ -784,7 +784,7 @@ export default function VoucherManagement() {
               <select
                 value={formData.appliesTo}
                 onChange={(e) => setFormData({ ...formData, appliesTo: e.target.value })}
-                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-sm focus:outline-none focus:border-[#10367D]"
+                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-sm focus:outline-none focus:border-[#1356d6]"
               >
                 <option value="">Semua Layanan</option>
                 <option value="passenger">Penumpang Saja</option>
@@ -799,7 +799,7 @@ export default function VoucherManagement() {
               <select
                 value={formData.discountType}
                 onChange={(e) => setFormData({ ...formData, discountType: e.target.value })}
-                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-sm focus:outline-none focus:border-[#10367D]"
+                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-sm focus:outline-none focus:border-[#1356d6]"
               >
                 <option value="percentage">Persentase (%)</option>
                 <option value="fixed_amount">Potongan Tetap (Rp)</option>
@@ -818,7 +818,7 @@ export default function VoucherManagement() {
                 value={formData.discountValue}
                 onChange={(e) => setFormData({ ...formData, discountValue: e.target.value })}
                 placeholder={formData.discountType === 'percentage' ? 'Contoh: 25' : 'Contoh: 15000'}
-                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-sm focus:outline-none focus:border-[#10367D]"
+                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-sm focus:outline-none focus:border-[#1356d6]"
               />
             </div>
           </div>
@@ -835,7 +835,7 @@ export default function VoucherManagement() {
                   value={formData.maxDiscountAmount}
                   onChange={(e) => setFormData({ ...formData, maxDiscountAmount: e.target.value })}
                   placeholder="Opsional (kosongkan jika tanpa batas)"
-                  className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-[#10367D]"
+                  className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-[#1356d6]"
                 />
               </div>
             )}
@@ -850,7 +850,7 @@ export default function VoucherManagement() {
                 value={formData.minOrderAmount}
                 onChange={(e) => setFormData({ ...formData, minOrderAmount: e.target.value })}
                 placeholder="0"
-                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-[#10367D]"
+                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-[#1356d6]"
               />
             </div>
           </div>
@@ -866,7 +866,7 @@ export default function VoucherManagement() {
                 value={formData.usageLimit}
                 onChange={(e) => setFormData({ ...formData, usageLimit: e.target.value })}
                 placeholder="Kosongkan jika tanpa batas kuota"
-                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-[#10367D]"
+                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-[#1356d6]"
               />
             </div>
 
@@ -881,7 +881,7 @@ export default function VoucherManagement() {
                 value={formData.usagePerUserLimit}
                 onChange={(e) => setFormData({ ...formData, usagePerUserLimit: e.target.value })}
                 placeholder="1"
-                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-[#10367D]"
+                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-[#1356d6]"
               />
             </div>
           </div>
@@ -896,7 +896,7 @@ export default function VoucherManagement() {
                 required
                 value={formData.validFrom}
                 onChange={(e) => setFormData({ ...formData, validFrom: e.target.value })}
-                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-[#10367D]"
+                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-[#1356d6]"
               />
             </div>
 
@@ -909,7 +909,7 @@ export default function VoucherManagement() {
                 required
                 value={formData.validUntil}
                 onChange={(e) => setFormData({ ...formData, validUntil: e.target.value })}
-                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-[#10367D]"
+                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-[#1356d6]"
               />
             </div>
           </div>
@@ -939,7 +939,7 @@ export default function VoucherManagement() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-5 py-2.5 bg-[#10367D] hover:bg-[#0C2C66] text-white font-bold rounded-xl transition shadow-sm cursor-pointer flex items-center gap-2"
+              className="px-5 py-2.5 bg-[#1356d6] hover:bg-[#0e44ba] text-white font-bold rounded-xl transition shadow-sm cursor-pointer flex items-center gap-2"
             >
               {isSubmitting ? (
                 <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -990,7 +990,7 @@ export default function VoucherManagement() {
                 maxLength={50}
                 value={formData.code}
                 onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-mono font-bold uppercase text-sm focus:outline-none focus:border-[#10367D]"
+                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-mono font-bold uppercase text-sm focus:outline-none focus:border-[#1356d6]"
               />
             </div>
 
@@ -1004,7 +1004,7 @@ export default function VoucherManagement() {
                 maxLength={150}
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-sm focus:outline-none focus:border-[#10367D]"
+                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-sm focus:outline-none focus:border-[#1356d6]"
               />
             </div>
           </div>
@@ -1017,7 +1017,7 @@ export default function VoucherManagement() {
               rows={2}
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-[#10367D]"
+              className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-[#1356d6]"
             />
           </div>
 
@@ -1031,7 +1031,7 @@ export default function VoucherManagement() {
                   editingHasRedemptions ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
                 } ${
                   formData.claimType === 'direct_platform'
-                    ? 'border-[#10367D] bg-blue-50/60 text-[#10367D]'
+                    ? 'border-[#1356d6] bg-blue-50/60 text-[#1356d6]'
                     : 'border-slate-200 bg-slate-50 text-slate-700'
                 }`}
               >
@@ -1052,7 +1052,7 @@ export default function VoucherManagement() {
                   editingHasRedemptions ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
                 } ${
                   formData.claimType === 'code_redemption'
-                    ? 'border-[#10367D] bg-blue-50/60 text-[#10367D]'
+                    ? 'border-[#1356d6] bg-blue-50/60 text-[#1356d6]'
                     : 'border-slate-200 bg-slate-50 text-slate-700'
                 }`}
               >
@@ -1079,7 +1079,7 @@ export default function VoucherManagement() {
                 disabled={editingHasRedemptions}
                 value={formData.appliesTo}
                 onChange={(e) => setFormData({ ...formData, appliesTo: e.target.value })}
-                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-sm focus:outline-none focus:border-[#10367D] disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-sm focus:outline-none focus:border-[#1356d6] disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <option value="">Semua Layanan</option>
                 <option value="passenger">Penumpang Saja</option>
@@ -1095,7 +1095,7 @@ export default function VoucherManagement() {
                 disabled={editingHasRedemptions}
                 value={formData.discountType}
                 onChange={(e) => setFormData({ ...formData, discountType: e.target.value })}
-                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-sm focus:outline-none focus:border-[#10367D] disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-sm focus:outline-none focus:border-[#1356d6] disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <option value="percentage">Persentase (%)</option>
                 <option value="fixed_amount">Potongan Tetap (Rp)</option>
@@ -1114,7 +1114,7 @@ export default function VoucherManagement() {
                 max={formData.discountType === 'percentage' ? '100' : undefined}
                 value={formData.discountValue}
                 onChange={(e) => setFormData({ ...formData, discountValue: e.target.value })}
-                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-sm focus:outline-none focus:border-[#10367D] disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-sm focus:outline-none focus:border-[#1356d6] disabled:opacity-60 disabled:cursor-not-allowed"
               />
             </div>
           </div>
@@ -1132,7 +1132,7 @@ export default function VoucherManagement() {
                   value={formData.maxDiscountAmount}
                   onChange={(e) => setFormData({ ...formData, maxDiscountAmount: e.target.value })}
                   placeholder="Kosongkan jika tanpa batas"
-                  className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-[#10367D] disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-[#1356d6] disabled:opacity-60 disabled:cursor-not-allowed"
                 />
               </div>
             )}
@@ -1146,7 +1146,7 @@ export default function VoucherManagement() {
                 min="0"
                 value={formData.minOrderAmount}
                 onChange={(e) => setFormData({ ...formData, minOrderAmount: e.target.value })}
-                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-[#10367D]"
+                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-[#1356d6]"
               />
             </div>
           </div>
@@ -1162,7 +1162,7 @@ export default function VoucherManagement() {
                 value={formData.usageLimit}
                 onChange={(e) => setFormData({ ...formData, usageLimit: e.target.value })}
                 placeholder="Kosongkan jika tanpa batas kuota"
-                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-[#10367D]"
+                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-[#1356d6]"
               />
             </div>
 
@@ -1176,7 +1176,7 @@ export default function VoucherManagement() {
                 required
                 value={formData.usagePerUserLimit}
                 onChange={(e) => setFormData({ ...formData, usagePerUserLimit: e.target.value })}
-                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-[#10367D]"
+                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-[#1356d6]"
               />
             </div>
           </div>
@@ -1191,7 +1191,7 @@ export default function VoucherManagement() {
                 required
                 value={formData.validFrom}
                 onChange={(e) => setFormData({ ...formData, validFrom: e.target.value })}
-                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-[#10367D]"
+                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-[#1356d6]"
               />
             </div>
 
@@ -1204,7 +1204,7 @@ export default function VoucherManagement() {
                 required
                 value={formData.validUntil}
                 onChange={(e) => setFormData({ ...formData, validUntil: e.target.value })}
-                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-[#10367D]"
+                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-[#1356d6]"
               />
             </div>
           </div>
@@ -1234,7 +1234,7 @@ export default function VoucherManagement() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-5 py-2.5 bg-[#10367D] hover:bg-[#0C2C66] text-white font-bold rounded-xl transition shadow-sm cursor-pointer flex items-center gap-2"
+              className="px-5 py-2.5 bg-[#1356d6] hover:bg-[#0e44ba] text-white font-bold rounded-xl transition shadow-sm cursor-pointer flex items-center gap-2"
             >
               {isSubmitting ? (
                 <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

@@ -7,7 +7,7 @@ export default function ToggleSwitch({ checked, onChange, disabled }) {
       disabled={disabled}
       onClick={() => onChange(!checked)}
       className={`relative w-9 h-5 rounded-full transition shrink-0 ${
-        checked ? 'bg-[#10367D]' : 'bg-neutral-200'
+        checked ? 'bg-[#1356d6]' : 'bg-neutral-200'
       } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
     >
       <span

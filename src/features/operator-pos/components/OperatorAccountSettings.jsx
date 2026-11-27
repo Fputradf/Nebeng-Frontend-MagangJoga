@@ -17,8 +17,8 @@ import BaseModal from '../../../components/ui/BaseModal';
 import ToggleSwitch from '../../../components/ui/ToggleSwitch';
 import apiClient from '../../../services/apiClient';
 
-const PRIMARY_COLOR = '#10367D';
-const PRIMARY_HOVER = '#0C2C66';
+const PRIMARY_COLOR = '#1356d6';
+const PRIMARY_HOVER = '#0e44ba';
 const PRIMARY_ACCENT = '#74B4D9';
 
 const DEFAULT_NOTIF_PREFS = {
@@ -426,7 +426,7 @@ export default function OperatorAccountSettings() {
   return (
     <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
       {/* ── BANNER GRADIENT ── */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2684ff] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
         <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
         <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0 flex-1">
@@ -535,7 +535,7 @@ export default function OperatorAccountSettings() {
                       e.target.value
                     )
                   }
-                  className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#10367D]"
+                  className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#1356d6]"
                   required
                 />
               </div>
@@ -558,7 +558,7 @@ export default function OperatorAccountSettings() {
                       )
                     )
                   }
-                  className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 font-mono focus:outline-none focus:border-[#10367D]"
+                  className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 font-mono focus:outline-none focus:border-[#1356d6]"
                 />
               </div>
 
@@ -577,7 +577,7 @@ export default function OperatorAccountSettings() {
                       e.target.value
                     )
                   }
-                  className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#10367D]"
+                  className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#1356d6]"
                   required
                 />
               </div>
@@ -646,7 +646,7 @@ export default function OperatorAccountSettings() {
                       current: e.target.value,
                     }))
                   }
-                  className="w-full px-3 py-2.5 pr-9 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#10367D]"
+                  className="w-full px-3 py-2.5 pr-9 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#1356d6]"
                 />
 
                 <button
@@ -685,7 +685,7 @@ export default function OperatorAccountSettings() {
                       next: e.target.value,
                     }))
                   }
-                  className="w-full px-3 py-2.5 pr-9 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#10367D]"
+                  className="w-full px-3 py-2.5 pr-9 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#1356d6]"
                 />
 
                 <button
@@ -724,7 +724,7 @@ export default function OperatorAccountSettings() {
                       confirm: e.target.value,
                     }))
                   }
-                  className="w-full px-3 py-2.5 pr-9 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#10367D]"
+                  className="w-full px-3 py-2.5 pr-9 bg-neutral-50 border border-neutral-200 rounded-xl font-bold text-neutral-800 focus:outline-none focus:border-[#1356d6]"
                 />
 
                 <button

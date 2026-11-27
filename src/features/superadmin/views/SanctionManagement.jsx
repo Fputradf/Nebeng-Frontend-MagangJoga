@@ -177,7 +177,7 @@ export default function SanctionManagement() {
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
       {/* ── BANNER GRADIENT ── */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2684ff] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
         <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
         <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0 flex-1">
@@ -203,7 +203,7 @@ export default function SanctionManagement() {
             <button
               onClick={handleSaveSettings}
               disabled={isSaving}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-blue-50 text-[#10367D] text-xs font-bold shadow-sm transition cursor-pointer disabled:opacity-50 whitespace-nowrap"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-blue-50 text-[#1356d6] text-xs font-bold shadow-sm transition cursor-pointer disabled:opacity-50 whitespace-nowrap"
             >
               <Save className="w-4 h-4" />
               {isSaving ? 'Menyimpan...' : 'Simpan Kebijakan'}
@@ -280,7 +280,7 @@ export default function SanctionManagement() {
           onClick={() => setActiveTab('policy')}
           className={`pb-3.5 flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
             activeTab === 'policy'
-              ? 'border-[#10367D] text-[#10367D]'
+              ? 'border-[#1356d6] text-[#1356d6]'
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
@@ -292,7 +292,7 @@ export default function SanctionManagement() {
           onClick={() => setActiveTab('appeals')}
           className={`pb-3.5 flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
             activeTab === 'appeals'
-              ? 'border-[#10367D] text-[#10367D]'
+              ? 'border-[#1356d6] text-[#1356d6]'
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
@@ -309,7 +309,7 @@ export default function SanctionManagement() {
           onClick={() => setActiveTab('lookup')}
           className={`pb-3.5 flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
             activeTab === 'lookup'
-              ? 'border-[#10367D] text-[#10367D]'
+              ? 'border-[#1356d6] text-[#1356d6]'
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
@@ -324,7 +324,7 @@ export default function SanctionManagement() {
           {/* General Thresholds Card */}
           <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 sm:p-6 space-y-4">
             <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
-              <Clock className="w-5 h-5 text-[#10367D]" />
+              <Clock className="w-5 h-5 text-[#1356d6]" />
               <h2 className="text-base font-bold text-slate-900">
                 Parameter Batas Waktu & Reputasi Global
               </h2>
@@ -373,7 +373,7 @@ export default function SanctionManagement() {
                   <label className="text-xs font-semibold text-slate-700 mb-1.5 min-h-[32px] flex items-end leading-snug">
                     {field.label}
                   </label>
-                  <div className="flex items-center rounded-xl border border-slate-200 bg-white overflow-hidden focus-within:ring-2 focus-within:ring-[#10367D]/20 focus-within:border-[#10367D]">
+                  <div className="flex items-center rounded-xl border border-slate-200 bg-white overflow-hidden focus-within:ring-2 focus-within:ring-[#1356d6]/20 focus-within:border-[#1356d6]">
                     <input
                       type="number"
                       min={field.min}
@@ -405,7 +405,7 @@ export default function SanctionManagement() {
                   <div className="space-y-4">
                     <div className="pb-3 border-b border-slate-100 md:min-h-[84px]">
                       <div className="flex items-center gap-2">
-                        <ShieldAlert className="w-4 h-4 text-[#10367D] shrink-0" />
+                        <ShieldAlert className="w-4 h-4 text-[#1356d6] shrink-0" />
                         <h3 className="text-sm font-bold text-slate-900">{policy.label}</h3>
                       </div>
                       <p className="text-xs text-slate-500 mt-1 leading-relaxed">
@@ -424,7 +424,7 @@ export default function SanctionManagement() {
                         },
                         {
                           tierLabel: 'Tier 2 (Berulang)',
-                          tierColor: 'text-[#10367D]',
+                          tierColor: 'text-[#1356d6]',
                           scoreField: 'tier2ScoreDeduction',
                           daysField: 'tier2SuspensionDays',
                           maxDays: 90,
@@ -438,7 +438,7 @@ export default function SanctionManagement() {
                             <label className="block text-[11px] text-slate-600 font-medium mb-1">
                               Potongan Skor
                             </label>
-                            <div className="flex items-center rounded-lg border border-slate-200 bg-white overflow-hidden focus-within:border-[#10367D]">
+                            <div className="flex items-center rounded-lg border border-slate-200 bg-white overflow-hidden focus-within:border-[#1356d6]">
                               <input
                                 type="number"
                                 min="0"
@@ -459,7 +459,7 @@ export default function SanctionManagement() {
                             <label className="block text-[11px] text-slate-600 font-medium mb-1">
                               Suspensi Akun
                             </label>
-                            <div className="flex items-center rounded-lg border border-slate-200 bg-white overflow-hidden focus-within:border-[#10367D]">
+                            <div className="flex items-center rounded-lg border border-slate-200 bg-white overflow-hidden focus-within:border-[#1356d6]">
                               <input
                                 type="number"
                                 min="0"
@@ -488,7 +488,7 @@ export default function SanctionManagement() {
                         onChange={(e) =>
                           handlePolicyChange(key, 'autoSuspendOnTier2', e.target.checked)
                         }
-                        className="rounded-sm border-slate-300 text-[#10367D] focus:ring-[#10367D]"
+                        className="rounded-sm border-slate-300 text-[#1356d6] focus:ring-[#1356d6]"
                       />
                       <span className="font-medium text-slate-700">
                         Otomatis bekukan akun jika mencapai Tier 2
@@ -593,7 +593,7 @@ export default function SanctionManagement() {
                     <tr>
                       <td colSpan="6" className="text-center py-12 text-slate-400">
                         <div className="flex flex-col items-center justify-center gap-2">
-                          <RefreshCw className="w-5 h-5 animate-spin text-[#10367D]" />
+                          <RefreshCw className="w-5 h-5 animate-spin text-[#1356d6]" />
                           <span>Memuat daftar permohonan banding mitra...</span>
                         </div>
                       </td>
@@ -649,7 +649,7 @@ export default function SanctionManagement() {
                               }}
                               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold text-xs cursor-pointer shadow-2xs ${
                                 item.status === 'PENDING'
-                                  ? 'bg-[#10367D] text-white hover:bg-[#0c2353]'
+                                  ? 'bg-[#1356d6] text-white hover:bg-[#0b3ba8]'
                                   : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                               }`}
                             >
@@ -695,13 +695,13 @@ export default function SanctionManagement() {
                   placeholder="Masukkan ID Mitra (Contoh: 1, 14, 25)..."
                   value={lookupMitraId}
                   onChange={(e) => setLookupMitraId(e.target.value)}
-                  className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-hidden focus:ring-2 focus:ring-[#10367D]/20 focus:border-[#10367D]"
+                  className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-hidden focus:ring-2 focus:ring-[#1356d6]/20 focus:border-[#1356d6]"
                 />
               </div>
               <button
                 type="submit"
                 disabled={isSearchingLookup || !lookupMitraId.trim()}
-                className="px-5 py-2.5 bg-[#10367D] hover:bg-[#0c2353] text-white text-xs font-bold rounded-xl transition cursor-pointer disabled:opacity-50 shrink-0"
+                className="px-5 py-2.5 bg-[#1356d6] hover:bg-[#0b3ba8] text-white text-xs font-bold rounded-xl transition cursor-pointer disabled:opacity-50 shrink-0"
               >
                 {isSearchingLookup ? 'Mencari...' : 'Periksa'}
               </button>
@@ -896,7 +896,7 @@ export default function SanctionManagement() {
                     value={reviewNotes}
                     onChange={(e) => setReviewNotes(e.target.value)}
                     placeholder="Tuliskan catatan pertimbangan (opsional untuk setuju, wajib bila menolak)..."
-                    className="w-full p-2.5 rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-[#10367D]/20 focus:border-[#10367D] text-xs"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-[#1356d6]/20 focus:border-[#1356d6] text-xs"
                   />
                 </div>
 

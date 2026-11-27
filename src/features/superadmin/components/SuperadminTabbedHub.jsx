@@ -39,7 +39,7 @@ export default function SuperadminTabbedHub({ tabs, defaultTab }) {
                 onClick={() => handleSelectTab(tab)}
                 className={`inline-flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-semibold border-b-2 transition-colors whitespace-nowrap cursor-pointer ${
                   isActive
-                    ? 'border-[#10367D] text-[#10367D] bg-white/70 rounded-t-xl'
+                    ? 'border-[#1356d6] text-[#1356d6] bg-white/70 rounded-t-xl'
                     : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-white/40 rounded-t-xl'
                 }`}
               >

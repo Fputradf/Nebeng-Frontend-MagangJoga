@@ -3,8 +3,8 @@ import { useState, useEffect } from 'react';
 import { X, Phone, IdCard, ShieldCheck, Settings, CalendarCheck } from 'lucide-react';
 import apiClient from '../../../services/apiClient';
 
-const PRIMARY_COLOR = '#10367D';
-const PRIMARY_HOVER = '#0C2C66';
+const PRIMARY_COLOR = '#1356d6';
+const PRIMARY_HOVER = '#0e44ba';
 
 const maskNik = (nik) => {
   if (!nik || nik === '-') return '-';

@@ -38,7 +38,6 @@ const SUPERADMIN_MENU_PATH = {
   'Log Darurat SOS': 'sos-logs',
   Banner: 'banner',
   Voucher: 'voucher',
-  Merchandise: 'merchandise',
   'Konfigurasi Logo & Nama': 'konfigurasi-aplikasi',
   'Sosial Link': 'sosial-link',
   // Aliases
@@ -48,7 +47,6 @@ const SUPERADMIN_MENU_PATH = {
   'Verifikasi ID & Face': 'verifikasi-kyc',
   'Pusat Verifikasi': 'verifikasi-kyc',
   'Konfigurasi Aplikasi': 'konfigurasi-aplikasi',
-  'Manajemen Merchandise': 'merchandise',
   'Manajemen Banner': 'banner',
   'Manajemen Voucher': 'voucher',
   'Manajemen Sanksi': 'sanksi',
@@ -71,7 +69,6 @@ const SIDEBAR_GROUP_BY_MENU = {
   'Log Darurat SOS': 'Kepatuhan & User',
   Banner: 'Promo & Konten',
   Voucher: 'Promo & Konten',
-  Merchandise: 'Promo & Konten',
   'Konfigurasi Logo & Nama': 'Branding & Sosial',
   'Sosial Link': 'Branding & Sosial',
 };

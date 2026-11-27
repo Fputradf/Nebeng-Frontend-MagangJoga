@@ -31,6 +31,7 @@ import {
   ShieldAlert,
   Lock,
   Hash,
+  CheckCircle2,
 } from 'lucide-react';
 import SosTriggerModal from '../components/SosTriggerModal';
 import ReportModal from '../../../components/common/ReportModal';
@@ -60,7 +61,7 @@ import {
 } from '../../../utils/dateUtils';
 import { parseRoutePolyline } from '../../../utils/mapRouteUtil';
 
-const PRIMARY_COLOR = '#10367D';
+const PRIMARY_COLOR = '#1356d6';
 const PRIMARY_ACCENT = '#74B4D9';
 
 const formatRupiah = (value) =>
@@ -716,7 +717,7 @@ export default function MyTickets() {
               pointer-events:none;
             ">
               <div style="
-                background:linear-gradient(135deg, ${PRIMARY_COLOR} 0%, #0C2C66 100%);
+                background:linear-gradient(135deg, ${PRIMARY_COLOR} 0%, #0e44ba 100%);
                 color:white;
                 padding:6px 12px;
                 border-radius:8px;
@@ -799,7 +800,7 @@ export default function MyTickets() {
                 pointer-events:none;
               ">
                 <div style="
-                  background:linear-gradient(135deg, ${PRIMARY_COLOR} 0%, #0C2C66 100%);
+                  background:linear-gradient(135deg, ${PRIMARY_COLOR} 0%, #0e44ba 100%);
                   color:white;
                   padding:6px 12px;
                   border-radius:8px;
@@ -1158,11 +1159,11 @@ Tunjukkan Kode Tiket / QR ini kepada Mitra Sopir atau Petugas Pos saat keberangk
   
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
+    <div className="w-full mx-auto p-4 space-y-5 min-h-screen font-['Inter']">
       {/* ── BANNER ── */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2684ff] px-5 py-4 flex items-center text-white shadow-card">
         <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
-        <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative w-full flex flex-col gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 mb-1 min-w-0">
               <span className="w-2 h-2 rounded-full bg-accent animate-pulse shrink-0" />
@@ -1180,9 +1181,9 @@ Tunjukkan Kode Tiket / QR ini kepada Mitra Sopir atau Petugas Pos saat keberangk
             <button
               type="button"
               onClick={() => navigate('/customer/qr')}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-white text-[#10367D] hover:bg-blue-50 rounded-xl text-xs font-bold transition cursor-pointer shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white whitespace-nowrap"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-white text-[#1356d6] hover:bg-blue-50 rounded-xl text-xs font-bold transition cursor-pointer shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white whitespace-nowrap"
             >
-              <QrCode className="w-4 h-4 text-[#10367D]" />
+              <QrCode className="w-4 h-4 text-[#1356d6]" />
               <span>Digital QR Aktif</span>
             </button>
 
@@ -1207,7 +1208,7 @@ Tunjukkan Kode Tiket / QR ini kepada Mitra Sopir atau Petugas Pos saat keberangk
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Cari No. Tiket, Rute, atau Mitra..."
-          className="w-full pl-10 pr-9 py-2.5 bg-white border border-neutral-200/90 rounded-xl text-[13px] font-medium text-neutral-800 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-[#10367D]/10 focus:border-[#10367D] shadow-xs transition-all"
+          className="w-full pl-10 pr-9 py-2.5 bg-white border border-neutral-200/90 rounded-xl text-[13px] font-medium text-neutral-800 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-[#1356d6]/10 focus:border-[#1356d6] shadow-xs transition-all"
         />
         {searchQuery && (
           <button
@@ -1242,22 +1243,10 @@ Tunjukkan Kode Tiket / QR ini kepada Mitra Sopir atau Petugas Pos saat keberangk
         >
           Riwayat Perjalanan ({tickets.filter((t) => t.isExpired || (t.status !== 'Aktif' && t.status !== 'Menunggu Pembayaran')).length})
         </button>
-
-        <button
-          onClick={() => setActiveTab('reward')}
-          className={`shrink-0 px-3.5 py-1.5 rounded-xl text-[13px] font-bold transition cursor-pointer flex items-center gap-1.5 ${
-            activeTab === 'reward' ? 'text-white shadow-sm' : 'bg-white text-neutral-600 border border-neutral-200 hover:bg-neutral-50'
-          }`}
-          style={activeTab === 'reward' ? { backgroundColor: PRIMARY_COLOR } : undefined}
-        >
-          <Award className="w-3.5 h-3.5 text-amber-500" />
-          <span>Poin & Reward ({rewardSummary.totalPoints} Poin)</span>
-        </button>
       </div>
 
       {/* Konten Tab */}
-      {activeTab !== 'reward' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 gap-4">
           {isLoadingTickets ? (
             Array.from({ length: 2 }).map((_, i) => (
               <div key={i} className="bg-white rounded-2xl p-5 shadow-xs border border-neutral-200/90 space-y-4">
@@ -1293,19 +1282,63 @@ Tunjukkan Kode Tiket / QR ini kepada Mitra Sopir atau Petugas Pos saat keberangk
               return (
                 <div
                   key={ticket.id}
-                  className="bg-white rounded-2xl p-5 shadow-xs hover:shadow-md border border-neutral-200/90 flex flex-col justify-between space-y-4 transition-all duration-200"
+                  className="bg-white rounded-2xl p-4 shadow-[0_2px_16px_rgba(16,54,125,0.06)] border border-slate-100 flex flex-col justify-between space-y-3.5 transition-all duration-200"
                 >
                   <div className="space-y-3.5">
-                    {/* Header Card: Kategori Tiket & Aksi Atas Kanan */}
-                    <div className="flex justify-between items-center gap-2">
-                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-[#10367D] border border-blue-200/70">
-                        {isParcel ? (
-                          <Package className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                    {/* Header Card Paling Atas (Di Atas Pos): Status Full Color di Kiri + SOS/ID di Kanan */}
+                    <div className="flex items-start justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {ticket.status === 'Aktif' ? (
+                          <>
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                              Aktif
+                            </span>
+                            {canTriggerSos ? (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 animate-pulse">
+                                🚀 Dalam Perjalanan
+                              </span>
+                            ) : hasCheckedInOrigin ? (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                                📍 Check-in Pos 1 Selesai
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                ⏳ Menunggu Check-in Pos 1
+                              </span>
+                            )}
+                          </>
+                        ) : ticket.status === 'Menunggu Pembayaran' ? (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                            <Clock className="w-3 h-3 text-amber-600" />
+                            Menunggu Pembayaran
+                          </span>
+                        ) : ticket.status === 'Selesai' ? (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                            Selesai
+                          </span>
+                        ) : ticket.status.startsWith('Batal') || ticket.currentStatusText === 'cancelled' || ticket.currentStatusText === 'cancelled_by_mitra' ? (
+                          <>
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                              <XCircle className="w-3.5 h-3.5 text-rose-600" />
+                              {ticket.status || 'Dibatalkan'}
+                            </span>
+                            {ticket.currentStatusText === 'cancelled_by_mitra' && (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-orange-50 text-orange-700 border border-orange-200">
+                                Dibatalkan Mitra
+                              </span>
+                            )}
+                          </>
                         ) : (
-                          <Users className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                          <StatusBadge variant="default">
+                            {ticket.status}
+                          </StatusBadge>
                         )}
-                        <span>{ticket.title}</span>
                       </div>
+
+                      {(isParcel || (!isParcel && ticket.status === 'Aktif')) && (
+                      <div className="flex justify-end items-center gap-2 ml-auto">
 
                       {/* Atas Kanan Tiket: Tombol Bantuan SOS untuk Tiket Penumpang */}
                       {!isParcel ? (
@@ -1358,55 +1391,59 @@ Tunjukkan Kode Tiket / QR ini kepada Mitra Sopir atau Petugas Pos saat keberangk
                         </span>
                       )}
                     </div>
+                    )}
+                    </div>
 
-                    {/* Rute Perjalanan Visual */}
-                    <div className="bg-blue-50/30 rounded-xl p-3 border border-blue-100/70 flex items-center justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0 inline-block" />
-                          Pos Asal
-                        </span>
-                        <p className="text-[13px] font-bold text-neutral-800 truncate mt-0.5" title={ticket.from}>
-                          {ticket.from}
-                        </p>
-                      </div>
-
-                      <div className="shrink-0 flex items-center justify-center">
-                        <div className="w-7 h-7 rounded-full bg-blue-50 border border-blue-200/60 flex items-center justify-center text-blue-600 shadow-xs">
-                          <ArrowRight className="w-3.5 h-3.5" />
+                    {/* Rute Perjalanan Visual (Vertikal agar tidak terpotong di mobile) */}
+                    <div className="bg-blue-50/40 rounded-xl p-3 border border-blue-100/80 space-y-2">
+                      <div className="flex items-start gap-2.5">
+                        <span className="mt-1.5 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-100 shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                            Pos Asal
+                          </span>
+                          <p className="text-[13px] font-bold text-slate-800 leading-snug" title={ticket.from}>
+                            {ticket.from}
+                          </p>
                         </div>
                       </div>
 
-                      <div className="flex-1 min-w-0 text-right">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 flex items-center justify-end gap-1">
-                          Pos Tujuan
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 shrink-0 inline-block" />
-                        </span>
-                        <p className="text-[13px] font-bold text-neutral-800 truncate mt-0.5" title={ticket.to}>
-                          {ticket.to}
-                        </p>
+                      <div className="ml-1 h-2.5 border-l-2 border-dashed border-blue-200" />
+
+                      <div className="flex items-start gap-2.5">
+                        <span className="mt-1.5 h-2.5 w-2.5 rounded-full bg-[#1356d6] ring-4 ring-blue-100 shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                            Pos Tujuan
+                          </span>
+                          <p className="text-[13px] font-bold text-slate-800 leading-snug" title={ticket.to}>
+                            {ticket.to}
+                          </p>
+                        </div>
                       </div>
                     </div>
 
                     {/* Detail Mitra, Jadwal, & Biaya */}
-                    <div className="bg-neutral-50/70 rounded-xl p-3 border border-neutral-100 space-y-2 text-[12px]">
+                    <div className="bg-slate-50/70 rounded-xl p-3 border border-slate-100 space-y-2.5 text-[12px]">
                       <div className="flex items-center justify-between gap-2 text-neutral-700">
                         <div className="flex items-center gap-2 min-w-0">
-                          <Car className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+                          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-blue-100/80 text-[#1356d6]">
+                            <Car className="w-3.5 h-3.5 stroke-[2.2]" />
+                          </span>
                           <span className="truncate">
                             <strong className="text-neutral-800 font-semibold">Mitra:</strong> {ticket.mitra} ({ticket.vehicle})
                           </span>
                         </div>
                         {ticket.mitraRating ? (
-                          <div className="shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 bg-amber-50 border border-amber-200/80 rounded-md text-[11px] font-bold text-amber-800">
-                            <Star className="w-3 h-3 fill-amber-400 text-amber-500 shrink-0" />
+                          <div className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 bg-amber-50 border border-amber-200 rounded-full text-[11px] font-bold text-amber-700 leading-none">
+                            <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500 shrink-0" />
                             <span>{ticket.mitraRating}</span>
                             {ticket.mitraTotalReviews > 0 && (
-                              <span className="text-[10px] text-amber-600 font-normal">({ticket.mitraTotalReviews})</span>
+                              <span className="text-[10px] text-amber-600/80 font-semibold">({ticket.mitraTotalReviews})</span>
                             )}
                           </div>
                         ) : (
-                          <div className="shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 bg-slate-50 border border-slate-200 rounded-md text-[10px] font-medium text-slate-500">
+                          <div className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 border border-slate-200 rounded-full text-[10px] font-semibold text-slate-500 leading-none">
                             <Star className="w-3 h-3 text-slate-400 shrink-0" />
                             <span>Baru</span>
                           </div>
@@ -1414,7 +1451,9 @@ Tunjukkan Kode Tiket / QR ini kepada Mitra Sopir atau Petugas Pos saat keberangk
                       </div>
 
                       <div className="flex items-center gap-2 text-neutral-700">
-                        <Clock className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-sky-100/80 text-sky-600">
+                          <Clock className="w-3.5 h-3.5 stroke-[2.2]" />
+                        </span>
                         <span className="truncate">
                           <strong className="text-neutral-800 font-semibold">Jadwal:</strong> {ticket.schedule}
                         </span>
@@ -1422,7 +1461,9 @@ Tunjukkan Kode Tiket / QR ini kepada Mitra Sopir atau Petugas Pos saat keberangk
 
                       {ticket.durationFormatted && (
                         <div className="flex items-center gap-2 text-neutral-700">
-                          <Navigation className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-indigo-100/80 text-indigo-600">
+                            <Navigation className="w-3.5 h-3.5 stroke-[2.2]" />
+                          </span>
                           <span className="truncate">
                             <strong className="text-neutral-800 font-semibold">Estimasi:</strong> {ticket.durationFormatted}
                             {ticket.distanceKm ? ` (${ticket.distanceKm} km)` : ''}
@@ -1432,14 +1473,18 @@ Tunjukkan Kode Tiket / QR ini kepada Mitra Sopir atau Petugas Pos saat keberangk
                       )}
 
                       <div className="flex items-center gap-2 text-neutral-700">
-                        <Ticket className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-emerald-100/80 text-emerald-600">
+                          <Ticket className="w-3.5 h-3.5 stroke-[2.2]" />
+                        </span>
                         <span className="truncate">
                           <strong className="text-neutral-800 font-semibold">Detail:</strong> {ticket.detail}
                         </span>
                       </div>
 
                       <div className="flex items-center gap-2 text-neutral-700">
-                        <Hash className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-slate-200/70 text-slate-600">
+                          <Hash className="w-3.5 h-3.5 stroke-[2.2]" />
+                        </span>
                         <span className="truncate">
                           <strong className="text-neutral-800 font-semibold">ID Tiket:</strong>{' '}
                           <span className="font-mono text-neutral-600 font-semibold">#{ticket.id}</span>
@@ -1455,7 +1500,7 @@ Tunjukkan Kode Tiket / QR ini kepada Mitra Sopir atau Petugas Pos saat keberangk
                             {ticket.passengers.map((p, pIdx) => (
                               <span
                                 key={pIdx}
-                                className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50/80 text-[#10367D] rounded-md text-[11px] font-semibold border border-blue-200/60"
+                                className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50/80 text-[#1356d6] rounded-md text-[11px] font-semibold border border-blue-200/60"
                               >
                                 <span className="w-3.5 h-3.5 rounded-full bg-blue-200/80 text-[9px] font-extrabold flex items-center justify-center">
                                   {p.seatNumber || (pIdx + 1)}
@@ -1508,67 +1553,35 @@ Tunjukkan Kode Tiket / QR ini kepada Mitra Sopir atau Petugas Pos saat keberangk
 
                     const canTriggerSos = hasCheckedInOrigin && isInTransit;
 
+                    const openAuditModal = () => {
+                      setSelectedTimelineTicket(ticket);
+                      setIsTimelineModalOpen(true);
+                    };
+
+                    const auditButton = (
+                      <button
+                        type="button"
+                        onClick={openAuditModal}
+                        className="w-full py-2.5 px-2.5 text-[12px] font-bold text-white bg-[#1356d6] hover:bg-[#0b3ba8] rounded-xl shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer min-h-[40px]"
+                        title="Lihat riwayat scan checkpoint perjalanan"
+                      >
+                        <History className="w-3.5 h-3.5 text-white shrink-0" />
+                        <span className="truncate">Audit Checkpoint</span>
+                      </button>
+                    );
+
                     return (
                       <div className="space-y-3 pt-3 border-t border-neutral-100">
-                        {/* Baris 1: Status Perjalanan & Tombol Riwayat Checkpoint */}
-                        <div className="flex items-center justify-between flex-wrap gap-2">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            {ticket.status === 'Aktif' ? (
-                              <>
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                  Aktif
-                                </span>
-                                {canTriggerSos ? (
-                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 animate-pulse">
-                                    🚀 Dalam Perjalanan
-                                  </span>
-                                ) : hasCheckedInOrigin ? (
-                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                                    📍 Check-in Pos 1 Selesai
-                                  </span>
-                                ) : (
-                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                                    ⏳ Menunggu Check-in Pos 1
-                                  </span>
-                                )}
-                              </>
-                            ) : ticket.status === 'Menunggu Pembayaran' ? (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                                <Clock className="w-3 h-3 text-amber-600" />
-                                Menunggu Pembayaran
-                              </span>
-                            ) : (
-                              <StatusBadge variant={ticket.status === 'Selesai' ? 'default' : 'rose'}>
-                                {ticket.status}
-                              </StatusBadge>
-                            )}
-                          </div>
-
-                          {/* Tombol Audit Checkpoint Timeline */}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSelectedTimelineTicket(ticket);
-                              setIsTimelineModalOpen(true);
-                            }}
-                            className="text-[12px] font-semibold text-[#10367D] hover:text-[#0C2C66] bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-lg border border-blue-200/80 transition flex items-center gap-1 cursor-pointer"
-                            title="Lihat riwayat scan checkpoint perjalanan"
-                          >
-                            <History className="w-3.5 h-3.5 text-blue-600" />
-                            <span>Audit Checkpoint</span>
-                          </button>
-                        </div>
-
-                        {/* Baris 2: Tombol Aksi Tiket Aktif */}
+                        {/* Baris Tombol Aksi Tiket Aktif (Sejajar 1 Baris) */}
                         {ticket.status === 'Aktif' && (
                           <div className="space-y-2.5">
-                            {/* Tombol Interaksi Utama: Live GPS, Chat Mitra, Bagikan Tiket */}
-                            <div className="grid grid-cols-3 gap-2">
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                              {auditButton}
+
                               <button
                                 type="button"
                                 onClick={() => handleOpenTracking(ticket)}
-                                className="py-2 px-1.5 bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-[12px] font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs min-h-[38px]"
+                                className="py-2.5 px-2 bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-[12px] font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs min-h-[40px]"
                                 title="Pantau lokasi armada secara real-time"
                               >
                                 <Navigation className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
@@ -1578,7 +1591,7 @@ Tunjukkan Kode Tiket / QR ini kepada Mitra Sopir atau Petugas Pos saat keberangk
                               <button
                                 type="button"
                                 onClick={() => openModal(ticket, 'chat')}
-                                className="py-2 px-1.5 bg-white hover:bg-sky-50 text-[#10367D] border border-sky-200 rounded-xl text-[12px] font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs min-h-[38px]"
+                                className="py-2.5 px-2 bg-white hover:bg-sky-50 text-[#1356d6] border border-sky-200 rounded-xl text-[12px] font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs min-h-[40px]"
                                 title="Buka obrolan chat dengan driver mitra"
                               >
                                 <MessageSquare className="w-3.5 h-3.5 text-sky-600 shrink-0" />
@@ -1588,7 +1601,7 @@ Tunjukkan Kode Tiket / QR ini kepada Mitra Sopir atau Petugas Pos saat keberangk
                               <button
                                 type="button"
                                 onClick={() => handleShareTicketWhatsApp(ticket, ticket.passengers?.[0]?.phone)}
-                                className="py-2 px-1.5 bg-white hover:bg-neutral-50 text-neutral-700 border border-neutral-200 rounded-xl text-[12px] font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs min-h-[38px]"
+                                className="py-2.5 px-2 bg-white hover:bg-neutral-50 text-neutral-700 border border-neutral-200 rounded-xl text-[12px] font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs min-h-[40px]"
                                 title="Bagikan rincian e-tiket ke WhatsApp keluarga / kerabat"
                               >
                                 <Share2 className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
@@ -1630,44 +1643,49 @@ Tunjukkan Kode Tiket / QR ini kepada Mitra Sopir atau Petugas Pos saat keberangk
                           </div>
                         )}
 
-                        {/* Aksi Khusus Tiket Menunggu Pembayaran */}
+                        {/* Aksi Khusus Tiket Menunggu Pembayaran: 3 Tombol Sejajar 1 Baris */}
                         {ticket.status === 'Menunggu Pembayaran' && (
-                          <div className="flex items-center gap-2">
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            {auditButton}
+
                             <button
                               type="button"
                               onClick={() => handlePayPendingTicket(ticket)}
                               disabled={payingTicketId === ticket.rawId}
-                              className="flex-1 py-2.5 px-3 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-[12px] font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-sm disabled:opacity-50 disabled:cursor-not-allowed min-h-[40px]"
+                              className="w-full py-2.5 px-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-[12px] font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-sm disabled:opacity-50 disabled:cursor-not-allowed min-h-[40px]"
                             >
                               {payingTicketId === ticket.rawId ? (
-                                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                <RefreshCw className="w-3.5 h-3.5 animate-spin shrink-0" />
                               ) : (
-                                <CreditCard className="w-3.5 h-3.5" />
+                                <CreditCard className="w-3.5 h-3.5 shrink-0" />
                               )}
-                              <span>Bayar Sekarang</span>
+                              <span className="truncate">Bayar Sekarang</span>
                             </button>
 
                             <button
                               type="button"
                               onClick={() => openModal(ticket, 'cancel')}
-                              className="py-2.5 px-3.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl text-[12px] font-bold transition flex items-center justify-center gap-1 cursor-pointer min-h-[40px]"
+                              className="w-full py-2.5 px-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-[12px] font-bold transition flex items-center justify-center gap-1.5 cursor-pointer min-h-[40px] shadow-sm"
                             >
-                              <XCircle className="w-3.5 h-3.5" />
-                              <span>Batalkan</span>
+                              <XCircle className="w-3.5 h-3.5 shrink-0" />
+                              <span className="truncate">Batalkan</span>
                             </button>
                           </div>
                         )}
 
-                        {/* Aksi Khusus Tiket Selesai */}
+                        {/* Aksi Khusus Tiket Selesai: 3 Tombol Sejajar 1 Baris */}
                         {ticket.status === 'Selesai' && (
-                          <div className="flex justify-end gap-2 flex-wrap">
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            {auditButton}
+
                             <button
                               type="button"
                               onClick={() => openModal(ticket, 'review')}
-                              className="py-2 px-3.5 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-xl text-[12px] font-bold transition flex items-center gap-1.5 cursor-pointer min-h-[40px]"
+                              className="w-full py-2.5 px-2.5 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-xl text-[12px] font-bold transition flex items-center justify-center gap-1.5 cursor-pointer min-h-[40px]"
+                              title="Beri Ulasan Perjalanan"
                             >
-                              <Star className="w-3.5 h-3.5 fill-current text-amber-500" />
-                              <span>Beri Ulasan Perjalanan</span>
+                              <Star className="w-3.5 h-3.5 fill-current text-amber-500 shrink-0" />
+                              <span className="truncate">Beri Ulasan</span>
                             </button>
                             {(() => {
                               const reportCheck = evaluateCustomerReportEligibility(ticket);
@@ -1675,11 +1693,11 @@ Tunjukkan Kode Tiket / QR ini kepada Mitra Sopir atau Petugas Pos saat keberangk
                                 <button
                                   type="button"
                                   onClick={() => handleOpenReport(ticket)}
-                                  className="py-2 px-3.5 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 rounded-xl text-[12px] font-bold transition flex items-center gap-1.5 cursor-pointer min-h-[40px]"
+                                  className="w-full py-2.5 px-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-[12px] font-bold transition flex items-center justify-center gap-1.5 cursor-pointer min-h-[40px] shadow-sm"
                                   title="Laporkan driver jika terjadi pelanggaran"
                                 >
-                                  <ShieldAlert className="w-3.5 h-3.5 text-rose-600" />
-                                  <span>Laporkan Driver / Pos</span>
+                                  <ShieldAlert className="w-3.5 h-3.5 text-white shrink-0" />
+                                  <span className="truncate">Laporkan Driver / Pos</span>
                                 </button>
                               ) : (
                                 <button
@@ -1689,39 +1707,30 @@ Tunjukkan Kode Tiket / QR ini kepada Mitra Sopir atau Petugas Pos saat keberangk
                                       title: 'Fitur Lapor Terkunci',
                                     })
                                   }
-                                  className="py-2 px-3.5 bg-neutral-100 text-neutral-400 border border-neutral-200 rounded-xl text-[12px] font-medium transition flex items-center gap-1.5 cursor-not-allowed min-h-[40px]"
+                                  className="w-full py-2.5 px-2.5 bg-slate-100 text-slate-400 border border-slate-200 rounded-xl text-[12px] font-medium transition flex items-center justify-center gap-1.5 cursor-not-allowed min-h-[40px]"
                                   title={reportCheck.reason}
                                 >
-                                  <Lock className="w-3.5 h-3.5 text-neutral-400" />
-                                  <span>Lapor (Terkunci)</span>
+                                  <Lock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                  <span className="truncate">Lapor (Terkunci)</span>
                                 </button>
                               );
                             })()}
                           </div>
                         )}
 
-                        {/* Aksi Khusus Tiket Batal / Trip Dibatalkan */}
+                        {/* Aksi Khusus Tiket Batal / Trip Dibatalkan: 2 Tombol Sejajar 1 Baris */}
                         {(ticket.status.startsWith('Batal') || ticket.currentStatusText === 'cancelled' || ticket.currentStatusText === 'cancelled_by_mitra') && (
-                          <div className="pt-2.5 border-t border-neutral-100 flex items-center justify-between gap-2 flex-wrap">
-                            <div className="flex items-center gap-1.5 text-[11px] text-rose-600 font-semibold bg-rose-50/80 border border-rose-200/60 px-2.5 py-1 rounded-lg">
-                              <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-rose-500" />
-                              <span>
-                                {ticket.tripStatus === 'mitra_no_show' || ticket.noShowReason
-                                  ? 'Supir tidak hadir (Dana di-refund 100% ke Dompet)'
-                                  : ticket.currentStatusText === 'cancelled_by_mitra'
-                                  ? 'Trip dibatalkan oleh Mitra'
-                                  : 'Perjalanan dibatalkan'}
-                              </span>
-                            </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            {auditButton}
 
                             <button
                               type="button"
                               onClick={() => handleOpenReport(ticket)}
-                              className="py-1.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-[12px] font-bold transition flex items-center gap-1.5 cursor-pointer min-h-[36px] shadow-sm ml-auto"
+                              className="w-full py-2.5 px-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-[12px] font-bold transition flex items-center justify-center gap-1.5 cursor-pointer min-h-[40px] shadow-sm"
                               title="Laporkan kendala jika mitra driver tidak datang atau mangkir"
                             >
-                              <ShieldAlert className="w-3.5 h-3.5 text-rose-600 shrink-0" />
-                              <span>Laporkan Mitra (Tidak Datang)</span>
+                              <ShieldAlert className="w-3.5 h-3.5 text-white shrink-0" />
+                              <span className="truncate">Laporkan Mitra</span>
                             </button>
                           </div>
                         )}
@@ -1741,40 +1750,6 @@ Tunjukkan Kode Tiket / QR ini kepada Mitra Sopir atau Petugas Pos saat keberangk
             </div>
           )}
         </div>
-      ) : (
-        <div className="space-y-5">
-          <StatCard
-            variant="primary"
-            title="LOYALTY REWARD POINTS"
-            value={`${rewardSummary.totalPoints} Poin Tersedia`}
-            subtitle="Kumpulkan poin dari setiap perjalanan aman di Pos Mitra!"
-            icon={Award}
-          />
-
-          <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 space-y-3">
-            <h3 className="text-[17px] font-bold text-neutral-800">Riwayat Perolehan Poin</h3>
-            {isLoadingRewards ? (
-              <div className="text-neutral-400 text-[13px]">Memuat riwayat poin...</div>
-            ) : rewardSummary.history.length > 0 ? (
-              <div className="space-y-2">
-                {rewardSummary.history.map((item) => (
-                  <div key={item.id} className="p-3 bg-neutral-50 border border-neutral-100 rounded-xl flex items-center justify-between text-[13px]">
-                    <div>
-                      <p className="font-bold text-neutral-800">{item.description || 'Reward Trip Selesai'}</p>
-                      <p className="text-[11px] text-neutral-400">{item.createdAt?.split('T')[0]}</p>
-                    </div>
-                    <span className={`font-bold font-mono text-[14px] ${item.type === 'earn' ? 'text-emerald-600' : 'text-rose-600'}`}>
-                      {item.type === 'earn' ? `+${item.points}` : `-${item.points}`}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-[13px] text-neutral-400">Belum ada riwayat transaksi poin.</p>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Modal Chat dengan Mitra */}
       <BaseModal

@@ -33,7 +33,7 @@ import apiClient from '../../../services/apiClient';
 import { walletService } from '../../../services/walletService';
 import { disbursementBankService, FALLBACK_SUPPORTED_BANKS } from '../../../services/disbursementBankService';
 
-const PRIMARY_COLOR = '#10367D';
+const PRIMARY_COLOR = '#1356d6';
 const MIN_WITHDRAWAL = 10000;
 
 const STATUS_LABEL = {
@@ -296,7 +296,7 @@ export default function MitraBalance() {
                 id: 'TX-01',
                 amount: 45000,
                 type: 'escrow_release',
-                description: 'Pencairan dana Escrow trip #58 (setelah komisi platform 10%)',
+                description: 'Pencairan dana Escrow trip #58 (setelah biaya aplikasi 10%)',
                 createdAt: new Date().toISOString()
               },
               {
@@ -622,14 +622,14 @@ export default function MitraBalance() {
   }, [filteredTransactions, txPage]);
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
+    <div className="w-full mx-auto p-4 space-y-5 min-h-screen font-['Inter']">
       {/* ── KARTU SALDO DOMPET MITRA UTAMA ── */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0c2353] via-[#10367D] to-[#1c4e9e] p-6 sm:p-8 text-white shadow-xl border border-blue-400/20">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0b3ba8] via-[#1356d6] to-[#2684ff] p-5 text-white shadow-xl border border-blue-400/20">
         {/* Dekorasi Aksen Lingkaran Glow */}
         <div className="absolute -right-12 -top-12 w-64 h-64 rounded-full bg-blue-400/10 blur-3xl pointer-events-none" />
         <div className="absolute right-1/3 -bottom-16 w-56 h-56 rounded-full bg-emerald-400/10 blur-2xl pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="relative z-10 flex flex-col justify-between gap-5">
           <div className="space-y-3">
             <div className="flex items-center gap-3">
               <div className="w-9 h-6 rounded bg-gradient-to-r from-amber-300 via-amber-400 to-amber-200 shadow-inner flex items-center justify-center">
@@ -689,7 +689,7 @@ export default function MitraBalance() {
           </div>
 
           {/* Quick Action Buttons */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+          <div className="flex flex-col items-stretch gap-2.5 shrink-0">
             <button
               onClick={handleOpenWithdrawModal}
               disabled={isLoading || availableBalance < MIN_WITHDRAWAL}
@@ -714,7 +714,7 @@ export default function MitraBalance() {
       </div>
 
       {/* ──────────────── KARTU DANA DITAHAN & REKENING PENCAIRAN ──────────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 gap-4">
         {/* Kartu Dana Ditahan */}
         <div className="bg-white p-6 rounded-2xl border border-neutral-200/90 shadow-sm flex flex-col justify-between space-y-4">
           <div className="flex items-start justify-between">
@@ -813,7 +813,7 @@ export default function MitraBalance() {
                 </p>
                 <button
                   onClick={handleStartEditBank}
-                  className="px-3.5 py-2 bg-[#10367D] hover:bg-[#0C2C66] text-white text-[12px] font-bold rounded-xl transition cursor-pointer shrink-0 shadow-sm"
+                  className="px-3.5 py-2 bg-[#1356d6] hover:bg-[#0e44ba] text-white text-[12px] font-bold rounded-xl transition cursor-pointer shrink-0 shadow-sm"
                 >
                   Atur Rekening
                 </button>

@@ -24,7 +24,7 @@ export default function MitraSidebar({
   activeMenu = 'Dashboard Mitra',
   onMenuSelect,
   onLogout,
-  isVerified = false, isOpen: propIsOpen, onClose: propOnClose }) {
+  isVerified = false, isOpen: propIsOpen, onClose: propOnClose, mobileOnly = false }) {
   const { appName, appLogoDark } = useAppConfig();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -92,20 +92,29 @@ export default function MitraSidebar({
         <button
           onClick={() => setInternalOpen(true)}
           aria-label="Buka menu navigasi"
-          className="lg:hidden fixed top-4 left-4 z-20 w-11 h-11 rounded-2xl bg-white shadow-soft border border-slate-200 flex items-center justify-center text-[#10367D] hover:bg-slate-50 transition-colors"
+          className={`${mobileOnly ? '' : 'lg:hidden '}fixed top-4 left-4 z-20 w-11 h-11 rounded-2xl bg-white shadow-soft border border-slate-200 flex items-center justify-center text-[#1356d6] hover:bg-slate-50 transition-colors`}
         >
           <Menu className="w-5 h-5" />
         </button>
       )}
 
-      {isMobileOpen && (
-        <div
-          onClick={handleClose}
-          className="lg:hidden fixed inset-0 bg-black/60 z-40 backdrop-blur-xs transition-opacity" aria-hidden="true"
-        />
-      )}
+      <div
+        className={
+          mobileOnly
+            ? `fixed inset-y-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] z-50 overflow-hidden ${
+                isMobileOpen ? 'pointer-events-auto' : 'pointer-events-none'
+              }`
+            : ''
+        }
+      >
+        {isMobileOpen && (
+          <div
+            onClick={handleClose}
+            className={`${mobileOnly ? 'absolute' : 'lg:hidden fixed'} inset-0 bg-black/60 z-40 backdrop-blur-xs transition-opacity`} aria-hidden="true"
+          />
+        )}
 
-      <aside className={`w-64 h-screen bg-gradient-to-b from-[#0c2353] via-[#10367D] to-[#18458f] text-white flex flex-col justify-between p-5 fixed left-0 top-0 shadow-2xl border-r border-blue-400/20 overflow-y-auto z-50 transition-transform duration-300 font-sans print:hidden select-none ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
+        <aside className={`w-64 ${mobileOnly ? 'h-full absolute' : 'h-screen fixed'} bg-gradient-to-b from-[#0b3ba8] via-[#1356d6] to-[#2684ff] text-white flex flex-col justify-between p-5 left-0 top-0 shadow-2xl border-r border-blue-400/20 overflow-y-auto z-50 transition-transform duration-300 font-sans print:hidden select-none ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'} ${mobileOnly ? '' : 'lg:translate-x-0'}`}>
         <div>
           <div className="mb-8 px-2 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -125,7 +134,7 @@ export default function MitraSidebar({
             <button
               onClick={handleClose}
               aria-label="Tutup menu navigasi"
-              className="lg:hidden w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-white hover:bg-white/15 transition-colors"
+              className={`${mobileOnly ? '' : 'lg:hidden '}w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-white hover:bg-white/15 transition-colors`}
             >
               <X className="w-4 h-4" />
             </button>
@@ -150,7 +159,7 @@ export default function MitraSidebar({
                             item.locked
                               ? 'text-white/40 cursor-not-allowed hover:bg-white/5'
                               : isActive
-                              ? 'bg-white text-[#10367D] font-bold shadow-md cursor-pointer'
+                              ? 'bg-white text-[#1356d6] font-bold shadow-md cursor-pointer'
                               : 'text-white/85 font-medium hover:bg-white/10 hover:text-white cursor-pointer'
                           }`}
                         >
@@ -160,7 +169,7 @@ export default function MitraSidebar({
                                 item.locked
                                   ? 'text-white/30'
                                   : isActive
-                                  ? 'text-[#10367D]'
+                                  ? 'text-[#1356d6]'
                                   : 'text-white/80'
                               }`}
                             />
@@ -195,7 +204,8 @@ export default function MitraSidebar({
             <span>Log Out</span>
           </button>
         </div>
-      </aside>
+        </aside>
+      </div>
 
       <ConfirmModal
         isOpen={showLogoutModal}

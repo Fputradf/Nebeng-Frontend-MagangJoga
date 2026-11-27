@@ -19,7 +19,6 @@ const CUSTOMER_MENU_PATH = {
   'Tagihan Saya': 'tagihan',
   'Dompet Saya': 'wallet',
   'Voucher Saya': 'vouchers',
-  'Rewards & Penukaran': 'rewards',
   'Pusat Bantuan & FAQ': 'bantuan',
   'Profil Saya': 'profile',
 };
@@ -57,6 +56,8 @@ export default function CustomerLayout() {
     navigate(`/customer/${slug}`);
   };
 
+  const isHomeDashboard = currentPath === '/customer/booking' || currentPath === '/customer';
+
   return (
     <AppShell
       role="customer"
@@ -70,12 +71,14 @@ export default function CustomerLayout() {
         />
       }
       topbar={
-        <AppTopbar
-          basePath="/customer"
-          profile={customerProfile}
-          roleLabel="Customer"
-          onProfileClick={() => setShowProfileModal(true)}
-        />
+        isHomeDashboard ? null : (
+          <AppTopbar
+            basePath="/customer"
+            profile={customerProfile}
+            roleLabel="Customer"
+            onProfileClick={() => setShowProfileModal(true)}
+          />
+        )
       }
     >
       <CustomerProfileModal

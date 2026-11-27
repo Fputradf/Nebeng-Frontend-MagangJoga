@@ -128,7 +128,7 @@ export default function RegionalSidebar({
         <button
         onClick={() => setInternalOpen(true)}
         aria-label="Buka menu navigasi"
-        className="lg:hidden fixed top-4 left-4 z-20 w-11 h-11 rounded-2xl bg-white shadow-md border border-neutral-100 flex items-center justify-center text-[#10367D]"
+        className="lg:hidden fixed top-4 left-4 z-20 w-11 h-11 rounded-2xl bg-white shadow-md border border-neutral-100 flex items-center justify-center text-[#1356d6]"
       >
         <Menu className="w-5 h-5" />
       </button>
@@ -147,7 +147,7 @@ export default function RegionalSidebar({
         className={`
           w-64
           h-screen
-          bg-gradient-to-b from-[#0c2353] via-[#10367D] to-[#18458f] border-r border-blue-400/20 shadow-2xl text-white flex flex-col justify-between p-5 fixed left-0 top-0
+          bg-gradient-to-b from-[#0b3ba8] via-[#1356d6] to-[#2684ff] border-r border-blue-400/20 shadow-2xl text-white flex flex-col justify-between p-5 fixed left-0 top-0
           overflow-y-auto print:hidden
           z-50
           transition-transform
@@ -226,7 +226,7 @@ export default function RegionalSidebar({
                           cursor-pointer
                           ${
                             isActive
-                              ? 'bg-white text-[#10367D] font-bold shadow-md'
+                              ? 'bg-white text-[#1356d6] font-bold shadow-md'
                               : 'text-white/85 font-medium hover:bg-white/10 hover:text-white'
                           }
                         `}
@@ -235,7 +235,7 @@ export default function RegionalSidebar({
                           className={`
                             w-4 h-4
                             ${
-                              isActive ? 'text-[#10367D]' : 'text-white/80'
+                              isActive ? 'text-[#1356d6]' : 'text-white/80'
                             }
                           `}
                         />

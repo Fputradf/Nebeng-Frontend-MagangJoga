@@ -73,8 +73,9 @@ export default function EmergencySosAlertModal({
 
   const customer = alertData.customer || {};
   const trip = alertData.trip || {};
-  const driver = trip.mitra || {};
+  const driver = alertData.mitra || trip.mitra || {};
   const vehicle = trip.vehicle || {};
+  const isMitraReporter = alertData.reporterRole === 'mitra' || (!alertData.customer && Boolean(alertData.mitra || trip.mitra));
   const lat = alertData.latitude || trip.originPoint?.latitude || -7.7956;
   const lng = alertData.longitude || trip.originPoint?.longitude || 110.3695;
   const gmapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
@@ -180,7 +181,9 @@ export default function EmergencySosAlertModal({
 
             {alertData.notes && (
               <div className="p-3 rounded-xl bg-neutral-800/90 border border-neutral-700 text-xs text-neutral-300">
-                <span className="font-bold text-neutral-400 block mb-0.5">Catatan Customer:</span>
+                <span className="font-bold text-neutral-400 block mb-0.5">
+                  {isMitraReporter ? 'Catatan Mitra Driver:' : 'Catatan Customer:'}
+                </span>
                 <p className="italic font-medium text-white">"{alertData.notes}"</p>
               </div>
             )}
@@ -191,41 +194,56 @@ export default function EmergencySosAlertModal({
               <div className="p-3.5 rounded-xl bg-neutral-800/80 border border-neutral-700 space-y-2.5">
                 <div className="flex items-center gap-2 text-neutral-400 text-xs font-bold uppercase tracking-wider">
                   <User className="w-4 h-4 text-sky-400" />
-                  <span>Pelanggan (Korban)</span>
+                  <span>{isMitraReporter ? 'Pelanggan / Penumpang' : 'Pelanggan (Pelapor)'}</span>
                 </div>
-                <div>
-                  <p className="text-sm sm:text-base font-bold text-white truncate">{customer.name || 'Pelanggan SatuRute'}</p>
-                  <p className="text-xs text-neutral-400 font-mono truncate">{customer.phone || customer.email || '-'}</p>
-                </div>
-                <div className="flex gap-2 pt-0.5">
-                  {customer.phone && (
-                    <>
-                      <a
-                        href={`tel:${customer.phone}`}
-                        className="flex-1 flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold transition min-h-[40px]"
-                      >
-                        <PhoneCall className="w-3.5 h-3.5 shrink-0" />
-                        <span className="truncate">Telepon</span>
-                      </a>
-                      <a
-                        href={`https://wa.me/${customer.phone.replace(/[^0-9]/g, '')}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex-1 flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition min-h-[40px]"
-                      >
-                        <MessageCircle className="w-3.5 h-3.5 shrink-0" />
-                        <span className="truncate">WhatsApp</span>
-                      </a>
-                    </>
-                  )}
-                </div>
+                {isMitraReporter && !customer.name ? (
+                  <p className="text-xs text-neutral-400 italic">
+                    Sinyal SOS dipicu langsung oleh Mitra Driver pada Trip #{trip.id || alertData.tripId}.
+                  </p>
+                ) : (
+                  <>
+                    <div>
+                      <p className="text-sm sm:text-base font-bold text-white truncate">{customer.name || 'Pelanggan SatuRute'}</p>
+                      <p className="text-xs text-neutral-400 font-mono truncate">{customer.phone || customer.email || '-'}</p>
+                    </div>
+                    <div className="flex gap-2 pt-0.5">
+                      {customer.phone && (
+                        <>
+                          <a
+                            href={`tel:${customer.phone}`}
+                            className="flex-1 flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold transition min-h-[40px]"
+                          >
+                            <PhoneCall className="w-3.5 h-3.5 shrink-0" />
+                            <span className="truncate">Telepon</span>
+                          </a>
+                          <a
+                            href={`https://wa.me/${customer.phone.replace(/[^0-9]/g, '')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1 flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition min-h-[40px]"
+                          >
+                            <MessageCircle className="w-3.5 h-3.5 shrink-0" />
+                            <span className="truncate">WhatsApp</span>
+                          </a>
+                        </>
+                      )}
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* Kartu Driver & Kendaraan */}
-              <div className="p-3.5 rounded-xl bg-neutral-800/80 border border-neutral-700 space-y-2.5">
-                <div className="flex items-center gap-2 text-neutral-400 text-xs font-bold uppercase tracking-wider">
-                  <Car className="w-4 h-4 text-emerald-400" />
-                  <span>Mitra Driver & Kendaraan</span>
+              <div className={`p-3.5 rounded-xl bg-neutral-800/80 border space-y-2.5 ${isMitraReporter ? 'border-rose-500/70' : 'border-neutral-700'}`}>
+                <div className="flex items-center justify-between gap-2 text-neutral-400 text-xs font-bold uppercase tracking-wider">
+                  <span className="flex items-center gap-2">
+                    <Car className="w-4 h-4 text-emerald-400" />
+                    <span>Mitra Driver &amp; Kendaraan</span>
+                  </span>
+                  {isMitraReporter && (
+                    <span className="px-2 py-0.5 rounded bg-rose-600 text-[10px] font-black text-white">
+                      PELAPOR
+                    </span>
+                  )}
                 </div>
                 <div>
                   <p className="text-sm sm:text-base font-bold text-white truncate">{driver.name || 'Mitra Driver'}</p>

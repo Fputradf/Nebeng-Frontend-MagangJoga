@@ -15,7 +15,7 @@ import { BannerSlider } from '../../../components/ui/BannerSlider';
 import { useAuth } from '../../../context/AuthContext';
 import { operatorService } from '../../../services/operatorService';
 
-const PRIMARY_COLOR = '#10367D';
+const PRIMARY_COLOR = '#1356d6';
 const PRIMARY_ACCENT = '#74B4D9';
 
 const DAYS_FULL = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
@@ -200,7 +200,7 @@ export default function OperatorDashboard() {
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
       {/* ── BANNER ── */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2684ff] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
         <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
         <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0 flex-1">
@@ -281,7 +281,7 @@ export default function OperatorDashboard() {
                   setDirectionFilter(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="border border-neutral-200 rounded-lg px-2.5 py-1 bg-white text-neutral-700 font-semibold focus:outline-none focus:border-[#10367D]"
+                className="border border-neutral-200 rounded-lg px-2.5 py-1 bg-white text-neutral-700 font-semibold focus:outline-none focus:border-[#1356d6]"
               >
                 <option value="all">Semua Arah</option>
                 <option value="masuk">Masuk Pos</option>
@@ -299,7 +299,7 @@ export default function OperatorDashboard() {
                   setLimit(Number(e.target.value));
                   setCurrentPage(1);
                 }}
-                className="border border-neutral-200 rounded-lg px-2.5 py-1 bg-white text-neutral-700 font-semibold focus:outline-none focus:border-[#10367D]"
+                className="border border-neutral-200 rounded-lg px-2.5 py-1 bg-white text-neutral-700 font-semibold focus:outline-none focus:border-[#1356d6]"
               >
                 <option value={5}>5 baris</option>
                 <option value={10}>10 baris</option>
@@ -343,7 +343,7 @@ export default function OperatorDashboard() {
                         #{trip.id}
                       </p>
                       <p className="text-[12px] text-neutral-400 flex items-center gap-1 mt-0.5">
-                        <Clock className="w-3 h-3 text-[#10367D]" />
+                        <Clock className="w-3 h-3 text-[#1356d6]" />
                         {trip.time}
                       </p>
                     </td>

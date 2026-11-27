@@ -26,7 +26,7 @@ import EmptyState from '../../../components/ui/EmptyState';
 import BaseModal from '../../../components/ui/BaseModal';
 import apiClient from '../../../services/apiClient';
 
-const PRIMARY_COLOR = '#10367D';
+const PRIMARY_COLOR = '#1356d6';
 
 export default function OperatorManifest() {
   const toast = useToast();

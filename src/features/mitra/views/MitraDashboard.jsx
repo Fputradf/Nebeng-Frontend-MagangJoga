@@ -31,6 +31,7 @@ import StatusBadge from '../../../components/ui/StatusBadge';
 import EmptyState from '../../../components/ui/EmptyState';
 import BaseModal from '../../../components/ui/BaseModal';
 import ReportModal from '../../../components/common/ReportModal';
+import MitraSosTriggerModal from '../components/MitraSosTriggerModal';
 import {
   evaluateDriverReportEligibility,
   isDriverArrivedAtOriginPos,
@@ -54,7 +55,7 @@ const getFullFileUrl = (path) => {
   return `${baseURL}${path.startsWith('/') ? '' : '/'}${path}`;
 };
 
-const PRIMARY_COLOR = '#10367D';
+const PRIMARY_COLOR = '#1356d6';
 const PRIMARY_ACCENT = '#74B4D9';
 
 const DAYS_FULL = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
@@ -169,6 +170,10 @@ export default function MitraDashboard() {
   const [reportTargetUser, setReportTargetUser] = useState(null);
   const [reportAvailableTargets, setReportAvailableTargets] = useState([]);
   const [reportContext, setReportContext] = useState({});
+
+  // State untuk Fitur SOS Darurat Mitra Driver
+  const [isSosModalOpen, setIsSosModalOpen] = useState(false);
+  const [selectedSosTrip, setSelectedSosTrip] = useState(null);
 
   const handleOpenReportPos = (history) => {
     // Validasi audit checkpoint: Driver harus sudah tiba / check-in di Pos
@@ -467,11 +472,11 @@ export default function MitraDashboard() {
   }, [trips]);
 
   return (
-    <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
+    <div className="mx-auto p-4 space-y-5 min-h-screen font-['Inter']">
       {/* ── BANNER ── */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2684ff] px-5 py-4 flex items-center text-white shadow-card">
         <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
-        <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative w-full flex flex-col gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 mb-1 min-w-0">
               <span className="w-2 h-2 rounded-full bg-accent animate-pulse shrink-0" />
@@ -566,7 +571,7 @@ export default function MitraDashboard() {
           )}
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4" role="tablist" aria-label="Filter Layanan Mitra">
+        <div className="grid grid-cols-2 gap-3" role="tablist" aria-label="Filter Layanan Mitra">
           {serviceCategories.map((cat) => {
             const Icon = cat.icon;
             const isSelected = activeService === cat.id;
@@ -624,7 +629,7 @@ export default function MitraDashboard() {
       </section>
 
       {/* ── METRIK RINGKASAN MITRA ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 gap-4">
         {/* TOTAL SALDO WALLET */}
         <div className="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
@@ -724,9 +729,9 @@ export default function MitraDashboard() {
       </div>
 
       {/* ── AKTIVITAS TRIP ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 gap-4">
         {/* Ringkasan Trip Mendatang */}
-        <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-neutral-200 space-y-4 flex flex-col justify-between">
+        <div className="bg-white p-4 rounded-2xl shadow-sm border border-neutral-200 space-y-4 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
               <div className="flex items-center gap-2.5">
@@ -829,6 +834,23 @@ export default function MitraDashboard() {
                         )}
                       </span>
                     </div>
+
+                    {(trip.status === 'in_transit' || trip.status === 'in_origin_pos' || trip.status === 'arrived_dest_pos') && (
+                      <div className="pt-2 border-t border-neutral-200/60 flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedSosTrip(trip);
+                            setIsSosModalOpen(true);
+                          }}
+                          className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-[11px] font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs animate-pulse"
+                          title="Picu sinyal SOS darurat untuk perjalanan ini"
+                        >
+                          <ShieldAlert className="w-3.5 h-3.5" />
+                          <span>SOS Darurat</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))
               )}
@@ -1130,7 +1152,7 @@ export default function MitraDashboard() {
       >
         <form onSubmit={handleSubmitAppeal} className="space-y-4 pt-1">
           {/* Header Card Bergaya Sidebar Biru */}
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#0c2353] via-[#10367D] to-[#18458f] p-4 text-white shadow-md">
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#0b3ba8] via-[#1356d6] to-[#2684ff] p-4 text-white shadow-md">
             <div className="absolute -right-6 -top-10 h-28 w-28 rounded-full bg-white/10 pointer-events-none" />
             <div className="absolute bottom-0 right-16 h-16 w-16 rounded-full bg-cyan-400/20 pointer-events-none" />
             <div className="relative z-10">
@@ -1154,7 +1176,7 @@ export default function MitraDashboard() {
 
           {/* Info Banner */}
           <div className="p-3 bg-blue-50/80 border border-blue-200/80 rounded-xl text-blue-900 text-[12px] flex items-start gap-2.5 shadow-2xs">
-            <ShieldCheck className="w-4 h-4 text-[#10367D] shrink-0 mt-0.5" />
+            <ShieldCheck className="w-4 h-4 text-[#1356d6] shrink-0 mt-0.5" />
             <p className="leading-relaxed">
               Jika pembatalan trip terjadi karena <strong>force majeure / kendala darurat</strong> dengan bukti sah, Admin Wilayah dapat menyetujui banding untuk mencabut sanksi dan memulihkan skor reputasi Anda.
             </p>
@@ -1164,7 +1186,7 @@ export default function MitraDashboard() {
           <div className="space-y-1.5">
             <label className="flex items-center justify-between text-[12px] font-bold text-neutral-700">
               <span className="flex items-center gap-1.5">
-                <FileText className="w-3.5 h-3.5 text-[#10367D]" />
+                <FileText className="w-3.5 h-3.5 text-[#1356d6]" />
                 Alasan & Kronologi Banding
               </span>
               <span className="text-[10px] font-semibold text-rose-500 uppercase tracking-wide">Wajib Diisi</span>
@@ -1175,7 +1197,7 @@ export default function MitraDashboard() {
               value={appealReason}
               onChange={(e) => setAppealReason(e.target.value)}
               placeholder="Tuliskan secara lengkap kronologi kendala darurat, alasan pembatalan, atau kendala kendaraan Anda..."
-              className="w-full px-3.5 py-2.5 border border-neutral-300 rounded-xl text-[13px] text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#10367D] focus:border-[#10367D] bg-white transition shadow-2xs"
+              className="w-full px-3.5 py-2.5 border border-neutral-300 rounded-xl text-[13px] text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#1356d6] focus:border-[#1356d6] bg-white transition shadow-2xs"
             />
           </div>
 
@@ -1183,7 +1205,7 @@ export default function MitraDashboard() {
           <div className="space-y-2">
             <label className="flex items-center justify-between text-[12px] font-bold text-neutral-700">
               <span className="flex items-center gap-1.5">
-                <Camera className="w-3.5 h-3.5 text-[#10367D]" />
+                <Camera className="w-3.5 h-3.5 text-[#1356d6]" />
                 Foto Bukti Pendukung
               </span>
               <span className="text-[10px] font-semibold text-neutral-400">Opsional</span>
@@ -1251,14 +1273,14 @@ export default function MitraDashboard() {
                     : 'border-blue-200 bg-blue-50/40 hover:bg-blue-50/80 hover:border-blue-400'
                 }`}
               >
-                <div className="w-9 h-9 rounded-full bg-blue-100 text-[#10367D] flex items-center justify-center">
+                <div className="w-9 h-9 rounded-full bg-blue-100 text-[#1356d6] flex items-center justify-center">
                   {isUploadingAppealFile ? (
-                    <span className="w-4 h-4 border-2 border-[#10367D] border-t-transparent rounded-full animate-spin" />
+                    <span className="w-4 h-4 border-2 border-[#1356d6] border-t-transparent rounded-full animate-spin" />
                   ) : (
                     <Upload className="w-4 h-4" />
                   )}
                 </div>
-                <span className="text-[12px] font-bold text-[#10367D]">
+                <span className="text-[12px] font-bold text-[#1356d6]">
                   {isUploadingAppealFile ? 'Sedang mengunggah...' : 'Klik untuk Upload Foto Bukti'}
                 </span>
                 <p className="text-[11px] text-neutral-500">
@@ -1284,7 +1306,7 @@ export default function MitraDashboard() {
                       setAppealFilePreview(null);
                     }}
                     placeholder="https://drive.google.com/... atau link foto online"
-                    className="w-full px-3 py-2 border border-neutral-300 rounded-xl text-[12px] text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#10367D] focus:border-[#10367D] bg-white transition shadow-2xs"
+                    className="w-full px-3 py-2 border border-neutral-300 rounded-xl text-[12px] text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#1356d6] focus:border-[#1356d6] bg-white transition shadow-2xs"
                   />
                   <p className="text-[10px] text-neutral-400">
                     Gunakan ini jika foto tersimpan di Google Drive atau penyimpanan daring publik.
@@ -1307,7 +1329,7 @@ export default function MitraDashboard() {
             <button
               type="submit"
               disabled={isSubmittingAppeal}
-              className="flex-1 py-2.5 bg-gradient-to-r from-[#0c2353] via-[#10367D] to-[#18458f] hover:brightness-110 text-white rounded-xl font-bold text-[13px] transition cursor-pointer shadow-md flex items-center justify-center gap-2"
+              className="flex-1 py-2.5 bg-gradient-to-r from-[#0b3ba8] via-[#1356d6] to-[#2684ff] hover:brightness-110 text-white rounded-xl font-bold text-[13px] transition cursor-pointer shadow-md flex items-center justify-center gap-2"
             >
               {isSubmittingAppeal ? (
                 <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -1332,6 +1354,13 @@ export default function MitraDashboard() {
         onSuccess={() => {
           toast.success('Laporan kendala pos Anda berhasil dikirim ke tim pengawas regional.');
         }}
+      />
+
+      {/* Modal Pemicu SOS Darurat Mitra Driver */}
+      <MitraSosTriggerModal
+        isOpen={isSosModalOpen}
+        onClose={() => setIsSosModalOpen(false)}
+        trip={selectedSosTrip}
       />
     </div>
   );

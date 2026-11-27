@@ -24,8 +24,8 @@ import { useToast } from '../../../context/ToastContext';
 import StatCard from '../../../components/ui/StatCard';
 import apiClient from '../../../services/apiClient';
 
-const PRIMARY_COLOR = '#10367D';
-const PRIMARY_HOVER = '#0C2C66';
+const PRIMARY_COLOR = '#1356d6';
+const PRIMARY_HOVER = '#0e44ba';
 const PRIMARY_ACCENT = '#74B4D9';
 
 const PHONE_REGEX = /^(\+62|62|0)8[1-9][0-9]{7,11}$/;
@@ -303,11 +303,11 @@ export default function CustomerAccountSettings() {
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
+    <div className="w-full mx-auto p-4 space-y-5 min-h-screen font-['Inter']">
       {/* ── BANNER ── */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2684ff] px-5 py-4 flex items-center text-white shadow-card">
         <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
-        <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative w-full flex flex-col gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 mb-1 min-w-0">
               <span className="w-2 h-2 rounded-full bg-accent animate-pulse shrink-0" />
@@ -349,14 +349,7 @@ export default function CustomerAccountSettings() {
         </div>
       </section>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard
-          title="POIN REWARD"
-          value={`${rewardPoints} Poin`}
-          subtitle="Kumpulkan dari setiap trip"
-          icon={Award}
-        />
-
+      <div className="grid grid-cols-2 gap-3">
         <StatCard
           title="TRIP SELESAI"
           value={String(completedTrips)}
@@ -372,8 +365,8 @@ export default function CustomerAccountSettings() {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-5 sm:p-6 space-y-5">
+      <div className="grid grid-cols-1 gap-5">
+        <div className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-4 space-y-5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="relative w-12 h-12 shrink-0">

@@ -29,7 +29,7 @@ function CustomTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   const displayLabel = payload[0]?.payload?.fullLabel || label;
   return (
-    <div className="bg-[#10367D] rounded-xl shadow-xl px-3 py-2.5 text-white text-[12px] min-w-[130px]">
+    <div className="bg-[#1356d6] rounded-xl shadow-xl px-3 py-2.5 text-white text-[12px] min-w-[130px]">
       <p className="font-bold mb-1.5 text-white/80">{displayLabel}</p>
       {payload.map((p) => (
         <div key={p.dataKey} className="flex justify-between gap-3 items-center mb-0.5">
@@ -184,12 +184,12 @@ export default function AdminRegionalDashboard() {
   // ── Pie Chart data (Trip Status Breakdown) ─────────────────────────────────
   const pieData = useMemo(() => [
     { name: 'Selesai', value: arrivedCount || chartSummary.selesai, color: '#10b981' },
-    { name: 'Berangkat', value: departedCount || Math.round(chartSummary.total * 0.15), color: '#10367D' },
+    { name: 'Berangkat', value: departedCount || Math.round(chartSummary.total * 0.15), color: '#1356d6' },
     { name: 'Pending KYC', value: pendingVerif, color: '#f59e0b' },
   ].filter(d => d.value > 0), [arrivedCount, departedCount, pendingVerif, chartSummary]);
 
   const kpis = [
-    { label: 'POS AKTIF', value: activePosCount, unit: 'Pos', sub: 'Pos terdaftar & beroperasi', icon: MapPin, color: '#10367D' },
+    { label: 'POS AKTIF', value: activePosCount, unit: 'Pos', sub: 'Pos terdaftar & beroperasi', icon: MapPin, color: '#1356d6' },
     { label: 'TOTAL TRIP', value: totalTrips, unit: 'Trip', sub: `Berangkat: ${departedCount} · Tiba: ${arrivedCount}`, icon: Compass, color: '#10b981' },
     { label: 'ANTREAN KYC', value: pendingVerif, unit: 'Berkas', sub: 'KTP & Face ID pending review', icon: ShieldCheck, color: '#f59e0b' },
   ];
@@ -201,7 +201,7 @@ export default function AdminRegionalDashboard() {
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 min-h-screen font-['Inter']">
 
       {/* ── BANNER ── */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2d5a9e] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-700 via-brand-500 to-[#2684ff] px-6 py-5 sm:py-0 sm:h-[104px] flex items-center text-white shadow-card">
         <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10 pointer-events-none" />
         <div className="relative w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0 flex-1">
@@ -269,7 +269,7 @@ export default function AdminRegionalDashboard() {
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-neutral-100 pb-4">
             <div className="flex items-center gap-2.5">
-              <div className="p-2 bg-[#10367D]/10 text-[#10367D] rounded-xl">
+              <div className="p-2 bg-[#1356d6]/10 text-[#1356d6] rounded-xl">
                 <Activity className="w-4 h-4" />
               </div>
               <div>
@@ -286,7 +286,7 @@ export default function AdminRegionalDashboard() {
               <div className="flex items-center gap-0.5 bg-neutral-50 border border-neutral-200 rounded-full p-1">
                 {['Minggu', 'Bulan', 'Tahun'].map(r => (
                   <button key={r} onClick={() => setActiveRange(r)}
-                    className={`text-[12px] font-semibold px-3 py-1 rounded-full transition cursor-pointer ${activeRange === r ? 'bg-[#10367D] text-white shadow-sm' : 'text-neutral-400 hover:text-neutral-600'}`}>
+                    className={`text-[12px] font-semibold px-3 py-1 rounded-full transition cursor-pointer ${activeRange === r ? 'bg-[#1356d6] text-white shadow-sm' : 'text-neutral-400 hover:text-neutral-600'}`}>
                     {r}
                   </button>
                 ))}
@@ -294,11 +294,11 @@ export default function AdminRegionalDashboard() {
               {/* Type toggle */}
               <div className="flex items-center gap-0.5 bg-neutral-50 border border-neutral-200 rounded-full p-1">
                 <button onClick={() => setChartType('area')} title="Area Chart"
-                  className={`w-7 h-7 rounded-full flex items-center justify-center transition cursor-pointer ${chartType === 'area' ? 'bg-[#10367D] text-white' : 'text-neutral-400'}`}>
+                  className={`w-7 h-7 rounded-full flex items-center justify-center transition cursor-pointer ${chartType === 'area' ? 'bg-[#1356d6] text-white' : 'text-neutral-400'}`}>
                   <LineChartIcon className="w-3.5 h-3.5" />
                 </button>
                 <button onClick={() => setChartType('bar')} title="Bar Chart"
-                  className={`w-7 h-7 rounded-full flex items-center justify-center transition cursor-pointer ${chartType === 'bar' ? 'bg-[#10367D] text-white' : 'text-neutral-400'}`}>
+                  className={`w-7 h-7 rounded-full flex items-center justify-center transition cursor-pointer ${chartType === 'bar' ? 'bg-[#1356d6] text-white' : 'text-neutral-400'}`}>
                   <BarChart3 className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -309,7 +309,7 @@ export default function AdminRegionalDashboard() {
           <div className="flex items-center gap-6">
             <div>
               <div className="flex items-center gap-1.5 mb-0.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#10367D]" />
+                <span className="w-2.5 h-2.5 rounded-full bg-[#1356d6]" />
                 <span className="text-[12px] font-medium text-neutral-500">Total Trip</span>
               </div>
               <p className="text-[22px] font-bold text-neutral-800">{chartSummary.total}</p>
@@ -336,8 +336,8 @@ export default function AdminRegionalDashboard() {
                 <AreaChart data={chartData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
                   <defs>
                     <linearGradient id="gradTotal" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10367D" stopOpacity={0.18} />
-                      <stop offset="95%" stopColor="#10367D" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#1356d6" stopOpacity={0.18} />
+                      <stop offset="95%" stopColor="#1356d6" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="gradSelesai" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#10b981" stopOpacity={0.22} />
@@ -349,7 +349,7 @@ export default function AdminRegionalDashboard() {
                   <YAxis tick={{ fontSize: 11, fill: '#A3A3A3', fontFamily: 'Inter' }} axisLine={false} tickLine={false} />
                   <Tooltip content={<CustomTooltip />} />
                   <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12, fontFamily: 'Inter' }} />
-                  <Area type="monotone" dataKey="total" name="Total Trip" stroke="#10367D" strokeWidth={2.5} fill="url(#gradTotal)" dot={false} activeDot={{ r: 5, strokeWidth: 2, stroke: '#fff' }} />
+                  <Area type="monotone" dataKey="total" name="Total Trip" stroke="#1356d6" strokeWidth={2.5} fill="url(#gradTotal)" dot={false} activeDot={{ r: 5, strokeWidth: 2, stroke: '#fff' }} />
                   <Area type="monotone" dataKey="selesai" name="Selesai" stroke="#10b981" strokeWidth={2} fill="url(#gradSelesai)" dot={false} activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff' }} />
                 </AreaChart>
               ) : (
@@ -359,7 +359,7 @@ export default function AdminRegionalDashboard() {
                   <YAxis tick={{ fontSize: 11, fill: '#A3A3A3', fontFamily: 'Inter' }} axisLine={false} tickLine={false} />
                   <Tooltip content={<CustomTooltip />} />
                   <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12, fontFamily: 'Inter' }} />
-                  <Bar dataKey="total" name="Total Trip" fill="#10367D" radius={[3, 3, 0, 0]} opacity={0.85} />
+                  <Bar dataKey="total" name="Total Trip" fill="#1356d6" radius={[3, 3, 0, 0]} opacity={0.85} />
                   <Bar dataKey="selesai" name="Selesai" fill="#10b981" radius={[3, 3, 0, 0]} opacity={0.85} />
                 </BarChart>
               )}
@@ -370,7 +370,7 @@ export default function AdminRegionalDashboard() {
         {/* Pie Chart — Trip Status Breakdown */}
         <div className="bg-white p-5 rounded-2xl shadow-sm border border-neutral-200 flex flex-col">
           <div className="flex items-center gap-2 mb-4">
-            <div className="p-2 bg-[#10367D]/10 text-[#10367D] rounded-xl">
+            <div className="p-2 bg-[#1356d6]/10 text-[#1356d6] rounded-xl">
               <PieChartIcon className="w-4 h-4" />
             </div>
             <div>
@@ -434,7 +434,7 @@ export default function AdminRegionalDashboard() {
       {/* ── COMPLIANCE + QUICK STATS ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Compliance */}
-        <div className="bg-[#10367D] rounded-2xl p-5 text-white shadow-sm">
+        <div className="bg-[#1356d6] rounded-2xl p-5 text-white shadow-sm">
           <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center mb-3">
             <ShieldCheck className="w-4 h-4 text-[#74B4D9]" />
           </div>
@@ -487,7 +487,7 @@ export default function AdminRegionalDashboard() {
         <div className="lg:col-span-2 bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-neutral-200">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <div className="p-1.5 bg-[#10367D]/10 text-[#10367D] rounded-lg">
+              <div className="p-1.5 bg-[#1356d6]/10 text-[#1356d6] rounded-lg">
                 <Clock className="w-4 h-4" />
               </div>
               <h2 className="text-[16px] font-bold text-neutral-800">Aktivitas & Logistik Terbaru</h2>
@@ -549,7 +549,7 @@ export default function AdminRegionalDashboard() {
           <div className="pt-2 border-t border-neutral-100">
             <p className="text-[11px] text-neutral-400 mb-1.5">Progress Penyelesaian Antrean</p>
             <div className="w-full bg-neutral-100 h-2 rounded-full overflow-hidden">
-              <div className="bg-[#10367D] h-full rounded-full transition-all duration-700"
+              <div className="bg-[#1356d6] h-full rounded-full transition-all duration-700"
                 style={{ width: `${pendingVerif === 0 ? 100 : Math.max(5, 100 - (pendingVerif / Math.max(pendingVerif + 5, 10)) * 100)}%` }} />
             </div>
             <p className="text-[11px] text-neutral-500 mt-1 font-medium">

@@ -278,14 +278,14 @@ export default function ForgotPassword({ onSwitchToLogin }) {
           <div className="flex items-center gap-2">
             <span
               className={`w-6 h-6 rounded-full flex items-center justify-center text-[12px] font-bold ${
-                step >= 1 ? 'bg-[#10367D] text-white' : 'bg-neutral-100 text-neutral-400'
+                step >= 1 ? 'bg-[#1356d6] text-white' : 'bg-neutral-100 text-neutral-400'
               }`}
             >
               1
             </span>
             <span
               className={`text-[12px] font-bold ${
-                step === 1 ? 'text-[#10367D]' : 'text-neutral-400'
+                step === 1 ? 'text-[#1356d6]' : 'text-neutral-400'
               }`}
             >
               Email
@@ -297,14 +297,14 @@ export default function ForgotPassword({ onSwitchToLogin }) {
           <div className="flex items-center gap-2">
             <span
               className={`w-6 h-6 rounded-full flex items-center justify-center text-[12px] font-bold ${
-                step >= 2 ? 'bg-[#10367D] text-white' : 'bg-neutral-100 text-neutral-400'
+                step >= 2 ? 'bg-[#1356d6] text-white' : 'bg-neutral-100 text-neutral-400'
               }`}
             >
               2
             </span>
             <span
               className={`text-[12px] font-bold ${
-                step === 2 ? 'text-[#10367D]' : 'text-neutral-400'
+                step === 2 ? 'text-[#1356d6]' : 'text-neutral-400'
               }`}
             >
               OTP
@@ -316,14 +316,14 @@ export default function ForgotPassword({ onSwitchToLogin }) {
           <div className="flex items-center gap-2">
             <span
               className={`w-6 h-6 rounded-full flex items-center justify-center text-[12px] font-bold ${
-                step >= 3 ? 'bg-[#10367D] text-white' : 'bg-neutral-100 text-neutral-400'
+                step >= 3 ? 'bg-[#1356d6] text-white' : 'bg-neutral-100 text-neutral-400'
               }`}
             >
               3
             </span>
             <span
               className={`text-[12px] font-bold ${
-                step === 3 ? 'text-[#10367D]' : 'text-neutral-400'
+                step === 3 ? 'text-[#1356d6]' : 'text-neutral-400'
               }`}
             >
               Password
@@ -382,8 +382,8 @@ export default function ForgotPassword({ onSwitchToLogin }) {
               h-10.5
               px-4
               rounded-full
-              bg-[#10367D]
-              hover:bg-[#0C2C66]
+              bg-[#1356d6]
+              hover:bg-[#0e44ba]
               disabled:opacity-60
               disabled:cursor-not-allowed
               text-white
@@ -422,7 +422,7 @@ export default function ForgotPassword({ onSwitchToLogin }) {
                 gap-1.5
                 text-[13px]
                 font-semibold
-                text-[#10367D]
+                text-[#1356d6]
                 hover:underline
                 cursor-pointer
               "
@@ -470,9 +470,9 @@ export default function ForgotPassword({ onSwitchToLogin }) {
                     rounded-xl
                     focus:bg-white
                     focus:outline-none
-                    focus:border-[#10367D]
+                    focus:border-[#1356d6]
                     focus:ring-2
-                    focus:ring-[#10367D]/20
+                    focus:ring-[#1356d6]/20
                     transition-all
                   "
                 />
@@ -492,7 +492,7 @@ export default function ForgotPassword({ onSwitchToLogin }) {
                 type="button"
                 onClick={handleResendOtp}
                 disabled={isSubmitting}
-                className="font-bold text-[#10367D] hover:underline cursor-pointer"
+                className="font-bold text-[#1356d6] hover:underline cursor-pointer"
               >
                 Kirim Ulang OTP
               </button>
@@ -512,8 +512,8 @@ export default function ForgotPassword({ onSwitchToLogin }) {
               h-10.5
               px-4
               rounded-full
-              bg-[#10367D]
-              hover:bg-[#0C2C66]
+              bg-[#1356d6]
+              hover:bg-[#0e44ba]
               disabled:opacity-60
               disabled:cursor-not-allowed
               text-white
@@ -618,8 +618,8 @@ export default function ForgotPassword({ onSwitchToLogin }) {
                 h-10.5
                 px-4
                 rounded-full
-                bg-[#10367D]
-                hover:bg-[#0C2C66]
+                bg-[#1356d6]
+                hover:bg-[#0e44ba]
                 disabled:opacity-60
                 disabled:cursor-not-allowed
                 text-white
@@ -678,8 +678,8 @@ export default function ForgotPassword({ onSwitchToLogin }) {
                 h-10.5
                 px-4
                 rounded-full
-                bg-[#10367D]
-                hover:bg-[#0C2C66]
+                bg-[#1356d6]
+                hover:bg-[#0e44ba]
                 text-white
                 text-[15px]
                 font-bold

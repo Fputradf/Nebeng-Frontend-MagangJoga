@@ -12,7 +12,6 @@ import {
   AlertTriangle,
   Image as ImageIcon,
   Ticket,
-  Gift,
   SlidersHorizontal,
   Share2,
   Siren,
@@ -37,7 +36,6 @@ import SosLogsManagement from './SosLogsManagement';
 
 import BannerManagement from './BannerManagement';
 import VoucherManagement from './VoucherManagement';
-import MerchandiseManagement from './MerchandiseManagement';
 
 import AppConfigManagement from './AppConfigManagement';
 import SocialLinksManagement from './SocialLinksManagement';
@@ -69,7 +67,6 @@ const KEPATUHAN_USER_TABS = [
 const PROMO_KONTEN_TABS = [
   { key: 'banner', label: 'Banner', icon: ImageIcon, path: '/admin/banner', component: BannerManagement },
   { key: 'voucher', label: 'Voucher', icon: Ticket, path: '/admin/voucher', component: VoucherManagement },
-  { key: 'merchandise', label: 'Merchandise', icon: Gift, path: '/admin/merchandise', component: MerchandiseManagement },
 ];
 
 const BRANDING_SOSIAL_TABS = [
